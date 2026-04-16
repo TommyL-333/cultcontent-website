@@ -1,0 +1,264 @@
+<!-- NAV BUTTON: <button class="tab-btn" data-tab="affiliates">Affiliate Agent</button> -->
+
+<section class="tab-pane" id="tab-affiliates">
+
+  <!-- ── Header row: title + date controls ─────────────────────────────── -->
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+    <h2 class="sec-title" style="margin:0">TikTok Affiliate Manager</h2>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <span id="reacherRefreshStatus" style="font-size:11px;color:var(--muted)">Loading…</span>
+      <a href="https://portal.reacherapp.com" target="_blank" class="btn btn-ghost" style="font-size:11px">Reacher ↗</a>
+      <button class="btn btn-teal" style="font-size:11px" onclick="loadAffiliate(true)">↺ Refresh</button>
+    </div>
+  </div>
+
+  <!-- ── Date range bar ────────────────────────────────────────────────── -->
+  <div class="card" style="padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+    <span style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.06em;white-space:nowrap;">DATE RANGE</span>
+    <div style="display:flex;gap:4px;">
+      <button class="range-btn" data-rng="7d"     onclick="setAffiliateRange(this,'7d')">7D</button>
+      <button class="range-btn active" data-rng="30d" onclick="setAffiliateRange(this,'30d')">30D</button>
+      <button class="range-btn" data-rng="90d"    onclick="setAffiliateRange(this,'90d')">90D</button>
+      <button class="range-btn" data-rng="custom" onclick="setAffiliateRange(this,'custom')">Custom</button>
+    </div>
+    <div id="reacherCustomDates" style="display:none;align-items:center;gap:6px;flex-wrap:wrap;">
+      <input type="date" id="reacherDateStart" class="agent-input" style="width:140px;padding:4px 8px;font-size:12px;" />
+      <span style="color:var(--muted);font-size:12px;">→</span>
+      <input type="date" id="reacherDateEnd"   class="agent-input" style="width:140px;padding:4px 8px;font-size:12px;" />
+      <button class="btn btn-teal" style="font-size:11px;padding:4px 12px" onclick="loadAffiliate(true)">Apply</button>
+    </div>
+    <span style="margin-left:auto;font-size:11px;color:var(--muted)" id="reacherDateLabel">last 30 days</span>
+  </div>
+
+  <!-- ── Agency Insights bar (NEW) ─────────────────────────────────────── -->
+  <div class="card" style="margin-bottom:16px;padding:16px 20px;" id="affiliateInsightsBar">
+    <div class="card-label" style="margin-bottom:12px;">Agency Insights</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;">
+
+      <!-- Top shop -->
+      <div style="background:rgba(0,210,122,0.06);border:1px solid rgba(0,210,122,0.18);border-radius:9px;padding:12px 14px;">
+        <div style="font-size:9px;font-weight:800;letter-spacing:0.1em;color:var(--muted);text-transform:uppercase;margin-bottom:5px;">Top Performing Shop</div>
+        <div id="insightTopShop" style="font-family:'Montserrat',sans-serif;font-weight:900;font-size:14px;color:var(--green);">—</div>
+        <div id="insightTopShopGmv" style="font-size:11px;color:var(--muted);margin-top:2px;"></div>
+      </div>
+
+      <!-- Shops at risk -->
+      <div style="background:rgba(255,59,48,0.05);border:1px solid rgba(255,59,48,0.15);border-radius:9px;padding:12px 14px;">
+        <div style="font-size:9px;font-weight:800;letter-spacing:0.1em;color:var(--muted);text-transform:uppercase;margin-bottom:5px;">Shops At Risk</div>
+        <div id="insightAtRisk" style="font-family:'Montserrat',sans-serif;font-weight:900;font-size:14px;color:var(--red);">—</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">GMV &lt;$500 or conv &lt;10%</div>
+      </div>
+
+      <!-- Est. commission payout -->
+      <div style="background:rgba(201,168,76,0.07);border:1px solid rgba(201,168,76,0.2);border-radius:9px;padding:12px 14px;">
+        <div style="font-size:9px;font-weight:800;letter-spacing:0.1em;color:var(--muted);text-transform:uppercase;margin-bottom:5px;">Est. Commission Payout</div>
+        <div id="insightCommission" style="font-family:'Montserrat',sans-serif;font-weight:900;font-size:14px;color:var(--gold);">—</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">~15% of GMV</div>
+      </div>
+
+      <!-- Automation coverage -->
+      <div style="background:rgba(0,242,234,0.06);border:1px solid rgba(0,242,234,0.18);border-radius:9px;padding:12px 14px;">
+        <div style="font-size:9px;font-weight:800;letter-spacing:0.1em;color:var(--muted);text-transform:uppercase;margin-bottom:5px;">Active Automation Coverage</div>
+        <div id="insightAutoCoverage" style="font-family:'Montserrat',sans-serif;font-weight:900;font-size:14px;color:var(--teal);">—</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">of shops with active sequences</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Agency KPI row ────────────────────────────────────────────────── -->
+  <div class="kpi-row" style="margin-bottom:16px;">
+    <div class="kpi-card">
+      <div class="kpi-label">Agency GMV</div>
+      <div class="kpi-value green" id="reacherKpiGmv">—</div>
+      <div class="kpi-sub" id="reacherKpiGmvSub">all clients</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Total Creators</div>
+      <div class="kpi-value" id="reacherKpiCreators">—</div>
+      <div class="kpi-sub">in funnels</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Video Views</div>
+      <div class="kpi-value gold" id="reacherKpiViews">—</div>
+      <div class="kpi-sub">affiliate videos</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Videos Posted</div>
+      <div class="kpi-value" id="reacherKpiVideos">—</div>
+      <div class="kpi-sub">by affiliates</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Samples</div>
+      <div class="kpi-value" id="reacherKpiSamples">—</div>
+      <div class="kpi-sub">requests</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Active Automations</div>
+      <div class="kpi-value" id="reacherKpiAuto">—</div>
+      <div class="kpi-sub">running sequences</div>
+    </div>
+  </div>
+
+  <!-- ── Chart row: trend line + agency funnel ─────────────────────────── -->
+  <div class="two-col" style="margin-bottom:16px;align-items:start;">
+
+    <!-- Trend chart -->
+    <div class="card">
+      <div class="card-label" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>Performance Trend</span>
+        <select id="reacherChartShop" class="agent-input" style="width:160px;padding:3px 6px;font-size:11px;" onchange="renderAffiliateChart()">
+          <option value="all">All clients (agency)</option>
+        </select>
+      </div>
+      <div style="position:relative;height:180px;">
+        <canvas id="reacherChart"></canvas>
+      </div>
+      <div style="display:flex;gap:14px;margin-top:8px;font-size:11px;">
+        <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:2px;background:var(--green);display:inline-block;border-radius:2px;"></span>GMV ($)</span>
+        <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:2px;background:var(--teal);display:inline-block;border-radius:2px;"></span>Video Views</span>
+        <span id="reacherChartStatus" style="color:var(--muted);font-style:italic;margin-left:auto;">Loading…</span>
+      </div>
+    </div>
+
+    <!-- Agency funnel -->
+    <div class="card">
+      <div class="card-label">Agency Creator Funnel</div>
+      <div id="reacherFunnelViz" style="display:flex;flex-direction:column;gap:6px;">
+        <div style="color:var(--muted);font-style:italic;font-size:12px;padding:8px 0;">Loading funnel…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Per-shop grid ──────────────────────────────────────────────────── -->
+  <div class="agent-section-label">🛍️ Client Shops</div>
+  <div id="reacherShopsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;margin-bottom:20px;">
+    <div class="card" style="grid-column:1/-1;padding:20px;text-align:center;color:var(--muted);font-style:italic;font-size:13px;">Loading shop data…</div>
+  </div>
+
+  <!-- ── Creator Actions (NEW) ──────────────────────────────────────────── -->
+  <div class="agent-section-label">⚡ Creator Actions</div>
+  <div class="two-col" style="margin-bottom:20px;align-items:start;">
+
+    <!-- Card A: Send Creator Blast -->
+    <div class="card">
+      <div class="card-label">Send Creator Blast</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+
+        <textarea
+          id="blastMessage"
+          class="agent-input"
+          rows="3"
+          placeholder="Hey [name], you're crushing it — want to unlock a 15% commission bonus?"
+          style="resize:vertical;"
+        ></textarea>
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:130px;">
+            <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:0.06em;margin-bottom:5px;">TARGET AUDIENCE</div>
+            <select id="blastAudience" class="agent-input">
+              <option value="all_funnel">All in funnel</option>
+              <option value="active_posters">Active posters</option>
+              <option value="non_starters">Non-starters</option>
+              <option value="sample_approved">Sample approved</option>
+            </select>
+          </div>
+          <div style="flex:1;min-width:130px;">
+            <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:0.06em;margin-bottom:5px;">CHANNEL</div>
+            <select id="blastChannel" class="agent-input">
+              <option value="reacher_dm">Reacher DM</option>
+              <option value="email">Email</option>
+              <option value="sms">SMS</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:10px;margin-top:2px;">
+          <button class="btn btn-teal" style="font-size:12px;" onclick="fireCreatorBlast()" id="blastBtn">🚀 Fire Blast</button>
+          <span id="blastStatus" style="font-size:11px;color:var(--muted);"></span>
+        </div>
+
+        <!-- Result display -->
+        <div id="blastResult" style="display:none;padding:10px 14px;border-radius:8px;font-size:12px;background:rgba(0,210,122,0.07);border:1px solid rgba(0,210,122,0.2);">
+          <span id="blastResultText"></span>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Card B: Create Promotion -->
+    <div class="card">
+      <div class="card-label">Create Promotion</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+
+        <div>
+          <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:0.06em;margin-bottom:5px;">SHOP</div>
+          <select id="promoShop" class="agent-input">
+            <option value="">Select shop…</option>
+          </select>
+        </div>
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:100px;">
+            <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:0.06em;margin-bottom:5px;">COMMISSION %</div>
+            <input type="number" id="promoCommission" class="agent-input" min="5" max="40" value="15" placeholder="15" />
+          </div>
+          <div style="flex:1;min-width:100px;">
+            <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:0.06em;margin-bottom:5px;">DURATION (days)</div>
+            <input type="number" id="promoDuration" class="agent-input" min="1" max="30" value="7" placeholder="7" />
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:0.06em;margin-bottom:5px;">TYPE</div>
+          <select id="promoType" class="agent-input">
+            <option value="sample_invite">Sample Invite</option>
+            <option value="bonus_campaign">Bonus Campaign</option>
+            <option value="exclusive_deal">Exclusive Deal</option>
+            <option value="flash_24h">Flash (24h)</option>
+          </select>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:10px;margin-top:2px;">
+          <button class="btn btn-gold" onclick="createPromotion()" id="promoBtn">💰 Create Promo</button>
+          <span id="promoStatus" style="font-size:11px;color:var(--muted);"></span>
+        </div>
+
+        <!-- Result display -->
+        <div id="promoResult" style="display:none;padding:10px 14px;border-radius:8px;font-size:12px;">
+          <span id="promoResultText"></span>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Command → Lark ─────────────────────────────────────────────────── -->
+  <div class="agent-section-label">🔊 Command → Lark</div>
+  <div class="card" style="margin-bottom:24px;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+      <div style="flex:1;font-size:13px;font-weight:700;">Send a message to the Lark alerts channel</div>
+      <span id="commandSendStatus" style="font-size:11px;color:var(--muted);"></span>
+    </div>
+    <div style="display:flex;gap:8px;align-items:stretch;flex-wrap:wrap;">
+      <select id="commandContext" class="agent-input" style="width:160px;padding:6px 8px;font-size:12px;flex-shrink:0;">
+        <option value="">No label</option>
+        <option value="📊 Affiliate Update">📊 Affiliate Update</option>
+        <option value="⚡ Action Required">⚡ Action Required</option>
+        <option value="🚨 Alert">🚨 Alert</option>
+        <option value="💡 Insight">💡 Insight</option>
+        <option value="✅ Done">✅ Done</option>
+        <option value="📝 Note">📝 Note</option>
+      </select>
+      <input type="text" id="commandText" class="agent-input"
+        placeholder="Type a message to fire to Lark…"
+        style="flex:1;min-width:200px;padding:6px 10px;font-size:13px;"
+        onkeydown="if(event.key==='Enter')sendCommand()" />
+      <button class="btn btn-teal" id="commandSendBtn" onclick="sendCommand()" style="padding:6px 16px;font-size:12px;flex-shrink:0;">Fire →</button>
+    </div>
+    <!-- Recent commands log -->
+    <div id="commandLog" style="margin-top:12px;max-height:120px;overflow-y:auto;display:none;"></div>
+  </div>
+
+</section>

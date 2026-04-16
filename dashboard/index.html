@@ -401,8 +401,11 @@
 <nav class="tab-nav">
   <button class="tab-btn active" data-tab="overview">Overview</button>
   <button class="tab-btn" data-tab="pipeline">Pipeline</button>
-  <button class="tab-btn" data-tab="agents">Agents &amp; Ops</button>
-  <button class="tab-btn" data-tab="affiliates">Affiliates</button>
+  <button class="tab-btn" data-tab="affiliates">Affiliate Agent</button>
+  <button class="tab-btn" data-tab="shopops">Shop Ops Agent</button>
+  <button class="tab-btn" data-tab="paidmedia">Paid Media Agent</button>
+  <button class="tab-btn" data-tab="shortvideo">Short Video Agent</button>
+  <button class="tab-btn" data-tab="agents">Ops</button>
   <button class="tab-btn" data-tab="performance">Performance</button>
   <button class="tab-btn" data-tab="inbox">Inbox</button>
   <button class="tab-btn" data-tab="community">Community</button>
@@ -819,309 +822,743 @@
   <!-- ── AFFILIATES ───────────────────────────────────────────── -->
   <section class="tab-pane" id="tab-affiliates">
 
-    <!-- Header row: title + date controls -->
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
-      <h2 class="sec-title" style="margin:0">TikTok Affiliate Manager</h2>
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-        <span id="reacherRefreshStatus" style="font-size:11px;color:var(--muted)">Loading…</span>
-        <a href="https://portal.reacherapp.com" target="_blank" class="btn btn-ghost" style="font-size:11px">Reacher ↗</a>
-        <button class="btn btn-teal" style="font-size:11px" onclick="loadReacher(true)">↺ Refresh</button>
+  <!-- ── Header row: title + date controls ─────────────────────────────── -->
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+    <h2 class="sec-title" style="margin:0">TikTok Affiliate Manager</h2>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <span id="reacherRefreshStatus" style="font-size:11px;color:var(--muted)">Loading…</span>
+      <a href="https://portal.reacherapp.com" target="_blank" class="btn btn-ghost" style="font-size:11px">Reacher ↗</a>
+      <button class="btn btn-teal" style="font-size:11px" onclick="loadAffiliate(true)">↺ Refresh</button>
+    </div>
+  </div>
+
+  <!-- ── Date range bar ────────────────────────────────────────────────── -->
+  <div class="card" style="padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+    <span style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.06em;white-space:nowrap;">DATE RANGE</span>
+    <div style="display:flex;gap:4px;">
+      <button class="range-btn" data-rng="7d"     onclick="setAffiliateRange(this,'7d')">7D</button>
+      <button class="range-btn active" data-rng="30d" onclick="setAffiliateRange(this,'30d')">30D</button>
+      <button class="range-btn" data-rng="90d"    onclick="setAffiliateRange(this,'90d')">90D</button>
+      <button class="range-btn" data-rng="custom" onclick="setAffiliateRange(this,'custom')">Custom</button>
+    </div>
+    <div id="reacherCustomDates" style="display:none;align-items:center;gap:6px;flex-wrap:wrap;">
+      <input type="date" id="reacherDateStart" class="agent-input" style="width:140px;padding:4px 8px;font-size:12px;" />
+      <span style="color:var(--muted);font-size:12px;">→</span>
+      <input type="date" id="reacherDateEnd"   class="agent-input" style="width:140px;padding:4px 8px;font-size:12px;" />
+      <button class="btn btn-teal" style="font-size:11px;padding:4px 12px" onclick="loadAffiliate(true)">Apply</button>
+    </div>
+    <span style="margin-left:auto;font-size:11px;color:var(--muted)" id="reacherDateLabel">last 30 days</span>
+  </div>
+
+  <!-- ── Agency Insights bar (NEW) ─────────────────────────────────────── -->
+  <div class="card" style="margin-bottom:16px;padding:16px 20px;" id="affiliateInsightsBar">
+    <div class="card-label" style="margin-bottom:12px;">Agency Insights</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;">
+
+      <!-- Top shop -->
+      <div style="background:rgba(0,210,122,0.06);border:1px solid rgba(0,210,122,0.18);border-radius:9px;padding:12px 14px;">
+        <div style="font-size:9px;font-weight:800;letter-spacing:0.1em;color:var(--muted);text-transform:uppercase;margin-bottom:5px;">Top Performing Shop</div>
+        <div id="insightTopShop" style="font-family:'Montserrat',sans-serif;font-weight:900;font-size:14px;color:var(--green);">—</div>
+        <div id="insightTopShopGmv" style="font-size:11px;color:var(--muted);margin-top:2px;"></div>
+      </div>
+
+      <!-- Shops at risk -->
+      <div style="background:rgba(255,59,48,0.05);border:1px solid rgba(255,59,48,0.15);border-radius:9px;padding:12px 14px;">
+        <div style="font-size:9px;font-weight:800;letter-spacing:0.1em;color:var(--muted);text-transform:uppercase;margin-bottom:5px;">Shops At Risk</div>
+        <div id="insightAtRisk" style="font-family:'Montserrat',sans-serif;font-weight:900;font-size:14px;color:var(--red);">—</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">GMV &lt;$500 or conv &lt;10%</div>
+      </div>
+
+      <!-- Est. commission payout -->
+      <div style="background:rgba(201,168,76,0.07);border:1px solid rgba(201,168,76,0.2);border-radius:9px;padding:12px 14px;">
+        <div style="font-size:9px;font-weight:800;letter-spacing:0.1em;color:var(--muted);text-transform:uppercase;margin-bottom:5px;">Est. Commission Payout</div>
+        <div id="insightCommission" style="font-family:'Montserrat',sans-serif;font-weight:900;font-size:14px;color:var(--gold);">—</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">~15% of GMV</div>
+      </div>
+
+      <!-- Automation coverage -->
+      <div style="background:rgba(0,242,234,0.06);border:1px solid rgba(0,242,234,0.18);border-radius:9px;padding:12px 14px;">
+        <div style="font-size:9px;font-weight:800;letter-spacing:0.1em;color:var(--muted);text-transform:uppercase;margin-bottom:5px;">Active Automation Coverage</div>
+        <div id="insightAutoCoverage" style="font-family:'Montserrat',sans-serif;font-weight:900;font-size:14px;color:var(--teal);">—</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">of shops with active sequences</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Agency KPI row ────────────────────────────────────────────────── -->
+  <div class="kpi-row" style="margin-bottom:16px;">
+    <div class="kpi-card">
+      <div class="kpi-label">Agency GMV</div>
+      <div class="kpi-value green" id="reacherKpiGmv">—</div>
+      <div class="kpi-sub" id="reacherKpiGmvSub">all clients</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Total Creators</div>
+      <div class="kpi-value" id="reacherKpiCreators">—</div>
+      <div class="kpi-sub">in funnels</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Video Views</div>
+      <div class="kpi-value gold" id="reacherKpiViews">—</div>
+      <div class="kpi-sub">affiliate videos</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Videos Posted</div>
+      <div class="kpi-value" id="reacherKpiVideos">—</div>
+      <div class="kpi-sub">by affiliates</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Samples</div>
+      <div class="kpi-value" id="reacherKpiSamples">—</div>
+      <div class="kpi-sub">requests</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Active Automations</div>
+      <div class="kpi-value" id="reacherKpiAuto">—</div>
+      <div class="kpi-sub">running sequences</div>
+    </div>
+  </div>
+
+  <!-- ── Chart row: trend line + agency funnel ─────────────────────────── -->
+  <div class="two-col" style="margin-bottom:16px;align-items:start;">
+
+    <!-- Trend chart -->
+    <div class="card">
+      <div class="card-label" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>Performance Trend</span>
+        <select id="reacherChartShop" class="agent-input" style="width:160px;padding:3px 6px;font-size:11px;" onchange="renderAffiliateChart()">
+          <option value="all">All clients (agency)</option>
+        </select>
+      </div>
+      <div style="position:relative;height:180px;">
+        <canvas id="reacherChart"></canvas>
+      </div>
+      <div style="display:flex;gap:14px;margin-top:8px;font-size:11px;">
+        <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:2px;background:var(--green);display:inline-block;border-radius:2px;"></span>GMV ($)</span>
+        <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:2px;background:var(--teal);display:inline-block;border-radius:2px;"></span>Video Views</span>
+        <span id="reacherChartStatus" style="color:var(--muted);font-style:italic;margin-left:auto;">Loading…</span>
       </div>
     </div>
 
-    <!-- Date range bar -->
-    <div class="card" style="padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-      <span style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.06em;white-space:nowrap;">DATE RANGE</span>
-      <div style="display:flex;gap:4px;">
-        <button class="range-btn" data-rng="7d"  onclick="setReacherRange(this,'7d')">7D</button>
-        <button class="range-btn active" data-rng="30d" onclick="setReacherRange(this,'30d')">30D</button>
-        <button class="range-btn" data-rng="90d" onclick="setReacherRange(this,'90d')">90D</button>
-        <button class="range-btn" data-rng="custom" onclick="setReacherRange(this,'custom')">Custom</button>
-      </div>
-      <div id="reacherCustomDates" style="display:none;align-items:center;gap:6px;flex-wrap:wrap;">
-        <input type="date" id="reacherDateStart" class="agent-input" style="width:140px;padding:4px 8px;font-size:12px;" />
-        <span style="color:var(--muted);font-size:12px;">→</span>
-        <input type="date" id="reacherDateEnd" class="agent-input" style="width:140px;padding:4px 8px;font-size:12px;" />
-        <button class="btn btn-teal" style="font-size:11px;padding:4px 12px" onclick="loadReacher(true)">Apply</button>
-      </div>
-      <span style="margin-left:auto;font-size:11px;color:var(--muted)" id="reacherDateLabel">last 30 days</span>
-    </div>
-
-    <!-- Agency KPI row -->
-    <div class="kpi-row" style="margin-bottom:16px;">
-      <div class="kpi-card">
-        <div class="kpi-label">Agency GMV</div>
-        <div class="kpi-value green" id="reacherKpiGmv">—</div>
-        <div class="kpi-sub" id="reacherKpiGmvSub">all clients</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Total Creators</div>
-        <div class="kpi-value" id="reacherKpiCreators">—</div>
-        <div class="kpi-sub">in funnels</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Video Views</div>
-        <div class="kpi-value gold" id="reacherKpiViews">—</div>
-        <div class="kpi-sub">affiliate videos</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Videos Posted</div>
-        <div class="kpi-value" id="reacherKpiVideos">—</div>
-        <div class="kpi-sub">by affiliates</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Samples</div>
-        <div class="kpi-value" id="reacherKpiSamples">—</div>
-        <div class="kpi-sub">requests</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Active Automations</div>
-        <div class="kpi-value" id="reacherKpiAuto">—</div>
-        <div class="kpi-sub">running sequences</div>
+    <!-- Agency funnel -->
+    <div class="card">
+      <div class="card-label">Agency Creator Funnel</div>
+      <div id="reacherFunnelViz" style="display:flex;flex-direction:column;gap:6px;">
+        <div style="color:var(--muted);font-style:italic;font-size:12px;padding:8px 0;">Loading funnel…</div>
       </div>
     </div>
+  </div>
 
-    <!-- Chart row: trend line + agency funnel -->
-    <div class="two-col" style="margin-bottom:16px;align-items:start;">
+  <!-- ── Per-shop grid ──────────────────────────────────────────────────── -->
+  <div class="agent-section-label">🛍️ Client Shops</div>
+  <div id="reacherShopsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;margin-bottom:20px;">
+    <div class="card" style="grid-column:1/-1;padding:20px;text-align:center;color:var(--muted);font-style:italic;font-size:13px;">Loading shop data…</div>
+  </div>
 
-      <!-- Trend chart -->
-      <div class="card">
-        <div class="card-label" style="display:flex;align-items:center;justify-content:space-between;">
-          <span>Performance Trend</span>
-          <select id="reacherChartShop" class="agent-input" style="width:160px;padding:3px 6px;font-size:11px;" onchange="renderReacherChart()">
-            <option value="all">All clients (agency)</option>
+  <!-- ── Creator Actions (NEW) ──────────────────────────────────────────── -->
+  <div class="agent-section-label">⚡ Creator Actions</div>
+  <div class="two-col" style="margin-bottom:20px;align-items:start;">
+
+    <!-- Card A: Send Creator Blast -->
+    <div class="card">
+      <div class="card-label">Send Creator Blast</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+
+        <textarea
+          id="blastMessage"
+          class="agent-input"
+          rows="3"
+          placeholder="Hey [name], you're crushing it — want to unlock a 15% commission bonus?"
+          style="resize:vertical;"
+        ></textarea>
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:130px;">
+            <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:0.06em;margin-bottom:5px;">TARGET AUDIENCE</div>
+            <select id="blastAudience" class="agent-input">
+              <option value="all_funnel">All in funnel</option>
+              <option value="active_posters">Active posters</option>
+              <option value="non_starters">Non-starters</option>
+              <option value="sample_approved">Sample approved</option>
+            </select>
+          </div>
+          <div style="flex:1;min-width:130px;">
+            <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:0.06em;margin-bottom:5px;">CHANNEL</div>
+            <select id="blastChannel" class="agent-input">
+              <option value="reacher_dm">Reacher DM</option>
+              <option value="email">Email</option>
+              <option value="sms">SMS</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:10px;margin-top:2px;">
+          <button class="btn btn-teal" style="font-size:12px;" onclick="fireCreatorBlast()" id="blastBtn">🚀 Fire Blast</button>
+          <span id="blastStatus" style="font-size:11px;color:var(--muted);"></span>
+        </div>
+
+        <!-- Result display -->
+        <div id="blastResult" style="display:none;padding:10px 14px;border-radius:8px;font-size:12px;background:rgba(0,210,122,0.07);border:1px solid rgba(0,210,122,0.2);">
+          <span id="blastResultText"></span>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Card B: Create Promotion -->
+    <div class="card">
+      <div class="card-label">Create Promotion</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+
+        <div>
+          <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:0.06em;margin-bottom:5px;">SHOP</div>
+          <select id="promoShop" class="agent-input">
+            <option value="">Select shop…</option>
           </select>
         </div>
-        <div style="position:relative;height:180px;">
-          <canvas id="reacherChart"></canvas>
-        </div>
-        <div style="display:flex;gap:14px;margin-top:8px;font-size:11px;">
-          <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:2px;background:var(--green);display:inline-block;border-radius:2px;"></span>GMV ($)</span>
-          <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:2px;background:var(--teal);display:inline-block;border-radius:2px;"></span>Video Views</span>
-          <span id="reacherChartStatus" style="color:var(--muted);font-style:italic;margin-left:auto;">Loading…</span>
-        </div>
-      </div>
 
-      <!-- Agency funnel -->
-      <div class="card">
-        <div class="card-label">Agency Creator Funnel</div>
-        <div id="reacherFunnelViz" style="display:flex;flex-direction:column;gap:6px;">
-          <div style="color:var(--muted);font-style:italic;font-size:12px;padding:8px 0;">Loading funnel…</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:100px;">
+            <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:0.06em;margin-bottom:5px;">COMMISSION %</div>
+            <input type="number" id="promoCommission" class="agent-input" min="5" max="40" value="15" placeholder="15" />
+          </div>
+          <div style="flex:1;min-width:100px;">
+            <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:0.06em;margin-bottom:5px;">DURATION (days)</div>
+            <input type="number" id="promoDuration" class="agent-input" min="1" max="30" value="7" placeholder="7" />
+          </div>
         </div>
+
+        <div>
+          <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:0.06em;margin-bottom:5px;">TYPE</div>
+          <select id="promoType" class="agent-input">
+            <option value="sample_invite">Sample Invite</option>
+            <option value="bonus_campaign">Bonus Campaign</option>
+            <option value="exclusive_deal">Exclusive Deal</option>
+            <option value="flash_24h">Flash (24h)</option>
+          </select>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:10px;margin-top:2px;">
+          <button class="btn btn-gold" onclick="createPromotion()" id="promoBtn">💰 Create Promo</button>
+          <span id="promoStatus" style="font-size:11px;color:var(--muted);"></span>
+        </div>
+
+        <!-- Result display -->
+        <div id="promoResult" style="display:none;padding:10px 14px;border-radius:8px;font-size:12px;">
+          <span id="promoResultText"></span>
+        </div>
+
       </div>
     </div>
 
-    <!-- Per-shop grid -->
-    <div class="agent-section-label">🛍️ Client Shops</div>
-    <div id="reacherShopsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;margin-bottom:20px;">
-      <div class="card" style="grid-column:1/-1;padding:20px;text-align:center;color:var(--muted);font-style:italic;font-size:13px;">Loading shop data…</div>
+  </div>
+
+  <!-- ── Command → Lark ─────────────────────────────────────────────────── -->
+  <div class="agent-section-label">🔊 Command → Lark</div>
+  <div class="card" style="margin-bottom:24px;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+      <div style="flex:1;font-size:13px;font-weight:700;">Send a message to the Lark alerts channel</div>
+      <span id="commandSendStatus" style="font-size:11px;color:var(--muted);"></span>
+    </div>
+    <div style="display:flex;gap:8px;align-items:stretch;flex-wrap:wrap;">
+      <select id="commandContext" class="agent-input" style="width:160px;padding:6px 8px;font-size:12px;flex-shrink:0;">
+        <option value="">No label</option>
+        <option value="📊 Affiliate Update">📊 Affiliate Update</option>
+        <option value="⚡ Action Required">⚡ Action Required</option>
+        <option value="🚨 Alert">🚨 Alert</option>
+        <option value="💡 Insight">💡 Insight</option>
+        <option value="✅ Done">✅ Done</option>
+        <option value="📝 Note">📝 Note</option>
+      </select>
+      <input type="text" id="commandText" class="agent-input"
+        placeholder="Type a message to fire to Lark…"
+        style="flex:1;min-width:200px;padding:6px 10px;font-size:13px;"
+        onkeydown="if(event.key==='Enter')sendCommand()" />
+      <button class="btn btn-teal" id="commandSendBtn" onclick="sendCommand()" style="padding:6px 16px;font-size:12px;flex-shrink:0;">Fire →</button>
+    </div>
+    <!-- Recent commands log -->
+    <div id="commandLog" style="margin-top:12px;max-height:120px;overflow-y:auto;display:none;"></div>
+  </div>
+
+</section>
+
+
+<section class="tab-pane" id="tab-shopops">
+
+  <!-- ── Header row ──────────────────────────────────────────── -->
+  <div class="sec-header mb24">
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+      <h2 class="sec-title">Shop Ops Agent</h2>
+      <span id="shopopsShopCount" class="badge b-active" style="font-size:11px;">— shops</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span class="muted mono" id="shopopsLastUpdated" style="font-size:11px;">—</span>
+      <button class="btn btn-ghost" onclick="loadShopOps()">↺ Refresh</button>
+    </div>
+  </div>
+
+  <!-- ── Agency KPI bar ──────────────────────────────────────── -->
+  <div class="kpi-row mb24">
+    <div class="kpi-card">
+      <div class="kpi-label">Total GMV</div>
+      <div class="kpi-value green mono" id="shopopsKpiGmv">—</div>
+      <div class="kpi-sub">all shops combined</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Active Shops</div>
+      <div class="kpi-value" id="shopopsKpiShops">—</div>
+      <div class="kpi-sub" id="shopopsKpiShopsSub">of — total</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Avg Creator Conversion</div>
+      <div class="kpi-value gold mono" id="shopopsKpiConversion">—</div>
+      <div class="kpi-sub">posted / sample requests</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Needs Attention</div>
+      <div class="kpi-value" id="shopopsKpiAlert" style="color:var(--red);">—</div>
+      <div class="kpi-sub" id="shopopsKpiAlertSub">GMV &lt;$500 or conv &lt;10%</div>
+    </div>
+  </div>
+
+  <!-- ── Shop Health Grid ────────────────────────────────────── -->
+  <div class="card mb24">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+      <div class="card-label" style="margin-bottom:0;">Shop Health Grid</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span style="font-size:10px;color:var(--green);font-weight:700;">● ≥70 Healthy</span>
+        <span style="font-size:10px;color:var(--gold);font-weight:700;">● 40–69 Watch</span>
+        <span style="font-size:10px;color:var(--red);font-weight:700;">● &lt;40 Critical</span>
+      </div>
+    </div>
+    <div id="shopopsHealthGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;">
+      <div class="agent-card card" style="color:var(--muted);font-style:italic;font-size:12px;text-align:center;padding:28px;">
+        Loading shop data…
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Promotions Manager ──────────────────────────────────── -->
+  <div class="card mb24" id="shopopsPromotionsCard">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+      <div class="card-label" style="margin-bottom:0;">Promotions Manager</div>
+      <button class="btn btn-teal" onclick="openPromoForm()" id="shopopsPromoToggleBtn">+ New Promotion</button>
     </div>
 
-    <!-- Command box -->
-    <div class="agent-section-label">🔊 Command → Lark</div>
-    <div class="card" style="margin-bottom:24px;">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-        <div style="flex:1;font-size:13px;font-weight:700;">Send a message to the Lark alerts channel</div>
-        <span id="commandSendStatus" style="font-size:11px;color:var(--muted);"></span>
+    <!-- Promo form (hidden by default) -->
+    <div id="shopopsPromoForm" style="display:none;background:rgba(0,242,234,0.03);border:1px solid rgba(0,242,234,0.15);border-radius:10px;padding:18px;margin-bottom:18px;">
+      <div class="agent-section-label" style="margin-bottom:14px;">New Promotion</div>
+      <div class="two-col mb16">
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;display:block;margin-bottom:6px;">Shop</label>
+          <select class="agent-input" id="promoShopId">
+            <option value="">Select shop…</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;display:block;margin-bottom:6px;">Type</label>
+          <select class="agent-input" id="promoType">
+            <option value="sample-invite">Sample Invite</option>
+            <option value="bonus-campaign">Bonus Campaign</option>
+            <option value="flash-deal">Flash Deal</option>
+            <option value="exclusive">Exclusive</option>
+          </select>
+        </div>
       </div>
-      <div style="display:flex;gap:8px;align-items:stretch;flex-wrap:wrap;">
-        <select id="commandContext" class="agent-input" style="width:160px;padding:6px 8px;font-size:12px;flex-shrink:0;">
-          <option value="">No label</option>
-          <option value="📊 Affiliate Update">📊 Affiliate Update</option>
-          <option value="⚡ Action Required">⚡ Action Required</option>
-          <option value="🚨 Alert">🚨 Alert</option>
-          <option value="💡 Insight">💡 Insight</option>
-          <option value="✅ Done">✅ Done</option>
-          <option value="📝 Note">📝 Note</option>
+      <div class="two-col mb16">
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;display:block;margin-bottom:6px;">Commission % (5–40)</label>
+          <input class="agent-input" type="number" id="promoCommission" min="5" max="40" value="15" />
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;display:block;margin-bottom:6px;">Duration</label>
+          <select class="agent-input" id="promoDuration">
+            <option value="24h">24 hours</option>
+            <option value="3d">3 days</option>
+            <option value="7d" selected>7 days</option>
+            <option value="14d">14 days</option>
+            <option value="30d">30 days</option>
+          </select>
+        </div>
+      </div>
+      <div class="mb16">
+        <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;display:block;margin-bottom:6px;">Target Tier</label>
+        <select class="agent-input" id="promoTier">
+          <option value="all">All creators</option>
+          <option value="top-earners">Top earners</option>
+          <option value="new-creators">New creators</option>
+          <option value="non-starters">Non-starters</option>
         </select>
-        <input type="text" id="commandText" class="agent-input" placeholder="Type a message to fire to Lark…"
-          style="flex:1;min-width:200px;padding:6px 10px;font-size:13px;"
-          onkeydown="if(event.key==='Enter')sendCommand()" />
-        <button class="btn btn-teal" id="commandSendBtn" onclick="sendCommand()" style="padding:6px 16px;font-size:12px;flex-shrink:0;">Fire →</button>
       </div>
-      <!-- Recent commands log -->
-      <div id="commandLog" style="margin-top:12px;max-height:120px;overflow-y:auto;display:none;"></div>
-    </div>
-
-  </section>
-
-  <!-- ── PERFORMANCE ──────────────────────────────────────────── -->
-  <section class="tab-pane" id="tab-performance">
-    <div class="sec-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-      <h2 class="sec-title" style="margin:0">Performance</h2>
-      <div style="display:flex;gap:6px;align-items:center;">
-        <span style="font-size:11px;color:var(--muted);margin-right:4px;">Range:</span>
-        <button class="range-btn active" data-range="7d">7D</button>
-        <button class="range-btn" data-range="30d">30D</button>
-        <button class="range-btn" data-range="90d">90D</button>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <button class="btn btn-teal" onclick="submitPromo()" id="promoSubmitBtn">Launch Promotion</button>
+        <button class="btn btn-ghost" onclick="closePromoForm()">Cancel</button>
+        <span id="promoFeedback" style="font-size:12px;font-weight:700;"></span>
       </div>
     </div>
 
-    <!-- Views history chart -->
-    <div class="card mb24">
-      <div class="card-label" style="display:flex;align-items:center;justify-content:space-between;">
-        <span>Views — YouTube Videos</span>
-        <span id="chartRangeLabel" style="font-size:11px;color:var(--muted)">last 30 days</span>
-      </div>
-      <div style="position:relative;height:200px;">
-        <canvas id="viewsChart"></canvas>
-      </div>
-      <div id="topVideoPanel" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);display:none;"></div>
+    <!-- Promotions table -->
+    <div id="shopopsPromotionsTable">
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>Shop</th>
+            <th>Type</th>
+            <th>Commission</th>
+            <th>Duration</th>
+            <th>Status</th>
+            <th>Performance</th>
+          </tr>
+        </thead>
+        <tbody id="shopopsPromoTbody">
+          <tr class="empty">
+            <td colspan="6" style="text-align:center;padding:28px;color:var(--muted);font-style:italic;">
+              No active promotions — launch one above to get started
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
+  </div>
 
-    <!-- KPI row — 6 cards -->
-    <div class="kpi-row-perf">
-      <div class="kpi-card">
-        <div class="kpi-label">YouTube Subscribers</div>
-        <div class="kpi-value" id="perfYtSubs">—</div>
-        <div class="kpi-sub" id="perfYtSubsSub">add YOUTUBE_API_KEY</div>
-        <div class="kpi-delta" id="perfYtSubsDelta"></div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">YouTube Total Views</div>
-        <div class="kpi-value gold" id="perfYtViews">—</div>
-        <div class="kpi-sub" id="perfYtViewsSub">all time</div>
-        <div class="kpi-delta" id="perfYtViewsDelta"></div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">TikTok Followers</div>
-        <div class="kpi-value" id="perfTkFollowers">—</div>
-        <div class="kpi-sub" id="perfTkFollowersSub">combined accounts</div>
-        <div class="kpi-delta" id="perfTkFollowersDelta"></div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Instagram Followers</div>
-        <div class="kpi-value gold" id="perfIgFollowers">—</div>
-        <div class="kpi-sub" id="perfIgFollowersSub">combined accounts</div>
-        <div class="kpi-delta" id="perfIgFollowersDelta"></div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">X Followers</div>
-        <div class="kpi-value" id="perfXFollowers">—</div>
-        <div class="kpi-sub" id="perfXFollowersSub">across X accounts</div>
-        <div class="kpi-delta" id="perfXFollowersDelta"></div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">LinkedIn Followers</div>
-        <div class="kpi-value gold" id="perfLiFollowers">—</div>
-        <div class="kpi-sub" id="perfLiFollowersSub">across accounts</div>
-        <div class="kpi-delta" id="perfLiFollowersDelta"></div>
+  <!-- ── Operations Pipeline ────────────────────────────────── -->
+  <div class="card" id="shopopsPipelineCard">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;">
+      <div class="card-label" style="margin-bottom:0;">Operations Pipeline</div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <div id="shopopsStuckBadge" style="display:none;background:rgba(255,59,48,0.1);border:1px solid rgba(255,59,48,0.25);border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;color:var(--red);">
+          ⚠ <span id="shopopsStuckCount">0</span> stuck creators
+        </div>
+        <button class="btn btn-ghost" id="shopopsReengageBtn" onclick="shopopsReengage()" style="display:none;">
+          ↺ Re-engage Stuck Creators
+        </button>
       </div>
     </div>
+    <div id="shopopsFunnelBars" style="display:flex;flex-direction:column;gap:14px;">
+      <div style="color:var(--muted);font-style:italic;font-size:12px;">Loading pipeline…</div>
+    </div>
+    <div id="shopopsReengageFeedback" style="margin-top:12px;font-size:12px;font-weight:700;"></div>
+  </div>
 
-    <!-- Platform cards — row 1: YouTube | TikTok -->
-    <div class="two-col mb16">
-      <div class="card" id="perfYoutubeCard">
-        <div class="connect-card">
-          <div class="connect-icon">▶</div>
-          <div class="connect-title">YouTube</div>
-          <div class="connect-desc">Set <code style="background:rgba(0,0,0,0.06);padding:2px 6px;border-radius:4px;">YOUTUBE_API_KEY</code> and channel IDs to see stats and recent videos.</div>
-          <span class="btn-soon">Add env vars</span>
+</section>
+
+
+<!-- NAV BUTTON: <button class="tab-btn" data-tab="paidmedia">Paid Media Agent</button> -->
+
+<section class="tab-pane" id="tab-paidmedia">
+
+  <!-- ── Header ──────────────────────────────────────────────────────────── -->
+  <div class="sec-header mb16">
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+      <h2 class="sec-title">Paid Media Agent</h2>
+      <span class="badge b-soon" id="pmLastUpdated" style="font-size:10px;">—</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <!-- Platform switcher -->
+      <div style="display:flex;gap:4px;" id="pmPlatformSwitcher">
+        <button class="range-btn active" id="pmBtn-tiktok" onclick="switchPlatform('tiktok')">
+          ♪ TikTok Ads
+        </button>
+        <button class="range-btn" id="pmBtn-meta" onclick="switchPlatform('meta')">
+          f Meta Ads
+        </button>
+      </div>
+      <!-- Date range -->
+      <div style="display:flex;gap:4px;" id="pmDateRange">
+        <button class="range-btn active" id="pmRange-7d"  onclick="setPmRange('7d')">7D</button>
+        <button class="range-btn"        id="pmRange-30d" onclick="setPmRange('30d')">30D</button>
+        <button class="range-btn"        id="pmRange-custom" onclick="setPmRange('custom')">Custom</button>
+      </div>
+      <button class="btn btn-ghost" id="pmRefreshBtn" onclick="loadPaidMedia(true)" style="height:32px;padding:0 12px;font-size:11px;">
+        ↺ Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Custom date range (hidden by default) ──────────────────────────── -->
+  <div id="pmCustomRange" style="display:none;margin-bottom:16px;display:none;">
+    <div class="card" style="padding:14px 20px;">
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+        <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;">From</label>
+        <input type="date" id="pmDateFrom" class="agent-input" style="width:160px;">
+        <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;">To</label>
+        <input type="date" id="pmDateTo" class="agent-input" style="width:160px;">
+        <button class="btn btn-teal" onclick="loadPmReport()" style="height:32px;padding:0 14px;font-size:12px;">Apply</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Main content (rendered by JS) ─────────────────────────────────── -->
+  <div id="pmContent">
+    <div style="color:var(--muted);font-style:italic;padding:40px 0;text-align:center;font-size:13px;">
+      Loading Paid Media data…
+    </div>
+  </div>
+
+</section>
+
+<!-- ─── Paid Media tab templates (rendered via JS into #pmContent) ──────────
+
+  The JS functions in functions.js build all inner HTML dynamically.
+  This section documents the expected rendered structure for reference.
+
+  renderPaidMedia() outputs into #pmContent:
+
+  1. Connection status cards  (if not connected)
+  2. KPI row                  (6 cards)
+  3. Spend Pacing card
+  4. Campaign table card
+  5. Top Creative card
+  6. Quick Actions card
+
+────────────────────────────────────────────────────────────────────────── -->
+
+
+<!-- NAV BUTTON: <button class="tab-btn" data-tab="shortvideo">Short Video Agent</button> -->
+
+<section class="tab-pane" id="tab-shortvideo">
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 1: Header + Stats
+  ══════════════════════════════════════════════════════════ -->
+  <div class="sec-header mb16">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <h2 class="sec-title">🎬 Short Video Agent</h2>
+      <span class="badge b-active">Live</span>
+    </div>
+    <button class="btn btn-ghost" onclick="renderShortVideo()">↺ Refresh</button>
+  </div>
+
+  <div class="kpi-row mb24">
+    <div class="kpi-card">
+      <div class="kpi-label">Videos Done</div>
+      <div class="kpi-value green" id="svStatDone">—</div>
+      <div class="kpi-sub">completed renders</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">In Progress</div>
+      <div class="kpi-value gold" id="svStatPending">—</div>
+      <div class="kpi-sub">generating now</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Total Scripts</div>
+      <div class="kpi-value" id="svStatScripts">—</div>
+      <div class="kpi-sub">across all folders</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 2: Production Pipeline
+  ══════════════════════════════════════════════════════════ -->
+  <div class="agent-section-label">🎭 Production Pipeline</div>
+  <div class="two-col mb16">
+
+    <!-- LEFT: Actor Browser -->
+    <div class="card">
+      <div class="card-label">Actor Browser</div>
+
+      <!-- Gender filters -->
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;" id="svActorFilters">
+        <button class="actor-filter active" data-gender="" onclick="svFilterActors(this,'')">All</button>
+        <button class="actor-filter" data-gender="Male" onclick="svFilterActors(this,'Male')">Male</button>
+        <button class="actor-filter" data-gender="Female" onclick="svFilterActors(this,'Female')">Female</button>
+      </div>
+
+      <!-- Actor grid -->
+      <div id="svActorGrid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;max-height:300px;overflow-y:auto;">
+        <div style="font-size:12px;color:var(--muted);font-style:italic;grid-column:1/-1;padding:12px 0">Loading actors…</div>
+      </div>
+
+      <div style="margin-top:8px;font-size:11px;color:var(--muted)" id="svActorSelLabel">No actor selected</div>
+    </div>
+
+    <!-- RIGHT: Script Editor -->
+    <div class="card">
+      <div class="card-label">Script Editor</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.06em;">SCRIPT DETAILS</div>
+
+        <input
+          class="agent-input"
+          id="svScriptName"
+          type="text"
+          placeholder="Script name (e.g. Hook #1 — Price Anchor)"
+        />
+
+        <!-- Hook library quick-load -->
+        <div style="display:flex;align-items:center;gap:8px;">
+          <select class="agent-input" id="svHookSelect" onchange="svQuickLoadHook(this.value)" style="flex:1;">
+            <option value="">💡 Load from Hook Library…</option>
+          </select>
+        </div>
+
+        <textarea
+          class="agent-input"
+          id="svScriptText"
+          rows="8"
+          placeholder="Write your script here… Keep it under 60 seconds for TikTok."
+          style="resize:vertical;line-height:1.5;"
+        ></textarea>
+
+        <select class="agent-input" id="svFolderSel">
+          <option value="">Loading folders…</option>
+        </select>
+
+        <button
+          class="btn btn-gold"
+          id="svGenerateBtn"
+          onclick="svGenerate()"
+          style="margin-top:4px;"
+          disabled
+        >🎬 Generate Video</button>
+
+        <div id="svGenerateResult" style="font-size:11px;display:none;margin-top:4px;"></div>
+      </div>
+    </div>
+
+  </div><!-- /.two-col -->
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 3: Hook Library
+  ══════════════════════════════════════════════════════════ -->
+  <div class="agent-section-label">💡 Hook Library</div>
+  <div class="card mb16">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <span class="card-label" style="margin-bottom:0;">Saved Hooks</span>
+      <button class="btn btn-ghost" onclick="svToggleSaveHookForm()">+ Save Current Hook</button>
+    </div>
+
+    <!-- Save hook form (hidden by default) -->
+    <div id="svSaveHookForm" style="display:none;background:rgba(0,242,234,0.03);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px;">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.06em;margin-bottom:10px;">SAVE HOOK</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+        <input class="agent-input" id="svHookName" type="text" placeholder="Hook name (e.g. Price Anchor Open)" />
+        <select class="agent-input" id="svHookTag">
+          <option value="Hook">Hook</option>
+          <option value="CTA">CTA</option>
+          <option value="Story">Story</option>
+          <option value="Educational">Educational</option>
+          <option value="Promo">Promo</option>
+        </select>
+      </div>
+      <textarea class="agent-input" id="svHookNote" rows="2" placeholder="Optional note (what makes this work, target audience, etc.)" style="resize:vertical;margin-bottom:10px;"></textarea>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-teal" onclick="svSaveHook()">💾 Save Hook</button>
+        <button class="btn btn-ghost" onclick="svToggleSaveHookForm()">Cancel</button>
+        <span id="svSaveHookMsg" style="font-size:11px;align-self:center;display:none;"></span>
+      </div>
+    </div>
+
+    <!-- Hook cards grid -->
+    <div id="svHookGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;">
+      <div style="font-size:12px;color:var(--muted);font-style:italic;grid-column:1/-1;padding:12px 0;text-align:center;">
+        No saved hooks yet. Generate a video and save the script.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 4: Active Jobs + Script Performance
+  ══════════════════════════════════════════════════════════ -->
+  <div class="agent-section-label">📊 Jobs &amp; Performance</div>
+  <div class="two-col mb16">
+
+    <!-- LEFT: Active Jobs -->
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <span class="card-label" style="margin-bottom:0;">Active Jobs</span>
+        <button class="btn btn-ghost" style="font-size:10px;padding:4px 9px;" onclick="svClearDoneJobs()">Clear Completed</button>
+      </div>
+      <div id="svJobsList">
+        <div style="font-size:12px;color:var(--muted);font-style:italic;">No active jobs this session.</div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Script Performance -->
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <span class="card-label" style="margin-bottom:0;">Script Performance</span>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-size:11px;color:var(--muted);">Sort:</span>
+          <select class="agent-input" id="svScriptSort" onchange="svSortScripts(this.value)" style="width:110px;padding:3px 6px;font-size:11px;">
+            <option value="done">Most Done</option>
+            <option value="name">Name</option>
+          </select>
         </div>
       </div>
-      <div class="card" id="perfTiktokCard">
-        <div class="connect-card">
-          <div class="connect-icon">♪</div>
-          <div class="connect-title">TikTok</div>
-          <div class="connect-desc">Set <code style="background:rgba(0,0,0,0.06);padding:2px 6px;border-radius:4px;">APIFY_API_KEY</code> and <code style="background:rgba(0,0,0,0.06);padding:2px 6px;border-radius:4px;">TIKTOK_HANDLE_PERSONAL</code> to pull follower stats.</div>
-          <span class="btn-soon">Add APIFY_API_KEY</span>
-        </div>
+      <div id="svScriptTableWrap" style="overflow-x:auto;">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Script</th>
+              <th>Folder</th>
+              <th style="text-align:center;">✓</th>
+              <th style="text-align:center;">⏳</th>
+              <th style="text-align:center;">✗</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="svScriptTableBody">
+            <tr class="empty"><td colspan="6">Loading scripts…</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
-    <!-- Platform cards — row 2: Instagram | X/Twitter -->
-    <div class="two-col mb16">
-      <div class="card" id="perfInstagramCard">
-        <div class="connect-card">
-          <div class="connect-icon">📸</div>
-          <div class="connect-title">Instagram</div>
-          <div class="connect-desc">Set <code style="background:rgba(0,0,0,0.06);padding:2px 6px;border-radius:4px;">APIFY_API_KEY</code> to pull Instagram profile stats.</div>
-          <span class="btn-soon">Add APIFY_API_KEY</span>
-        </div>
+  </div><!-- /.two-col -->
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 5: Video Queue
+  ══════════════════════════════════════════════════════════ -->
+  <div class="agent-section-label">📤 Video Queue</div>
+  <div class="card mb24">
+    <div class="card-label">Upload &amp; Stage Videos</div>
+
+    <!-- Drop zone -->
+    <div class="drop-zone" id="svDropZone" style="margin-bottom:16px;">
+      <div class="drop-icon">🎥</div>
+      <div style="font-weight:700;margin-bottom:4px;">Drop a video file here</div>
+      <div class="muted" style="font-size:12px;">or click to browse · MP4, MOV, WebM · up to 500 MB</div>
+      <input type="file" id="svFileInput" accept="video/*" style="display:none;" />
+    </div>
+
+    <!-- Upload form (hidden until file chosen) -->
+    <div id="svUploadForm" style="display:none;background:rgba(0,242,234,0.03);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px;">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.06em;margin-bottom:10px;">FILE DETAILS</div>
+      <div style="font-size:12px;font-weight:700;color:var(--teal);margin-bottom:10px;font-family:'JetBrains Mono',monospace;" id="svUploadFileName"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+        <input class="agent-input" id="svUploadTitle" type="text" placeholder="Title" />
+        <input class="agent-input" id="svUploadDesc" type="text" placeholder="Description (optional)" />
       </div>
-      <div class="card" id="perfTwitterCard">
-        <div class="connect-card">
-          <div class="connect-icon">𝕏</div>
-          <div class="connect-title">X / Twitter</div>
-          <div class="connect-desc">Configure Twitter handles to pull follower stats.</div>
-          <span class="btn-soon">Coming soon</span>
-        </div>
+      <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.06em;margin-bottom:8px;">PLATFORMS</div>
+      <div class="flex-wrap" id="svPlatformCheckboxes" style="margin-bottom:12px;">
+        <label class="platform-check"><input type="checkbox" value="tiktok" checked /> ♪ TikTok</label>
+        <label class="platform-check"><input type="checkbox" value="instagram" checked /> 📸 Instagram</label>
+        <label class="platform-check"><input type="checkbox" value="youtube" /> ▶ YouTube</label>
+        <label class="platform-check"><input type="checkbox" value="twitter" /> 𝕏 Twitter</label>
+        <label class="platform-check"><input type="checkbox" value="linkedin" /> in LinkedIn</label>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-teal" id="svUploadSubmitBtn" onclick="svSubmitUpload()">📤 Add to Queue</button>
+        <button class="btn btn-ghost" onclick="svCancelUpload()">Cancel</button>
       </div>
     </div>
 
-    <!-- Platform cards — row 3: LinkedIn | spacer -->
-    <div class="two-col mb16">
-      <div class="card" id="perfLinkedinCard">
-        <div class="connect-card">
-          <div class="connect-icon">in</div>
-          <div class="connect-title">LinkedIn</div>
-          <div class="connect-desc">Configure LinkedIn handles to pull follower stats.</div>
-          <span class="btn-soon">Coming soon</span>
-        </div>
-      </div>
-      <div></div>
+    <!-- Queue list -->
+    <div id="svUploadQueue">
+      <div class="muted" style="font-size:12px;font-style:italic;">No videos staged yet.</div>
     </div>
+  </div>
 
-  </section>
+</section>
 
-  <!-- ── COMMUNITY ──────────────────────────────────────────── -->
-  <section class="tab-pane" id="tab-community">
-    <div class="sec-header">
-      <h2 class="sec-title">Community</h2>
-    </div>
-
-    <!-- Top row: Skool (live) + Discord + Lark -->
-    <div class="three-col mb24">
-
-      <!-- Skool — live data -->
-      <div class="card" id="skoolCard">
-        <div class="card-label" style="display:flex;align-items:center;justify-content:space-between;">
-          <span>🏫 Cult Content — Skool</span>
-          <a href="https://www.skool.com/cult-content/about" target="_blank" style="font-size:11px;color:var(--teal);text-decoration:none;">Open ↗</a>
-        </div>
-        <div style="color:var(--muted);font-style:italic;font-size:12px;" id="skoolLoading">Loading…</div>
-      </div>
-
-      <!-- Discord -->
-      <div class="card">
-        <div class="card-label">Alchemists Club — Discord</div>
-        <div class="server-row mb16">
-          <div class="server-icon">⚗️</div>
-          <div style="flex:1">
-            <div class="server-name">Discord</div>
-            <div class="server-url">TikTok Shop operators &amp; brands</div>
-          </div>
-          <div style="text-align:right">
-            <div class="kpi-value" style="font-size:30px;margin:0">450+</div>
-            <div class="muted" style="font-size:11px">members</div>
-          </div>
-        </div>
-        <p style="font-size:12px;color:var(--muted);margin-bottom:14px;">Brand Q&amp;A, affiliate strategy, and operator discussion.</p>
-        <a href="https://discord.gg/cultcontent" target="_blank" class="btn btn-teal">Open Discord ↗</a>
-      </div>
-
-      <!-- Lark -->
-      <div class="connect-card">
-        <div class="connect-icon">🌿</div>
-        <div class="connect-title">Lark</div>
-        <div class="connect-desc">Surface Bitable records, team messages, and content calendar from this dashboard.</div>
-        <span class="btn-soon">Coming soon</span>
-      </div>
-    </div>
-
-    <!-- Recent Skool member joins (from webhook) -->
-    <div class="card" id="skoolEventsCard" style="display:none;">
-      <div class="card-label">Recent Member Activity</div>
-      <div id="skoolEventsList"></div>
-    </div>
-
-  </section>
 
 </main>
 
 <script>
 // ─── State ───────────────────────────────────────────────────────────────────
-const S = { contacts: null, opportunities: null, appointments: null, railway: null, buffer: null, youtube: null, social: null, twitter: null, history: null, reacher: null, reacherTimeseries: null, skool: null, perfRange: '30d' };
+const S = { contacts: null, opportunities: null, appointments: null, railway: null, buffer: null, youtube: null, social: null, twitter: null, history: null, reacher: null, reacherTimeseries: null, skool: null, perfRange: '30d', paidMedia: null, shopOps: null };
 let countdown = 60;
 let timer;
 
@@ -1132,6 +1569,10 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    // Lazy-init tab-specific data
+    if (btn.dataset.tab === 'shortvideo') svInitActors();
+    if (btn.dataset.tab === 'paidmedia')  loadPaidMedia();
+    if (btn.dataset.tab === 'affiliates') loadAffiliate();
   });
 });
 
@@ -1176,6 +1617,9 @@ function renderAll() {
   renderPipeline();
   renderAgents();
   renderReacher();
+  renderShopOps();
+  renderPaidMedia();
+  renderShortVideo();
   renderPerformance();
   renderCommunity();
   document.getElementById('lastRefresh').textContent =
@@ -2709,6 +3153,2337 @@ function renderCommunity() {
   }).catch(() => {});
 }
 
+// ─── Affiliate Agent ─────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// Affiliate Agent — functions.js
+// Replaces the Reacher JS block in dashboard/index.html.
+//
+// RENAME NOTE: renderReacher() is kept as an alias of renderAffiliate() for
+// backwards-compat with any callers that invoke it directly (e.g. the global
+// refresh loop). Both names work — prefer renderAffiliate() going forward.
+//
+// Global helpers used from index.html (already defined there):
+//   x(s)            — HTML-escape a string
+//   fmtNum(n)       — locale number string
+//   fmtMoney(n)     — "$1.2k" compact format
+//   fmtDate(ts)     — relative time string
+//   el(id)          — getElementById with silent fallback
+//   S               — global state object
+//   statCell(val,label) — mini stat box HTML string
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── Date-range state ────────────────────────────────────────────────────────
+const RNG = { mode: '30d' };   // persisted across renders
+
+function getAffiliateDates() {
+  if (RNG.mode === 'custom') {
+    return {
+      start_date: document.getElementById('reacherDateStart')?.value || '',
+      end_date:   document.getElementById('reacherDateEnd')?.value   || '',
+    };
+  }
+  const days  = RNG.mode === '7d' ? 7 : RNG.mode === '30d' ? 30 : 90;
+  const end   = new Date();
+  const start = new Date(Date.now() - days * 86_400_000);
+  return {
+    start_date: start.toISOString().slice(0, 10),
+    end_date:   end.toISOString().slice(0, 10),
+  };
+}
+
+function setAffiliateRange(btn, mode) {
+  RNG.mode = mode;
+  document.querySelectorAll('[data-rng]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const customEl = document.getElementById('reacherCustomDates');
+  if (customEl) customEl.style.display = mode === 'custom' ? 'flex' : 'none';
+  const labels = { '7d': 'last 7 days', '30d': 'last 30 days', '90d': 'last 90 days', 'custom': 'custom range' };
+  const labelEl = document.getElementById('reacherDateLabel');
+  if (labelEl) labelEl.textContent = labels[mode] || '';
+  if (mode !== 'custom') loadAffiliate(true);
+}
+
+// ── Data loading ─────────────────────────────────────────────────────────────
+async function loadAffiliate(force = false) {
+  const statusEl = document.getElementById('reacherRefreshStatus');
+  if (statusEl) statusEl.textContent = 'Fetching…';
+
+  const { start_date, end_date } = getAffiliateDates();
+  const params = new URLSearchParams();
+  if (start_date) params.set('start_date', start_date);
+  if (end_date)   params.set('end_date',   end_date);
+
+  try {
+    const data = await fetch(`/api/reacher/stats?${params}`).then(r => r.json());
+    S.reacher = data;
+    renderAffiliate();
+    loadAffiliateTimeseries(start_date, end_date);
+    if (statusEl) statusEl.textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  } catch(e) {
+    if (statusEl) statusEl.textContent = 'Error: ' + e.message;
+  }
+}
+
+async function loadAffiliateTimeseries(start_date, end_date) {
+  const chartStatus = document.getElementById('reacherChartStatus');
+  if (chartStatus) chartStatus.textContent = 'Loading chart…';
+  try {
+    const data = await fetch('/api/reacher/timeseries', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ start_date, end_date, granularity: 'day' }),
+    }).then(r => r.json());
+    S.reacherTimeseries = data;
+    renderAffiliateChart();
+    if (chartStatus) chartStatus.textContent = '';
+  } catch(e) {
+    if (chartStatus) chartStatus.textContent = 'Chart unavailable';
+    S.reacherTimeseries = null;
+  }
+}
+
+// ── Chart ─────────────────────────────────────────────────────────────────────
+function renderAffiliateChart() {
+  const ts  = S.reacherTimeseries;
+  const ctx = document.getElementById('reacherChart')?.getContext('2d');
+  if (!ctx) return;
+
+  if (window._reacherChart) { window._reacherChart.destroy(); window._reacherChart = null; }
+
+  const shopSel      = document.getElementById('reacherChartShop');
+  const selectedShop = shopSel?.value || 'all';
+
+  // Populate shop selector from live data (first time only)
+  if (S.reacher?.shops && shopSel && shopSel.options.length <= 1) {
+    S.reacher.shops.forEach(s => {
+      if (!s.error) {
+        const opt = document.createElement('option');
+        opt.value       = String(s.shop_id);
+        opt.textContent = s.shop_name;
+        shopSel.appendChild(opt);
+      }
+    });
+  }
+
+  let rows = [];
+  if (ts) {
+    if (selectedShop === 'all') {
+      rows = ts.timeline || [];
+    } else {
+      const shopData  = (ts.per_shop || []).find(s => String(s.shop_id) === selectedShop);
+      const metricData = shopData?.data?.data || {};
+      const byDate = {};
+      ['gmv', 'video_views', 'videos_posted'].forEach(m => {
+        (metricData[m] || []).forEach(pt => {
+          if (!byDate[pt.date]) byDate[pt.date] = { date: pt.date, gmv: 0, video_views: 0, videos_posted: 0 };
+          byDate[pt.date][m] = pt.value || 0;
+        });
+      });
+      rows = Object.values(byDate).sort((a, b) => a.date.localeCompare(b.date));
+    }
+  }
+
+  if (!rows.length) { ctx.canvas.style.opacity = '0.3'; return; }
+  ctx.canvas.style.opacity = '1';
+
+  const labels   = rows.map(r => new Date(r.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+  const gmvData  = rows.map(r => r.gmv          || 0);
+  const viewData = rows.map(r => r.video_views  || 0);
+
+  window._reacherChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'GMV ($)', data: gmvData,
+          borderColor: '#00d27a', backgroundColor: 'rgba(0,210,122,0.07)',
+          borderWidth: 2, fill: true, tension: 0.4, pointRadius: 2,
+          yAxisID: 'yGmv',
+        },
+        {
+          label: 'Video Views', data: viewData,
+          borderColor: '#00f2ea', backgroundColor: 'rgba(0,242,234,0.05)',
+          borderWidth: 2, fill: false, tension: 0.4, pointRadius: 2,
+          yAxisID: 'yViews',
+        },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: c => c.datasetIndex === 0
+              ? ' GMV: $' + c.parsed.y.toLocaleString()
+              : ' Views: ' + c.parsed.y.toLocaleString(),
+          },
+        },
+      },
+      scales: {
+        x: {
+          ticks: { color: '#7a7268', font: { size: 9 }, maxRotation: 30, maxTicksLimit: 10 },
+          grid:  { color: 'rgba(20,18,16,0.05)' },
+        },
+        yGmv: {
+          type: 'linear', position: 'left',
+          ticks: { color: '#00d27a', font: { size: 9 }, callback: v => '$' + (v >= 1000 ? v / 1000 + 'k' : v) },
+          grid:  { color: 'rgba(20,18,16,0.05)' },
+        },
+        yViews: {
+          type: 'linear', position: 'right',
+          ticks: { color: '#00f2ea', font: { size: 9 }, callback: v => v >= 1000 ? v / 1000 + 'k' : v },
+          grid:  { display: false },
+        },
+      },
+    },
+  });
+}
+
+// ── Agency Insights bar ───────────────────────────────────────────────────────
+function renderAffiliateInsights(shops, totals) {
+  if (!shops || !shops.length) return;
+
+  // Top performing shop by GMV
+  const activeShops = shops.filter(s => !s.error);
+  const topShop     = activeShops.reduce((best, s) => {
+    return (s.metrics?.gmv || 0) > (best?.metrics?.gmv || 0) ? s : best;
+  }, null);
+
+  const topShopEl    = document.getElementById('insightTopShop');
+  const topShopGmvEl = document.getElementById('insightTopShopGmv');
+  if (topShop && topShopEl) {
+    topShopEl.textContent    = topShop.shop_name || 'Unknown';
+    if (topShopGmvEl) topShopGmvEl.textContent = fmtMoney(topShop.metrics?.gmv || 0) + ' GMV';
+  }
+
+  // Shops at risk: GMV < $500 OR funnel conversion < 10%
+  const atRisk = activeShops.filter(s => {
+    const gmv = s.metrics?.gmv || 0;
+    const funnel = s.funnel || {};
+    const requests = funnel['sample-requests'] || 0;
+    const posted   = funnel['content-posted']  || 0;
+    const conv     = requests > 0 ? (posted / requests) * 100 : 0;
+    return gmv < 500 || conv < 10;
+  });
+  const atRiskEl = document.getElementById('insightAtRisk');
+  if (atRiskEl) atRiskEl.textContent = atRisk.length + ' shop' + (atRisk.length !== 1 ? 's' : '');
+
+  // Estimated commission payout (~15% of total GMV)
+  const totalGmv      = totals?.total_gmv || 0;
+  const commissionEl  = document.getElementById('insightCommission');
+  if (commissionEl) commissionEl.textContent = fmtMoney(totalGmv * 0.15);
+
+  // Automation coverage: % of shops with at least 1 active automation
+  const shopsWithAuto = activeShops.filter(s => (s.active_automations || 0) > 0).length;
+  const coveragePct   = activeShops.length > 0 ? Math.round((shopsWithAuto / activeShops.length) * 100) : 0;
+  const coverageEl    = document.getElementById('insightAutoCoverage');
+  if (coverageEl) coverageEl.textContent = coveragePct + '%';
+}
+
+// ── Main render ───────────────────────────────────────────────────────────────
+function renderAffiliate() {
+  const d        = S.reacher;
+  const statusEl = document.getElementById('reacherRefreshStatus');
+
+  if (!d || d.error) {
+    const msg = d?.error || 'Could not load — Railway server may be offline';
+    document.getElementById('reacherShopsGrid').innerHTML =
+      `<div class="card" style="grid-column:1/-1;padding:20px;text-align:center;color:var(--red);font-size:13px;">⚠ ${x(msg)}</div>`;
+    if (statusEl && d?.error) statusEl.textContent = 'Error';
+    return;
+  }
+
+  const totals = d.totals || {};
+  const shops  = d.shops  || [];
+
+  // ── Agency KPIs ──
+  el('reacherKpiGmv').textContent      = fmtMoney(totals.total_gmv           || 0);
+  el('reacherKpiCreators').textContent = fmtNum(totals.total_creators         || 0);
+  el('reacherKpiViews').textContent    = fmtNum(totals.total_video_views      || 0);
+  el('reacherKpiVideos').textContent   = fmtNum(totals.total_videos           || 0);
+  el('reacherKpiSamples').textContent  = fmtNum(totals.total_samples          || 0);
+  el('reacherKpiAuto').textContent     = fmtNum(totals.active_automations     || 0);
+
+  // ── Agency Insights bar ──
+  renderAffiliateInsights(shops, totals);
+
+  // ── Populate promo shop selector ──
+  _populatePromoShopSelect(shops);
+
+  // ── Agency funnel (aggregate) ──
+  const funnelEl = document.getElementById('reacherFunnelViz');
+  if (funnelEl) {
+    const agencyFunnel = {};
+    shops.forEach(s => {
+      Object.entries(s.funnel || {}).forEach(([stage, count]) => {
+        agencyFunnel[stage] = (agencyFunnel[stage] || 0) + (count || 0);
+      });
+    });
+    const funnelStages = Object.entries(agencyFunnel);
+    const maxVal = Math.max(...funnelStages.map(([, v]) => v), 1);
+    const STAGE_LABELS = {
+      'sample-requests':    'Sample Requests',
+      'approved-samples':   'Approved Samples',
+      'content-pending':    'Content Pending',
+      'content-unfulfilled':'Unfulfilled',
+      'content-posted':     'Content Posted',
+      'generated-gmv':      'Generated GMV',
+    };
+    funnelEl.innerHTML = funnelStages.length
+      ? funnelStages.map(([stage, count]) => {
+          const pct   = Math.round((count / maxVal) * 100);
+          const label = STAGE_LABELS[stage] || stage.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+          const isGmv = stage === 'generated-gmv';
+          return `<div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:3px;font-size:11px;">
+              <span style="color:var(--soft);font-weight:700;">${label}</span>
+              <span style="font-family:'JetBrains Mono',monospace;color:${isGmv ? 'var(--green)' : 'var(--teal)'};">${fmtNum(count)}</span>
+            </div>
+            <div style="height:6px;background:rgba(0,0,0,0.06);border-radius:4px;overflow:hidden;">
+              <div style="height:100%;width:${pct}%;background:${isGmv ? 'var(--green)' : 'var(--teal)'};border-radius:4px;transition:width 0.4s ease;"></div>
+            </div>
+          </div>`;
+        }).join('')
+      : '<div style="color:var(--muted);font-style:italic;font-size:12px;">No funnel data</div>';
+  }
+
+  // ── Per-shop cards ──
+  const grid = document.getElementById('reacherShopsGrid');
+  if (!shops.length) {
+    grid.innerHTML = '<div class="card" style="grid-column:1/-1;padding:20px;text-align:center;color:var(--muted);font-style:italic;">No shops found.</div>';
+    return;
+  }
+
+  grid.innerHTML = shops.map(s => _renderShopCard(s)).join('');
+
+  if (statusEl) statusEl.textContent = 'Updated ' + new Date(d.generated_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+// ── Per-shop card renderer ────────────────────────────────────────────────────
+function _renderShopCard(s) {
+  if (s.error) {
+    return `<div class="card agent-card" style="opacity:0.6">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+        <div class="agent-icon" style="background:rgba(255,0,80,0.08);color:var(--pink)">🛍️</div>
+        <div>
+          <div class="agent-name">${x(s.shop_name || 'Shop ' + s.shop_id)}</div>
+          <div style="font-size:11px;color:var(--red)">Error: ${x(s.error)}</div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  const m          = s.metrics       || {};
+  const gmv        = fmtMoney(m.gmv  || 0);
+  const videoViews = fmtNum(m.video_views    || 0);
+  const videos     = fmtNum(m.videos_posted  || 0);
+  const samples    = fmtNum(m.sample_requests|| 0);
+  const creators   = fmtNum(s.total_creators || 0);
+  const activeAuto = s.active_automations || 0;
+  const totalAuto  = s.total_automations  || 0;
+  const isPro      = s.status === 'active' || s.status?.startsWith('pro');
+  const statusColor = isPro ? 'var(--green)' : 'var(--muted)';
+  const statusDot   = `<span class="dot" style="background:${statusColor};flex-shrink:0"></span>`;
+  const autoLabel   = totalAuto > 0
+    ? `<span style="color:${activeAuto > 0 ? 'var(--teal)' : 'var(--muted)'}">${activeAuto} running</span><span style="color:var(--muted)"> / ${totalAuto} total</span>`
+    : '<span style="color:var(--muted)">No automations</span>';
+
+  // Mini funnel bars
+  const funnelHtml = (() => {
+    const f      = s.funnel || {};
+    const stages = Object.entries(f).filter(([, v]) => v > 0);
+    if (!stages.length) return '';
+    const maxF = Math.max(...stages.map(([, v]) => v), 1);
+    const SLABELS = {
+      'sample-requests':    'Requests',
+      'approved-samples':   'Approved',
+      'content-pending':    'Pending',
+      'content-unfulfilled':'Unfulfilled',
+      'content-posted':     'Posted',
+      'generated-gmv':      'Has GMV',
+    };
+    return `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
+      <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:0.06em;margin-bottom:6px;">CREATOR FUNNEL</div>
+      ${stages.map(([stage, count]) => {
+        const pct   = Math.round((count / maxF) * 100);
+        const lbl   = SLABELS[stage] || stage.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
+        const isGmv = stage === 'generated-gmv';
+        return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+          <div style="width:72px;font-size:9px;color:var(--muted);text-align:right;flex-shrink:0;">${lbl}</div>
+          <div style="flex:1;height:5px;background:rgba(0,0,0,0.06);border-radius:3px;overflow:hidden;">
+            <div style="height:100%;width:${pct}%;background:${isGmv ? 'var(--green)' : 'var(--teal)'};border-radius:3px;"></div>
+          </div>
+          <div style="width:32px;font-size:9px;font-weight:700;font-family:'JetBrains Mono',monospace;color:${isGmv ? 'var(--green)' : 'var(--soft)'};">${count}</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  })();
+
+  // Creator tier breakdown (derived from funnel data or stubbed)
+  const funnel     = s.funnel || {};
+  const topEarners = funnel['generated-gmv']   || 0;
+  const newCreators= funnel['approved-samples'] || 0;
+  const atRisk     = Math.max(0, (funnel['content-pending'] || 0) - (funnel['content-posted'] || 0));
+
+  const shopId = String(s.shop_id);
+
+  return `<div class="card agent-card" id="shopCard-${shopId}">
+    <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px;">
+      <div class="agent-icon" style="background:rgba(0,242,234,0.08);color:var(--teal);font-size:18px">🛍️</div>
+      <div style="flex:1;min-width:0;">
+        <div class="agent-name" style="display:flex;align-items:center;gap:6px;">${statusDot}${x(s.shop_name)}</div>
+        <div style="font-size:10px;color:${isPro ? 'var(--green)' : 'var(--muted)'};margin-top:2px;text-transform:capitalize;font-weight:700">${x(s.status || '')}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;">
+        <div style="text-align:right;">
+          <div style="font-size:20px;font-weight:900;color:var(--green)">${gmv}</div>
+          <div style="font-size:9px;color:var(--muted);font-weight:700;letter-spacing:0.06em">GMV</div>
+        </div>
+        <button class="btn btn-ghost" style="font-size:10px;padding:3px 10px;height:auto;"
+          onclick="toggleShopManage('${shopId}')">Manage ▾</button>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px;">
+      ${statCell(videoViews, 'VIEWS')}
+      ${statCell(videos,     'VIDEOS')}
+      ${statCell(samples,    'SAMPLES')}
+      ${statCell(creators,   'CREATORS')}
+    </div>
+
+    <div style="font-size:11px;display:flex;align-items:center;gap:6px;">
+      <span style="color:var(--muted);font-weight:700;letter-spacing:0.04em;">AUTO:</span>${autoLabel}
+    </div>
+
+    ${funnelHtml}
+
+    <!-- ── Manage panel (collapsed by default) ── -->
+    <div id="shopManage-${shopId}" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+
+      <!-- Active promotions -->
+      <div style="margin-bottom:12px;">
+        <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:0.06em;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;">
+          <span>ACTIVE PROMOTIONS</span>
+          <button class="btn btn-ghost" style="font-size:10px;padding:2px 8px;height:auto;"
+            onclick="openCreatePromoForShop('${shopId}','${x(s.shop_name)}')">+ New</button>
+        </div>
+        <div id="shopPromos-${shopId}" style="font-size:12px;color:var(--muted);font-style:italic;">
+          Loading promotions…
+        </div>
+      </div>
+
+      <!-- Creator tier breakdown -->
+      <div style="margin-bottom:12px;">
+        <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:0.06em;margin-bottom:6px;">CREATOR TIERS</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;">
+          <div style="background:rgba(0,210,122,0.07);border-radius:7px;padding:8px;text-align:center;">
+            <div style="font-size:16px;font-weight:900;color:var(--green);">${topEarners}</div>
+            <div style="font-size:9px;color:var(--muted);font-weight:700;margin-top:2px;">TOP EARNERS</div>
+          </div>
+          <div style="background:rgba(0,242,234,0.06);border-radius:7px;padding:8px;text-align:center;">
+            <div style="font-size:16px;font-weight:900;color:var(--teal);">${newCreators}</div>
+            <div style="font-size:9px;color:var(--muted);font-weight:700;margin-top:2px;">NEW</div>
+          </div>
+          <div style="background:rgba(255,59,48,0.05);border-radius:7px;padding:8px;text-align:center;">
+            <div style="font-size:16px;font-weight:900;color:var(--red);">${atRisk}</div>
+            <div style="font-size:9px;color:var(--muted);font-weight:700;margin-top:2px;">AT RISK</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick outreach button -->
+      <button class="btn btn-teal" style="font-size:11px;width:100%;"
+        onclick="fireShopOutreach('${shopId}','${x(s.shop_name)}')">
+        ⚡ Fire Outreach for ${x(s.shop_name)}
+      </button>
+      <div id="shopOutreachStatus-${shopId}" style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center;"></div>
+
+    </div>
+  </div>`;
+}
+
+// ── Shop manage panel toggle ──────────────────────────────────────────────────
+function toggleShopManage(shopId) {
+  const panel = document.getElementById('shopManage-' + shopId);
+  if (!panel) return;
+  const isHidden = panel.style.display === 'none';
+  panel.style.display = isHidden ? 'block' : 'none';
+  if (isHidden) _loadShopPromos(shopId);
+}
+
+async function _loadShopPromos(shopId) {
+  const el = document.getElementById('shopPromos-' + shopId);
+  if (!el) return;
+  try {
+    const data = await fetch('/api/affiliate/promotions/' + shopId).then(r => r.json());
+    const promos = data.promotions || [];
+    if (!promos.length) {
+      el.innerHTML = '<span style="color:var(--muted);font-style:italic;">No active promotions</span>';
+    } else {
+      el.innerHTML = promos.map(p => `
+        <div class="gen-job">
+          <span class="gen-status done">${x(p.type || 'promo')}</span>
+          <span style="flex:1;color:var(--soft);">${x(p.label || p.promoId)}</span>
+          <span style="color:var(--muted);font-size:10px;">${x(p.commission || '')}%</span>
+        </div>`).join('');
+    }
+  } catch(e) {
+    el.innerHTML = '<span style="color:var(--red);font-size:11px;">Could not load promotions</span>';
+  }
+}
+
+// Prefill promo card from shop manage panel
+function openCreatePromoForShop(shopId, shopName) {
+  const sel = document.getElementById('promoShop');
+  if (sel) {
+    // Find or create option
+    let opt = Array.from(sel.options).find(o => o.value === shopId);
+    if (!opt) {
+      opt = new Option(shopName, shopId);
+      sel.appendChild(opt);
+    }
+    sel.value = shopId;
+  }
+  // Scroll to promo card
+  document.querySelector('[onclick="createPromotion()"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// ── Fire outreach for a specific shop ────────────────────────────────────────
+async function fireShopOutreach(shopId, shopName) {
+  const statusEl = document.getElementById('shopOutreachStatus-' + shopId);
+  if (statusEl) statusEl.textContent = 'Sending…';
+  try {
+    const r = await fetch('/api/affiliate/blast', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({
+        message:  `Hey [name], we have updates for ${shopName} — check in!`,
+        audience: 'all_funnel',
+        channel:  'reacher_dm',
+        shopId,
+      }),
+    }).then(r => r.json());
+    if (r.ok && statusEl) {
+      statusEl.style.color = 'var(--green)';
+      statusEl.textContent = `✓ Blast sent to ${r.sent || '?'} creators`;
+      setTimeout(() => { if (statusEl) { statusEl.style.color = ''; statusEl.textContent = ''; } }, 4000);
+    }
+  } catch(e) {
+    if (statusEl) { statusEl.style.color = 'var(--red)'; statusEl.textContent = '✗ Error: ' + e.message; }
+  }
+}
+
+// ── Creator Blast ─────────────────────────────────────────────────────────────
+async function fireCreatorBlast() {
+  const message  = document.getElementById('blastMessage')?.value?.trim();
+  const audience = document.getElementById('blastAudience')?.value;
+  const channel  = document.getElementById('blastChannel')?.value;
+  const btn      = document.getElementById('blastBtn');
+  const statusEl = document.getElementById('blastStatus');
+  const resultEl = document.getElementById('blastResult');
+  const resultText = document.getElementById('blastResultText');
+
+  if (!message) { if (statusEl) { statusEl.style.color = 'var(--red)'; statusEl.textContent = 'Message required'; } return; }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Sending…';
+  if (statusEl) { statusEl.style.color = 'var(--muted)'; statusEl.textContent = 'Firing blast…'; }
+  if (resultEl) resultEl.style.display = 'none';
+
+  try {
+    const r = await fetch('/api/affiliate/blast', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ message, audience, channel }),
+    }).then(res => res.json());
+
+    if (r.ok) {
+      if (statusEl) { statusEl.style.color = 'var(--green)'; statusEl.textContent = '✓ Blast fired'; }
+      if (resultText) resultText.innerHTML = `<span style="color:var(--green);font-weight:800;">✓ Blast sent to ${r.sent} creators</span> via <span style="color:var(--teal);">${channel.replace('_', ' ')}</span>`;
+      if (resultEl)  { resultEl.style.display = 'block'; resultEl.style.background = 'rgba(0,210,122,0.07)'; resultEl.style.borderColor = 'rgba(0,210,122,0.2)'; }
+      setTimeout(() => { if (statusEl) { statusEl.style.color = ''; statusEl.textContent = ''; } }, 4000);
+    } else {
+      if (statusEl) { statusEl.style.color = 'var(--red)'; statusEl.textContent = '✗ ' + (r.error || 'Failed'); }
+    }
+  } catch(e) {
+    if (statusEl) { statusEl.style.color = 'var(--red)'; statusEl.textContent = '✗ Network error'; }
+  }
+
+  btn.disabled = false;
+  btn.textContent = '🚀 Fire Blast';
+}
+
+// ── Create Promotion ──────────────────────────────────────────────────────────
+async function createPromotion() {
+  const shopId     = document.getElementById('promoShop')?.value;
+  const commission = document.getElementById('promoCommission')?.value;
+  const type       = document.getElementById('promoType')?.value;
+  const duration   = document.getElementById('promoDuration')?.value;
+  const btn        = document.getElementById('promoBtn');
+  const statusEl   = document.getElementById('promoStatus');
+  const resultEl   = document.getElementById('promoResult');
+  const resultText = document.getElementById('promoResultText');
+
+  if (!shopId)     { if (statusEl) { statusEl.style.color = 'var(--red)'; statusEl.textContent = 'Select a shop'; } return; }
+  if (!commission || commission < 5 || commission > 40) {
+    if (statusEl) { statusEl.style.color = 'var(--red)'; statusEl.textContent = 'Commission must be 5–40%'; }
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Creating…';
+  if (statusEl) { statusEl.style.color = 'var(--muted)'; statusEl.textContent = 'Creating…'; }
+  if (resultEl) resultEl.style.display = 'none';
+
+  try {
+    const r = await fetch('/api/affiliate/promotion', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ shopId, commission: Number(commission), type, duration: Number(duration) }),
+    }).then(res => res.json());
+
+    if (r.ok) {
+      if (statusEl) { statusEl.style.color = 'var(--green)'; statusEl.textContent = '✓ Created'; }
+      if (resultText) resultText.innerHTML = `<span style="color:var(--green);font-weight:800;">✓ Promo created</span> <span class="mono">${x(r.promoId)}</span>`;
+      if (resultEl)   { resultEl.style.display = 'block'; resultEl.style.background = 'rgba(0,210,122,0.07)'; resultEl.style.border = '1px solid rgba(0,210,122,0.2)'; }
+      // Reload promos in manage panel if open
+      const managePanel = document.getElementById('shopManage-' + shopId);
+      if (managePanel?.style.display !== 'none') _loadShopPromos(shopId);
+      setTimeout(() => { if (statusEl) { statusEl.style.color = ''; statusEl.textContent = ''; } }, 4000);
+    } else {
+      if (statusEl) { statusEl.style.color = 'var(--red)'; statusEl.textContent = '✗ ' + (r.error || 'Failed'); }
+      if (resultEl)   { resultEl.style.display = 'block'; resultEl.style.background = 'rgba(255,59,48,0.05)'; resultEl.style.border = '1px solid rgba(255,59,48,0.15)'; }
+      if (resultText) resultText.innerHTML = `<span style="color:var(--red);">✗ ${x(r.error || 'Unknown error')}</span>`;
+    }
+  } catch(e) {
+    if (statusEl) { statusEl.style.color = 'var(--red)'; statusEl.textContent = '✗ Network error'; }
+  }
+
+  btn.disabled = false;
+  btn.textContent = '💰 Create Promo';
+}
+
+// ── Populate the promo shop <select> from live data ───────────────────────────
+function _populatePromoShopSelect(shops) {
+  const sel = document.getElementById('promoShop');
+  if (!sel) return;
+  // Clear and rebuild (keep placeholder)
+  while (sel.options.length > 1) sel.remove(1);
+  (shops || []).forEach(s => {
+    if (!s.error) {
+      const opt = new Option(s.shop_name, String(s.shop_id));
+      sel.appendChild(opt);
+    }
+  });
+}
+
+// ── Lark Command box ──────────────────────────────────────────────────────────
+// (Kept identical to existing implementation — functions.js owns the full copy)
+const _cmdLog = [];
+
+async function sendCommand() {
+  const text     = document.getElementById('commandText')?.value?.trim();
+  const context  = document.getElementById('commandContext')?.value || '';
+  const btn      = document.getElementById('commandSendBtn');
+  const statusEl = document.getElementById('commandSendStatus');
+
+  if (!text) return;
+
+  btn.disabled = true;
+  btn.textContent = '⏳';
+  if (statusEl) statusEl.textContent = 'Sending…';
+
+  try {
+    const r = await fetch('/api/command', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ text, context }),
+    }).then(r => r.json());
+
+    if (r.ok) {
+      document.getElementById('commandText').value = '';
+      if (statusEl) { statusEl.style.color = 'var(--green)'; statusEl.textContent = '✓ Sent to Lark'; }
+      _cmdLog.unshift({ text, context, ts: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), ok: true });
+      if (_cmdLog.length > 10) _cmdLog.pop();
+      renderCommandLog();
+      setTimeout(() => { if (statusEl) { statusEl.style.color = ''; statusEl.textContent = ''; } }, 3000);
+    } else {
+      if (statusEl) { statusEl.style.color = 'var(--red)'; statusEl.textContent = '✗ ' + (r.error || 'Failed'); }
+    }
+  } catch(e) {
+    if (statusEl) { statusEl.style.color = 'var(--red)'; statusEl.textContent = '✗ Network error'; }
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Fire →';
+}
+
+function renderCommandLog() {
+  const logEl = document.getElementById('commandLog');
+  if (!logEl || !_cmdLog.length) return;
+  logEl.style.display = 'block';
+  logEl.innerHTML =
+    `<div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:0.06em;margin-bottom:6px;padding-top:10px;border-top:1px solid var(--border);">RECENTLY SENT</div>` +
+    _cmdLog.map(c => `
+      <div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border);font-size:12px;">
+        <span style="color:var(--green);flex-shrink:0;">✓</span>
+        ${c.context ? `<span style="color:var(--gold);font-weight:700;flex-shrink:0;font-size:11px;">${x(c.context)}</span>` : ''}
+        <span style="flex:1;color:var(--soft);">${x(c.text)}</span>
+        <span style="color:var(--muted);font-size:10px;flex-shrink:0;">${c.ts}</span>
+      </div>`).join('');
+}
+
+// ── Compatibility alias ───────────────────────────────────────────────────────
+// The global refresh loop and any legacy callers that reference renderReacher()
+// or loadReacher() will still work without modification.
+const renderReacher = renderAffiliate;
+const loadReacher   = loadAffiliate;
+
+
+// ─── Shop Ops Agent ─────────────────────────────────────────────────────────────────
+// STATE: Add S.shopOps = null to S object in main fetchAll
+
+// ─── Main render ──────────────────────────────────────────────────────────────
+
+function renderShopOps() {
+  const d = S.reacher;
+  if (!d || d.error) {
+    document.getElementById('shopopsHealthGrid').innerHTML =
+      `<div class="card agent-card" style="grid-column:1/-1;text-align:center;padding:28px;color:var(--red);font-size:13px;">
+        ⚠ ${x(d?.error || 'Could not load shop data — Railway server may be offline')}
+      </div>`;
+    return;
+  }
+
+  const totals = d.totals || {};
+  const shops  = d.shops  || [];
+
+  // ── KPI bar ──
+  const totalGmv    = totals.total_gmv || 0;
+  const totalShops  = shops.length;
+  const activeShops = shops.filter(s => (s.status || '').toLowerCase() === 'active').length;
+
+  // Avg creator conversion: sum(posted) / sum(requests) * 100
+  let totalPosted   = 0;
+  let totalRequests = 0;
+  shops.forEach(s => {
+    const f = s.funnel || {};
+    totalPosted   += f['content-posted']    || 0;
+    totalRequests += f['sample-requests']   || 0;
+  });
+  const avgConversion = totalRequests > 0 ? (totalPosted / totalRequests * 100) : 0;
+
+  // Shops needing attention: GMV < 500 OR conversion < 10%
+  const needsAttention = shops.filter(s => {
+    const gmv  = (s.metrics || {}).gmv || 0;
+    const f    = s.funnel || {};
+    const req  = f['sample-requests'] || 0;
+    const post = f['content-posted']  || 0;
+    const conv = req > 0 ? (post / req * 100) : 0;
+    return gmv < 500 || conv < 10;
+  }).length;
+
+  el('shopopsKpiGmv').textContent        = fmtMoney(totalGmv);
+  el('shopopsKpiShops').textContent      = activeShops;
+  el('shopopsKpiShopsSub').textContent   = `of ${totalShops} total`;
+  el('shopopsKpiConversion').textContent = avgConversion.toFixed(1) + '%';
+  el('shopopsKpiAlert').textContent      = needsAttention;
+  el('shopopsShopCount').textContent     = `${totalShops} shop${totalShops !== 1 ? 's' : ''}`;
+
+  // ── Last updated ──
+  el('shopopsLastUpdated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+
+  // ── Grids ──
+  el('shopopsHealthGrid').innerHTML = renderShopHealthGrid(shops);
+
+  // ── Promotions table ──
+  renderPromotionsTable();
+
+  // ── Ops pipeline ──
+  renderOpsPipeline(shops);
+
+  // ── Populate shop dropdown in promo form ──
+  const sel = document.getElementById('promoShopId');
+  if (sel) {
+    sel.innerHTML = '<option value="">Select shop…</option>' +
+      shops.map(s => `<option value="${x(String(s.shop_id))}">${x(s.shop_name || 'Shop ' + s.shop_id)}</option>`).join('');
+  }
+}
+
+// ─── Load (fetches fresh data via existing Reacher endpoint) ──────────────────
+
+async function loadShopOps() {
+  el('shopopsLastUpdated').textContent = 'Refreshing…';
+  try {
+    const res  = await fetch('/api/reacher/stats');
+    const data = await res.json();
+    S.reacher  = data;
+    renderShopOps();
+  } catch (e) {
+    el('shopopsLastUpdated').textContent = 'Error loading data';
+    console.error('[ShopOps] loadShopOps error:', e);
+  }
+}
+
+// ─── Health score computation ─────────────────────────────────────────────────
+// Returns 0–100
+// 40% weight: GMV relative to avg (capped at 2x avg = full score)
+// 30% weight: creator conversion rate (posted/requests), full score at ≥30%
+// 30% weight: automation coverage (active/total), full score at 100%
+
+function computeShopHealth(shop, avgGmv) {
+  const m    = shop.metrics || {};
+  const f    = shop.funnel  || {};
+  const gmv  = m.gmv || 0;
+
+  // GMV component (40%)
+  const gmvRatio    = avgGmv > 0 ? Math.min(gmv / (avgGmv * 2), 1) : 0;
+  const gmvScore    = gmvRatio * 40;
+
+  // Conversion component (30%)
+  const requests    = f['sample-requests'] || 0;
+  const posted      = f['content-posted']  || 0;
+  const convRate    = requests > 0 ? (posted / requests) : 0;
+  const convScore   = Math.min(convRate / 0.30, 1) * 30;
+
+  // Automation coverage component (30%)
+  const totalAuto   = shop.total_automations  || 0;
+  const activeAuto  = shop.active_automations || 0;
+  const autoRatio   = totalAuto > 0 ? Math.min(activeAuto / totalAuto, 1) : 0;
+  const autoScore   = autoRatio * 30;
+
+  return Math.round(gmvScore + convScore + autoScore);
+}
+
+// ─── Shop Health Grid HTML ────────────────────────────────────────────────────
+
+function renderShopHealthGrid(shops) {
+  if (!shops.length) {
+    return `<div class="agent-card card" style="grid-column:1/-1;text-align:center;padding:28px;color:var(--muted);font-style:italic;">
+      No shops found.
+    </div>`;
+  }
+
+  const gmvValues = shops.map(s => (s.metrics || {}).gmv || 0);
+  const avgGmv    = gmvValues.length ? gmvValues.reduce((a, b) => a + b, 0) / gmvValues.length : 0;
+  const targetGmv = avgGmv * 1.2;
+
+  return shops.map(s => {
+    if (s.error) {
+      return `<div class="card agent-card" style="opacity:0.6;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+          <div class="dot off"></div>
+          <div class="agent-name">${x(s.shop_name || 'Shop ' + s.shop_id)}</div>
+        </div>
+        <div style="font-size:11px;color:var(--red);">Error: ${x(s.error)}</div>
+      </div>`;
+    }
+
+    const m           = s.metrics  || {};
+    const f           = s.funnel   || {};
+    const shopId      = s.shop_id;
+    const shopName    = s.shop_name || 'Shop ' + shopId;
+    const gmv         = m.gmv || 0;
+    const score       = computeShopHealth(s, avgGmv);
+    const requests    = f['sample-requests']  || 0;
+    const approved    = f['approved-samples'] || 0;
+    const posted      = f['content-posted']   || 0;
+    const funnelGmv   = f['generated-gmv']    || 0;
+    const activeAuto  = s.active_automations  || 0;
+    const totalAuto   = s.total_automations   || 0;
+
+    // Health color
+    const scoreColor  = score >= 70 ? 'var(--green)' : score >= 40 ? 'var(--gold)' : 'var(--red)';
+    const dotClass    = score >= 70 ? 'on' : score >= 40 ? 'idle' : 'off';
+    const scoreBadge  = score >= 70 ? 'b-active' : score >= 40 ? 'b-new' : 'b-lost';
+
+    // GMV bar
+    const gmvPct      = targetGmv > 0 ? Math.min(Math.round(gmv / targetGmv * 100), 100) : 0;
+    const gmvBarColor = gmvPct >= 80 ? 'var(--green)' : gmvPct >= 40 ? 'var(--gold)' : 'var(--red)';
+
+    // Funnel mini-bars (relative to requests as 100%)
+    const funnelMax   = Math.max(requests, 1);
+    const mkBar = (val, color) => {
+      const pct = Math.min(Math.round(val / funnelMax * 100), 100);
+      return `<div style="height:4px;background:rgba(0,0,0,0.07);border-radius:3px;flex:1;overflow:hidden;">
+        <div style="height:100%;width:${pct}%;background:${color};border-radius:3px;transition:width 0.4s;"></div>
+      </div>`;
+    };
+
+    const statusText  = (s.status || 'unknown').toLowerCase();
+    const convRate    = requests > 0 ? (posted / requests * 100).toFixed(1) : '0.0';
+
+    return `<div class="card agent-card" id="shopops-card-${x(String(shopId))}">
+      <!-- Name + status + score -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+          <span class="dot ${dotClass}"></span>
+          <span class="agent-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${x(shopName)}">${x(shopName)}</span>
+        </div>
+        <span class="badge ${scoreBadge}" style="font-size:11px;flex-shrink:0;margin-left:8px;">
+          ${score}/100
+        </span>
+      </div>
+
+      <!-- Shop status label -->
+      <div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:12px;">
+        ${x(statusText)} · Conv ${convRate}% · ${activeAuto}/${totalAuto} automations
+      </div>
+
+      <!-- GMV progress bar -->
+      <div style="margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;">
+          <span style="color:var(--muted);font-weight:700;">GMV vs Target</span>
+          <span class="mono" style="color:${gmvBarColor};">${fmtMoney(gmv)} <span style="color:var(--muted);">/ ${fmtMoney(targetGmv)}</span></span>
+        </div>
+        <div style="height:6px;background:rgba(0,0,0,0.07);border-radius:4px;overflow:hidden;">
+          <div style="height:100%;width:${gmvPct}%;background:${gmvBarColor};border-radius:4px;transition:width 0.4s;"></div>
+        </div>
+      </div>
+
+      <!-- Creator funnel mini-bars -->
+      <div style="margin-bottom:12px;">
+        <div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.09em;margin-bottom:6px;">Creator Funnel</div>
+        <div style="display:flex;gap:4px;align-items:center;margin-bottom:3px;">
+          ${mkBar(requests, 'var(--teal)')}
+          ${mkBar(approved, 'var(--gold)')}
+          ${mkBar(posted,   'var(--green)')}
+          ${mkBar(funnelGmv > 0 ? posted : 0, 'var(--green)')}
+        </div>
+        <div style="display:flex;gap:4px;font-size:9px;color:var(--muted);font-weight:700;">
+          <span style="flex:1;text-align:center;">${funnelMax > 1 ? requests : '—'} Req</span>
+          <span style="flex:1;text-align:center;">${approved} Appr</span>
+          <span style="flex:1;text-align:center;">${posted} Post</span>
+          <span style="flex:1;text-align:center;">${fmtMoney(funnelGmv)}</span>
+        </div>
+      </div>
+
+      <!-- Action buttons -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+        <button class="btn btn-teal" style="height:30px;font-size:11px;padding:0 12px;"
+          onclick="shopopsOutreach('${x(String(shopId))}', this)">⚡ Outreach</button>
+        <button class="btn btn-ghost" style="height:30px;font-size:11px;padding:0 12px;"
+          onclick="shopopsReport('${x(String(shopId))}')">📊 Report</button>
+        <button class="btn btn-ghost" style="height:30px;font-size:11px;padding:0 12px;margin-left:auto;"
+          onclick="toggleShopExpand('${x(String(shopId))}')" id="shopops-expand-btn-${x(String(shopId))}">
+          ▾ Details
+        </button>
+      </div>
+
+      <!-- Expand panel (hidden by default) -->
+      <div id="shopops-expand-${x(String(shopId))}" style="display:none;border-top:1px solid var(--border);padding-top:12px;margin-top:4px;">
+        <div class="agent-section-label" style="margin-bottom:10px;">Full Funnel Breakdown</div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;">
+          ${[
+            ['sample-requests',    'Sample Requests',  'var(--teal)'],
+            ['approved-samples',   'Approved Samples', 'var(--gold)'],
+            ['content-pending',    'Content Pending',  'var(--yellow)'],
+            ['content-unfulfilled','Unfulfilled',      'var(--red)'],
+            ['content-posted',     'Content Posted',   'var(--green)'],
+            ['generated-gmv',      'Generated GMV',    'var(--green)'],
+          ].map(([key, label, color]) => {
+            const val     = key === 'generated-gmv' ? fmtMoney(f[key] || 0) : fmtNum(f[key] || 0);
+            const rawVal  = f[key] || 0;
+            const maxVal  = Math.max(f['sample-requests'] || 1, 1);
+            const pct     = key === 'generated-gmv' ? 0 : Math.min(Math.round(rawVal / maxVal * 100), 100);
+            return `<div>
+              <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;">
+                <span style="color:var(--soft);font-weight:700;">${label}</span>
+                <span class="mono" style="color:${color};">${val}</span>
+              </div>
+              ${key !== 'generated-gmv' ? `
+              <div style="height:4px;background:rgba(0,0,0,0.07);border-radius:3px;overflow:hidden;">
+                <div style="height:100%;width:${pct}%;background:${color};border-radius:3px;transition:width 0.4s;"></div>
+              </div>` : ''}
+            </div>`;
+          }).join('')}
+        </div>
+        <div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--muted);font-style:italic;">
+          📋 Promotion history — coming soon
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── Expand/collapse shop detail panel ───────────────────────────────────────
+
+function toggleShopExpand(shopId) {
+  const panel = document.getElementById('shopops-expand-' + shopId);
+  const btn   = document.getElementById('shopops-expand-btn-' + shopId);
+  if (!panel) return;
+  const open  = panel.style.display === 'none';
+  panel.style.display = open ? 'block' : 'none';
+  if (btn) btn.textContent = open ? '▴ Details' : '▾ Details';
+}
+
+// ─── Promotion form ───────────────────────────────────────────────────────────
+
+function openPromoForm() {
+  const form = document.getElementById('shopopsPromoForm');
+  const btn  = document.getElementById('shopopsPromoToggleBtn');
+  if (!form) return;
+  form.style.display = 'block';
+  if (btn) btn.style.display = 'none';
+  document.getElementById('promoFeedback').textContent = '';
+}
+
+function closePromoForm() {
+  const form = document.getElementById('shopopsPromoForm');
+  const btn  = document.getElementById('shopopsPromoToggleBtn');
+  if (!form) return;
+  form.style.display = 'none';
+  if (btn) btn.style.display = '';
+}
+
+async function submitPromo() {
+  const shopId     = document.getElementById('promoShopId').value;
+  const type       = document.getElementById('promoType').value;
+  const commission = parseInt(document.getElementById('promoCommission').value, 10);
+  const duration   = document.getElementById('promoDuration').value;
+  const tier       = document.getElementById('promoTier').value;
+  const feedback   = document.getElementById('promoFeedback');
+  const submitBtn  = document.getElementById('promoSubmitBtn');
+
+  if (!shopId) {
+    feedback.style.color = 'var(--red)';
+    feedback.textContent = '⚠ Please select a shop.';
+    return;
+  }
+  if (!commission || commission < 5 || commission > 40) {
+    feedback.style.color = 'var(--red)';
+    feedback.textContent = '⚠ Commission must be 5–40%.';
+    return;
+  }
+
+  submitBtn.disabled   = true;
+  feedback.style.color = 'var(--muted)';
+  feedback.textContent = 'Launching…';
+
+  try {
+    const res  = await fetch('/api/shopops/promotion', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ shopId, type, commission, duration, tier }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      feedback.style.color = 'var(--green)';
+      feedback.textContent = '✓ Promotion launched!';
+      setTimeout(() => {
+        closePromoForm();
+        renderPromotionsTable();
+      }, 1200);
+    } else {
+      throw new Error(data.error || 'Unknown error');
+    }
+  } catch (e) {
+    feedback.style.color = 'var(--red)';
+    feedback.textContent = '⚠ ' + e.message;
+  } finally {
+    submitBtn.disabled = false;
+  }
+}
+
+// ─── Promotions table ─────────────────────────────────────────────────────────
+
+async function renderPromotionsTable() {
+  const tbody = document.getElementById('shopopsPromoTbody');
+  if (!tbody) return;
+
+  try {
+    const res  = await fetch('/api/shopops/promotions');
+    const data = await res.json();
+    const rows = (data.promotions || []);
+
+    if (!rows.length) {
+      tbody.innerHTML = `<tr class="empty">
+        <td colspan="6" style="text-align:center;padding:28px;color:var(--muted);font-style:italic;">
+          No active promotions — launch one above to get started
+        </td>
+      </tr>`;
+      return;
+    }
+
+    tbody.innerHTML = rows.map(p => `<tr>
+      <td style="font-weight:700;">${x(p.shopName || p.shopId || '—')}</td>
+      <td><span class="badge b-new">${x(p.type || '—')}</span></td>
+      <td class="mono green">${p.commission || '—'}%</td>
+      <td class="muted">${x(p.duration || '—')}</td>
+      <td><span class="badge ${p.status === 'active' ? 'b-active' : 'b-draft'}">${x(p.status || 'draft')}</span></td>
+      <td class="mono">${p.performance || '—'}</td>
+    </tr>`).join('');
+  } catch (e) {
+    tbody.innerHTML = `<tr class="empty"><td colspan="6" style="color:var(--red);text-align:center;padding:20px;">Error loading promotions</td></tr>`;
+  }
+}
+
+// ─── Operations Pipeline (agency funnel bars) ─────────────────────────────────
+
+function renderOpsPipeline(shops) {
+  const funnelEl = document.getElementById('shopopsFunnelBars');
+  if (!funnelEl) return;
+
+  const STAGES = [
+    { key: 'sample-requests',    label: 'Sample Requests',  color: 'var(--teal)'   },
+    { key: 'approved-samples',   label: 'Approved Samples', color: 'var(--gold)'   },
+    { key: 'content-pending',    label: 'Content Pending',  color: 'var(--yellow)' },
+    { key: 'content-unfulfilled',label: 'Unfulfilled',      color: 'var(--red)'    },
+    { key: 'content-posted',     label: 'Content Posted',   color: 'var(--green)'  },
+    { key: 'generated-gmv',      label: 'Generated GMV',    color: 'var(--green)'  },
+  ];
+
+  // Aggregate all shops
+  const agg = {};
+  STAGES.forEach(s => { agg[s.key] = 0; });
+  shops.forEach(shop => {
+    const f = shop.funnel || {};
+    STAGES.forEach(s => { agg[s.key] += (f[s.key] || 0); });
+  });
+
+  const nonGmvVals = STAGES.filter(s => s.key !== 'generated-gmv').map(s => agg[s.key]);
+  const maxVal     = Math.max(...nonGmvVals, 1);
+
+  // Stuck creators = content-pending + content-unfulfilled
+  const stuckCount = (agg['content-pending'] || 0) + (agg['content-unfulfilled'] || 0);
+  const stuckBadge = document.getElementById('shopopsStuckBadge');
+  const stuckNum   = document.getElementById('shopopsStuckCount');
+  const reengageBtn = document.getElementById('shopopsReengageBtn');
+
+  if (stuckCount > 0) {
+    if (stuckBadge) stuckBadge.style.display = '';
+    if (stuckNum)   stuckNum.textContent = stuckCount;
+    if (reengageBtn) reengageBtn.style.display = '';
+  } else {
+    if (stuckBadge)  stuckBadge.style.display  = 'none';
+    if (reengageBtn) reengageBtn.style.display = 'none';
+  }
+
+  funnelEl.innerHTML = STAGES.map(({ key, label, color }) => {
+    const val    = agg[key];
+    const isGmv  = key === 'generated-gmv';
+    const pct    = isGmv ? 0 : Math.min(Math.round(val / maxVal * 100), 100);
+    const isStuck = key === 'content-pending' || key === 'content-unfulfilled';
+    const display = isGmv ? fmtMoney(val) : fmtNum(val);
+
+    return `<div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:11px;font-weight:700;color:var(--soft);min-width:130px;">${label}</span>
+          ${isStuck && val > 0 ? `<span class="badge b-lost" style="font-size:9px;">needs action</span>` : ''}
+        </div>
+        <span class="mono" style="font-size:12px;color:${color};">${display}</span>
+      </div>
+      ${!isGmv ? `
+      <div style="height:8px;background:rgba(0,0,0,0.07);border-radius:5px;overflow:hidden;">
+        <div style="height:100%;width:${pct}%;background:${color};border-radius:5px;transition:width 0.5s ease;opacity:${isStuck && val > 0 ? '1' : '0.85'};"></div>
+      </div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ─── Outreach action ──────────────────────────────────────────────────────────
+
+async function shopopsOutreach(shopId, btnEl) {
+  if (!shopId) return;
+  const orig = btnEl.textContent;
+  btnEl.disabled    = true;
+  btnEl.textContent = '…';
+  try {
+    const res  = await fetch(`/api/shopops/outreach/${encodeURIComponent(shopId)}`, { method: 'POST' });
+    const data = await res.json();
+    btnEl.textContent = data.ok ? `✓ ${data.queued || 0} queued` : '⚠ Error';
+    btnEl.style.background = data.ok ? 'var(--green)' : 'var(--red)';
+    setTimeout(() => {
+      btnEl.disabled        = false;
+      btnEl.textContent     = orig;
+      btnEl.style.background = '';
+    }, 2500);
+  } catch (e) {
+    btnEl.textContent = '⚠ Failed';
+    setTimeout(() => { btnEl.disabled = false; btnEl.textContent = orig; btnEl.style.background = ''; }, 2500);
+  }
+}
+
+// ─── Report stub ──────────────────────────────────────────────────────────────
+
+function shopopsReport(shopId) {
+  // STUB — future: open a modal or navigate to a report view
+  alert(`Report for shop ${shopId} — coming soon.`);
+}
+
+// ─── Re-engage stuck creators ─────────────────────────────────────────────────
+
+async function shopopsReengage() {
+  const btn      = document.getElementById('shopopsReengageBtn');
+  const feedback = document.getElementById('shopopsReengageFeedback');
+  if (!btn) return;
+  btn.disabled    = true;
+  if (feedback) { feedback.style.color = 'var(--muted)'; feedback.textContent = 'Sending re-engagement…'; }
+  try {
+    const res  = await fetch('/api/shopops/reengage', { method: 'POST' });
+    const data = await res.json();
+    if (data.ok) {
+      if (feedback) { feedback.style.color = 'var(--green)'; feedback.textContent = `✓ Re-engaged ${data.count || 0} creators.`; }
+    } else {
+      throw new Error(data.error || 'Unknown error');
+    }
+  } catch (e) {
+    if (feedback) { feedback.style.color = 'var(--red)'; feedback.textContent = '⚠ ' + e.message; }
+  } finally {
+    btn.disabled = false;
+    setTimeout(() => { if (feedback) feedback.textContent = ''; }, 4000);
+  }
+}
+
+
+// ─── Paid Media Agent ─────────────────────────────────────────────────────────────────
+// ─── Paid Media Agent — functions.js ─────────────────────────────────────────
+//
+// STATE:  Add S.paidMedia = null to the S object in index.html
+//         Add loadPaidMedia() to fetchAll() and renderAll() to renderPaidMedia()
+//
+// GLOBALS used: S, x, fmtNum, fmtMoney, fmtDate, el
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ─── Local state ─────────────────────────────────────────────────────────────
+const PM = {
+  platform:   'tiktok',   // 'tiktok' | 'meta'
+  range:      '7d',       // '7d' | '30d' | 'custom'
+  sortField:  'spend',    // 'spend' | 'ctr' | 'impressions'
+  sortDir:    'desc',
+};
+
+// ─── Date helpers ─────────────────────────────────────────────────────────────
+function getPmDateRange(range) {
+  const now   = new Date();
+  const end   = now.toISOString().slice(0, 10);
+  const start = new Date(now);
+  if (range === '7d')  start.setDate(start.getDate() - 7);
+  if (range === '30d') start.setDate(start.getDate() - 30);
+  return { start_date: start.toISOString().slice(0, 10), end_date: end };
+}
+
+function daysLeftInMonth() {
+  const now  = new Date();
+  const last = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  return last.getDate() - now.getDate();
+}
+
+function daysElapsedInMonth() {
+  return new Date().getDate();
+}
+
+// ─── Platform switcher ───────────────────────────────────────────────────────
+function switchPlatform(platform) {
+  PM.platform = platform;
+  ['tiktok', 'meta'].forEach(p => {
+    const btn = document.getElementById('pmBtn-' + p);
+    if (btn) btn.classList.toggle('active', p === platform);
+  });
+  renderPaidMedia();
+}
+
+// ─── Date range selector ─────────────────────────────────────────────────────
+function setPmRange(range) {
+  PM.range = range;
+  ['7d', '30d', 'custom'].forEach(r => {
+    const btn = document.getElementById('pmRange-' + r);
+    if (btn) btn.classList.toggle('active', r === range);
+  });
+  const customRow = document.getElementById('pmCustomRange');
+  if (customRow) customRow.style.display = range === 'custom' ? 'block' : 'none';
+  if (range !== 'custom') loadPaidMedia(true);
+}
+
+// ─── Load / fetch ─────────────────────────────────────────────────────────────
+async function loadPaidMedia(force = false) {
+  const btn = document.getElementById('pmRefreshBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '↻ Loading…'; }
+
+  try {
+    const url = PM.platform === 'tiktok'
+      ? '/api/paidmedia/tiktok/summary'
+      : '/api/paidmedia/meta/summary';
+
+    const res  = await fetch(url);
+    const data = await res.json();
+    S.paidMedia = data;
+  } catch (e) {
+    S.paidMedia = { connected: false, error: e.message };
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '↺ Refresh'; }
+    const ts = document.getElementById('pmLastUpdated');
+    if (ts) ts.textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    renderPaidMedia();
+  }
+}
+
+// Report with custom date range
+async function loadPmReport() {
+  const from = document.getElementById('pmDateFrom')?.value;
+  const to   = document.getElementById('pmDateTo')?.value;
+  if (!from || !to) return;
+  try {
+    const res  = await fetch(`/api/paidmedia/tiktok/report?start_date=${from}&end_date=${to}`);
+    const data = await res.json();
+    S.paidMedia = data;
+  } catch (e) {
+    S.paidMedia = { connected: false, error: e.message };
+  }
+  renderPaidMedia();
+}
+
+// ─── Main render ─────────────────────────────────────────────────────────────
+function renderPaidMedia() {
+  const container = document.getElementById('pmContent');
+  if (!container) return;
+
+  const d = S.paidMedia;
+
+  // Not yet loaded
+  if (!d) {
+    container.innerHTML = `<div style="color:var(--muted);font-style:italic;padding:40px 0;text-align:center;font-size:13px;">Loading Paid Media data…</div>`;
+    loadPaidMedia();
+    return;
+  }
+
+  // Not connected
+  if (!d.connected) {
+    container.innerHTML = renderConnectionCards();
+    return;
+  }
+
+  const totals    = d.totals    || {};
+  const campaigns = d.campaigns || [];
+  const ads       = d.topAds   || [];
+  const budget    = d.monthlyBudget || 0;
+  const spent     = totals.spend   || 0;
+
+  container.innerHTML = `
+    ${renderKpiRow(totals)}
+    ${renderPacingCard(spent, budget)}
+    ${renderCampaignTableCard(campaigns)}
+    ${renderTopCreativeCard(ads)}
+    ${renderQuickActionsCard()}
+  `;
+}
+
+// ─── Connection cards ─────────────────────────────────────────────────────────
+function renderConnectionCards() {
+  const platforms = [
+    {
+      icon:  '♪',
+      name:  'TikTok Ads',
+      vars:  ['TIKTOK_ADS_ACCESS_TOKEN', 'TIKTOK_ADS_ADVERTISER_ID'],
+      docs:  'https://business-api.tiktok.com/portal/docs?id=1738373141733378',
+    },
+    {
+      icon:  'f',
+      name:  'Meta Ads',
+      vars:  ['META_ADS_ACCESS_TOKEN', 'META_ADS_ACCOUNT_ID'],
+      docs:  'https://developers.facebook.com/docs/marketing-api/get-started',
+    },
+  ];
+
+  const cards = platforms.map(p => `
+    <div class="connect-card">
+      <div class="connect-icon">${p.icon}</div>
+      <div class="connect-title">${p.name}</div>
+      <div class="connect-desc" style="margin-bottom:14px;">
+        Add these to your <code style="background:rgba(0,0,0,0.06);padding:1px 5px;border-radius:3px;">.env</code> file:
+      </div>
+      ${p.vars.map(v => `
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;background:rgba(0,0,0,0.04);
+             border-radius:6px;padding:6px 10px;margin-bottom:6px;text-align:left;color:var(--soft);">
+          ${v}=your_token_here
+        </div>`).join('')}
+      <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-top:16px;">
+        <span class="badge b-draft">Not connected</span>
+        <a href="${p.docs}" target="_blank"
+           style="font-size:11px;color:var(--teal);text-decoration:none;">Get API key ↗</a>
+      </div>
+    </div>
+  `).join('');
+
+  return `
+    <div class="mb16" style="color:var(--muted);font-size:13px;font-weight:700;padding:2px 0;">
+      Connect a platform to start tracking paid media performance.
+    </div>
+    <div class="two-col mb24">${cards}</div>
+  `;
+}
+
+// ─── KPI row (6 cards) ────────────────────────────────────────────────────────
+function renderKpiRow(t) {
+  const ctr  = t.ctr  != null ? t.ctr.toFixed(2)  + '%' : '—';
+  const cpc  = t.cpc  != null ? fmtMoney(t.cpc)         : '—';
+  const roas = t.roas != null ? t.roas.toFixed(2) + 'x'  : '—';
+  const conv = t.conversions != null ? fmtNum(t.conversions) : '—';
+
+  return `
+    <div class="kpi-row mb24">
+      <div class="kpi-card">
+        <div class="kpi-label">Total Spend</div>
+        <div class="kpi-value gold">${t.spend != null ? fmtMoney(t.spend) : '—'}</div>
+        <div class="kpi-sub">${PM.range === '7d' ? 'Last 7 days' : 'Last 30 days'}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Impressions</div>
+        <div class="kpi-value">${t.impressions != null ? fmtNum(t.impressions) : '—'}</div>
+        <div class="kpi-sub">total reach</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Clicks</div>
+        <div class="kpi-value">${t.clicks != null ? fmtNum(t.clicks) : '—'}</div>
+        <div class="kpi-sub">link clicks</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">CTR</div>
+        <div class="kpi-value green">${ctr}</div>
+        <div class="kpi-sub">click-through rate</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">CPC</div>
+        <div class="kpi-value gold">${cpc}</div>
+        <div class="kpi-sub">cost per click</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">${t.roas != null ? 'ROAS' : 'Conversions'}</div>
+        <div class="kpi-value green">${t.roas != null ? roas : conv}</div>
+        <div class="kpi-sub">${t.roas != null ? 'return on ad spend' : 'total conversions'}</div>
+      </div>
+    </div>
+  `;
+}
+
+// ─── Spend pacing card ────────────────────────────────────────────────────────
+function renderPacingCard(spent, budget) {
+  if (!budget) {
+    return `
+      <div class="card mb24">
+        <div class="card-label">Spend Pacing</div>
+        <div style="color:var(--muted);font-size:12px;font-style:italic;">
+          No monthly budget set. Add <code style="background:rgba(0,0,0,0.06);padding:1px 5px;border-radius:3px;">budget</code>
+          to campaign or set TIKTOK_MONTHLY_BUDGET in .env.
+        </div>
+      </div>
+    `;
+  }
+
+  const pct         = Math.min((spent / budget) * 100, 100);
+  const daysElapsed = daysElapsedInMonth();
+  const daysLeft    = daysLeftInMonth();
+  const daysTotal   = daysElapsed + daysLeft;
+  const dailyBurn   = daysElapsed > 0 ? spent / daysElapsed : 0;
+  const projected   = dailyBurn * daysTotal;
+  const pacingPct   = budget > 0 ? (projected / budget) * 100 : 0;
+
+  // Color logic: green = on track, gold = 10% over pace, red = 20% over
+  let barColor = 'var(--green)';
+  let statusLabel = 'On track';
+  let statusClass = 'green';
+  if (pacingPct > 120) { barColor = 'var(--red)';  statusLabel = 'Over pace'; statusClass = 'off'; }
+  else if (pacingPct > 110) { barColor = 'var(--gold)'; statusLabel = 'Slightly over'; statusClass = 'idle'; }
+
+  return `
+    <div class="card mb24">
+      <div class="card-label" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>Spend Pacing — This Month</span>
+        <span class="status-row ${statusClass}" style="font-size:11px;">
+          <span class="dot ${statusClass}"></span>${statusLabel}
+        </span>
+      </div>
+
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px;">
+        <div>
+          <span style="font-family:'Montserrat',sans-serif;font-weight:900;font-size:28px;color:var(--gold);">${fmtMoney(spent)}</span>
+          <span style="font-size:12px;color:var(--muted);margin-left:6px;">of ${fmtMoney(budget)} budget</span>
+        </div>
+        <div style="text-align:right;font-size:12px;color:var(--muted);">
+          <div>${daysLeft} day${daysLeft !== 1 ? 's' : ''} left</div>
+          <div>${fmtMoney(dailyBurn)}/day burn</div>
+        </div>
+      </div>
+
+      <!-- Progress bar -->
+      <div style="background:rgba(0,0,0,0.07);border-radius:100px;height:10px;overflow:hidden;margin-bottom:12px;">
+        <div style="width:${pct.toFixed(1)}%;height:100%;background:${barColor};border-radius:100px;
+             transition:width 0.4s ease;"></div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);">
+        <span>${pct.toFixed(1)}% spent</span>
+        <span>Projected EOM: <strong style="color:${barColor};">${fmtMoney(projected)}</strong></span>
+      </div>
+    </div>
+  `;
+}
+
+// ─── Campaign table ───────────────────────────────────────────────────────────
+function renderCampaignTableCard(campaigns) {
+  const sortedCampaigns = sortCampaignsBy(campaigns, PM.sortField, PM.sortDir);
+
+  const thStyle = (field) => {
+    const active = PM.sortField === field;
+    return `style="cursor:pointer;${active ? 'color:var(--teal);' : ''}"
+            onclick="pmSort('${field}')"`;
+  };
+
+  const rows = sortedCampaigns.length
+    ? sortedCampaigns.map(c => renderCampaignRow(c)).join('')
+    : `<tr class="empty"><td colspan="8">No campaigns found</td></tr>`;
+
+  return `
+    <div class="card mb24">
+      <div class="card-label" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>Campaigns</span>
+        <span class="muted" style="font-size:11px;">${sortedCampaigns.length} campaign${sortedCampaigns.length !== 1 ? 's' : ''}</span>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th style="width:24px;"></th>
+              <th>Campaign</th>
+              <th>Budget/day</th>
+              <th ${thStyle('spend')}>Spend ${PM.sortField === 'spend' ? (PM.sortDir === 'desc' ? '↓' : '↑') : ''}</th>
+              <th ${thStyle('impressions')}>Impr. ${PM.sortField === 'impressions' ? (PM.sortDir === 'desc' ? '↓' : '↑') : ''}</th>
+              <th ${thStyle('ctr')}>CTR ${PM.sortField === 'ctr' ? (PM.sortDir === 'desc' ? '↓' : '↑') : ''}</th>
+              <th>CPC</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="pmCampaignTableBody">
+            ${rows}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function renderCampaignRow(c) {
+  const statusMap = {
+    ENABLE:  { cls: 'on',   label: 'Active' },
+    DISABLE: { cls: 'off',  label: 'Paused' },
+    DELETE:  { cls: 'off',  label: 'Deleted' },
+    ENDED:   { cls: 'off',  label: 'Ended' },
+    // fallbacks
+    active:  { cls: 'on',   label: 'Active' },
+    paused:  { cls: 'off',  label: 'Paused' },
+    ended:   { cls: 'off',  label: 'Ended' },
+  };
+  const st     = statusMap[c.status] || { cls: 'idle', label: c.status || '—' };
+  const canAct = c.status === 'ENABLE' || c.status === 'DISABLE' || c.status === 'active' || c.status === 'paused';
+  const nextStatus = (c.status === 'ENABLE' || c.status === 'active') ? 'DISABLE' : 'ENABLE';
+  const actionLabel = nextStatus === 'DISABLE' ? 'Pause' : 'Resume';
+  const budget = c.budget != null ? fmtMoney(c.budget) : '—';
+  const spend  = c.spend  != null ? fmtMoney(c.spend)  : '—';
+  const impr   = c.impressions != null ? fmtNum(c.impressions)    : '—';
+  const ctr    = c.ctr   != null ? c.ctr.toFixed(2) + '%' : '—';
+  const cpc    = c.cpc   != null ? fmtMoney(c.cpc)             : '—';
+
+  return `
+    <tr>
+      <td><span class="dot ${st.cls}" title="${st.label}"></span></td>
+      <td>
+        <div style="font-weight:700;font-size:12px;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"
+             title="${x(c.name || '')}">${x(c.name || '—')}</div>
+        <div class="mono muted" style="font-size:10px;">${x(c.id || '')}</div>
+      </td>
+      <td class="mono" style="font-size:12px;">${budget}</td>
+      <td class="mono gold" style="font-size:12px;">${spend}</td>
+      <td class="mono" style="font-size:12px;">${impr}</td>
+      <td class="mono green" style="font-size:12px;">${ctr}</td>
+      <td class="mono" style="font-size:12px;">${cpc}</td>
+      <td>
+        ${canAct ? `
+          <button class="btn btn-ghost" style="height:26px;padding:0 10px;font-size:11px;"
+                  onclick="toggleCampaignStatus('${x(c.id)}', '${c.status}')">
+            ${actionLabel}
+          </button>
+        ` : '<span class="muted" style="font-size:11px;">—</span>'}
+      </td>
+    </tr>
+  `;
+}
+
+// ─── Sort campaigns client-side ───────────────────────────────────────────────
+function sortCampaignsBy(campaigns, field, dir) {
+  return [...campaigns].sort((a, b) => {
+    const av = a[field] ?? -1;
+    const bv = b[field] ?? -1;
+    return dir === 'desc' ? bv - av : av - bv;
+  });
+}
+
+// Toggle sort column (called from table headers)
+function pmSort(field) {
+  if (PM.sortField === field) {
+    PM.sortDir = PM.sortDir === 'desc' ? 'asc' : 'desc';
+  } else {
+    PM.sortField = field;
+    PM.sortDir   = 'desc';
+  }
+  // Re-render just the table body for performance
+  if (S.paidMedia?.campaigns) {
+    const sorted = sortCampaignsBy(S.paidMedia.campaigns, PM.sortField, PM.sortDir);
+    const tbody = document.getElementById('pmCampaignTableBody');
+    if (tbody) {
+      tbody.innerHTML = sorted.length
+        ? sorted.map(c => renderCampaignRow(c)).join('')
+        : `<tr class="empty"><td colspan="8">No campaigns found</td></tr>`;
+    }
+    // Also update column header arrows
+    renderPaidMedia();
+  }
+}
+
+// ─── Toggle campaign status ───────────────────────────────────────────────────
+async function toggleCampaignStatus(id, currentStatus) {
+  const nextStatus = (currentStatus === 'ENABLE' || currentStatus === 'active') ? 'DISABLE' : 'ENABLE';
+  try {
+    const res  = await fetch(`/api/paidmedia/tiktok/campaign/${id}/status`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ status: nextStatus }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      // Optimistically update local state
+      if (S.paidMedia?.campaigns) {
+        const camp = S.paidMedia.campaigns.find(c => c.id === id);
+        if (camp) camp.status = nextStatus;
+      }
+      renderPaidMedia();
+    } else {
+      alert('Failed to update campaign: ' + (data.error || 'Unknown error'));
+    }
+  } catch (e) {
+    alert('Network error: ' + e.message);
+  }
+}
+
+// ─── Top Creative card ────────────────────────────────────────────────────────
+function renderTopCreativeCard(ads) {
+  if (!ads || ads.length === 0) {
+    return `
+      <div class="card mb24">
+        <div class="card-label">Top Creative Performance</div>
+        <div style="color:var(--muted);font-size:12px;font-style:italic;">No ad creative data available.</div>
+      </div>
+    `;
+  }
+
+  function ctrColor(ctr) {
+    if (ctr >= 3)  return 'var(--green)';
+    if (ctr >= 1)  return 'var(--gold)';
+    return 'var(--red)';
+  }
+
+  const top5 = ads.slice(0, 5);
+  const cards = top5.map(ad => `
+    <div class="card" style="padding:14px;">
+      <!-- Thumbnail placeholder -->
+      <div style="width:100%;aspect-ratio:9/16;background:rgba(0,0,0,0.06);border-radius:8px;
+           display:flex;align-items:center;justify-content:center;margin-bottom:12px;
+           color:var(--muted);font-size:11px;text-align:center;padding:10px;overflow:hidden;">
+        <span style="line-height:1.4;">${x((ad.name || '').slice(0, 60))}</span>
+      </div>
+      <!-- CTR badge -->
+      <div style="margin-bottom:8px;">
+        <span class="badge" style="background:${ctrColor(ad.ctr || 0)}22;
+              color:${ctrColor(ad.ctr || 0)};font-size:10px;">
+          CTR ${ad.ctr != null ? ad.ctr.toFixed(2) + '%' : '—'}
+        </span>
+      </div>
+      <!-- Ad name -->
+      <div style="font-size:11px;font-weight:700;color:var(--soft);margin-bottom:4px;
+           white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${x(ad.name || '')}">
+        ${x(ad.name || 'Unnamed Ad')}
+      </div>
+      <!-- Stats -->
+      <div style="font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;">
+        <span class="gold">${ad.spend != null ? fmtMoney(ad.spend) : '—'}</span>
+        &nbsp;·&nbsp;
+        ${ad.impressions != null ? fmtNum(ad.impressions) : '—'} impr.
+      </div>
+    </div>
+  `).join('');
+
+  return `
+    <div class="card mb24">
+      <div class="card-label">Top Creative Performance</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;">
+        ${cards}
+      </div>
+    </div>
+  `;
+}
+
+// ─── Quick Actions card ───────────────────────────────────────────────────────
+function renderQuickActionsCard() {
+  return `
+    <div class="card mb24">
+      <div class="card-label">Quick Actions</div>
+      <div class="flex-wrap">
+        <button class="btn btn-ghost" onclick="pmPauseAll()"
+                style="border-color:rgba(255,59,48,0.3);color:var(--red);">
+          ⏸ Pause All
+        </button>
+        <button class="btn btn-ghost" onclick="pmExportReport()">
+          ↓ Export Report
+        </button>
+        <a href="https://ads.tiktok.com" target="_blank" class="btn btn-teal">
+          ♪ New TikTok Campaign ↗
+        </a>
+        <a href="https://www.facebook.com/adsmanager" target="_blank" class="btn btn-ghost">
+          f New Meta Campaign ↗
+        </a>
+      </div>
+    </div>
+  `;
+}
+
+// ─── Quick action stubs ───────────────────────────────────────────────────────
+async function pmPauseAll() {
+  if (!confirm('Pause ALL active campaigns? This cannot be undone from this dashboard.')) return;
+  try {
+    const res  = await fetch('/api/paidmedia/tiktok/pause-all', { method: 'POST' });
+    const data = await res.json();
+    if (data.ok) {
+      await loadPaidMedia(true);
+    } else {
+      alert('Pause All: ' + (data.message || data.error || 'Response received'));
+    }
+  } catch (e) {
+    alert('Network error: ' + e.message);
+  }
+}
+
+function pmExportReport() {
+  // Stub — show "Coming soon" inline
+  const btn = event.target;
+  const orig = btn.textContent;
+  btn.textContent = '✓ Coming soon';
+  btn.disabled = true;
+  setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 2000);
+}
+
+
+// ─── Short Video Agent ─────────────────────────────────────────────────────────────────
+// ─── Short Video Agent — functions.js ────────────────────────────────────────
+// Call svInitActors() and renderShortVideo() on tab init.
+//
+// IMPORTANT: This file MUST be loaded after the main dashboard JS.
+// It reuses all existing globals: _arcadsActors, _arcadsJobs, _arcadsFolders,
+// _bufferChannels, queueFromArcads(), loadBufferChannels(), x(), fmtDate(), el()
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── New globals for Short Video Agent ────────────────────────────────────────
+let _svActors     = [];          // separate copy fetched for this tab's grid
+let _svSelectedId = null;        // currently selected actor ID in SV tab
+let _svHooks      = JSON.parse(localStorage.getItem('svHooks') || '[]');
+let _svScripts    = [];          // cached from /api/arcads/stats for performance table
+
+// ─── SECTION 1: Stats ────────────────────────────────────────────────────────
+
+async function svLoadStats() {
+  try {
+    const stats = await fetch('/api/arcads/stats').then(r => r.json());
+    if (!stats.connected) return;
+    const done    = document.getElementById('svStatDone');
+    const pending = document.getElementById('svStatPending');
+    const scripts = document.getElementById('svStatScripts');
+    if (done)    done.textContent    = stats.totals.done;
+    if (pending) pending.textContent = stats.totals.pending;
+    if (scripts) scripts.textContent = stats.totals.scripts;
+    // cache for script table
+    _svScripts = stats.scripts || [];
+    svRenderScriptTable(_svScripts);
+  } catch(e) { console.error('svLoadStats:', e); }
+}
+
+// ─── SECTION 2: Actor Browser ────────────────────────────────────────────────
+
+async function svInitActors() {
+  try {
+    const [actorsRes, scriptsRes] = await Promise.all([
+      fetch('/api/arcads/actors').then(r => r.json()),
+      fetch('/api/arcads/scripts').then(r => r.json()),
+    ]);
+
+    if (!actorsRes.connected) {
+      const grid = document.getElementById('svActorGrid');
+      if (grid) grid.innerHTML = '<div style="font-size:12px;color:var(--muted);font-style:italic;grid-column:1/-1;padding:12px 0">Arcads not connected.</div>';
+      return;
+    }
+
+    _svActors = actorsRes.items || [];
+
+    // Populate folder select
+    const sel = document.getElementById('svFolderSel');
+    const folders = scriptsRes.folders || [];
+    if (sel && folders.length) {
+      sel.innerHTML = folders.map(f => `<option value="${f.id}">${x(f.name)}</option>`).join('');
+    } else if (sel) {
+      sel.innerHTML = '<option value="">No folders found</option>';
+    }
+
+    svRenderActorGrid('');
+  } catch(e) {
+    console.error('svInitActors:', e);
+    const grid = document.getElementById('svActorGrid');
+    if (grid) grid.innerHTML = '<div style="font-size:12px;color:var(--red);grid-column:1/-1;padding:8px 0">Failed to load actors.</div>';
+  }
+}
+
+// Filter button click handler — clears active state, re-renders
+function svFilterActors(btn, gender) {
+  document.querySelectorAll('#svActorFilters .actor-filter').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  svRenderActorGrid(gender);
+}
+
+function svRenderActorGrid(genderFilter) {
+  const grid = document.getElementById('svActorGrid');
+  if (!grid) return;
+  const actors = _svActors
+    .filter(a => !genderFilter || a.actor?.gender === genderFilter)
+    .filter(a => a.talkingActorEnabled !== false)
+    .slice(0, 24);
+
+  if (!actors.length) {
+    grid.innerHTML = '<div style="font-size:12px;color:var(--muted);font-style:italic;grid-column:1/-1;padding:8px 0">No actors found.</div>';
+    return;
+  }
+
+  grid.innerHTML = actors.map(a => {
+    const sel     = _svSelectedId === a.id;
+    const emotion = (a.emotions || [])[0] || '';
+    const tag     = (a.tags || [])[0] || '';
+    return `<div class="actor-card ${sel ? 'selected' : ''}" onclick="svSelectActor('${a.id}','${x(a.actor?.name || 'Actor')}')">
+      <div class="actor-card-name">${x(a.actor?.name || 'Actor')} <span style="font-size:10px;color:var(--muted)">${a.actor?.gender || ''}</span></div>
+      <div class="actor-card-tags">${emotion}${tag ? ' · ' + tag : ''}</div>
+    </div>`;
+  }).join('');
+}
+
+function svSelectActor(id, name) {
+  _svSelectedId = id;
+  const label = document.getElementById('svActorSelLabel');
+  const btn   = document.getElementById('svGenerateBtn');
+  if (label) label.textContent = '✓ Selected: ' + name;
+  if (btn)   btn.disabled = false;
+  svRenderActorGrid(
+    document.querySelector('#svActorFilters .actor-filter.active')?.dataset.gender || ''
+  );
+}
+
+// ─── SECTION 2: Script Editor + Generate ─────────────────────────────────────
+
+function svShowGenerateMsg(msg, color) {
+  const el = document.getElementById('svGenerateResult');
+  if (!el) return;
+  el.style.display = 'block';
+  el.style.color   = color || 'var(--teal)';
+  el.textContent   = msg;
+}
+
+async function svGenerate() {
+  const name     = document.getElementById('svScriptName')?.value.trim();
+  const text     = document.getElementById('svScriptText')?.value.trim();
+  const folderId = document.getElementById('svFolderSel')?.value;
+  const btn      = document.getElementById('svGenerateBtn');
+
+  if (!name || !text)   { svShowGenerateMsg('Script name and text are required.', 'var(--red)'); return; }
+  if (!_svSelectedId)   { svShowGenerateMsg('Select an actor first.', 'var(--red)'); return; }
+
+  btn.disabled     = true;
+  btn.textContent  = '⏳ Creating script…';
+  const resEl = document.getElementById('svGenerateResult');
+  if (resEl) resEl.style.display = 'none';
+
+  try {
+    // Step 1: create script
+    const createRes = await fetch('/api/arcads/scripts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, text, situationIds: [_svSelectedId], folderId }),
+    }).then(r => r.json());
+
+    if (!createRes.ok) {
+      svShowGenerateMsg('✗ ' + (createRes.error?.message || JSON.stringify(createRes.error)), 'var(--red)');
+      btn.disabled = false; btn.textContent = '🎬 Generate Video';
+      return;
+    }
+
+    const scriptId = createRes.script?.id;
+    btn.textContent = '⏳ Triggering generation…';
+
+    // Step 2: trigger generation
+    await fetch(`/api/arcads/scripts/${scriptId}/generate`, { method: 'POST' }).then(r => r.json());
+
+    // Step 3: add to the SHARED _arcadsJobs so pollArcadsJob works
+    const job = {
+      scriptId,
+      name,
+      actorId: _svSelectedId,
+      createdAt: new Date().toISOString(),
+      status: 'pending',
+    };
+    _arcadsJobs.unshift(job);
+    if (_arcadsJobs.length > 20) _arcadsJobs.splice(20);
+    localStorage.setItem('arcadsJobs', JSON.stringify(_arcadsJobs));
+
+    svShowGenerateMsg('✓ Generation started! Polling for completion…', 'var(--green)');
+
+    // Clear form
+    const nameEl = document.getElementById('svScriptName');
+    const textEl = document.getElementById('svScriptText');
+    if (nameEl) nameEl.value = '';
+    if (textEl) textEl.value = '';
+
+    svRenderJobs();
+
+    // Reuse existing poll function — it updates _arcadsJobs and calls renderArcadsJobs()
+    // We also hook renderArcadsJobs to trigger svRenderJobs via the shared data
+    pollArcadsJob(scriptId);
+
+  } catch(e) {
+    svShowGenerateMsg('✗ ' + e.message, 'var(--red)');
+  }
+
+  btn.disabled    = false;
+  btn.textContent = '🎬 Generate Video';
+}
+
+// ─── SECTION 3: Hook Library ──────────────────────────────────────────────────
+
+function svToggleSaveHookForm() {
+  const form = document.getElementById('svSaveHookForm');
+  if (!form) return;
+  const isHidden = form.style.display === 'none';
+  form.style.display = isHidden ? 'block' : 'none';
+
+  // Pre-fill from script editor when opening
+  if (isHidden) {
+    const name = document.getElementById('svScriptName')?.value.trim();
+    const nameEl = document.getElementById('svHookName');
+    if (nameEl && name) nameEl.value = name;
+    const note = document.getElementById('svHookNote');
+    if (note) note.value = '';
+    const msgEl = document.getElementById('svSaveHookMsg');
+    if (msgEl) msgEl.style.display = 'none';
+  }
+}
+
+function svSaveHook() {
+  const name = document.getElementById('svHookName')?.value.trim();
+  const tag  = document.getElementById('svHookTag')?.value || 'Hook';
+  const note = document.getElementById('svHookNote')?.value.trim() || '';
+  const text = document.getElementById('svScriptText')?.value.trim() || '';
+  const msg  = document.getElementById('svSaveHookMsg');
+
+  if (!name) {
+    if (msg) { msg.style.display = 'inline'; msg.style.color = 'var(--red)'; msg.textContent = 'Hook name is required.'; }
+    return;
+  }
+  if (!text) {
+    if (msg) { msg.style.display = 'inline'; msg.style.color = 'var(--red)'; msg.textContent = 'Script text is empty — write a script first.'; }
+    return;
+  }
+
+  const hook = {
+    id:        'h_' + Date.now(),
+    name,
+    tag,
+    text,
+    note,
+    createdAt: new Date().toISOString(),
+  };
+
+  _svHooks.unshift(hook);
+  localStorage.setItem('svHooks', JSON.stringify(_svHooks));
+
+  if (msg) { msg.style.display = 'inline'; msg.style.color = 'var(--green)'; msg.textContent = '✓ Saved!'; }
+
+  svRenderHookLibrary();
+  svPopulateHookSelect();
+
+  // Close form after a beat
+  setTimeout(() => svToggleSaveHookForm(), 1200);
+}
+
+function svLoadHook(id) {
+  const hook = _svHooks.find(h => h.id === id);
+  if (!hook) return;
+  const nameEl = document.getElementById('svScriptName');
+  const textEl = document.getElementById('svScriptText');
+  if (nameEl) nameEl.value = hook.name;
+  if (textEl) textEl.value = hook.text;
+  // Reset hook select back to placeholder
+  const sel = document.getElementById('svHookSelect');
+  if (sel) sel.value = '';
+}
+
+function svDeleteHook(id) {
+  _svHooks = _svHooks.filter(h => h.id !== id);
+  localStorage.setItem('svHooks', JSON.stringify(_svHooks));
+  svRenderHookLibrary();
+  svPopulateHookSelect();
+}
+
+// Quick-load from the dropdown in the script editor
+function svQuickLoadHook(id) {
+  if (!id) return;
+  svLoadHook(id);
+}
+
+function svPopulateHookSelect() {
+  const sel = document.getElementById('svHookSelect');
+  if (!sel) return;
+  if (!_svHooks.length) {
+    sel.innerHTML = '<option value="">💡 Load from Hook Library…</option>';
+    return;
+  }
+  sel.innerHTML =
+    '<option value="">💡 Load from Hook Library…</option>' +
+    _svHooks.map(h => `<option value="${h.id}">[${h.tag}] ${x(h.name)}</option>`).join('');
+}
+
+const SV_TAG_COLOR = {
+  Hook:        'rgba(0,242,234,0.12)',
+  CTA:         'rgba(255,0,80,0.10)',
+  Story:       'rgba(201,168,76,0.12)',
+  Educational: 'rgba(0,210,122,0.10)',
+  Promo:       'rgba(0,0,0,0.06)',
+};
+const SV_TAG_TEXT = {
+  Hook:        'var(--teal)',
+  CTA:         'var(--pink)',
+  Story:       'var(--gold)',
+  Educational: 'var(--green)',
+  Promo:       'var(--muted)',
+};
+
+function svRenderHookLibrary() {
+  const grid = document.getElementById('svHookGrid');
+  if (!grid) return;
+
+  if (!_svHooks.length) {
+    grid.innerHTML = '<div style="font-size:12px;color:var(--muted);font-style:italic;grid-column:1/-1;padding:12px 0;text-align:center;">No saved hooks yet. Generate a video and save the script.</div>';
+    return;
+  }
+
+  grid.innerHTML = _svHooks.map(h => {
+    const preview = h.text.length > 60 ? h.text.slice(0, 60) + '…' : h.text;
+    const bg   = SV_TAG_COLOR[h.tag] || 'rgba(0,0,0,0.06)';
+    const clr  = SV_TAG_TEXT[h.tag]  || 'var(--muted)';
+    const date = new Date(h.createdAt).toLocaleDateString();
+    return `<div style="border:1px solid var(--border);border-radius:10px;padding:14px;background:rgba(255,255,255,0.6);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+        <span style="font-weight:700;font-size:13px;">${x(h.name)}</span>
+        <span style="font-size:9px;font-weight:800;padding:2px 8px;border-radius:20px;background:${bg};color:${clr};text-transform:uppercase;letter-spacing:0.05em;">${h.tag}</span>
+      </div>
+      <div style="font-size:11px;color:var(--soft);line-height:1.5;margin-bottom:8px;">${x(preview)}</div>
+      ${h.note ? `<div style="font-size:10px;color:var(--muted);font-style:italic;margin-bottom:8px;">${x(h.note)}</div>` : ''}
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;">${date}</span>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-teal" style="font-size:10px;padding:3px 9px;" onclick="svLoadHook('${h.id}')">Load</button>
+          <button class="btn btn-ghost" style="font-size:10px;padding:3px 8px;color:var(--red);" onclick="svDeleteHook('${h.id}')">✕</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── SECTION 4: Active Jobs ───────────────────────────────────────────────────
+
+function svRenderJobs() {
+  const el = document.getElementById('svJobsList');
+  if (!el) return;
+
+  if (!_arcadsJobs.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--muted);font-style:italic;">No active jobs this session.</div>';
+    return;
+  }
+
+  el.innerHTML = _arcadsJobs.slice(0, 10).map(j => `
+    <div class="gen-job">
+      <span class="gen-status ${j.status}">${j.status}</span>
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:700;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${x(j.name)}</div>
+        <div style="font-size:10px;color:var(--muted);">${new Date(j.createdAt).toLocaleString()}</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0;">
+        ${j.downloadUrl
+          ? `<a href="${j.downloadUrl}" target="_blank" class="btn btn-ghost" style="font-size:11px;padding:4px 8px;">⬇ Download</a>`
+          : ''}
+        ${j.downloadUrl
+          ? `<button class="btn btn-teal" style="font-size:11px;padding:4px 8px;" onclick="queueFromArcads('${j.scriptId}','${x(j.name)}','${j.downloadUrl}')">+ Queue</button>`
+          : ''}
+      </div>
+    </div>`).join('');
+}
+
+function svClearDoneJobs() {
+  // Remove completed jobs from the shared _arcadsJobs array
+  const before = _arcadsJobs.length;
+  // Reassign — _arcadsJobs is a let in the parent scope; we splice in place to preserve reference
+  const remaining = _arcadsJobs.filter(j => j.status !== 'done');
+  _arcadsJobs.splice(0, _arcadsJobs.length, ...remaining);
+  localStorage.setItem('arcadsJobs', JSON.stringify(_arcadsJobs));
+  svRenderJobs();
+  // Also refresh the Agents & Ops tab tracker if it's rendered
+  if (typeof renderArcadsJobs === 'function') renderArcadsJobs();
+}
+
+// ─── SECTION 4: Script Performance Table ─────────────────────────────────────
+
+let _svCurrentSort = 'done';
+
+function svSortScripts(sortBy) {
+  _svCurrentSort = sortBy;
+  svRenderScriptTable(_svScripts);
+}
+
+function svRenderScriptTable(scripts) {
+  const tbody = document.getElementById('svScriptTableBody');
+  if (!tbody) return;
+
+  if (!scripts || !scripts.length) {
+    tbody.innerHTML = '<tr class="empty"><td colspan="6">No scripts found.</td></tr>';
+    return;
+  }
+
+  const sorted = [...scripts].sort((a, b) => {
+    if (_svCurrentSort === 'name') return a.name.localeCompare(b.name);
+    return b.done - a.done; // default: most done
+  });
+
+  tbody.innerHTML = sorted.map(s => {
+    const statusDot = s.done > 0
+      ? `<span style="color:var(--green)">●</span>`
+      : s.pending > 0
+        ? `<span style="color:var(--yellow)">●</span>`
+        : `<span style="color:var(--muted)">○</span>`;
+    const actions = s.firstUrl
+      ? `<div style="display:flex;gap:4px;">
+           <a href="${s.firstUrl}" target="_blank" class="btn btn-ghost" style="font-size:10px;padding:3px 7px;">▶ Watch</a>
+           <button class="btn btn-teal" style="font-size:10px;padding:3px 7px;" onclick="queueFromArcads('${s.id}','${x(s.name)}','${s.firstUrl}')">+ Queue</button>
+         </div>`
+      : '<span style="font-size:11px;color:var(--muted);">—</span>';
+
+    return `<tr>
+      <td><span style="font-size:12px;font-weight:700;">${statusDot} ${x(s.name)}</span></td>
+      <td><span class="muted" style="font-size:11px;">${x(s.folderName || '—')}</span></td>
+      <td style="text-align:center;color:var(--green);font-weight:800;">${s.done}</td>
+      <td style="text-align:center;color:var(--gold);font-weight:800;">${s.pending}</td>
+      <td style="text-align:center;color:var(--red);font-weight:800;">${s.failed}</td>
+      <td>${actions}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── SECTION 5: Upload Queue (sv-prefixed) ────────────────────────────────────
+// These mirror initUpload / submitUpload / cancelUpload / renderUploadQueue
+// but use svDropZone, svFileInput, svUploadForm, etc.
+
+let _svPendingFile = null;
+
+function svInitUpload() {
+  const zone  = document.getElementById('svDropZone');
+  const input = document.getElementById('svFileInput');
+  if (!zone || !input) return;
+
+  zone.onclick = () => input.click();
+  zone.ondragover  = (e) => { e.preventDefault(); zone.classList.add('drag-over'); };
+  zone.ondragleave = ()  => zone.classList.remove('drag-over');
+  zone.ondrop = (e) => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    const f = e.dataTransfer.files[0];
+    if (f) svShowUploadForm(f);
+  };
+  input.onchange = () => { if (input.files[0]) svShowUploadForm(input.files[0]); };
+}
+
+function svShowUploadForm(file) {
+  _svPendingFile = file;
+  const fname = document.getElementById('svUploadFileName');
+  const title = document.getElementById('svUploadTitle');
+  const form  = document.getElementById('svUploadForm');
+  const zone  = document.getElementById('svDropZone');
+
+  if (fname) fname.textContent = `${file.name}  (${(file.size / 1024 / 1024).toFixed(1)} MB)`;
+  if (title) title.value = file.name.replace(/\.[^.]+$/, '').replace(/[_-]/g, ' ');
+  if (form)  form.style.display = 'block';
+  if (zone)  zone.style.display = 'none';
+}
+
+function svCancelUpload() {
+  _svPendingFile = null;
+  const form  = document.getElementById('svUploadForm');
+  const zone  = document.getElementById('svDropZone');
+  const input = document.getElementById('svFileInput');
+  if (form)  form.style.display  = 'none';
+  if (zone)  zone.style.display  = 'block';
+  if (input) input.value         = '';
+}
+
+async function svSubmitUpload() {
+  if (!_svPendingFile) return;
+  const btn = document.getElementById('svUploadSubmitBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Uploading…'; }
+
+  const platforms = [...document.querySelectorAll('#svPlatformCheckboxes input:checked')]
+    .map(i => i.value).join(',');
+
+  const fd = new FormData();
+  fd.append('video',       _svPendingFile);
+  fd.append('title',       document.getElementById('svUploadTitle')?.value.trim() || '');
+  fd.append('description', document.getElementById('svUploadDesc')?.value.trim() || '');
+  fd.append('platforms',   platforms);
+
+  try {
+    const r    = await fetch('/api/upload/video', { method: 'POST', body: fd });
+    const data = await r.json();
+    if (data.ok) {
+      svCancelUpload();
+      svRenderUploadQueue();
+      // Also refresh the original upload queue in Content Studio tab if visible
+      if (typeof renderUploadQueue === 'function') renderUploadQueue();
+    } else {
+      alert('Upload failed: ' + (data.error || 'Unknown error'));
+    }
+  } catch(e) {
+    alert('Upload error: ' + e.message);
+  }
+
+  if (btn) { btn.disabled = false; btn.textContent = '📤 Add to Queue'; }
+}
+
+async function svRenderUploadQueue() {
+  const el = document.getElementById('svUploadQueue');
+  if (!el) return;
+
+  // Ensure buffer channels are loaded (reuse shared global + loader)
+  if (!_bufferChannels.length && typeof loadBufferChannels === 'function') {
+    await loadBufferChannels();
+  }
+
+  try {
+    const q = await fetch('/api/upload/queue').then(r => r.json());
+    if (!q.length) {
+      el.innerHTML = '<div class="muted" style="font-size:12px;font-style:italic;">No videos staged yet.</div>';
+      return;
+    }
+
+    const SICONS = { tiktok: '♪', instagram: '📸', youtube: '▶', twitter: '𝕏', linkedin: 'in', facebook: 'f' };
+
+    el.innerHTML = q.map(v => {
+      const videoUrl   = v.arcadsUrl || (v.localUrl ? `http://localhost:${location.port || 3457}${v.localUrl}` : '');
+      const displayUrl = v.arcadsUrl || v.localUrl || '';
+      const channelOpts = _bufferChannels.map(c =>
+        `<option value="${c.id}">${SICONS[c.service] || '○'} ${x(c.name)}</option>`
+      ).join('');
+
+      return `
+      <div class="upload-item" id="svqi-${v.id}">
+        <div style="font-size:22px;flex-shrink:0;">${v.source === 'arcads' ? '🎬' : '🎥'}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${x(v.title)}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">
+            ${(v.platforms || []).map(p => `<span>${SICONS[p] || p}</span>`).join(' ')} ·
+            ${v.source === 'arcads' ? 'Arcads AI' : 'Upload'} ·
+            ${new Date(v.uploadedAt).toLocaleDateString()}
+          </div>
+          ${displayUrl ? `<div style="margin-top:4px;display:flex;align-items:center;gap:4px;">
+            <span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--teal);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;">${displayUrl.replace(/^https?:\/\/[^/]+/, '')}</span>
+            <button class="btn btn-ghost" style="font-size:10px;padding:2px 6px;flex-shrink:0;" onclick="navigator.clipboard.writeText('${encodeURIComponent(videoUrl)}')">Copy</button>
+          </div>` : ''}
+        </div>
+        <span class="upload-status ${v.status}">${v.status}</span>
+        <div style="display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end;">
+          ${videoUrl ? `<a href="${videoUrl}" target="_blank" class="btn btn-ghost" style="font-size:11px;padding:4px 8px;">⬇</a>` : ''}
+          ${v.status === 'staged' && _bufferChannels.length ? `
+            <select id="svBufChan-${v.id}" class="agent-input" style="width:130px;padding:3px 6px;font-size:11px;">
+              <option value="">Pick channel…</option>${channelOpts}
+            </select>
+            <button class="btn btn-teal" style="font-size:11px;padding:4px 8px;" onclick="svPostToBuffer('${v.id}','${encodeURIComponent(videoUrl || '')}','${encodeURIComponent(v.title || '')}')">Post ↗</button>
+          ` : ''}
+          ${v.status === 'staged' ? `<button class="btn btn-ghost" style="font-size:11px;padding:4px 8px;" onclick="markPublished('${v.id}');svRenderUploadQueue();">✓</button>` : ''}
+          <button class="btn btn-ghost" style="font-size:11px;padding:4px 8px;color:var(--red);" onclick="removeUpload('${v.id}');svRenderUploadQueue();">✕</button>
+        </div>
+      </div>`;
+    }).join('');
+
+  } catch(e) {
+    el.innerHTML = '<div class="muted" style="font-size:12px;">Could not load queue.</div>';
+  }
+}
+
+// Buffer post helper scoped to svUploadQueue (reads svBufChan- selects)
+async function svPostToBuffer(videoId, encodedUrl, encodedTitle) {
+  const chanEl = document.getElementById(`svBufChan-${videoId}`);
+  if (!chanEl || !chanEl.value) { alert('Pick a Buffer channel first.'); return; }
+  // Delegate to the shared postToBuffer function (same API surface)
+  if (typeof postToBuffer === 'function') {
+    // Temporarily copy the channel select value so postToBuffer can read bufChan-{id}
+    // The cleanest approach: call the API directly here
+    const channelId   = chanEl.value;
+    const videoUrl    = decodeURIComponent(encodedUrl);
+    const title       = decodeURIComponent(encodedTitle);
+    try {
+      const r = await fetch('/api/buffer/post', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ channelId, text: title, mediaUrl: videoUrl }),
+      });
+      const data = await r.json();
+      if (data.ok || data.data) {
+        await fetch('/api/upload/queue/' + videoId, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'published' }),
+        });
+        svRenderUploadQueue();
+        if (typeof renderUploadQueue === 'function') renderUploadQueue();
+      } else {
+        alert('Buffer post failed: ' + (data.error || JSON.stringify(data)));
+      }
+    } catch(e) { alert('Buffer error: ' + e.message); }
+  }
+}
+
+// ─── Main render ──────────────────────────────────────────────────────────────
+
+async function renderShortVideo() {
+  svLoadStats();        // fetches stats + renders performance table
+  svRenderJobs();       // reads _arcadsJobs (shared global)
+  svRenderHookLibrary();
+  svPopulateHookSelect();
+  svRenderUploadQueue();
+}
+
+// ─── Tab init (called by tab-switcher when shortvideo tab is activated) ────────
+// Wire this up in the tab-btn click handler:
+//
+//   case 'shortvideo':
+//     svInitActors();      // fetch actors once
+//     renderShortVideo();  // stats, jobs, hooks, queue
+//     break;
+//
+// Or add to the existing initArcads() / page-load block:
+//   svInitActors().then(() => renderShortVideo());
+
+
 // ─── Agent Manager ───────────────────────────────────────────────────────────
 const AM_SCHED_LABELS = { '0':'On-demand','900000':'Every 15 min','3600000':'Hourly','21600000':'Every 6h','86400000':'Daily','604800000':'Weekly' };
 const AM_TYPE_COLOR   = { webhook:'var(--teal)', command:'var(--gold)', 'ghl-workflow':'var(--pink)' };
@@ -2996,6 +5771,8 @@ initArcads();
 renderArcadsStats();
 loadConsultantStats();
 renderAgentManager();
+svInitActors();
+loadPaidMedia();
 
 // Resume polling for any pending Arcads jobs from previous sessions
 _arcadsJobs.filter(j=>j.status==='pending').forEach(j=>pollArcadsJob(j.scriptId));
