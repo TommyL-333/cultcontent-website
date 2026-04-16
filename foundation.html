@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Foundation &mdash; Cult Content</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    /* ��ۉ�� GHL full-width override ��ۉ�� */
+    .c-section > .inner { max-width: 100% !important; width: 100% !important; padding: 0 !important; }
+    .c-row { max-width: 100% !important; }
+    .c-column { max-width: 100% !important; }
+
+    /* ��ۉ�� Reset & base ��ۉ�� */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0d1b35;
+      --bg-card:   #122040;
+      --bg-card2:  #162548;
+      --teal:      #00f2ea;
+      --pink:      #ff2d6e;
+      --gold:      #c9a84c;
+      --text:      #e8eaf2;
+      --muted:     #8892a4;
+      --border:    rgba(0, 242, 234, 0.15);
+      --border-pink: rgba(255, 45, 110, 0.25);
+      --glow-teal: 0 0 30px rgba(0, 242, 234, 0.18);
+      --glow-pink: 0 0 30px rgba(255, 45, 110, 0.18);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Lato', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    h1, h2, h3, h4, h5 {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900;
+      line-height: 1.15;
+    }
+
+    a { color: var(--teal); text-decoration: none; transition: opacity .2s; }
+    a:hover { opacity: .8; }
+
+    img { display: block; max-width: 100%; }
+
+    /* ��ۉ�� Gradient text ��ۉ�� */
+    .gt {
+      background: linear-gradient(135deg, var(--teal) 0%, var(--pink) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .gt-gold {
+      background: linear-gradient(135deg, #e8c96a 0%, var(--gold) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ��ۉ�� Buttons ��ۉ�� */
+    .btn {
+      display: inline-block;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: .9rem;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      padding: .85rem 2rem;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: transform .2s, box-shadow .2s, opacity .2s;
+      border: none;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--teal), #00c9c3);
+      color: #080d1a;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,242,234,.35); opacity: 1; }
+
+    .btn-pink {
+      background: linear-gradient(135deg, var(--pink), #cc1a55);
+      color: #fff;
+    }
+    .btn-pink:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(255,45,110,.4); opacity: 1; }
+
+    .btn-outline {
+      background: transparent;
+      border: 2px solid var(--teal);
+      color: var(--teal);
+    }
+    .btn-outline:hover { background: rgba(0,242,234,.08); transform: translateY(-2px); opacity: 1; }
+
+    .btn-lg { font-size: 1rem; padding: 1.1rem 2.6rem; border-radius: 5px; }
+
+    /* ��ۉ�� Layout helpers ��ۉ�� */
+    .container { width: 100%; max-width: 1160px; margin: 0 auto; padding: 0 1.5rem; }
+    .section { padding: 5rem 0; }
+    .section-sm { padding: 3.5rem 0; }
+    .section-lg { padding: 7rem 0; }
+
+    .text-center { text-align: center; }
+    .text-muted { color: var(--muted); }
+
+    .section-label {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: .72rem;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: .75rem;
+    }
+
+    .section-title {
+      font-size: clamp(2rem, 4vw, 3rem);
+      margin-bottom: 1rem;
+    }
+
+    .section-sub {
+      font-size: 1.1rem;
+      color: var(--muted);
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    .divider {
+      width: 60px;
+      height: 3px;
+      background: linear-gradient(90deg, var(--teal), var(--pink));
+      border-radius: 2px;
+      margin: 1.25rem auto;
+    }
+
+    /* ��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?
+       NAV
+    ��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��? */
+    /* ── NAV ── */
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; flex-shrink: 0; }
+    .logo-img { height: 34px; width: auto; display: block; }
+    .logo-name {
+      font-family: 'Montserrat', sans-serif; font-weight: 900;
+      font-size: 0.8rem; letter-spacing: 0.13em; text-transform: uppercase; color: #fff;
+    }
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 40px; height: 64px;
+      background: rgba(8,13,26,0.88);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .nav-links { display: flex; align-items: center; gap: 26px; list-style: none; margin: 0; padding: 0; }
+    .nav-links a {
+      color: rgba(255,255,255,0.55); text-decoration: none;
+      font-size: 0.875rem; font-weight: 700; letter-spacing: 0.04em;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: #fff; }
+    .nav-links a.active { color: var(--teal, #00f2ea); }
+    .nav-right { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+    .nav-social { display: flex; align-items: center; gap: 5px; }
+    .nav-social a {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: rgba(255,255,255,0.07);
+      display: flex; align-items: center; justify-content: center;
+      text-decoration: none; color: rgba(255,255,255,0.5); font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+    .nav-social a:hover { background: rgba(255,255,255,0.14); color: #fff; }
+    .nav-cta {
+      display: inline-flex; align-items: center;
+      background: linear-gradient(90deg, #00f2ea, #ff0050);
+      color: #000; font-family: 'Montserrat', sans-serif;
+      font-weight: 900; font-size: 0.75rem; letter-spacing: 0.07em;
+      text-transform: uppercase; padding: 9px 20px;
+      border-radius: 100px; text-decoration: none; white-space: nowrap;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .nav-cta:hover { opacity: 0.85; transform: translateY(-1px); }
+    .nav-mobile-btn {
+      display: none; background: none; border: none; cursor: pointer;
+      color: #fff; font-size: 1.3rem; padding: 4px; line-height: 1;
+    }
+    .mobile-drawer {
+      display: none; position: fixed; top: 64px; left: 0; right: 0;
+      background: rgba(8,13,26,0.97); backdrop-filter: blur(16px);
+      z-index: 99; flex-direction: column;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .mobile-drawer.open { display: flex; }
+    .mobile-drawer a {
+      color: rgba(255,255,255,0.8); text-decoration: none;
+      font-family: 'Montserrat', sans-serif; font-weight: 700;
+      font-size: 0.9rem; letter-spacing: 0.05em; text-transform: uppercase;
+      padding: 16px 24px; border-bottom: 1px solid rgba(255,255,255,0.06);
+      display: flex; align-items: center; justify-content: space-between;
+      transition: background 0.2s;
+    }
+    .mobile-drawer a:hover { background: rgba(255,255,255,0.04); }
+    .mobile-drawer .mobile-cta {
+      background: linear-gradient(90deg, #00f2ea, #ff0050);
+      color: #000; margin: 16px 24px 20px; border-radius: 100px;
+      text-align: center; justify-content: center; border-bottom: none;
+    }
+    @media (max-width: 860px) {
+      nav { padding: 0 20px; }
+      .nav-links, .nav-social { display: none; }
+      .nav-mobile-btn { display: flex; }
+    }
+
+    /* ��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?
+       HERO
+    ��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��? */
+    .hero {
+      padding-top: 130px;
+      padding-bottom: 5rem;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(0,242,234,.08) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 40% at 80% 50%, rgba(255,0,80,.05) 0%, transparent 60%),
+        var(--bg);
+      text-align: center;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      background: rgba(0,242,234,.08);
+      border: 1px solid rgba(0,242,234,.25);
+      border-radius: 99px;
+      padding: .4rem 1.1rem;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: .72rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 1.75rem;
+    }
+
+    .hero-badge .dot {
+      width: 7px; height: 7px;
+      background: var(--teal);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--teal);
+      flex-shrink: 0;
+    }
+
+    .hero-title {
+      font-size: clamp(2.6rem, 6vw, 5rem);
+      letter-spacing: -.01em;
+      max-width: 820px;
+      margin: 0 auto .5rem;
+    }
+
+    .hero-sub {
+      font-size: clamp(1rem, 2vw, 1.25rem);
+      color: var(--muted);
+      max-width: 620px;
+      margin: 1.25rem auto 2rem;
+      line-height: 1.75;
+    }
+
+    .hero-price-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: .75rem;
+      background: rgba(201,168,76,.1);
+      border: 1px solid rgba(201,168,76,.35);
+      border-radius: 6px;
+      padding: .65rem 1.4rem;
+      margin-bottom: 2.25rem;
+    }
+
+    .hero-price-chip .chip-label {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: .72rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+
+    .hero-price-chip .chip-price {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900;
+      font-size: 1.5rem;
+      color: var(--gold);
+    }
+
+    .hero-price-chip .chip-type {
+      font-size: .8rem;
+      color: var(--muted);
+    }
+
+    .hero-ctas { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+
+    /* ��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?
+       DELIVERABLES
+    ��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��? */
+    .deliverables {
+      background: var(--bg);
+      position: relative;
+    }
+
+    .deliverables::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 70% 50% at 50% 100%, rgba(0,242,234,.05) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .del-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.5rem;
+      margin-top: 3.5rem;
+    }
+
+    .del-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 2rem;
+      transition: border-color .3s, transform .3s, box-shadow .3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .del-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--teal), var(--pink));
+      opacity: 0;
+      transition: opacity .3s;
+    }
+
+    .del-card:hover {
+      border-color: rgba(0,242,234,.35);
+      transform: translateY(-4px);
+      box-shadow: var(--glow-teal);
+    }
+
+    .del-card:hover::before { opacity: 1; }
+
+    .del-icon {
+      width: 52px; height: 52px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(0,242,234,.08);
+      border: 1px solid rgba(0,242,234,.2);
+      border-radius: 10px;
+      font-size: 1.5rem;
+      margin-bottom: 1.25rem;
+      flex-shrink: 0;
+    }
+
+    .del-num {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900;
+      font-size: .72rem;
+      letter-spacing: .12em;
+      color: var(--teal);
+      text-transform: uppercase;
+      margin-bottom: .4rem;
+    }
+
+    .del-card h3 {
+      font-size: 1.05rem;
+      margin-bottom: .6rem;
+      color: var(--text);
+    }
+
+    .del-card p {
+      font-size: .9rem;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    /* ��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?
+       HOW IT WORKS
+    ��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��? */
+    .how {
+      background: var(--bg-card);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+      margin-top: 3.5rem;
+      position: relative;
+    }
+
+    .steps-grid::before {
+      content: '';
+      position: absolute;
+      top: 2.5rem;
+      left: calc(16.67% + 1rem);
+      right: calc(16.67% + 1rem);
+      height: 2px;
+      background: linear-gradient(90deg, var(--teal), var(--pink));
+      opacity: .4;
+    }
+
+    .step {
+      text-align: center;
+      padding: 0 2rem 2rem;
+      position: relative;
+    }
+
+    .step-number {
+      width: 5rem; height: 5rem;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 1.5rem;
+      background: var(--bg);
+      border: 2px solid var(--teal);
+      border-radius: 50%;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900;
+      font-size: 1.5rem;
+      color: var(--teal);
+      position: relative;
+      z-index: 1;
+      box-shadow: 0 0 20px rgba(0,242,234,.2);
+    }
+
+    .step h3 {
+      font-size: 1.1rem;
+      margin-bottom: .6rem;
+      color: var(--text);
+    }
+
+    .step p {
+      font-size: .9rem;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    @media (max-width: 640px) {
+      .steps-grid { grid-template-columns: 1fr; }
+      .steps-grid::before { display: none; }
+      .step { padding-bottom: 2.5rem; }
+    }
+
+    /* ��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?
+       WHO IT'S FOR
+    ��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��? */
+    .for-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-top: 3.5rem;
+    }
+
+    @media (max-width: 640px) { .for-grid { grid-template-columns: 1fr; } }
+
+    .for-card {
+      background: var(--bg-card);
+      border-radius: 10px;
+      padding: 2rem;
+      border: 1px solid var(--border);
+    }
+
+    .for-card.yes { border-color: rgba(0,242,234,.25); }
+    .for-card.no  { border-color: rgba(255,0,80,.2); }
+
+    .for-card-title {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900;
+      font-size: .8rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+    }
+
+    .for-card.yes .for-card-title { color: var(--teal); }
+    .for-card.no  .for-card-title { color: var(--pink); }
+
+    .for-card ul { list-style: none; }
+
+    .for-card ul li {
+      padding: .65rem 0;
+      font-size: .95rem;
+      color: var(--muted);
+      border-bottom: 1px solid rgba(255,255,255,.05);
+      display: flex;
+      align-items: flex-start;
+      gap: .75rem;
+      line-height: 1.55;
+    }
+
+    .for-card ul li:last-child { border-bottom: none; }
+
+    .for-card ul li .li-icon {
+      width: 20px; height: 20px;
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%;
+      font-size: .75rem;
+      margin-top: .15rem;
+    }
+
+    .for-card.yes .li-icon { background: rgba(0,242,234,.12); color: var(--teal); }
+    .for-card.no  .li-icon { background: rgba(255,0,80,.12); color: var(--pink); }
+
+    /* ��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?
+       PRICING CARD
+    ��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��? */
+    .pricing-wrap {
+      background: var(--bg);
+    }
+
+    .pricing-card {
+      max-width: 720px;
+      margin: 3.5rem auto 0;
+      background: var(--bg-card2);
+      border: 1px solid rgba(201,168,76,.3);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 0 60px rgba(201,168,76,.08);
+    }
+
+    .pricing-header {
+      padding: 2.5rem 2.5rem 2rem;
+      background: linear-gradient(135deg, rgba(0,242,234,.06), rgba(255,0,80,.04));
+      border-bottom: 1px solid rgba(255,255,255,.07);
+      text-align: center;
+    }
+
+    .pricing-tag {
+      display: inline-block;
+      background: rgba(201,168,76,.12);
+      border: 1px solid rgba(201,168,76,.3);
+      border-radius: 99px;
+      padding: .3rem .9rem;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: .7rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1rem;
+    }
+
+    .pricing-name {
+      font-size: 1.8rem;
+      color: var(--text);
+      margin-bottom: .5rem;
+    }
+
+    .pricing-tagline {
+      font-size: .95rem;
+      color: var(--muted);
+    }
+
+    .pricing-price-row {
+      margin-top: 1.5rem;
+      display: flex;
+      align-items: baseline;
+      gap: .5rem;
+      justify-content: center;
+    }
+
+    .pricing-price {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900;
+      font-size: 3.5rem;
+      color: var(--gold);
+      line-height: 1;
+    }
+
+    .pricing-price-note {
+      font-size: .9rem;
+      color: var(--muted);
+    }
+
+    .pricing-body {
+      padding: 2rem 2.5rem;
+    }
+
+    .pricing-body h4 {
+      font-size: .8rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1.25rem;
+    }
+
+    .pricing-list {
+      list-style: none;
+      margin-bottom: 2rem;
+    }
+
+    .pricing-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: .75rem;
+      padding: .75rem 0;
+      border-bottom: 1px solid rgba(255,255,255,.05);
+      font-size: .95rem;
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    .pricing-list li:last-child { border-bottom: none; }
+
+    .pricing-list .check {
+      width: 20px; height: 20px;
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(0,242,234,.1);
+      border-radius: 50%;
+      color: var(--teal);
+      font-size: .8rem;
+      margin-top: .1rem;
+    }
+
+    .pricing-footer {
+      padding: 0 2.5rem 2.5rem;
+      text-align: center;
+    }
+
+    .pricing-footer .btn { width: 100%; max-width: 380px; font-size: 1rem; padding: 1.1rem 2rem; }
+
+    .pricing-note {
+      margin-top: 1rem;
+      font-size: .8rem;
+      color: var(--muted);
+    }
+
+    /* ��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?
+       FINAL CTA
+    ��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��? */
+    .final-cta {
+      background:
+        radial-gradient(ellipse 70% 60% at 50% 0%, rgba(0,242,234,.07) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 40% at 80% 100%, rgba(255,0,80,.05) 0%, transparent 60%),
+        var(--bg-card);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .final-cta h2 { font-size: clamp(2rem, 4.5vw, 3.2rem); max-width: 700px; margin: 0 auto 1rem; }
+    .final-cta p { font-size: 1.1rem; color: var(--muted); max-width: 520px; margin: 0 auto 2.25rem; }
+
+    /* ��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?
+       FOOTER
+    ��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��? */
+    .footer {
+      background: #091222;
+      border-top: 1px solid rgba(255,255,255,.06);
+      padding: 3rem 0 2rem;
+    }
+
+    .footer-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+      text-align: center;
+    }
+
+    .footer-logo img { height: 30px; }
+
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      justify-content: center;
+      list-style: none;
+    }
+
+    .footer-links a {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 600;
+      font-size: .75rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      transition: color .2s;
+    }
+
+    .footer-links a:hover { color: var(--text); }
+
+    .footer-copy {
+      font-size: .78rem;
+      color: #4a5568;
+    }
+
+    .footer-social {
+      display: flex;
+      gap: 18px;
+      align-items: center;
+    }
+    .footer-social a {
+      color: var(--muted);
+      font-size: 1.15rem;
+      text-decoration: none;
+      transition: color .2s;
+    }
+    .footer-social a:hover { color: var(--teal); }
+
+    .footer-divider {
+      width: 100%;
+      max-width: 600px;
+      height: 1px;
+      background: rgba(255,255,255,.05);
+    }
+
+    /* ��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?
+       MISC HELPERS
+    ��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��? */
+    .mt-1 { margin-top: .5rem; }
+    .mt-2 { margin-top: 1rem; }
+    .mt-3 { margin-top: 1.5rem; }
+    .mt-4 { margin-top: 2rem; }
+
+  </style>
+</head>
+<body>
+
+<!-- ��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?
+     NAV
+��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��? -->
+<nav>
+  <a href="/" class="logo">
+    <img src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/68529ceff63e1913ceb4e2e0.png" alt="Cult Content" class="logo-img">
+    <span class="logo-name">Cult Content</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/">Home</a></li>
+    <li><a href="/founders-story">My Story</a></li>
+    <li><a href="/consulting">Consulting</a></li>
+    <li><a href="/partners">Partners</a></li>
+    <li><a href="/creators">Community</a></li>
+  </ul>
+  <div class="nav-right">
+    <div class="nav-social">
+      <a href="https://www.tiktok.com/@cultcontent.cc" title="TikTok" target="_blank" rel="noopener"><i class="fa-brands fa-tiktok"></i></a>
+      <a href="https://www.instagram.com/cultcontent.cc/" title="Instagram" target="_blank" rel="noopener"><i class="fa-brands fa-instagram"></i></a>
+      <a href="https://www.youtube.com/@Cult-Content-CC" title="YouTube" target="_blank" rel="noopener"><i class="fa-brands fa-youtube"></i></a>
+      <a href="https://www.linkedin.com/company/cultcontent" title="LinkedIn" target="_blank" rel="noopener"><i class="fa-brands fa-linkedin-in"></i></a>
+    </div>
+    <a href="/book-with-tommy" class="nav-cta">Book a Call</a>
+  </div>
+  <button class="nav-mobile-btn" id="mobileMenuBtn" aria-label="Open menu">&#9776;</button>
+</nav>
+<div class="mobile-drawer" id="mobileDrawer">
+  <a href="/">Home</a>
+  <a href="/founders-story">My Story</a>
+  <a href="/consulting">Consulting</a>
+  <a href="/partners">Partners</a>
+  <a href="/creators">Community</a>
+  <a href="/book-with-tommy" class="mobile-cta">Book a Call</a>
+</div>
+
+
+<!-- ��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?
+     HERO
+��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��? -->
+<section class="hero" id="hero">
+  <div class="container">
+    <div class="hero-badge">
+      <span class="dot"></span>
+      Done With You &mdash; Setup Package
+    </div>
+
+    <h1 class="hero-title">
+      Let Us Build Your
+      <span class="gt"> Foundation</span>
+    </h1>
+
+    <p class="hero-sub">
+      Before you scale, you need a system. We&#39;ll build your affiliate infrastructure, messaging, and strategy so you&#39;re ready to run the moment cold start ends &mdash; not scrambling after it.
+    </p>
+
+    <div class="hero-price-chip">
+      <span class="chip-label">One-Time Investment</span>
+      <span class="chip-price">$1,497</span>
+      <span class="chip-type">&middot; No retainer. No recurring fees.</span>
+    </div>
+
+    <div class="hero-ctas">
+      <a href="https://link.fastpaydirect.com/payment-link/69c28a874ed3f557f5e84184" class="btn btn-pink btn-lg">Get Started &mdash; $1,497</a>
+      <a href="#whats-included" class="btn btn-outline btn-lg">See What&#39;s Included</a>
+    </div>
+  </div>
+</section>
+
+
+<!-- ��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?
+     WHAT'S INCLUDED
+��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��? -->
+<section class="section deliverables" id="whats-included">
+  <div class="container">
+    <div class="text-center">
+      <p class="section-label">What&#39;s Included</p>
+      <h2 class="section-title">Five Deliverables.<br /><span class="gt">One Solid Foundation.</span></h2>
+      <div class="divider"></div>
+      <p class="section-sub">Every asset, template, and session you need to hit the ground running with TikTok Shop affiliates.</p>
+    </div>
+
+    <div class="del-grid">
+
+      <!-- 1 -->
+      <div class="del-card">
+        <div class="del-icon">&#128196;</div>
+        <p class="del-num">Deliverable 01</p>
+        <h3>Affiliate Resource Hub</h3>
+        <p>
+          One document with everything a creator needs before they post &mdash; video briefs, top-performing videos, competitor references, scripts, product details, and full brand information. One place. No excuses for a bad video.
+        </p>
+      </div>
+
+      <!-- 2 -->
+      <div class="del-card">
+        <div class="del-icon">&#9993;</div>
+        <p class="del-num">Deliverable 02</p>
+        <h3>Affiliate Messaging Template</h3>
+        <p>
+          Your complete messaging flow &mdash; built for every stage of affiliate outreach. From first contact to follow-up to activation, you&#39;ll have proven copy for every conversation so nothing falls through the cracks.
+        </p>
+      </div>
+
+      <!-- 3 -->
+      <div class="del-card">
+        <div class="del-icon">&#128172;</div>
+        <p class="del-num">Deliverable 03</p>
+        <h3>Cult Content Creator Q&amp;A</h3>
+        <p>
+          An invite into the Cult Content creator community. Your brand gets a dedicated Q&amp;A session with active affiliates who are already posting TikTok Shop content &mdash; real feedback, real connections.
+        </p>
+      </div>
+
+      <!-- 4 -->
+      <div class="del-card">
+        <div class="del-icon">&#127919;</div>
+        <p class="del-num">Deliverable 04</p>
+        <h3>TAP Campaign Setup</h3>
+        <p>
+          Your brand gets added to the Cult Content TikTok Affiliate Partner campaigns &mdash; a proven framework that plugs you into an active affiliate ecosystem from day one.
+        </p>
+      </div>
+
+      <!-- 5 -->
+      <div class="del-card">
+        <div class="del-icon">&#128222;</div>
+        <p class="del-num">Deliverable 05</p>
+        <h3>Strategy Kickoff Call</h3>
+        <p>
+          A dedicated session with Tommy to walk through everything we&#39;ve built together. You&#39;ll leave knowing exactly what to do next &mdash; no confusion, no guesswork.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?
+     HOW IT WORKS
+��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��? -->
+<section class="section how" id="how-it-works">
+  <div class="container">
+    <div class="text-center">
+      <p class="section-label">The Process</p>
+      <h2 class="section-title">Simple. Fast. <span class="gt">Done Right.</span></h2>
+      <div class="divider"></div>
+      <p class="section-sub">Three steps from signup to launch-ready. No drawn-out onboarding, no waiting around.</p>
+    </div>
+
+    <div class="steps-grid">
+
+      <div class="step">
+        <div class="step-number">1</div>
+        <h3>You Book</h3>
+        <p>
+          Grab your spot and lock in your $1,497 investment. We&#39;ll send you an onboarding form to get the brand details we need before we start building.
+        </p>
+      </div>
+
+      <div class="step">
+        <div class="step-number">2</div>
+        <h3>We Build</h3>
+        <p>
+          Our team builds out every deliverable &mdash; your Resource Hub, messaging templates, Creator Q&amp;A, and TAP setup &mdash; tailored to your brand and offer.
+        </p>
+      </div>
+
+      <div class="step">
+        <div class="step-number">3</div>
+        <h3>You Launch</h3>
+        <p>
+          We walk through everything on your Strategy Kickoff Call. You get your Discord invite, all your assets, and a clear plan. You&#39;re ready to run.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?
+     WHO IT'S FOR
+��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��? -->
+<section class="section" id="who-its-for"
+  style="background: radial-gradient(ellipse 60% 40% at 50% 50%, rgba(255,0,80,.04) 0%, transparent 70%), var(--bg);">
+  <div class="container">
+    <div class="text-center">
+      <p class="section-label">Is This Right for You?</p>
+      <h2 class="section-title">Foundation Is <span class="gt">Built For</span> Sellers Who Are Ready to Do the Work</h2>
+      <div class="divider"></div>
+      <p class="section-sub">This is a setup package &mdash; not full management. Be honest about where you are before you book.</p>
+    </div>
+
+    <div class="for-grid">
+
+      <div class="for-card yes">
+        <p class="for-card-title">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <circle cx="8" cy="8" r="8" fill="rgba(0,242,234,0.15)"/>
+            <path d="M4.5 8.5l2.5 2.5 4-5" stroke="#00f2ea" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          This is for you if&hellip;
+        </p>
+        <ul role="list">
+          <li>
+            <span class="li-icon" aria-hidden="true">&#10003;</span>
+            You&#39;re a new TikTok Shop seller in cold start (or about to enter it) and want to set up the right way from day one
+          </li>
+          <li>
+            <span class="li-icon" aria-hidden="true">&#10003;</span>
+            You&#39;re an established brand that wants to find quality affiliates and actually build a repeatable recruitment system
+          </li>
+          <li>
+            <span class="li-icon" aria-hidden="true">&#10003;</span>
+            You&#39;re a founder who wants real infrastructure &mdash; not vibes &mdash; before you start spending on creators
+          </li>
+          <li>
+            <span class="li-icon" aria-hidden="true">&#10003;</span>
+            You understand this is DWY (Done With You) and you&#39;re ready to execute the system we build together
+          </li>
+        </ul>
+      </div>
+
+      <div class="for-card no">
+        <p class="for-card-title">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <circle cx="8" cy="8" r="8" fill="rgba(255,0,80,0.15)"/>
+            <path d="M5.5 5.5l5 5M10.5 5.5l-5 5" stroke="#ff0050" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          This is NOT for you if&hellip;
+        </p>
+        <ul role="list">
+          <li>
+            <span class="li-icon" aria-hidden="true">&#215;</span>
+            Your brand is already at scale with an active affiliate base &mdash; you need our Growth Partner program, not a setup package
+          </li>
+          <li>
+            <span class="li-icon" aria-hidden="true">&#215;</span>
+            You want fully done-for-you management where we handle everything while you stay hands-off
+          </li>
+          <li>
+            <span class="li-icon" aria-hidden="true">&#215;</span>
+            You won&#39;t actually use the system we build &mdash; the deliverables only work if you put them to work
+          </li>
+          <li>
+            <span class="li-icon" aria-hidden="true">&#215;</span>
+            You&#39;re looking for a shortcut that skips the work of affiliate recruitment entirely
+          </li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?
+     PRICING CARD
+��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��? -->
+<section class="section pricing-wrap" id="pricing">
+  <div class="container">
+    <div class="text-center">
+      <p class="section-label">Pricing</p>
+      <h2 class="section-title">One Price. <span class="gt">Everything Included.</span></h2>
+      <div class="divider"></div>
+    </div>
+
+    <div class="pricing-card">
+      <div class="pricing-header">
+        <span class="pricing-tag">Done With You &mdash; One-Time</span>
+        <h3 class="pricing-name">Foundation</h3>
+        <p class="pricing-tagline">Let Us Build Your Foundation</p>
+        <div class="pricing-price-row">
+          <span class="pricing-price gt-gold">$1,497</span>
+          <span class="pricing-price-note">one-time payment</span>
+        </div>
+      </div>
+
+      <div class="pricing-body">
+        <h4>Everything included:</h4>
+        <ul class="pricing-list" role="list">
+          <li>
+            <span class="check" aria-hidden="true">&#10003;</span>
+            <span><strong>Affiliate Resource Hub</strong> &mdash; Everything a creator needs in one document</span>
+          </li>
+          <li>
+            <span class="check" aria-hidden="true">&#10003;</span>
+            <span><strong>Affiliate Messaging Template</strong> &mdash; Your complete outreach &amp; follow-up messaging flow</span>
+          </li>
+          <li>
+            <span class="check" aria-hidden="true">&#10003;</span>
+            <span><strong>Cult Content Creator Q&amp;A</strong> &mdash; Live session with active TikTok Shop affiliates</span>
+          </li>
+          <li>
+            <span class="check" aria-hidden="true">&#10003;</span>
+            <span><strong>TAP Campaign Setup</strong> &mdash; Added to the Cult Content TikTok Affiliate Partner campaigns</span>
+          </li>
+          <li>
+            <span class="check" aria-hidden="true">&#10003;</span>
+            <span><strong>Strategy Kickoff Call</strong> &mdash; Walk through everything together before you launch</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="pricing-footer">
+        <a href="https://link.fastpaydirect.com/payment-link/69c28a874ed3f557f5e84184" class="btn btn-pink btn-lg">Build Your Foundation &rarr;</a>
+        <p class="pricing-note">One-time payment &middot; No contracts &middot; No recurring fees</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?
+     FINAL CTA
+��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��? -->
+<section class="section-lg final-cta" id="get-started">
+  <div class="container">
+    <p class="section-label">Ready to Start?</p>
+    <h2>
+      Stop Guessing.<br />
+      <span class="gt">Build the System First.</span>
+    </h2>
+    <p>
+      Most sellers waste weeks fumbling through TikTok Shop without a strategy. Foundation gets you set up right &mdash; so when you scale, you scale on solid ground.
+    </p>
+    <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
+      <a href="https://link.fastpaydirect.com/payment-link/69c28a874ed3f557f5e84184" class="btn btn-pink btn-lg">Get Started &mdash; $1,497</a>
+      <a href="https://cultcontent.cc/growth-partner" class="btn btn-outline btn-lg">See Growth Partner Instead</a>
+    </div>
+  </div>
+</section>
+
+
+<!-- ��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?
+     FOOTER
+��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��?��? -->
+<footer class="footer" role="contentinfo">
+  <div class="container">
+    <div class="footer-inner">
+      <a href="/" class="footer-logo" aria-label="Cult Content">
+        <img src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/68529ceff63e1913ceb4e2e0.png" alt="Cult Content" />
+      </a>
+
+      <nav aria-label="Footer navigation">
+        <ul class="footer-links" role="list">
+          <li><a href="/">Home</a></li>
+          <li><a href="/growth-partner">Growth Partner</a></li>
+          <li><a href="/foundation" aria-current="page">Foundation</a></li>
+          <li><a href="/consulting">Consulting</a></li>
+          <li><a href="https://link.fastpaydirect.com/payment-link/69c28a874ed3f557f5e84184">Book a Call</a></li>
+        </ul>
+      </nav>
+
+      <div class="footer-social">
+        <a href="https://www.tiktok.com/@cultcontent.cc" target="_blank" rel="noopener" aria-label="TikTok"><i class="fa-brands fa-tiktok"></i></a>
+        <a href="https://www.instagram.com/cultcontent.cc/" target="_blank" rel="noopener" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+        <a href="https://www.youtube.com/@Cult-Content-CC" target="_blank" rel="noopener" aria-label="YouTube"><i class="fa-brands fa-youtube"></i></a>
+        <a href="https://www.linkedin.com/company/cultcontent/" target="_blank" rel="noopener" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+      </div>
+
+      <div class="footer-divider" role="separator"></div>
+
+      <p class="footer-copy">
+        &copy; 2025 Cult Content. All rights reserved.
+        Built by Tommy Lynch &amp; the Cult Content team.
+      </p>
+    </div>
+  </div>
+</footer>
+
+  <script>
+    (function(){
+      const links = document.querySelectorAll('.nav-links a');
+      const path = window.location.pathname.replace(/\/$/, '') || '/';
+      links.forEach(a => { if ((a.getAttribute('href').replace(/\/$/, '') || '/') === path) a.classList.add('active'); });
+      const btn = document.getElementById('mobileMenuBtn');
+      const drawer = document.getElementById('mobileDrawer');
+      if (btn && drawer) {
+        btn.addEventListener('click', e => { e.stopPropagation(); drawer.classList.toggle('open'); });
+        document.addEventListener('click', e => { if (!drawer.contains(e.target) && e.target !== btn) drawer.classList.remove('open'); });
+      }
+    })();
+  </script>
+</body>
+</html>

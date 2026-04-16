@@ -1,0 +1,3006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Command Center — Cult Content</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Lato:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    /* ─── Variables ─────────────────────────────────────────── */
+    :root {
+      --bg:        #f7f3ec;
+      --text:      #141210;
+      --soft:      #3a3530;
+      --muted:     #7a7268;
+      --border:    rgba(20,18,16,0.09);
+      --dark:      #12101a;
+      --dark-2:    #1c1828;
+      --teal:      #00f2ea;
+      --pink:      #ff0050;
+      --gold:      #c9a84c;
+      --green:     #00d27a;
+      --red:       #ff3b30;
+      --yellow:    #ffcc00;
+      --card:      #ffffff;
+      --shadow:    0 1px 4px rgba(0,0,0,0.06), 0 6px 20px rgba(0,0,0,0.04);
+      --glow:      0 0 20px rgba(0,242,234,0.3);
+    }
+
+    /* ─── Reset ─────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; }
+    body {
+      font-family: 'Lato', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* ─── Fixed layout ──────────────────────────────────────── */
+    .header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      height: 60px;
+      background: var(--dark);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 28px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .tab-nav {
+      position: fixed; top: 60px; left: 0; right: 0; z-index: 99;
+      height: 46px;
+      background: var(--dark-2);
+      display: flex; align-items: stretch;
+      padding: 0 20px;
+      gap: 2px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .content {
+      position: fixed; top: 106px; left: 0; right: 0; bottom: 0;
+      overflow-y: auto;
+      padding: 28px;
+    }
+    .content::-webkit-scrollbar { width: 5px; }
+    .content::-webkit-scrollbar-thumb { background: rgba(20,18,16,0.15); border-radius: 3px; }
+
+    /* ─── Header ────────────────────────────────────────────── */
+    .logo { display: flex; align-items: baseline; gap: 12px; }
+    .logo-name {
+      font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 17px;
+      background: linear-gradient(90deg, var(--teal), var(--pink));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      filter: var(--glow); letter-spacing: 0.06em;
+    }
+    .logo-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.18em;
+      text-transform: uppercase; color: var(--gold);
+    }
+    .header-right { display: flex; align-items: center; gap: 14px; }
+    .refresh-meta {
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      color: rgba(255,255,255,0.35);
+    }
+    .refresh-meta b { color: rgba(255,255,255,0.55); }
+    .btn-refresh {
+      height: 30px; padding: 0 14px;
+      background: rgba(0,242,234,0.08); border: 1px solid rgba(0,242,234,0.25);
+      border-radius: 6px; color: var(--teal);
+      font-size: 12px; font-weight: 700; cursor: pointer;
+      font-family: 'Lato', sans-serif; letter-spacing: 0.04em;
+      transition: all 0.15s;
+    }
+    .btn-refresh:hover { background: rgba(0,242,234,0.18); border-color: var(--teal); box-shadow: var(--glow); }
+    .btn-refresh:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* ─── Tabs ───────────────────────────────────────────────── */
+    .tab-btn {
+      height: 100%; padding: 0 18px;
+      background: none; border: none; border-bottom: 2px solid transparent;
+      color: rgba(255,255,255,0.4); font-size: 13px; font-weight: 700;
+      cursor: pointer; font-family: 'Lato', sans-serif; letter-spacing: 0.04em;
+      transition: all 0.15s; white-space: nowrap;
+    }
+    .tab-btn:hover { color: rgba(255,255,255,0.7); }
+    .tab-btn.active { color: var(--teal); border-bottom-color: var(--teal); }
+
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+    /* ─── Grids ──────────────────────────────────────────────── */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+      gap: 16px; margin-bottom: 24px;
+    }
+    .two-col   { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .three-col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    @media (max-width: 860px) {
+      .two-col, .three-col { grid-template-columns: 1fr; }
+    }
+
+    /* ─── Cards ──────────────────────────────────────────────── */
+    .card {
+      background: var(--card); border-radius: 12px;
+      padding: 20px; box-shadow: var(--shadow); border: 1px solid var(--border);
+    }
+    .card-label {
+      font-family: 'Montserrat', sans-serif; font-weight: 700;
+      font-size: 10px; text-transform: uppercase; letter-spacing: 0.13em;
+      color: var(--muted); margin-bottom: 14px;
+    }
+
+    /* ─── KPI cards ──────────────────────────────────────────── */
+    .kpi-card {
+      background: var(--card); border-radius: 12px;
+      padding: 20px 20px 16px; box-shadow: var(--shadow); border: 1px solid var(--border);
+    }
+    .kpi-label {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.12em; color: var(--muted); margin-bottom: 8px;
+    }
+    .kpi-value {
+      font-family: 'Montserrat', sans-serif; font-weight: 900;
+      font-size: 38px; color: var(--teal); line-height: 1; margin-bottom: 5px;
+    }
+    .kpi-value.gold  { color: var(--gold); }
+    .kpi-value.green { color: var(--green); }
+    .kpi-sub { font-size: 12px; color: var(--muted); }
+
+    /* ─── Status ─────────────────────────────────────────────── */
+    .dot {
+      display: inline-block; width: 8px; height: 8px;
+      border-radius: 50%; margin-right: 6px; flex-shrink: 0;
+    }
+    .dot.on  { background: var(--green); box-shadow: 0 0 7px var(--green); }
+    .dot.off { background: var(--red); }
+    .dot.idle { background: var(--yellow); }
+    .status-row { display: flex; align-items: center; font-size: 13px; font-weight: 700; }
+    .status-row.on  { color: var(--green); }
+    .status-row.off { color: var(--red); }
+    .status-row.idle { color: var(--yellow); }
+
+    /* ─── Tables ─────────────────────────────────────────────── */
+    .tbl { width: 100%; border-collapse: collapse; }
+    .tbl th {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.1em; color: var(--muted); text-align: left;
+      padding: 0 10px 10px; border-bottom: 1px solid var(--border);
+    }
+    .tbl td {
+      padding: 10px; font-size: 13px; color: var(--soft);
+      border-bottom: 1px solid var(--border); vertical-align: middle;
+    }
+    .tbl tr:last-child td { border-bottom: none; }
+    .tbl tr:hover td { background: rgba(0,242,234,0.025); }
+    .tbl .empty td { text-align: center; color: var(--muted); padding: 24px; font-style: italic; }
+
+    /* ─── Badges ─────────────────────────────────────────────── */
+    .badge {
+      display: inline-block; padding: 2px 8px; border-radius: 20px;
+      font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+    }
+    .b-open     { background: rgba(0,242,234,0.12);  color: var(--teal); }
+    .b-won      { background: rgba(0,210,122,0.12);  color: var(--green); }
+    .b-lost     { background: rgba(255,59,48,0.1);   color: var(--red); }
+    .b-active   { background: rgba(0,210,122,0.12);  color: var(--green); }
+    .b-draft    { background: rgba(0,0,0,0.06);      color: var(--muted); }
+    .b-new      { background: rgba(201,168,76,0.15); color: var(--gold); }
+    .b-confirmed{ background: rgba(0,210,122,0.12);  color: var(--green); }
+    .b-cancelled{ background: rgba(255,59,48,0.1);   color: var(--red); }
+
+    /* ─── Workflow list ──────────────────────────────────────── */
+    .wf-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 9px 0; border-bottom: 1px solid var(--border);
+    }
+    .wf-item:last-child { border-bottom: none; }
+    .wf-name  { font-size: 13px; font-weight: 700; color: var(--soft); }
+    .wf-id    { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); }
+
+    /* ─── Server card ────────────────────────────────────────── */
+    .server-row { display: flex; align-items: center; gap: 14px; }
+    .server-icon {
+      width: 46px; height: 46px; border-radius: 10px;
+      background: rgba(0,242,234,0.08); display: flex; align-items: center;
+      justify-content: center; font-size: 22px; flex-shrink: 0;
+    }
+    .server-name { font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 14px; margin-bottom: 3px; }
+    .server-url  { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); }
+
+    /* ─── Connect cards ──────────────────────────────────────── */
+    .connect-card {
+      border: 1.5px dashed rgba(20,18,16,0.14); border-radius: 12px;
+      padding: 36px 24px; text-align: center;
+      background: rgba(247,243,236,0.6);
+    }
+    .connect-icon { font-size: 30px; margin-bottom: 10px; opacity: 0.3; }
+    .connect-title { font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 15px; margin-bottom: 6px; }
+    .connect-desc  { font-size: 12px; color: var(--muted); margin-bottom: 18px; }
+    .btn-soon {
+      display: inline-block; padding: 8px 18px;
+      background: rgba(20,18,16,0.06); border: 1px solid var(--border);
+      border-radius: 6px; font-size: 12px; font-weight: 700; color: var(--muted);
+      font-family: 'Lato', sans-serif; cursor: default;
+    }
+
+    /* ─── Action buttons ─────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      height: 34px; padding: 0 16px; border-radius: 8px;
+      font-size: 12px; font-weight: 700; cursor: pointer;
+      font-family: 'Lato', sans-serif; text-decoration: none;
+      transition: all 0.15s; border: none; white-space: nowrap;
+    }
+    .btn-teal { background: var(--teal); color: var(--dark); }
+    .btn-teal:hover { box-shadow: var(--glow); filter: brightness(1.06); }
+    .btn-ghost {
+      background: rgba(20,18,16,0.06); color: var(--soft);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { background: rgba(20,18,16,0.11); }
+
+    /* ─── Section header ─────────────────────────────────────── */
+    .sec-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .sec-title  { font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 20px; }
+
+    /* ─── Utilities ──────────────────────────────────────────── */
+    .mb16 { margin-bottom: 16px; }
+    .mb24 { margin-bottom: 24px; }
+    .mt16 { margin-top: 16px; }
+    .mono { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+
+    /* ─── Performance tab overrides ─────────────────────────── */
+    .kpi-row-perf {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 16px; margin-bottom: 24px;
+    }
+    .yt-two-col {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;
+    }
+    @media (max-width: 860px) {
+      .yt-two-col { grid-template-columns: 1fr; }
+    }
+    .muted { color: var(--muted); }
+    .gold  { color: var(--gold); }
+    .flex-wrap { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    /* ─── Social profile cards ───────────────────────────────── */
+    .social-profile {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 0; border-bottom: 1px solid var(--border);
+    }
+    .social-profile:last-child { border-bottom: none; }
+    .social-avatar {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: rgba(0,242,234,0.08);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; flex-shrink: 0; overflow: hidden;
+    }
+    .social-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    .social-info { flex: 1; min-width: 0; }
+    .social-name { font-size: 13px; font-weight: 700; color: var(--soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .social-handle { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); margin-top: 2px; }
+    .social-stat { text-align: right; flex-shrink: 0; }
+    .social-stat-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+    .social-stat-value { font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 18px; color: var(--teal); line-height: 1.1; }
+
+    .range-btn {
+      background: rgba(0,0,0,0.05); border: 1px solid var(--border);
+      border-radius: 6px; padding: 4px 12px; font-size: 12px; font-weight: 700;
+      font-family: 'JetBrains Mono', monospace; color: var(--muted); cursor: pointer;
+      transition: all 0.15s;
+    }
+    .range-btn:hover { background: rgba(0,242,234,0.08); color: var(--teal); border-color: rgba(0,242,234,0.3); }
+    .range-btn.active { background: rgba(0,242,234,0.12); color: var(--teal); border-color: rgba(0,242,234,0.5); }
+    .kpi-delta { font-size: 10px; font-weight: 700; margin-top: 2px; min-height: 13px; }
+    .delta-up   { color: #00d27a; }
+    .delta-down { color: #ff6b6b; }
+    .delta-flat { color: var(--muted); }
+    .perf-account-row { display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border); }
+    .perf-account-row:last-child { border-bottom: none; }
+
+    /* ── Agents & Ops ── */
+    .agent-section-label {
+      font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 11px;
+      letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase;
+      margin: 0 0 10px; padding-top: 4px;
+    }
+    .agent-card { padding: 16px; }
+    .agent-icon {
+      width: 38px; height: 38px; border-radius: 10px; font-size: 18px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .agent-name { font-family:'Montserrat',sans-serif; font-weight:900; font-size:13px; margin-bottom:3px; }
+    .agent-desc { font-size:11px; color:var(--muted); line-height:1.5; }
+    .agent-meta { font-size:11px; color:var(--muted); margin-top:8px; font-family:'JetBrains Mono',monospace; }
+    .agent-input {
+      width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:7px;
+      background:rgba(255,255,255,0.7); font-size:12px; font-family:inherit;
+      color:var(--text); outline:none; box-sizing:border-box;
+      transition: border-color 0.15s;
+    }
+    .agent-input:focus { border-color: rgba(0,242,234,0.5); }
+    .btn-gold {
+      background: linear-gradient(90deg, #c9a84c, #e8c76a); color: #12101a;
+      border: none; padding: 8px 16px; border-radius: 8px; font-weight: 800;
+      font-size: 12px; cursor: pointer; font-family: 'Montserrat', sans-serif;
+      transition: opacity 0.15s;
+    }
+    .btn-gold:hover { opacity: 0.88; }
+    .btn-gold:disabled { opacity: 0.45; cursor: not-allowed; }
+    .b-soon { background: rgba(201,168,76,0.12); color: var(--gold); font-size:10px; font-weight:800; padding:3px 8px; border-radius:20px; white-space:nowrap; }
+    .drop-zone {
+      border: 2px dashed var(--border); border-radius: 12px; padding: 32px 20px;
+      text-align: center; cursor: pointer; transition: all 0.2s; color: var(--soft);
+    }
+    .drop-zone:hover, .drop-zone.drag-over {
+      border-color: rgba(0,242,234,0.5); background: rgba(0,242,234,0.04);
+    }
+    .drop-icon { font-size: 32px; margin-bottom: 8px; }
+    .platform-check {
+      display:flex; align-items:center; gap:5px; font-size:12px; font-weight:700;
+      color:var(--soft); cursor:pointer; padding:5px 10px; border-radius:6px;
+      border:1px solid var(--border); background:rgba(0,0,0,0.03);
+      transition: all 0.15s;
+    }
+    .platform-check:has(input:checked) { border-color: rgba(0,242,234,0.4); background:rgba(0,242,234,0.06); color:var(--teal); }
+    .upload-item {
+      display:flex; align-items:center; gap:12px; padding:10px 0;
+      border-bottom:1px solid var(--border);
+    }
+    .upload-item:last-child { border-bottom:none; }
+    .upload-status { font-size:10px; font-weight:800; padding:3px 8px; border-radius:20px; white-space:nowrap; }
+    .upload-status.staged    { background:rgba(0,242,234,0.1);  color:var(--teal); }
+    .upload-status.published { background:rgba(0,210,122,0.1);  color:var(--green); }
+    .upload-status.skipped   { background:rgba(0,0,0,0.06);     color:var(--muted); }
+    .actor-filter {
+      background:rgba(0,0,0,0.05); border:1px solid var(--border); border-radius:5px;
+      padding:3px 10px; font-size:11px; font-weight:700; cursor:pointer; color:var(--muted);
+      font-family:inherit; transition:all 0.15s;
+    }
+    .actor-filter.active  { background:rgba(0,242,234,0.12); color:var(--teal); border-color:rgba(0,242,234,0.4); }
+    .actor-card {
+      border:1px solid var(--border); border-radius:8px; padding:8px 10px; cursor:pointer;
+      background:rgba(255,255,255,0.5); transition:all 0.15s; font-size:12px;
+    }
+    .actor-card:hover { border-color:rgba(0,242,234,0.4); background:rgba(0,242,234,0.04); }
+    .actor-card.selected { border-color:var(--teal); background:rgba(0,242,234,0.08); }
+    .actor-card .actor-card-name { font-weight:700; font-size:12px; margin-bottom:3px; }
+    .actor-card .actor-card-tags { font-size:10px; color:var(--muted); }
+    .gen-job {
+      display:flex; align-items:center; gap:10px; padding:8px 0;
+      border-bottom:1px solid var(--border); font-size:12px;
+    }
+    .gen-job:last-child { border-bottom:none; }
+    .gen-status { font-size:10px; font-weight:800; padding:2px 8px; border-radius:20px; white-space:nowrap; }
+    .gen-status.pending   { background:rgba(201,168,76,0.12); color:var(--gold); }
+    .gen-status.done      { background:rgba(0,210,122,0.1);  color:var(--green); }
+    .gen-status.failed    { background:rgba(255,107,107,0.1); color:var(--red); }
+    .gen-status.queued    { background:rgba(0,0,0,0.06);      color:var(--muted); }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="header">
+  <div class="logo">
+    <span class="logo-name">CULT CONTENT</span>
+    <span class="logo-label">Command Center</span>
+  </div>
+  <div class="header-right">
+    <div class="refresh-meta">
+      Updated <b id="lastRefresh">—</b> &nbsp;·&nbsp; next in <b id="countdown">60</b>s
+    </div>
+    <button class="btn-refresh" id="btnRefresh" onclick="manualRefresh()">↺ Refresh</button>
+  </div>
+</header>
+
+<!-- Tab nav -->
+<nav class="tab-nav">
+  <button class="tab-btn active" data-tab="overview">Overview</button>
+  <button class="tab-btn" data-tab="pipeline">Pipeline</button>
+  <button class="tab-btn" data-tab="agents">Agents &amp; Ops</button>
+  <button class="tab-btn" data-tab="affiliates">Affiliates</button>
+  <button class="tab-btn" data-tab="performance">Performance</button>
+  <button class="tab-btn" data-tab="inbox">Inbox</button>
+  <button class="tab-btn" data-tab="community">Community</button>
+</nav>
+
+<!-- Content -->
+<main class="content">
+
+  <!-- ── OVERVIEW ──────────────────────────────────────────── -->
+  <section class="tab-pane active" id="tab-overview">
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-label">Total Contacts</div>
+        <div class="kpi-value" id="kpiContacts">—</div>
+        <div class="kpi-sub" id="kpiContactsSub">Loading…</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Open Pipeline</div>
+        <div class="kpi-value gold" id="kpiPipeline">—</div>
+        <div class="kpi-sub" id="kpiPipelineSub">Loading…</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Upcoming Calls</div>
+        <div class="kpi-value" id="kpiCalls">—</div>
+        <div class="kpi-sub">next 14 days</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Posts Queued</div>
+        <div class="kpi-value" id="kpiPosts">—</div>
+        <div class="kpi-sub" id="kpiPostsSub">across all channels</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Railway Server</div>
+        <div id="kpiServer" style="margin:10px 0 5px">
+          <div class="status-row idle"><span class="dot idle"></span>Checking…</div>
+        </div>
+        <div class="kpi-sub" id="kpiServerSub"></div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="card-label">Top Opportunities</div>
+        <table class="tbl">
+          <thead><tr><th>Name</th><th>Stage</th><th>Value</th><th>Contact</th></tr></thead>
+          <tbody id="ovOpps"><tr class="empty"><td colspan="4">Loading…</td></tr></tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-label">Upcoming Appointments</div>
+        <table class="tbl">
+          <thead><tr><th>Title</th><th>Date</th><th>Status</th></tr></thead>
+          <tbody id="ovAppointments"><tr class="empty"><td colspan="3">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── PIPELINE ───────────────────────────────────────────── -->
+  <section class="tab-pane" id="tab-pipeline">
+    <div class="sec-header">
+      <h2 class="sec-title">Pipeline</h2>
+      <a href="https://app.profitibull.com/v2/location/c216j58Vx9XxYa7WYMiA/pipeline" target="_blank" class="btn btn-ghost">Open in GHL ↗</a>
+    </div>
+
+    <div class="two-col mb24">
+      <div class="card">
+        <div class="card-label">Sales Pipeline</div>
+        <table class="tbl">
+          <thead><tr><th>Name</th><th>Stage</th><th>Value</th><th>Contact</th></tr></thead>
+          <tbody id="plSalesOpps"><tr class="empty"><td colspan="4">Loading…</td></tr></tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-label">Client Onboarding</div>
+        <table class="tbl">
+          <thead><tr><th>Name</th><th>Stage</th><th>Value</th><th>Contact</th></tr></thead>
+          <tbody id="plOnboardOpps"><tr class="empty"><td colspan="4">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Recent Contacts</div>
+      <table class="tbl">
+        <thead><tr><th>Name</th><th>Email</th><th>Tags</th><th>Added</th></tr></thead>
+        <tbody id="plContacts"><tr class="empty"><td colspan="4">Loading…</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── AGENTS & OPS ───────────────────────────────────────── -->
+  <section class="tab-pane" id="tab-agents">
+    <div class="sec-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+      <h2 class="sec-title" style="margin:0">Agents &amp; Ops</h2>
+      <div class="flex-wrap" style="gap:8px;">
+        <button class="btn btn-teal" style="font-size:12px" onclick="manualRefresh()">↺ Refresh</button>
+        <a href="https://app.profitibull.com/v2/location/c216j58Vx9XxYa7WYMiA/" target="_blank" class="btn btn-ghost" style="font-size:12px">GHL ↗</a>
+        <a href="https://railway.app/dashboard" target="_blank" class="btn btn-ghost" style="font-size:12px">Railway ↗</a>
+      </div>
+    </div>
+
+    <!-- ── Section: Automations ── -->
+    <div class="agent-section-label">🔄 Automations</div>
+    <div class="two-col mb16">
+
+      <!-- Railway Server -->
+      <div class="card agent-card">
+        <div style="display:flex;align-items:flex-start;gap:12px;">
+          <div class="agent-icon" style="background:rgba(255,0,80,0.1);color:var(--pink)">🚂</div>
+          <div style="flex:1;min-width:0">
+            <div class="agent-name">Railway Scheduler</div>
+            <div class="agent-desc">Cloud server running cron jobs, consultant webhook, and automations.</div>
+          </div>
+          <div id="agentServerStatus"><div class="status-row idle"><span class="dot idle"></span>Checking…</div></div>
+        </div>
+        <div class="agent-meta" id="railwayMeta">—</div>
+        <div class="flex-wrap mt12">
+          <a href="https://cultcontent-server-production.up.railway.app/health" target="_blank" class="btn btn-ghost" style="font-size:11px">Health ↗</a>
+          <button class="btn btn-ghost" style="font-size:11px" onclick="pingServer()">Ping</button>
+        </div>
+      </div>
+
+      <!-- Buffer pipeline -->
+      <div class="card agent-card">
+        <div style="display:flex;align-items:flex-start;gap:12px;">
+          <div class="agent-icon" style="background:rgba(0,242,234,0.1);color:var(--teal)">📢</div>
+          <div style="flex:1;min-width:0">
+            <div class="agent-name">Content Pipeline</div>
+            <div class="agent-desc">Buffer social queue — scheduled posts across all channels.</div>
+          </div>
+          <div id="bufferStatus"></div>
+        </div>
+        <div id="bufferPanel" style="margin-top:12px;">
+          <div class="muted" style="font-size:12px;font-style:italic;">Loading…</div>
+        </div>
+        <div class="flex-wrap mt12">
+          <a href="https://publish.buffer.com" target="_blank" class="btn btn-ghost" style="font-size:11px">Open Buffer ↗</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- GHL Workflows -->
+    <div class="card mb16">
+      <div class="card-label" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>GHL Workflows</span>
+        <span id="wfStatus"></span>
+      </div>
+      <div id="wfPanel"><div class="muted" style="font-size:12px;font-style:italic;padding:8px 0">Loading…</div></div>
+    </div>
+
+    <!-- ── Section: Agent Manager ── -->
+    <div class="agent-section-label" style="display:flex;align-items:center;justify-content:space-between;padding-right:0;">
+      <span>⚙️ Custom Automations</span>
+      <button class="btn btn-teal" style="font-size:11px;padding:5px 14px;" onclick="openAgentForm()">+ New</button>
+    </div>
+
+    <!-- Create / Edit form -->
+    <div class="card mb16" id="agentFormCard" style="display:none;">
+      <div class="card-label" id="agentFormTitle">New Agent</div>
+      <input type="hidden" id="afEditId" value="" />
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+        <div style="grid-column:1/-1;">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.06em;margin-bottom:5px;">NAME</div>
+          <input class="agent-input" id="afName" type="text" placeholder="e.g. Daily Pipeline Report" style="width:100%;box-sizing:border-box;" />
+        </div>
+        <div style="grid-column:1/-1;">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.06em;margin-bottom:5px;">DESCRIPTION</div>
+          <input class="agent-input" id="afDesc" type="text" placeholder="What does this agent do?" style="width:100%;box-sizing:border-box;" />
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.06em;margin-bottom:5px;">TYPE</div>
+          <select class="agent-input" id="afType" style="width:100%;" onchange="onAgentTypeChange()">
+            <option value="webhook">Webhook (HTTP call)</option>
+            <option value="command">Command → Lark</option>
+            <option value="ghl-workflow">GHL Workflow (reference)</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.06em;margin-bottom:5px;">SCHEDULE</div>
+          <select class="agent-input" id="afSchedule" style="width:100%;">
+            <option value="0">On-demand only</option>
+            <option value="900000">Every 15 min</option>
+            <option value="3600000">Every hour</option>
+            <option value="21600000">Every 6 hours</option>
+            <option value="86400000">Daily</option>
+            <option value="604800000">Weekly</option>
+          </select>
+        </div>
+        <div id="afActionFields" style="grid-column:1/-1;"></div>
+        <div style="grid-column:1/-1;">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.06em;margin-bottom:5px;">TAGS <span style="font-weight:400;">(comma-separated, optional)</span></div>
+          <input class="agent-input" id="afTags" type="text" placeholder="e.g. reporting, daily, ghl" style="width:100%;box-sizing:border-box;" />
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;padding-top:10px;border-top:1px solid var(--border);">
+        <button class="btn btn-teal" id="afSaveBtn" onclick="saveAgentForm()">Save Agent</button>
+        <button class="btn btn-ghost" onclick="closeAgentForm()">Cancel</button>
+        <span id="afResult" style="font-size:11px;margin-left:6px;display:none;"></span>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;margin-left:auto;cursor:pointer;">
+          <input type="checkbox" id="afEnabled" checked /> Enabled
+        </label>
+      </div>
+    </div>
+
+    <!-- Agent list card -->
+    <div class="card mb16">
+      <div class="card-label" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>Custom Automations</span>
+        <span id="agentCount" style="font-size:11px;color:var(--muted);">Loading…</span>
+      </div>
+      <div id="agentListPanel">
+        <div style="color:var(--muted);font-style:italic;font-size:12px;padding:8px 0;">Loading agents…</div>
+      </div>
+    </div>
+
+    <!-- ── Section: On-Demand Agents ── -->
+    <div class="agent-section-label">⚡ On-Demand Agents</div>
+    <div class="two-col mb16">
+
+      <!-- Consultant Onboarding Agent -->
+      <div class="card agent-card">
+        <div style="display:flex;align-items:flex-start;gap:12px;">
+          <div class="agent-icon" style="background:rgba(201,168,76,0.12);color:var(--gold)">🏗️</div>
+          <div style="flex:1;min-width:0">
+            <div class="agent-name">Consultant Onboarding</div>
+            <div class="agent-desc">Auto-creates GHL user, calendar, product &amp; published funnel page for a new consultant.</div>
+          </div>
+          <button class="btn btn-ghost" style="font-size:10px;padding:4px 8px;flex-shrink:0" id="copyOnboardBtn" onclick="copyOnboardLink()">📋 Copy Form Link</button>
+        </div>
+        <!-- Stats -->
+        <div id="consultantStats" style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div style="background:rgba(201,168,76,0.07);border-radius:8px;padding:10px 12px;">
+            <div style="font-size:20px;font-weight:900;color:var(--gold)" id="cStatMonth">—</div>
+            <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:0.05em;margin-top:2px">ONBOARDED THIS MONTH</div>
+          </div>
+          <div style="background:rgba(201,168,76,0.07);border-radius:8px;padding:10px 12px;">
+            <div style="font-size:20px;font-weight:900;color:var(--gold)" id="cStatTotal">—</div>
+            <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:0.05em;margin-top:2px">TOTAL CONSULTANTS</div>
+          </div>
+        </div>
+        <div id="cRecentList" style="margin-top:10px;"></div>
+        <!-- Onboard form (hidden) -->
+        <div id="consultantForm" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:none;flex-direction:column;gap:8px;">
+          <input class="agent-input" id="cName"    type="text"  placeholder="Full name" />
+          <input class="agent-input" id="cEmail"   type="email" placeholder="Email address" />
+          <input class="agent-input" id="cProduct" type="url"   placeholder="Product URL (optional)" />
+          <button class="btn btn-gold" id="consultantTriggerBtn" onclick="triggerConsultant()">⚡ Generate Pages</button>
+          <div id="consultantResult" style="font-size:11px;margin-top:4px;display:none;"></div>
+        </div>
+      </div>
+
+      <!-- Arcads AI Content Pipeline (live) -->
+      <div class="card agent-card" id="arcadsCard" style="grid-column:1/-1;">
+        <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:14px;">
+          <div class="agent-icon" style="background:rgba(255,0,80,0.08);color:var(--pink)">🎬</div>
+          <div style="flex:1;min-width:0">
+            <div class="agent-name">Arcads AI Video Pipeline</div>
+            <div class="agent-desc">Generate UGC videos with AI actors — auto-queued for Buffer publishing.</div>
+          </div>
+          <span class="badge b-active" id="arcadsStatus">Live</span>
+          <button class="btn btn-gold" id="arcadsToggleFormBtn" onclick="toggleArcadsForm()" style="font-size:11px;padding:5px 12px;margin-left:8px;">+ Generate New</button>
+        </div>
+
+        <!-- Stats bar -->
+        <div id="arcadsStatsBar" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;">
+          <div style="background:rgba(0,210,122,0.07);border-radius:8px;padding:10px 14px;text-align:center;">
+            <div style="font-size:22px;font-weight:900;color:var(--green)" id="arcadsStatDone">—</div>
+            <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:0.06em;margin-top:2px">VIDEOS DONE</div>
+          </div>
+          <div style="background:rgba(255,204,0,0.07);border-radius:8px;padding:10px 14px;text-align:center;">
+            <div style="font-size:22px;font-weight:900;color:var(--yellow)" id="arcadsStatPending">—</div>
+            <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:0.06em;margin-top:2px">IN PROGRESS</div>
+          </div>
+          <div style="background:rgba(201,168,76,0.07);border-radius:8px;padding:10px 14px;text-align:center;">
+            <div style="font-size:22px;font-weight:900;color:var(--gold)" id="arcadsStatScripts">—</div>
+            <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:0.06em;margin-top:2px">TOTAL SCRIPTS</div>
+          </div>
+        </div>
+
+        <!-- Scripts list (from account) -->
+        <div id="arcadsScriptList" style="margin-bottom:14px;"></div>
+
+        <!-- Generation form (hidden by default, toggled) -->
+        <div id="arcadsForm" style="display:none;padding-top:14px;border-top:1px solid var(--border);">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <!-- LEFT: Actor browser -->
+            <div>
+              <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.06em;margin-bottom:8px;">SELECT ACTOR</div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;" id="actorFilters">
+                <button class="actor-filter active" data-gender="">All</button>
+                <button class="actor-filter" data-gender="Male">Male</button>
+                <button class="actor-filter" data-gender="Female">Female</button>
+              </div>
+              <div id="actorGrid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;max-height:280px;overflow-y:auto;">
+                <div style="font-size:12px;color:var(--muted);font-style:italic;grid-column:1/-1;padding:12px 0">Loading actors…</div>
+              </div>
+              <div style="margin-top:8px;font-size:11px;color:var(--muted)" id="actorSelLabel">No actor selected</div>
+            </div>
+            <!-- RIGHT: Script form -->
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.06em;">SCRIPT DETAILS</div>
+              <input class="agent-input" id="arcadsScriptName" type="text" placeholder="Script name (e.g. Hook #1 — Price)" />
+              <textarea class="agent-input" id="arcadsScriptText" rows="6" placeholder="Write your script here… Keep it under 60 seconds for TikTok." style="resize:vertical;line-height:1.5;"></textarea>
+              <select class="agent-input" id="arcadsFolderSel"><option value="">Loading folders…</option></select>
+              <button class="btn btn-gold" id="arcadsGenerateBtn" onclick="arcadsGenerate()" style="margin-top:4px;" disabled>🎬 Generate Video</button>
+              <div id="arcadsGenerateResult" style="font-size:11px;display:none;margin-top:4px;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent generations tracker -->
+        <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.06em;margin-bottom:8px;">RECENT GENERATIONS (this session)</div>
+          <div id="arcadsJobs"><div style="font-size:12px;color:var(--muted);font-style:italic">No active jobs this session.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="two-col mb16">
+      <!-- TAP Campaign Setup -->
+      <div class="card agent-card">
+        <div style="display:flex;align-items:flex-start;gap:12px;">
+          <div class="agent-icon" style="background:rgba(0,242,234,0.08);color:var(--teal)">🎯</div>
+          <div style="flex:1;min-width:0">
+            <div class="agent-name">TAP Campaign Setup</div>
+            <div class="agent-desc">Register a new brand into TikTok Affiliate Program — affiliate resource hub + outreach automation.</div>
+          </div>
+          <span class="badge b-soon">Soon</span>
+        </div>
+      </div>
+
+      <!-- Affiliate Outreach -->
+      <div class="card agent-card">
+        <div style="display:flex;align-items:flex-start;gap:12px;">
+          <div class="agent-icon" style="background:rgba(122,150,136,0.15);color:var(--sage)">📣</div>
+          <div style="flex:1;min-width:0">
+            <div class="agent-name">Affiliate Outreach Blast</div>
+            <div class="agent-desc">Send personalised affiliate invites to a curated creator list via GHL automation.</div>
+          </div>
+          <span class="badge b-soon">Soon</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Section: Content Studio ── -->
+    <div class="agent-section-label">📤 Content Studio</div>
+    <div class="card mb16">
+      <div class="card-label" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>Video Upload &amp; Staging Queue</span>
+        <span style="font-size:11px;color:var(--muted)">Drag &amp; drop videos · up to 500 MB</span>
+      </div>
+
+      <!-- Drop zone -->
+      <div id="dropZone" class="drop-zone">
+        <div class="drop-icon">🎥</div>
+        <div style="font-weight:700;font-size:14px;margin-bottom:4px;">Drop video here or click to browse</div>
+        <div style="font-size:12px;color:var(--muted)">MP4, MOV, AVI, WEBM · max 500 MB</div>
+        <input type="file" id="fileInput" accept="video/*" style="display:none" />
+      </div>
+
+      <!-- Metadata form (hidden until file selected) -->
+      <div id="uploadForm" style="display:none;margin-top:14px;padding:14px;background:rgba(0,0,0,0.03);border-radius:10px;">
+        <div style="font-weight:700;font-size:12px;color:var(--muted);margin-bottom:10px;letter-spacing:0.06em;">FILE READY — ADD DETAILS</div>
+        <div id="uploadFileName" style="font-size:12px;color:var(--teal);font-family:'JetBrains Mono',monospace;margin-bottom:10px;"></div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <input class="agent-input" id="uploadTitle"       type="text"  placeholder="Video title" />
+          <textarea class="agent-input" id="uploadDesc"     rows="2"     placeholder="Description (optional)" style="resize:vertical;"></textarea>
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:700;">TARGET PLATFORMS</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;" id="platformCheckboxes">
+              <label class="platform-check"><input type="checkbox" value="tiktok" checked> TikTok</label>
+              <label class="platform-check"><input type="checkbox" value="instagram"> Instagram</label>
+              <label class="platform-check"><input type="checkbox" value="youtube"> YouTube</label>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:4px;">
+            <button class="btn btn-teal" onclick="submitUpload()" id="uploadSubmitBtn">📤 Add to Queue</button>
+            <button class="btn btn-ghost" onclick="cancelUpload()">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upload queue -->
+      <div style="margin-top:16px;">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.06em;margin-bottom:10px;">STAGED VIDEOS</div>
+        <div id="uploadQueue"><div class="muted" style="font-size:12px;font-style:italic;">No videos staged yet.</div></div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ── INBOX ──────────────────────────────────────────────── -->
+  <section class="tab-pane" id="tab-inbox">
+    <div class="sec-header">
+      <h2 class="sec-title">Inbox</h2>
+    </div>
+    <div class="two-col">
+      <div class="connect-card">
+        <div class="connect-icon">📧</div>
+        <div class="connect-title">Gmail</div>
+        <div class="connect-desc">Connect Gmail via OAuth to see unread count, recent threads, and important messages here.</div>
+        <span class="btn-soon">Coming soon</span>
+      </div>
+      <div class="connect-card">
+        <div class="connect-icon">📅</div>
+        <div class="connect-title">Google Calendar</div>
+        <div class="connect-desc">Connect Google Calendar to view upcoming events, booked calls, and your availability.</div>
+        <span class="btn-soon">Coming soon</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── AFFILIATES ───────────────────────────────────────────── -->
+  <section class="tab-pane" id="tab-affiliates">
+
+    <!-- Header row: title + date controls -->
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+      <h2 class="sec-title" style="margin:0">TikTok Affiliate Manager</h2>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span id="reacherRefreshStatus" style="font-size:11px;color:var(--muted)">Loading…</span>
+        <a href="https://portal.reacherapp.com" target="_blank" class="btn btn-ghost" style="font-size:11px">Reacher ↗</a>
+        <button class="btn btn-teal" style="font-size:11px" onclick="loadReacher(true)">↺ Refresh</button>
+      </div>
+    </div>
+
+    <!-- Date range bar -->
+    <div class="card" style="padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <span style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.06em;white-space:nowrap;">DATE RANGE</span>
+      <div style="display:flex;gap:4px;">
+        <button class="range-btn" data-rng="7d"  onclick="setReacherRange(this,'7d')">7D</button>
+        <button class="range-btn active" data-rng="30d" onclick="setReacherRange(this,'30d')">30D</button>
+        <button class="range-btn" data-rng="90d" onclick="setReacherRange(this,'90d')">90D</button>
+        <button class="range-btn" data-rng="custom" onclick="setReacherRange(this,'custom')">Custom</button>
+      </div>
+      <div id="reacherCustomDates" style="display:none;align-items:center;gap:6px;flex-wrap:wrap;">
+        <input type="date" id="reacherDateStart" class="agent-input" style="width:140px;padding:4px 8px;font-size:12px;" />
+        <span style="color:var(--muted);font-size:12px;">→</span>
+        <input type="date" id="reacherDateEnd" class="agent-input" style="width:140px;padding:4px 8px;font-size:12px;" />
+        <button class="btn btn-teal" style="font-size:11px;padding:4px 12px" onclick="loadReacher(true)">Apply</button>
+      </div>
+      <span style="margin-left:auto;font-size:11px;color:var(--muted)" id="reacherDateLabel">last 30 days</span>
+    </div>
+
+    <!-- Agency KPI row -->
+    <div class="kpi-row" style="margin-bottom:16px;">
+      <div class="kpi-card">
+        <div class="kpi-label">Agency GMV</div>
+        <div class="kpi-value green" id="reacherKpiGmv">—</div>
+        <div class="kpi-sub" id="reacherKpiGmvSub">all clients</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Total Creators</div>
+        <div class="kpi-value" id="reacherKpiCreators">—</div>
+        <div class="kpi-sub">in funnels</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Video Views</div>
+        <div class="kpi-value gold" id="reacherKpiViews">—</div>
+        <div class="kpi-sub">affiliate videos</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Videos Posted</div>
+        <div class="kpi-value" id="reacherKpiVideos">—</div>
+        <div class="kpi-sub">by affiliates</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Samples</div>
+        <div class="kpi-value" id="reacherKpiSamples">—</div>
+        <div class="kpi-sub">requests</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Active Automations</div>
+        <div class="kpi-value" id="reacherKpiAuto">—</div>
+        <div class="kpi-sub">running sequences</div>
+      </div>
+    </div>
+
+    <!-- Chart row: trend line + agency funnel -->
+    <div class="two-col" style="margin-bottom:16px;align-items:start;">
+
+      <!-- Trend chart -->
+      <div class="card">
+        <div class="card-label" style="display:flex;align-items:center;justify-content:space-between;">
+          <span>Performance Trend</span>
+          <select id="reacherChartShop" class="agent-input" style="width:160px;padding:3px 6px;font-size:11px;" onchange="renderReacherChart()">
+            <option value="all">All clients (agency)</option>
+          </select>
+        </div>
+        <div style="position:relative;height:180px;">
+          <canvas id="reacherChart"></canvas>
+        </div>
+        <div style="display:flex;gap:14px;margin-top:8px;font-size:11px;">
+          <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:2px;background:var(--green);display:inline-block;border-radius:2px;"></span>GMV ($)</span>
+          <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:2px;background:var(--teal);display:inline-block;border-radius:2px;"></span>Video Views</span>
+          <span id="reacherChartStatus" style="color:var(--muted);font-style:italic;margin-left:auto;">Loading…</span>
+        </div>
+      </div>
+
+      <!-- Agency funnel -->
+      <div class="card">
+        <div class="card-label">Agency Creator Funnel</div>
+        <div id="reacherFunnelViz" style="display:flex;flex-direction:column;gap:6px;">
+          <div style="color:var(--muted);font-style:italic;font-size:12px;padding:8px 0;">Loading funnel…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Per-shop grid -->
+    <div class="agent-section-label">🛍️ Client Shops</div>
+    <div id="reacherShopsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;margin-bottom:20px;">
+      <div class="card" style="grid-column:1/-1;padding:20px;text-align:center;color:var(--muted);font-style:italic;font-size:13px;">Loading shop data…</div>
+    </div>
+
+    <!-- Command box -->
+    <div class="agent-section-label">🔊 Command → Lark</div>
+    <div class="card" style="margin-bottom:24px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+        <div style="flex:1;font-size:13px;font-weight:700;">Send a message to the Lark alerts channel</div>
+        <span id="commandSendStatus" style="font-size:11px;color:var(--muted);"></span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:stretch;flex-wrap:wrap;">
+        <select id="commandContext" class="agent-input" style="width:160px;padding:6px 8px;font-size:12px;flex-shrink:0;">
+          <option value="">No label</option>
+          <option value="📊 Affiliate Update">📊 Affiliate Update</option>
+          <option value="⚡ Action Required">⚡ Action Required</option>
+          <option value="🚨 Alert">🚨 Alert</option>
+          <option value="💡 Insight">💡 Insight</option>
+          <option value="✅ Done">✅ Done</option>
+          <option value="📝 Note">📝 Note</option>
+        </select>
+        <input type="text" id="commandText" class="agent-input" placeholder="Type a message to fire to Lark…"
+          style="flex:1;min-width:200px;padding:6px 10px;font-size:13px;"
+          onkeydown="if(event.key==='Enter')sendCommand()" />
+        <button class="btn btn-teal" id="commandSendBtn" onclick="sendCommand()" style="padding:6px 16px;font-size:12px;flex-shrink:0;">Fire →</button>
+      </div>
+      <!-- Recent commands log -->
+      <div id="commandLog" style="margin-top:12px;max-height:120px;overflow-y:auto;display:none;"></div>
+    </div>
+
+  </section>
+
+  <!-- ── PERFORMANCE ──────────────────────────────────────────── -->
+  <section class="tab-pane" id="tab-performance">
+    <div class="sec-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+      <h2 class="sec-title" style="margin:0">Performance</h2>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <span style="font-size:11px;color:var(--muted);margin-right:4px;">Range:</span>
+        <button class="range-btn active" data-range="7d">7D</button>
+        <button class="range-btn" data-range="30d">30D</button>
+        <button class="range-btn" data-range="90d">90D</button>
+      </div>
+    </div>
+
+    <!-- Views history chart -->
+    <div class="card mb24">
+      <div class="card-label" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>Views — YouTube Videos</span>
+        <span id="chartRangeLabel" style="font-size:11px;color:var(--muted)">last 30 days</span>
+      </div>
+      <div style="position:relative;height:200px;">
+        <canvas id="viewsChart"></canvas>
+      </div>
+      <div id="topVideoPanel" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);display:none;"></div>
+    </div>
+
+    <!-- KPI row — 6 cards -->
+    <div class="kpi-row-perf">
+      <div class="kpi-card">
+        <div class="kpi-label">YouTube Subscribers</div>
+        <div class="kpi-value" id="perfYtSubs">—</div>
+        <div class="kpi-sub" id="perfYtSubsSub">add YOUTUBE_API_KEY</div>
+        <div class="kpi-delta" id="perfYtSubsDelta"></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">YouTube Total Views</div>
+        <div class="kpi-value gold" id="perfYtViews">—</div>
+        <div class="kpi-sub" id="perfYtViewsSub">all time</div>
+        <div class="kpi-delta" id="perfYtViewsDelta"></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">TikTok Followers</div>
+        <div class="kpi-value" id="perfTkFollowers">—</div>
+        <div class="kpi-sub" id="perfTkFollowersSub">combined accounts</div>
+        <div class="kpi-delta" id="perfTkFollowersDelta"></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Instagram Followers</div>
+        <div class="kpi-value gold" id="perfIgFollowers">—</div>
+        <div class="kpi-sub" id="perfIgFollowersSub">combined accounts</div>
+        <div class="kpi-delta" id="perfIgFollowersDelta"></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">X Followers</div>
+        <div class="kpi-value" id="perfXFollowers">—</div>
+        <div class="kpi-sub" id="perfXFollowersSub">across X accounts</div>
+        <div class="kpi-delta" id="perfXFollowersDelta"></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">LinkedIn Followers</div>
+        <div class="kpi-value gold" id="perfLiFollowers">—</div>
+        <div class="kpi-sub" id="perfLiFollowersSub">across accounts</div>
+        <div class="kpi-delta" id="perfLiFollowersDelta"></div>
+      </div>
+    </div>
+
+    <!-- Platform cards — row 1: YouTube | TikTok -->
+    <div class="two-col mb16">
+      <div class="card" id="perfYoutubeCard">
+        <div class="connect-card">
+          <div class="connect-icon">▶</div>
+          <div class="connect-title">YouTube</div>
+          <div class="connect-desc">Set <code style="background:rgba(0,0,0,0.06);padding:2px 6px;border-radius:4px;">YOUTUBE_API_KEY</code> and channel IDs to see stats and recent videos.</div>
+          <span class="btn-soon">Add env vars</span>
+        </div>
+      </div>
+      <div class="card" id="perfTiktokCard">
+        <div class="connect-card">
+          <div class="connect-icon">♪</div>
+          <div class="connect-title">TikTok</div>
+          <div class="connect-desc">Set <code style="background:rgba(0,0,0,0.06);padding:2px 6px;border-radius:4px;">APIFY_API_KEY</code> and <code style="background:rgba(0,0,0,0.06);padding:2px 6px;border-radius:4px;">TIKTOK_HANDLE_PERSONAL</code> to pull follower stats.</div>
+          <span class="btn-soon">Add APIFY_API_KEY</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Platform cards — row 2: Instagram | X/Twitter -->
+    <div class="two-col mb16">
+      <div class="card" id="perfInstagramCard">
+        <div class="connect-card">
+          <div class="connect-icon">📸</div>
+          <div class="connect-title">Instagram</div>
+          <div class="connect-desc">Set <code style="background:rgba(0,0,0,0.06);padding:2px 6px;border-radius:4px;">APIFY_API_KEY</code> to pull Instagram profile stats.</div>
+          <span class="btn-soon">Add APIFY_API_KEY</span>
+        </div>
+      </div>
+      <div class="card" id="perfTwitterCard">
+        <div class="connect-card">
+          <div class="connect-icon">𝕏</div>
+          <div class="connect-title">X / Twitter</div>
+          <div class="connect-desc">Configure Twitter handles to pull follower stats.</div>
+          <span class="btn-soon">Coming soon</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Platform cards — row 3: LinkedIn | spacer -->
+    <div class="two-col mb16">
+      <div class="card" id="perfLinkedinCard">
+        <div class="connect-card">
+          <div class="connect-icon">in</div>
+          <div class="connect-title">LinkedIn</div>
+          <div class="connect-desc">Configure LinkedIn handles to pull follower stats.</div>
+          <span class="btn-soon">Coming soon</span>
+        </div>
+      </div>
+      <div></div>
+    </div>
+
+  </section>
+
+  <!-- ── COMMUNITY ──────────────────────────────────────────── -->
+  <section class="tab-pane" id="tab-community">
+    <div class="sec-header">
+      <h2 class="sec-title">Community</h2>
+    </div>
+
+    <!-- Top row: Skool (live) + Discord + Lark -->
+    <div class="three-col mb24">
+
+      <!-- Skool — live data -->
+      <div class="card" id="skoolCard">
+        <div class="card-label" style="display:flex;align-items:center;justify-content:space-between;">
+          <span>🏫 Cult Content — Skool</span>
+          <a href="https://www.skool.com/cult-content/about" target="_blank" style="font-size:11px;color:var(--teal);text-decoration:none;">Open ↗</a>
+        </div>
+        <div style="color:var(--muted);font-style:italic;font-size:12px;" id="skoolLoading">Loading…</div>
+      </div>
+
+      <!-- Discord -->
+      <div class="card">
+        <div class="card-label">Alchemists Club — Discord</div>
+        <div class="server-row mb16">
+          <div class="server-icon">⚗️</div>
+          <div style="flex:1">
+            <div class="server-name">Discord</div>
+            <div class="server-url">TikTok Shop operators &amp; brands</div>
+          </div>
+          <div style="text-align:right">
+            <div class="kpi-value" style="font-size:30px;margin:0">450+</div>
+            <div class="muted" style="font-size:11px">members</div>
+          </div>
+        </div>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:14px;">Brand Q&amp;A, affiliate strategy, and operator discussion.</p>
+        <a href="https://discord.gg/cultcontent" target="_blank" class="btn btn-teal">Open Discord ↗</a>
+      </div>
+
+      <!-- Lark -->
+      <div class="connect-card">
+        <div class="connect-icon">🌿</div>
+        <div class="connect-title">Lark</div>
+        <div class="connect-desc">Surface Bitable records, team messages, and content calendar from this dashboard.</div>
+        <span class="btn-soon">Coming soon</span>
+      </div>
+    </div>
+
+    <!-- Recent Skool member joins (from webhook) -->
+    <div class="card" id="skoolEventsCard" style="display:none;">
+      <div class="card-label">Recent Member Activity</div>
+      <div id="skoolEventsList"></div>
+    </div>
+
+  </section>
+
+</main>
+
+<script>
+// ─── State ───────────────────────────────────────────────────────────────────
+const S = { contacts: null, opportunities: null, appointments: null, railway: null, buffer: null, youtube: null, social: null, twitter: null, history: null, reacher: null, reacherTimeseries: null, skool: null, perfRange: '30d' };
+let countdown = 60;
+let timer;
+
+// ─── Tabs ────────────────────────────────────────────────────────────────────
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ─── Fetch ───────────────────────────────────────────────────────────────────
+async function fetchAll() {
+  const [c, o, a, r, b, yt, sc, tw, li, hist, re, sk] = await Promise.allSettled([
+    fetch('/api/ghl/contacts').then(r => r.json()),
+    fetch('/api/ghl/opportunities').then(r => r.json()),
+    fetch('/api/ghl/appointments').then(r => r.json()),
+    fetch('/api/railway/health').then(r => r.json()),
+    fetch('/api/buffer/stats').then(r => r.json()),
+    fetch('/api/youtube/stats').then(r => r.json()),
+    fetch('/api/social/stats').then(r => r.json()),
+    fetch('/api/twitter/stats').then(r => r.json()),
+    fetch('/api/linkedin/stats').then(r => r.json()),
+    fetch('/api/performance/history').then(r => r.json()),
+    fetch('/api/reacher/stats').then(r => r.json()),
+    fetch('/api/skool/stats').then(r => r.json()),
+  ]);
+  S.contacts      = c.status  === 'fulfilled' ? c.value  : null;
+  S.opportunities = o.status  === 'fulfilled' ? o.value  : null;
+  S.appointments  = a.status  === 'fulfilled' ? a.value  : null;
+  S.railway       = r.status  === 'fulfilled' ? r.value  : null;
+  S.buffer        = b.status  === 'fulfilled' ? b.value  : null;
+  S.youtube       = yt.status === 'fulfilled' ? yt.value : null;
+  S.social        = sc.status === 'fulfilled' ? sc.value : null;
+  S.twitter       = tw.status === 'fulfilled' ? tw.value : null;
+  S.linkedin      = li.status === 'fulfilled' ? li.value : null;
+  S.history       = hist.status === 'fulfilled' ? hist.value : null;
+  S.reacher       = re.status === 'fulfilled' ? re.value : null;
+  S.skool         = sk.status === 'fulfilled' ? sk.value : null;
+  // Kick off timeseries in background after stats load
+  if (S.reacher && !S.reacherTimeseries) {
+    const { start_date, end_date } = getReacherDates();
+    loadReacherTimeseries(start_date, end_date);
+  }
+}
+
+// ─── Render ──────────────────────────────────────────────────────────────────
+function renderAll() {
+  renderOverview();
+  renderPipeline();
+  renderAgents();
+  renderReacher();
+  renderPerformance();
+  renderCommunity();
+  document.getElementById('lastRefresh').textContent =
+    new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+function renderOverview() {
+  const contacts = S.contacts?.contacts || [];
+  const total    = S.contacts?.total ?? S.contacts?.count ?? contacts.length;
+  document.getElementById('kpiContacts').textContent = total != null ? fmtNum(total) : '—';
+  const todayCount = contacts.filter(c => isToday(c.dateAdded)).length;
+  document.getElementById('kpiContactsSub').textContent = `+${todayCount} added today`;
+
+  const allOpps = S.opportunities?.opportunities || [];
+  const opps = allOpps.filter(o => o.status === 'open');
+  const pipeVal = opps.reduce((s, o) => s + (Number(o.monetaryValue) || 0), 0);
+  document.getElementById('kpiPipeline').textContent = fmtMoney(pipeVal);
+  document.getElementById('kpiPipelineSub').textContent = `${opps.length} open deal${opps.length !== 1 ? 's' : ''}`;
+
+  const events = S.appointments?.events || [];
+  document.getElementById('kpiCalls').textContent = events.length;
+
+  // Posts queued KPI
+  const buf = S.buffer;
+  if (buf?.connected) {
+    const total = buf.scheduledTotal + (buf.hasMore ? '+' : '');
+    document.getElementById('kpiPosts').textContent = total;
+    const platforms = Object.keys(buf.byPlatform || {}).join(', ');
+    document.getElementById('kpiPostsSub').textContent = platforms || 'across all channels';
+  } else {
+    document.getElementById('kpiPosts').textContent = '—';
+    document.getElementById('kpiPostsSub').textContent = 'add BUFFER_ACCESS_TOKEN';
+  }
+
+  const ry = S.railway;
+  const kpiSrv = document.getElementById('kpiServer');
+  if (ry?.status === 'online') {
+    kpiSrv.innerHTML = '<div class="status-row on"><span class="dot on"></span>Online</div>';
+    document.getElementById('kpiServerSub').textContent = 'Railway production';
+  } else {
+    kpiSrv.innerHTML = '<div class="status-row off"><span class="dot off"></span>Offline</div>';
+    document.getElementById('kpiServerSub').textContent = ry?.error || 'Unreachable';
+  }
+
+  // Top opportunities — open only, sorted by stage priority desc then monetary value desc
+  const topOpps = opps
+    .slice()
+    .sort((a, b) =>
+      ((b.stagePriority||0) - (a.stagePriority||0)) ||
+      ((Number(b.monetaryValue)||0) - (Number(a.monetaryValue)||0))
+    )
+    .slice(0, 8);
+  document.getElementById('ovOpps').innerHTML = topOpps.length
+    ? topOpps.map(o => `<tr>
+        <td><strong>${x(o.name || '—')}</strong></td>
+        <td>${stageChip(o.stageName, o.stagePriority)}</td>
+        <td class="gold mono">${o.monetaryValue ? fmtMoney(o.monetaryValue) : '—'}</td>
+        <td class="muted">${x(o.contact?.name || '—')}</td>
+      </tr>`).join('')
+    : '<tr class="empty"><td colspan="4">No open opportunities</td></tr>';
+
+  document.getElementById('ovAppointments').innerHTML = events.length
+    ? events.slice(0, 8).map(e => `<tr>
+        <td><strong>${x(e.title || 'Appointment')}</strong></td>
+        <td class="mono muted">${fmtDate(e.startTime)}</td>
+        <td>${badge(e.appointmentStatus || e.status)}</td>
+      </tr>`).join('')
+    : '<tr class="empty"><td colspan="3">No upcoming appointments</td></tr>';
+}
+
+function renderPipeline() {
+  const opps = S.opportunities?.opportunities || [];
+  const salesOpps = opps.filter(o => o.pipelineName === 'Sales' && o.status === 'open')
+    .sort((a, b) => ((b.stagePriority||0) - (a.stagePriority||0)) || ((Number(b.monetaryValue)||0) - (Number(a.monetaryValue)||0)));
+  const onboardOpps = opps.filter(o => o.pipelineName === 'Onboarding')
+    .sort((a, b) => (b.stagePriority||0) - (a.stagePriority||0));
+
+  const oppRow = o => `<tr>
+    <td><strong>${x(o.name || '—')}</strong></td>
+    <td>${stageChip(o.stageName, o.stagePriority)}</td>
+    <td class="gold mono">${o.monetaryValue ? fmtMoney(o.monetaryValue) : '—'}</td>
+    <td class="muted">${x(o.contact?.name || '—')}</td>
+  </tr>`;
+
+  document.getElementById('plSalesOpps').innerHTML = salesOpps.length
+    ? salesOpps.map(oppRow).join('')
+    : '<tr class="empty"><td colspan="4">No open sales deals</td></tr>';
+  document.getElementById('plOnboardOpps').innerHTML = onboardOpps.length
+    ? onboardOpps.map(oppRow).join('')
+    : '<tr class="empty"><td colspan="4">No active clients</td></tr>';
+
+  const contacts = S.contacts?.contacts || [];
+  document.getElementById('plContacts').innerHTML = contacts.length
+    ? contacts.slice(0, 15).map(c => `<tr>
+        <td><strong>${x(c.firstName||'')} ${x(c.lastName||'')}</strong></td>
+        <td class="muted">${x(c.email || '—')}</td>
+        <td>${(c.tags||[]).slice(0,3).map(t => `<span class="badge b-new">${x(t)}</span>`).join(' ')}</td>
+        <td class="mono muted">${fmtDate(c.dateAdded)}</td>
+      </tr>`).join('')
+    : '<tr class="empty"><td colspan="4">No contacts found</td></tr>';
+}
+
+function renderAgents() {
+  // ── Railway status ──
+  const ry  = S.railway;
+  const srv = document.getElementById('agentServerStatus');
+  const meta = document.getElementById('railwayMeta');
+  if (ry?.status === 'online') {
+    srv.innerHTML  = '<div class="status-row on"><span class="dot on"></span>Online</div>';
+    if (meta) meta.textContent = `Last checked ${fmtDate(Date.now())} · ${CFG_RAILWAY_URL}`;
+  } else {
+    srv.innerHTML = '<div class="status-row off"><span class="dot off"></span>Offline</div>';
+  }
+
+  // ── Buffer pipeline ──
+  const buf      = S.buffer;
+  const statusEl = document.getElementById('bufferStatus');
+  const panelEl  = document.getElementById('bufferPanel');
+
+  if (!buf?.connected) {
+    statusEl.innerHTML = '<span class="badge b-draft">Not connected</span>';
+    panelEl.innerHTML  = '<div style="font-size:12px;color:var(--muted);padding:4px 0;">Set <code style="background:rgba(0,0,0,0.06);padding:1px 5px;border-radius:3px;">BUFFER_ACCESS_TOKEN</code> in .env</div>';
+  } else {
+    statusEl.innerHTML = '<span class="badge b-active">Connected</span>';
+    const PICN = { youtube:'▶', instagram:'📸', tiktok:'♪', linkedin:'in', twitter:'𝕏', facebook:'f' };
+    const rows = Object.entries(buf.byPlatform || {}).sort((a,b)=>b[1]-a[1])
+      .map(([p, n]) => `<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;text-transform:capitalize">
+          <span style="width:22px;text-align:center">${PICN[p]||'○'}</span>${p}
+        </div>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--teal)">${n}</span>
+      </div>`).join('');
+    const np = buf.nextPost;
+    panelEl.innerHTML = `${rows}
+      <div style="padding-top:8px;display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:12px;color:var(--muted)">Total: <strong style="color:var(--teal)">${buf.scheduledTotal}${buf.hasMore?'+':''}</strong></span>
+      </div>
+      ${np ? `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;">
+        <span style="color:var(--muted);font-weight:700">NEXT:</span>
+        <span style="font-family:'JetBrains Mono',monospace;color:var(--teal);margin:0 6px">${fmtDate(np.dueAt)}</span>
+        <span style="color:var(--soft)">${x((np.text||'').slice(0,80))}${(np.text||'').length>80?'…':''}</span>
+      </div>` : ''}`;
+  }
+
+  // ── GHL Workflows ──
+  fetch('/api/ghl/workflows').then(r=>r.json()).then(data => {
+    const wfs = data.workflows || [];
+    const wfPanel  = document.getElementById('wfPanel');
+    const wfStatus = document.getElementById('wfStatus');
+    const active = wfs.filter(w => w.status === 'published');
+    wfStatus.innerHTML = `<span style="font-size:11px;color:var(--muted)">${active.length} active · ${wfs.length} total</span>`;
+    if (!wfs.length) { wfPanel.innerHTML = '<div class="muted" style="font-size:12px;padding:4px 0">No workflows found.</div>'; return; }
+    // Sort: published first, then draft/other, then alphabetically within each group
+    const sorted = [...wfs].sort((a, b) => {
+      const ap = a.status === 'published' ? 0 : 1;
+      const bp = b.status === 'published' ? 0 : 1;
+      if (ap !== bp) return ap - bp;
+      return (a.name||'').localeCompare(b.name||'');
+    });
+    wfPanel.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:0;">
+      ${sorted.slice(0,16).map(w => `
+        <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
+          <span class="dot ${w.status==='published'?'on':'idle'}" style="flex-shrink:0"></span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${x(w.name)}</div>
+            <div style="font-size:10px;color:var(--muted);text-transform:capitalize">${w.status==='published'?'<span style="color:var(--green)">active</span>':w.status||'draft'}</div>
+          </div>
+        </div>`).join('')}
+    </div>
+    ${wfs.length > 16 ? `<div style="font-size:11px;color:var(--muted);padding-top:8px">+${wfs.length-16} more in GHL</div>` : ''}`;
+  }).catch(() => {
+    document.getElementById('wfPanel').innerHTML = '<div class="muted" style="font-size:12px">Could not load workflows.</div>';
+  });
+
+  // ── Upload queue ──
+  renderUploadQueue();
+  // ── Agent Manager ──
+  renderAgentManager();
+}
+
+// ─── Consultant trigger ───────────────────────────────────────────────────────
+async function triggerConsultant() {
+  const name    = document.getElementById('cName')?.value?.trim();
+  const email   = document.getElementById('cEmail')?.value?.trim();
+  const product = document.getElementById('cProduct')?.value?.trim();
+  const resEl   = document.getElementById('consultantResult');
+  const btn     = document.getElementById('consultantTriggerBtn');
+  if (!name || !email) { resEl.style.display='block'; resEl.style.color='var(--red)'; resEl.textContent='Name and email are required.'; return; }
+  btn.disabled = true; btn.textContent = '⏳ Generating…';
+  resEl.style.display = 'none';
+  try {
+    const r = await fetch('/api/consultant/trigger', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ name, email, productUrl: product })
+    });
+    const data = await r.json();
+    resEl.style.display = 'block';
+    if (data.ok) {
+      resEl.style.color = 'var(--green)';
+      resEl.textContent = '✓ Pages generated successfully!';
+      document.getElementById('cName').value = '';
+      document.getElementById('cEmail').value = '';
+      document.getElementById('cProduct').value = '';
+    } else {
+      resEl.style.color = 'var(--red)';
+      resEl.textContent = '✗ ' + (data.error || 'Unknown error');
+    }
+  } catch(e) {
+    resEl.style.display = 'block'; resEl.style.color = 'var(--red)';
+    resEl.textContent = '✗ Network error: ' + e.message;
+  }
+  btn.disabled = false; btn.textContent = '⚡ Generate Pages';
+}
+
+// ─── Video upload logic ───────────────────────────────────────────────────────
+let _pendingFile = null;
+
+function initUpload() {
+  const zone  = document.getElementById('dropZone');
+  const input = document.getElementById('fileInput');
+  if (!zone || !input) return;
+  zone.onclick = () => input.click();
+  zone.ondragover  = (e) => { e.preventDefault(); zone.classList.add('drag-over'); };
+  zone.ondragleave = ()  => zone.classList.remove('drag-over');
+  zone.ondrop = (e) => {
+    e.preventDefault(); zone.classList.remove('drag-over');
+    const f = e.dataTransfer.files[0];
+    if (f) showUploadForm(f);
+  };
+  input.onchange = () => { if (input.files[0]) showUploadForm(input.files[0]); };
+}
+
+function showUploadForm(file) {
+  _pendingFile = file;
+  document.getElementById('uploadFileName').textContent = `${file.name}  (${(file.size/1024/1024).toFixed(1)} MB)`;
+  document.getElementById('uploadTitle').value = file.name.replace(/\.[^.]+$/, '').replace(/[_-]/g, ' ');
+  document.getElementById('uploadForm').style.display = 'block';
+  document.getElementById('dropZone').style.display = 'none';
+}
+
+function cancelUpload() {
+  _pendingFile = null;
+  document.getElementById('uploadForm').style.display = 'none';
+  document.getElementById('dropZone').style.display = 'block';
+  document.getElementById('fileInput').value = '';
+}
+
+async function submitUpload() {
+  if (!_pendingFile) return;
+  const btn = document.getElementById('uploadSubmitBtn');
+  btn.disabled = true; btn.textContent = '⏳ Uploading…';
+  const platforms = [...document.querySelectorAll('#platformCheckboxes input:checked')].map(i=>i.value).join(',');
+  const fd = new FormData();
+  fd.append('video',       _pendingFile);
+  fd.append('title',       document.getElementById('uploadTitle').value.trim());
+  fd.append('description', document.getElementById('uploadDesc').value.trim());
+  fd.append('platforms',   platforms);
+  try {
+    const r = await fetch('/api/upload/video', { method:'POST', body: fd });
+    const data = await r.json();
+    if (data.ok) {
+      cancelUpload();
+      renderUploadQueue();
+    } else {
+      alert('Upload failed: ' + (data.error || 'Unknown error'));
+    }
+  } catch(e) { alert('Upload error: ' + e.message); }
+  btn.disabled = false; btn.textContent = '📤 Add to Queue';
+}
+
+// ─── Arcads integration ───────────────────────────────────────────────────────
+let _arcadsActors     = [];
+let _arcadsSelectedId = null;
+let _arcadsFolders    = [];
+let _arcadsJobs       = JSON.parse(localStorage.getItem('arcadsJobs') || '[]'); // persist across reloads
+
+function toggleArcadsForm() {
+  const form = document.getElementById('arcadsForm');
+  const btn  = document.getElementById('arcadsToggleFormBtn');
+  if (!form) return;
+  const open = form.style.display !== 'none';
+  form.style.display = open ? 'none' : 'block';
+  btn.textContent    = open ? '+ Generate New' : '✕ Close';
+}
+
+const CONSULTANT_FORM_URL = 'https://link.msgsndr.com/widget/form/yKOFTYIE2Li3eLxxSXpW';
+
+function copyOnboardLink() {
+  const btn = document.getElementById('copyOnboardBtn');
+  navigator.clipboard.writeText(CONSULTANT_FORM_URL).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = '✓ Copied!';
+    btn.style.color = 'var(--green)';
+    setTimeout(() => { btn.textContent = orig; btn.style.color = ''; }, 2000);
+  }).catch(() => {
+    prompt('Copy this consultant onboarding link:', CONSULTANT_FORM_URL);
+  });
+}
+
+async function renderArcadsStats() {
+  try {
+    const stats = await fetch('/api/arcads/stats').then(r=>r.json());
+    if (!stats.connected) return;
+    document.getElementById('arcadsStatDone').textContent    = stats.totals.done;
+    document.getElementById('arcadsStatPending').textContent = stats.totals.pending;
+    document.getElementById('arcadsStatScripts').textContent = stats.totals.scripts;
+
+    const listEl = document.getElementById('arcadsScriptList');
+    if (!listEl || !stats.scripts.length) return;
+    const rows = stats.scripts.map(s => {
+      const statusDot = s.done > 0 ? `<span style="color:var(--green)">●</span>` : s.pending > 0 ? `<span style="color:var(--yellow)">●</span>` : `<span style="color:var(--muted)">○</span>`;
+      const actions = s.firstUrl
+        ? `<a href="${s.firstUrl}" target="_blank" class="btn btn-ghost" style="font-size:10px;padding:3px 7px">▶ Watch</a>
+           <button class="btn btn-teal" style="font-size:10px;padding:3px 7px" onclick="queueFromArcads('${s.id}','${x(s.name)}','${s.firstUrl}')">+ Queue</button>`
+        : '';
+      return `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border);">
+        ${statusDot}
+        <div style="flex:1;min-width:0;">
+          <span style="font-size:12px;font-weight:700">${x(s.name)}</span>
+          <span style="font-size:10px;color:var(--muted);margin-left:8px">${s.folderName}</span>
+        </div>
+        <span style="font-size:10px;color:var(--muted);flex-shrink:0">${s.done} done${s.pending?` · ${s.pending} pending`:''}</span>
+        <div style="display:flex;gap:4px;flex-shrink:0">${actions}</div>
+      </div>`;
+    }).join('');
+    listEl.innerHTML = `<div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.06em;margin-bottom:8px;">ALL SCRIPTS</div>${rows}`;
+  } catch(e) { console.error('arcads stats:', e); }
+}
+
+async function loadConsultantStats() {
+  try {
+    const data = await fetch('/api/ghl/consultants').then(r=>r.json());
+    const mEl = document.getElementById('cStatMonth');
+    const tEl = document.getElementById('cStatTotal');
+    if (mEl) mEl.textContent = data.thisMonth ?? '—';
+    if (tEl) tEl.textContent = data.total ?? '—';
+    const listEl = document.getElementById('cRecentList');
+    if (listEl && (data.recent||[]).length) {
+      listEl.innerHTML = `<div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.06em;margin-bottom:6px;">RECENTLY ONBOARDED</div>` +
+        data.recent.map(c => `<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px;">
+          <span style="font-weight:700">${x(c.name)}</span>
+          <span style="color:var(--muted)">${new Date(c.createdAt).toLocaleDateString()}</span>
+        </div>`).join('');
+    }
+  } catch(e) { /* silent */ }
+}
+
+async function initArcads() {
+  try {
+    const [actorsRes, scriptsRes] = await Promise.all([
+      fetch('/api/arcads/actors').then(r=>r.json()),
+      fetch('/api/arcads/scripts').then(r=>r.json()),
+    ]);
+    if (!actorsRes.connected) return;
+    _arcadsActors = actorsRes.items || [];
+    _arcadsFolders = scriptsRes.folders || [];
+
+    // Populate folder select
+    const sel = document.getElementById('arcadsFolderSel');
+    if (sel && _arcadsFolders.length) {
+      sel.innerHTML = _arcadsFolders.map(f => `<option value="${f.id}">${x(f.name)}</option>`).join('');
+    }
+
+    // Wire gender filter buttons
+    document.querySelectorAll('.actor-filter').forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll('.actor-filter').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        renderActorGrid(btn.dataset.gender);
+      };
+    });
+
+    renderActorGrid('');
+    renderArcadsJobs();
+  } catch(e) { console.error('Arcads init:', e); }
+}
+
+function renderActorGrid(genderFilter) {
+  const grid = document.getElementById('actorGrid');
+  if (!grid) return;
+  const actors = _arcadsActors
+    .filter(a => !genderFilter || a.actor?.gender === genderFilter)
+    .filter(a => a.talkingActorEnabled !== false)
+    .slice(0, 24);
+  if (!actors.length) { grid.innerHTML = '<div style="font-size:12px;color:var(--muted);font-style:italic;grid-column:1/-1;padding:8px 0">No actors found.</div>'; return; }
+  grid.innerHTML = actors.map(a => {
+    const sel = _arcadsSelectedId === a.id;
+    const emotion = (a.emotions||[])[0] || '';
+    const tag = (a.tags||[])[0] || '';
+    return `<div class="actor-card ${sel?'selected':''}" onclick="selectActor('${a.id}','${x(a.actor?.name||'Actor')}')">
+      <div class="actor-card-name">${x(a.actor?.name||'Actor')} <span style="font-size:10px;color:var(--muted)">${a.actor?.gender||''}</span></div>
+      <div class="actor-card-tags">${emotion}${tag?' · '+tag:''}</div>
+    </div>`;
+  }).join('');
+}
+
+function selectActor(id, name) {
+  _arcadsSelectedId = id;
+  document.getElementById('actorSelLabel').textContent = '✓ Selected: ' + name;
+  document.getElementById('arcadsGenerateBtn').disabled = false;
+  renderActorGrid(document.querySelector('.actor-filter.active')?.dataset.gender || '');
+}
+
+async function arcadsGenerate() {
+  const name = document.getElementById('arcadsScriptName').value.trim();
+  const text = document.getElementById('arcadsScriptText').value.trim();
+  const folderId = document.getElementById('arcadsFolderSel').value;
+  const resEl = document.getElementById('arcadsGenerateResult');
+  const btn   = document.getElementById('arcadsGenerateBtn');
+
+  if (!name || !text)           { showArcadsMsg('Script name and text are required.', 'var(--red)'); return; }
+  if (!_arcadsSelectedId)       { showArcadsMsg('Select an actor first.', 'var(--red)'); return; }
+
+  btn.disabled = true; btn.textContent = '⏳ Creating script…';
+  resEl.style.display = 'none';
+
+  try {
+    // Step 1: create script
+    const createRes = await fetch('/api/arcads/scripts', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ name, text, situationIds: [_arcadsSelectedId], folderId }),
+    }).then(r=>r.json());
+    if (!createRes.ok) { showArcadsMsg('✗ ' + (createRes.error?.message || JSON.stringify(createRes.error)), 'var(--red)'); btn.disabled=false; btn.textContent='🎬 Generate Video'; return; }
+
+    const scriptId = createRes.script?.id;
+    btn.textContent = '⏳ Triggering generation…';
+
+    // Step 2: trigger generation
+    const genRes = await fetch(`/api/arcads/scripts/${scriptId}/generate`, { method:'POST' }).then(r=>r.json());
+
+    // Step 3: add to jobs tracker
+    const job = { scriptId, name, actorId: _arcadsSelectedId, createdAt: new Date().toISOString(), status: 'pending' };
+    _arcadsJobs.unshift(job);
+    if (_arcadsJobs.length > 20) _arcadsJobs.splice(20);
+    localStorage.setItem('arcadsJobs', JSON.stringify(_arcadsJobs));
+
+    showArcadsMsg('✓ Generation started! Polling for completion…', 'var(--green)');
+    document.getElementById('arcadsScriptName').value = '';
+    document.getElementById('arcadsScriptText').value = '';
+    renderArcadsJobs();
+    pollArcadsJob(scriptId);
+  } catch(e) { showArcadsMsg('✗ ' + e.message, 'var(--red)'); }
+  btn.disabled = false; btn.textContent = '🎬 Generate Video';
+}
+
+function showArcadsMsg(msg, color) {
+  const el = document.getElementById('arcadsGenerateResult');
+  el.style.display = 'block'; el.style.color = color; el.textContent = msg;
+}
+
+async function pollArcadsJob(scriptId, attempt=0) {
+  if (attempt > 60) return; // give up after ~5 min
+  setTimeout(async () => {
+    try {
+      const videos = await fetch(`/api/arcads/scripts/${scriptId}/videos`).then(r=>r.json());
+      const done   = videos.filter(v => v.videoStatus === 'completed' || v.videoUrl);
+      const failed = videos.filter(v => v.videoStatus === 'failed' || v.videoStatus === 'error');
+      const pending = videos.filter(v => v.videoStatus === 'pending' || v.videoStatus === 'processing' || v.videoStatus === 'generating');
+
+      // Update job status
+      const ji = _arcadsJobs.findIndex(j => j.scriptId === scriptId);
+      if (ji >= 0) {
+        if (done.length > 0)        _arcadsJobs[ji].status = 'done';
+        else if (failed.length > 0 && !pending.length) _arcadsJobs[ji].status = 'failed';
+        else _arcadsJobs[ji].status = 'pending';
+        if (done.length > 0) _arcadsJobs[ji].downloadUrl = done[0].videoUrl || done[0].data?.videoUrl;
+        localStorage.setItem('arcadsJobs', JSON.stringify(_arcadsJobs));
+      }
+      renderArcadsJobs();
+
+      if (pending.length > 0) pollArcadsJob(scriptId, attempt + 1); // keep polling
+    } catch(e) { /* silent */ }
+  }, 5000);
+}
+
+function renderArcadsJobs() {
+  const el = document.getElementById('arcadsJobs');
+  if (!el) return;
+  if (!_arcadsJobs.length) { el.innerHTML = '<div style="font-size:12px;color:var(--muted);font-style:italic">No active jobs.</div>'; return; }
+  el.innerHTML = _arcadsJobs.slice(0, 8).map(j => `
+    <div class="gen-job">
+      <span class="gen-status ${j.status}">${j.status}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:700;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${x(j.name)}</div>
+        <div style="font-size:10px;color:var(--muted)">${new Date(j.createdAt).toLocaleString()}</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        ${j.downloadUrl ? `<a href="${j.downloadUrl}" target="_blank" class="btn btn-ghost" style="font-size:11px;padding:4px 8px">⬇ Download</a>` : ''}
+        ${j.downloadUrl ? `<button class="btn btn-teal" style="font-size:11px;padding:4px 8px" onclick="queueFromArcads('${j.scriptId}','${x(j.name)}','${j.downloadUrl}')">+ Queue</button>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+async function queueFromArcads(scriptId, name, downloadUrl) {
+  // Add to staging queue as a URL-based entry (not a local file)
+  const q = await fetch('/api/upload/queue').then(r=>r.json());
+  const entry = {
+    id: 'arcads_' + scriptId,
+    originalName: name + '.mp4',
+    filename: name + '.mp4',
+    title: name,
+    description: '',
+    platforms: ['tiktok', 'instagram'],
+    status: 'staged',
+    uploadedAt: new Date().toISOString(),
+    size: 0,
+    arcadsUrl: downloadUrl,
+    source: 'arcads',
+  };
+  // Use PATCH to add (server will handle if id exists)
+  await fetch('/api/upload/queue/' + entry.id, {
+    method: 'PATCH', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(entry)
+  });
+  renderUploadQueue();
+  alert('Added to staging queue!');
+}
+
+// ─── Upload queue + Buffer posting ───────────────────────────────────────────
+let _bufferChannels = [];
+
+async function loadBufferChannels() {
+  try {
+    const r = await fetch('/api/buffer/channels').then(res=>res.json());
+    _bufferChannels = r.channels || [];
+  } catch(e) {}
+}
+
+async function renderUploadQueue() {
+  const el = document.getElementById('uploadQueue');
+  if (!el) return;
+  if (!_bufferChannels.length) await loadBufferChannels();
+  try {
+    const q = await fetch('/api/upload/queue').then(r=>r.json());
+    if (!q.length) { el.innerHTML = '<div class="muted" style="font-size:12px;font-style:italic">No videos staged yet.</div>'; return; }
+    const SICONS = { tiktok:'♪', instagram:'📸', youtube:'▶', twitter:'𝕏', linkedin:'in', facebook:'f' };
+    el.innerHTML = q.map(v => {
+      const videoUrl = v.arcadsUrl || (v.localUrl ? `http://localhost:${location.port||3457}${v.localUrl}` : '');
+      const displayUrl = v.arcadsUrl || v.localUrl || '';
+      const channelOpts = _bufferChannels.map(c =>
+        `<option value="${c.id}">${SICONS[c.service]||'○'} ${x(c.name)}</option>`
+      ).join('');
+      return `
+      <div class="upload-item" id="qi-${v.id}">
+        <div style="font-size:22px;flex-shrink:0">${v.source==='arcads'?'🎬':'🎥'}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${x(v.title)}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">
+            ${(v.platforms||[]).map(p=>`<span>${SICONS[p]||p}</span>`).join(' ')} ·
+            ${v.source==='arcads'?'Arcads AI':'Upload'} ·
+            ${new Date(v.uploadedAt).toLocaleDateString()}
+          </div>
+          ${displayUrl ? `<div style="margin-top:4px;display:flex;align-items:center;gap:4px;">
+            <span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--teal);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px">${displayUrl.replace(/^https?:\/\/[^/]+/,'')}</span>
+            <button class="btn btn-ghost" style="font-size:10px;padding:2px 6px;flex-shrink:0" onclick="copyLink('${encodeURIComponent(videoUrl)}')">Copy</button>
+          </div>` : ''}
+        </div>
+        <span class="upload-status ${v.status}">${v.status}</span>
+        <div style="display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end">
+          ${videoUrl ? `<a href="${videoUrl}" target="_blank" class="btn btn-ghost" style="font-size:11px;padding:4px 8px">⬇</a>` : ''}
+          ${v.status==='staged' && _bufferChannels.length ? `
+            <select id="bufChan-${v.id}" class="agent-input" style="width:130px;padding:3px 6px;font-size:11px">
+              <option value="">Pick channel…</option>${channelOpts}
+            </select>
+            <button class="btn btn-teal" style="font-size:11px;padding:4px 8px" onclick="postToBuffer('${v.id}','${encodeURIComponent(videoUrl||'')}','${encodeURIComponent(v.title||'')}')">Post ↗</button>` : ''}
+          ${v.status==='staged' ? `<button class="btn btn-ghost" style="font-size:11px;padding:4px 8px" onclick="markPublished('${v.id}')">✓</button>` : ''}
+          <button class="btn btn-ghost" style="font-size:11px;padding:4px 8px;color:var(--red)" onclick="removeUpload('${v.id}')">✕</button>
+        </div>
+      </div>`}).join('');
+  } catch(e) { el.innerHTML = '<div class="muted" style="font-size:12px">Could not load queue.</div>'; }
+}
+
+function copyLink(encodedUrl) {
+  const url = decodeURIComponent(encodedUrl);
+  navigator.clipboard.writeText(url).then(() => {
+    // brief visual feedback via button text swap
+  }).catch(() => {
+    prompt('Copy this link:', url);
+  });
+}
+
+async function postToBuffer(videoId, encodedUrl, encodedTitle) {
+  const channelId = document.getElementById('bufChan-' + videoId)?.value;
+  if (!channelId) { alert('Select a Buffer channel first.'); return; }
+  const videoUrl = decodeURIComponent(encodedUrl);
+  const title    = decodeURIComponent(encodedTitle);
+  try {
+    const r = await fetch('/api/buffer/post', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ channelId, text: title, mediaUrl: videoUrl || undefined }),
+    }).then(res=>res.json());
+    if (r.ok) {
+      alert('✓ Posted to Buffer! It will appear in your scheduled queue.');
+      await markPublished(videoId);
+    } else {
+      alert('Buffer error: ' + (r.error || 'Unknown'));
+    }
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+async function markPublished(id) {
+  await fetch('/api/upload/queue/' + id, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ status:'published' }) });
+  renderUploadQueue();
+}
+async function removeUpload(id) {
+  if (!confirm('Remove this video from the queue?')) return;
+  await fetch('/api/upload/queue/' + id, { method:'DELETE' });
+  renderUploadQueue();
+}
+
+// ─── Reacher / TikTok Affiliate ──────────────────────────────────────────────
+const RNG = { mode: '30d' };  // current date range state
+
+function getReacherDates() {
+  if (RNG.mode === 'custom') {
+    return {
+      start_date: document.getElementById('reacherDateStart')?.value || '',
+      end_date:   document.getElementById('reacherDateEnd')?.value   || '',
+    };
+  }
+  const days = RNG.mode === '7d' ? 7 : RNG.mode === '30d' ? 30 : 90;
+  const end   = new Date();
+  const start = new Date(Date.now() - days * 86_400_000);
+  return {
+    start_date: start.toISOString().slice(0, 10),
+    end_date:   end.toISOString().slice(0, 10),
+  };
+}
+
+function setReacherRange(btn, mode) {
+  RNG.mode = mode;
+  document.querySelectorAll('[data-rng]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const customEl = document.getElementById('reacherCustomDates');
+  if (customEl) customEl.style.display = mode === 'custom' ? 'flex' : 'none';
+  const labels = { '7d': 'last 7 days', '30d': 'last 30 days', '90d': 'last 90 days', 'custom': 'custom range' };
+  const labelEl = document.getElementById('reacherDateLabel');
+  if (labelEl) labelEl.textContent = labels[mode] || '';
+  if (mode !== 'custom') loadReacher(true);
+}
+
+async function loadReacher(force = false) {
+  const statusEl = document.getElementById('reacherRefreshStatus');
+  if (statusEl) statusEl.textContent = 'Fetching…';
+  const { start_date, end_date } = getReacherDates();
+  const params = new URLSearchParams();
+  if (start_date) params.set('start_date', start_date);
+  if (end_date)   params.set('end_date',   end_date);
+  try {
+    const data = await fetch(`/api/reacher/stats?${params}`).then(r => r.json());
+    S.reacher = data;
+    renderReacher();
+    // Also kick off timeseries fetch for chart
+    loadReacherTimeseries(start_date, end_date);
+    if (statusEl) statusEl.textContent = 'Updated ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  } catch(e) {
+    if (statusEl) statusEl.textContent = 'Error: ' + e.message;
+  }
+}
+
+async function loadReacherTimeseries(start_date, end_date) {
+  const chartStatus = document.getElementById('reacherChartStatus');
+  if (chartStatus) chartStatus.textContent = 'Loading chart…';
+  try {
+    const data = await fetch('/api/reacher/timeseries', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ start_date, end_date, granularity: 'day' }),
+    }).then(r => r.json());
+    S.reacherTimeseries = data;
+    renderReacherChart();
+    if (chartStatus) chartStatus.textContent = '';
+  } catch(e) {
+    if (chartStatus) chartStatus.textContent = 'Chart unavailable';
+    S.reacherTimeseries = null;
+  }
+}
+
+function renderReacherChart() {
+  const ts = S.reacherTimeseries;
+  const ctx = document.getElementById('reacherChart')?.getContext('2d');
+  if (!ctx) return;
+
+  if (window._reacherChart) { window._reacherChart.destroy(); window._reacherChart = null; }
+
+  const shopSel = document.getElementById('reacherChartShop');
+  const selectedShop = shopSel?.value || 'all';
+
+  // Populate shop selector if shops are loaded
+  if (S.reacher?.shops && shopSel && shopSel.options.length <= 1) {
+    S.reacher.shops.forEach(s => {
+      if (!s.error) {
+        const opt = document.createElement('option');
+        opt.value = String(s.shop_id);
+        opt.textContent = s.shop_name;
+        shopSel.appendChild(opt);
+      }
+    });
+  }
+
+  let rows = [];
+  if (ts) {
+    if (selectedShop === 'all') {
+      rows = ts.timeline || [];
+    } else {
+      // Per-shop Reacher response: { data: { gmv: [{date,value}], video_views: [...] } }
+      const shopData = (ts.per_shop || []).find(s => String(s.shop_id) === selectedShop);
+      const metricData = shopData?.data?.data || {};
+      // Merge metric arrays into [{date, gmv, video_views}] rows
+      const byDate = {};
+      ['gmv','video_views','videos_posted'].forEach(m => {
+        (metricData[m] || []).forEach(pt => {
+          if (!byDate[pt.date]) byDate[pt.date] = { date: pt.date, gmv: 0, video_views: 0, videos_posted: 0 };
+          byDate[pt.date][m] = pt.value || 0;
+        });
+      });
+      rows = Object.values(byDate).sort((a,b) => a.date.localeCompare(b.date));
+    }
+  }
+
+  if (!rows.length) {
+    ctx.canvas.style.opacity = '0.3';
+    return;
+  }
+  ctx.canvas.style.opacity = '1';
+
+  const labels = rows.map(r => {
+    const d = new Date(r.date);
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  });
+  const gmvData   = rows.map(r => r.gmv || 0);
+  const viewsData = rows.map(r => r.video_views || 0);
+
+  window._reacherChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'GMV ($)',
+          data: gmvData,
+          borderColor: '#00d27a',
+          backgroundColor: 'rgba(0,210,122,0.07)',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 2,
+          yAxisID: 'yGmv',
+        },
+        {
+          label: 'Video Views',
+          data: viewsData,
+          borderColor: '#00f2ea',
+          backgroundColor: 'rgba(0,242,234,0.05)',
+          borderWidth: 2,
+          fill: false,
+          tension: 0.4,
+          pointRadius: 2,
+          yAxisID: 'yViews',
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ctx.datasetIndex === 0
+              ? ' GMV: $' + ctx.parsed.y.toLocaleString()
+              : ' Views: ' + ctx.parsed.y.toLocaleString(),
+          },
+        },
+      },
+      scales: {
+        x: {
+          ticks: { color: '#7a7268', font: { size: 9 }, maxRotation: 30, maxTicksLimit: 10 },
+          grid: { color: 'rgba(20,18,16,0.05)' },
+        },
+        yGmv: {
+          type: 'linear', position: 'left',
+          ticks: { color: '#00d27a', font: { size: 9 }, callback: v => '$' + (v>=1000?v/1000+'k':v) },
+          grid: { color: 'rgba(20,18,16,0.05)' },
+        },
+        yViews: {
+          type: 'linear', position: 'right',
+          ticks: { color: '#00f2ea', font: { size: 9 }, callback: v => v>=1000?v/1000+'k':v },
+          grid: { display: false },
+        },
+      },
+    },
+  });
+}
+
+function renderReacher() {
+  const d = S.reacher;
+  const statusEl = document.getElementById('reacherRefreshStatus');
+
+  if (!d || d.error) {
+    const msg = d?.error || 'Could not load — Railway server may be offline';
+    document.getElementById('reacherShopsGrid').innerHTML =
+      `<div class="card" style="grid-column:1/-1;padding:20px;text-align:center;color:var(--red);font-size:13px;">⚠ ${x(msg)}</div>`;
+    if (statusEl && d?.error) statusEl.textContent = 'Error';
+    return;
+  }
+
+  const totals = d.totals || {};
+  const shops  = d.shops  || [];
+
+  // ── Agency KPIs ──
+  el('reacherKpiGmv').textContent      = fmtMoney(totals.total_gmv || 0);
+  el('reacherKpiCreators').textContent = fmtNum(totals.total_creators || 0);
+  el('reacherKpiViews').textContent    = fmtNum(totals.total_video_views || 0);
+  el('reacherKpiVideos').textContent   = fmtNum(totals.total_videos || 0);
+  el('reacherKpiSamples').textContent  = fmtNum(totals.total_samples || 0);
+  el('reacherKpiAuto').textContent     = fmtNum(totals.active_automations || 0);
+
+  // ── Agency funnel (aggregate all shops) ──
+  const funnelEl = document.getElementById('reacherFunnelViz');
+  if (funnelEl) {
+    // Sum all shops' funnel stages
+    const agencyFunnel = {};
+    shops.forEach(s => {
+      Object.entries(s.funnel || {}).forEach(([stage, count]) => {
+        agencyFunnel[stage] = (agencyFunnel[stage] || 0) + (count || 0);
+      });
+    });
+    const funnelStages = Object.entries(agencyFunnel);
+    const maxVal = Math.max(...funnelStages.map(([,v]) => v), 1);
+    const STAGE_LABELS = {
+      'sample-requests':    'Sample Requests',
+      'approved-samples':   'Approved Samples',
+      'content-pending':    'Content Pending',
+      'content-unfulfilled':'Unfulfilled',
+      'content-posted':     'Content Posted',
+      'generated-gmv':      'Generated GMV',
+    };
+    funnelEl.innerHTML = funnelStages.length
+      ? funnelStages.map(([stage, count]) => {
+          const pct = Math.round((count / maxVal) * 100);
+          const label = STAGE_LABELS[stage] || stage.replace(/-/g,' ').replace(/\b\w/g,l=>l.toUpperCase());
+          const isGmv = stage === 'generated-gmv';
+          return `<div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:3px;font-size:11px;">
+              <span style="color:var(--soft);font-weight:700;">${label}</span>
+              <span style="font-family:'JetBrains Mono',monospace;color:${isGmv?'var(--green)':'var(--teal)'};">${fmtNum(count)}</span>
+            </div>
+            <div style="height:6px;background:rgba(0,0,0,0.06);border-radius:4px;overflow:hidden;">
+              <div style="height:100%;width:${pct}%;background:${isGmv?'var(--green)':'var(--teal)'};border-radius:4px;transition:width 0.4s ease;"></div>
+            </div>
+          </div>`;
+        }).join('')
+      : '<div style="color:var(--muted);font-style:italic;font-size:12px;">No funnel data</div>';
+  }
+
+  // ── Per-shop cards ──
+  const grid = document.getElementById('reacherShopsGrid');
+  if (!shops.length) {
+    grid.innerHTML = '<div class="card" style="grid-column:1/-1;padding:20px;text-align:center;color:var(--muted);font-style:italic;">No shops found.</div>';
+    return;
+  }
+
+  grid.innerHTML = shops.map(s => {
+    if (s.error) {
+      return `<div class="card agent-card" style="opacity:0.6">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <div class="agent-icon" style="background:rgba(255,0,80,0.08);color:var(--pink)">🛍️</div>
+          <div><div class="agent-name">${x(s.shop_name || 'Shop ' + s.shop_id)}</div>
+          <div style="font-size:11px;color:var(--red)">Error: ${x(s.error)}</div></div>
+        </div>
+      </div>`;
+    }
+
+    const m = s.metrics || {};
+    const gmv         = fmtMoney(m.gmv || 0);
+    const videoViews  = fmtNum(m.video_views || 0);
+    const videos      = fmtNum(m.videos_posted || 0);
+    const samples     = fmtNum(m.sample_requests || 0);
+    const creators    = fmtNum(s.total_creators || 0);
+    const activeAuto  = s.active_automations || 0;
+    const totalAuto   = s.total_automations  || 0;
+    const isPro       = s.status === 'active' || s.status?.startsWith('pro');
+    const statusColor = isPro ? 'var(--green)' : 'var(--muted)';
+    const statusDot   = `<span class="dot" style="background:${statusColor};flex-shrink:0"></span>`;
+    const autoLabel   = totalAuto > 0
+      ? `<span style="color:${activeAuto > 0 ? 'var(--teal)' : 'var(--muted)'}">${activeAuto} running</span><span style="color:var(--muted)"> / ${totalAuto} total</span>`
+      : '<span style="color:var(--muted)">No automations</span>';
+
+    // Mini funnel bars for per-shop card
+    const funnelHtml = (() => {
+      const f = s.funnel || {};
+      const stages = Object.entries(f).filter(([,v]) => v > 0);
+      if (!stages.length) return '';
+      const maxF = Math.max(...stages.map(([,v]) => v), 1);
+      const SLABELS = {
+        'sample-requests':'Requests','approved-samples':'Approved',
+        'content-pending':'Pending','content-unfulfilled':'Unfulfilled',
+        'content-posted':'Posted','generated-gmv':'Has GMV',
+      };
+      return `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
+        <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:0.06em;margin-bottom:6px;">CREATOR FUNNEL</div>
+        ${stages.map(([stage, count]) => {
+          const pct = Math.round((count / maxF) * 100);
+          const lbl = SLABELS[stage] || stage.split('-').map(w=>w[0].toUpperCase()+w.slice(1)).join(' ');
+          const isGmv = stage === 'generated-gmv';
+          return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+            <div style="width:72px;font-size:9px;color:var(--muted);text-align:right;flex-shrink:0;">${lbl}</div>
+            <div style="flex:1;height:5px;background:rgba(0,0,0,0.06);border-radius:3px;overflow:hidden;">
+              <div style="height:100%;width:${pct}%;background:${isGmv?'var(--green)':'var(--teal)'};border-radius:3px;"></div>
+            </div>
+            <div style="width:32px;font-size:9px;font-weight:700;font-family:'JetBrains Mono',monospace;color:${isGmv?'var(--green)':'var(--soft)'};">${count}</div>
+          </div>`;
+        }).join('')}
+      </div>`;
+    })();
+
+    return `<div class="card agent-card">
+      <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px;">
+        <div class="agent-icon" style="background:rgba(0,242,234,0.08);color:var(--teal);font-size:18px">🛍️</div>
+        <div style="flex:1;min-width:0;">
+          <div class="agent-name" style="display:flex;align-items:center;gap:6px;">${statusDot}${x(s.shop_name)}</div>
+          <div style="font-size:10px;color:${isPro?'var(--green)':'var(--muted)'};margin-top:2px;text-transform:capitalize;font-weight:700">${x(s.status||'')}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:20px;font-weight:900;color:var(--green)">${gmv}</div>
+          <div style="font-size:9px;color:var(--muted);font-weight:700;letter-spacing:0.06em">GMV</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px;">
+        ${statCell(videoViews, 'VIEWS')}
+        ${statCell(videos, 'VIDEOS')}
+        ${statCell(samples, 'SAMPLES')}
+        ${statCell(creators, 'CREATORS')}
+      </div>
+      <div style="font-size:11px;display:flex;align-items:center;gap:6px;">
+        <span style="color:var(--muted);font-weight:700;letter-spacing:0.04em;">AUTO:</span>${autoLabel}
+      </div>
+      ${funnelHtml}
+    </div>`;
+  }).join('');
+
+  if (statusEl) statusEl.textContent = 'Updated ' + new Date(d.generated_at || Date.now()).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+}
+
+function statCell(val, label) {
+  return `<div style="background:rgba(0,0,0,0.03);border-radius:6px;padding:6px;text-align:center;">
+    <div style="font-size:13px;font-weight:900;color:var(--text)">${val}</div>
+    <div style="font-size:9px;color:var(--muted);font-weight:700;letter-spacing:0.05em;margin-top:1px">${label}</div>
+  </div>`;
+}
+
+function el(id) { return document.getElementById(id) || { textContent: '' }; }
+
+// ─── Lark Command box ─────────────────────────────────────────────────────────
+const _cmdLog = [];
+
+async function sendCommand() {
+  const text    = document.getElementById('commandText')?.value?.trim();
+  const context = document.getElementById('commandContext')?.value || '';
+  const btn     = document.getElementById('commandSendBtn');
+  const statusEl= document.getElementById('commandSendStatus');
+  const logEl   = document.getElementById('commandLog');
+
+  if (!text) return;
+
+  btn.disabled = true;
+  btn.textContent = '⏳';
+  if (statusEl) statusEl.textContent = 'Sending…';
+
+  try {
+    const r = await fetch('/api/command', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, context }),
+    }).then(r => r.json());
+
+    if (r.ok) {
+      document.getElementById('commandText').value = '';
+      if (statusEl) { statusEl.style.color = 'var(--green)'; statusEl.textContent = '✓ Sent to Lark'; }
+
+      // Add to log
+      _cmdLog.unshift({ text, context, ts: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}), ok: true });
+      if (_cmdLog.length > 10) _cmdLog.pop();
+      renderCommandLog();
+
+      setTimeout(() => { if(statusEl) { statusEl.style.color = ''; statusEl.textContent = ''; } }, 3000);
+    } else {
+      if (statusEl) { statusEl.style.color = 'var(--red)'; statusEl.textContent = '✗ ' + (r.error || 'Failed'); }
+    }
+  } catch(e) {
+    if (statusEl) { statusEl.style.color = 'var(--red)'; statusEl.textContent = '✗ Network error'; }
+  }
+  btn.disabled = false;
+  btn.textContent = 'Fire →';
+}
+
+function renderCommandLog() {
+  const logEl = document.getElementById('commandLog');
+  if (!logEl || !_cmdLog.length) return;
+  logEl.style.display = 'block';
+  logEl.innerHTML = `<div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:0.06em;margin-bottom:6px;padding-top:10px;border-top:1px solid var(--border);">RECENTLY SENT</div>` +
+    _cmdLog.map(c => `
+      <div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border);font-size:12px;">
+        <span style="color:var(--green);flex-shrink:0;">✓</span>
+        ${c.context ? `<span style="color:var(--gold);font-weight:700;flex-shrink:0;font-size:11px;">${x(c.context)}</span>` : ''}
+        <span style="flex:1;color:var(--soft);">${x(c.text)}</span>
+        <span style="color:var(--muted);font-size:10px;flex-shrink:0;">${c.ts}</span>
+      </div>`).join('');
+}
+
+function renderPerformance() {
+  // Wire range buttons
+  document.querySelectorAll('.range-btn').forEach(btn => {
+    btn.onclick = () => {
+      S.perfRange = btn.dataset.range;
+      document.querySelectorAll('.range-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderPerformance();
+    };
+  });
+  const range = S.perfRange || '30d';
+  const rangeDays = range === '7d' ? 7 : range === '30d' ? 30 : 90;
+  const rangeMs = rangeDays * 86_400_000;
+  const rangeLabel = range === '7d' ? 'last 7 days' : range === '30d' ? 'last 30 days' : 'last 90 days';
+  const rangeEl = document.getElementById('chartRangeLabel');
+  if (rangeEl) rangeEl.textContent = rangeLabel;
+
+  // Helper: get delta for a platform/handle from S.history
+  function getDelta(platform, handle) {
+    return S.history?.[platform]?.[handle]?.delta?.[range] || null;
+  }
+  function deltaHtml(d) {
+    if (!d || d.followers === null || d.followers === undefined) return '';
+    if (d.followers === 0) return '<span class="delta-flat">→ no change</span>';
+    const sign = d.followers > 0 ? '+' : '';
+    const cls  = d.followers > 0 ? 'delta-up' : 'delta-down';
+    const arrow = d.followers > 0 ? '▲' : '▼';
+    return `<span class="${cls}">${arrow} ${sign}${d.followers.toLocaleString()} vs ${range}</span>`;
+  }
+
+  const yt = S.youtube;
+  const sc = S.social;
+
+  // ── YouTube KPI (sum across channels) ──
+  const ytChannels = yt?.channels || [];
+  if (yt?.connected && ytChannels.length > 0) {
+    const ytSubsTotal  = ytChannels.reduce((s, c) => s + (c.subscribers || 0), 0);
+    const ytViewsTotal = ytChannels.reduce((s, c) => s + (c.totalViews  || 0), 0);
+    document.getElementById('perfYtSubs').textContent    = fmtNum(ytSubsTotal);
+    document.getElementById('perfYtSubsSub').textContent = ytChannels.length > 1 ? `${ytChannels.length} channels` : (ytChannels[0].channelName || 'YouTube channel');
+    document.getElementById('perfYtViews').textContent   = fmtNum(ytViewsTotal);
+    document.getElementById('perfYtViewsSub').textContent = 'all time';
+    // YT subs delta — sum across channels
+    const ytSubsDelta = ytChannels.map(ch => getDelta('youtube', ch.handle)).reduce((s, d) => s + (d?.followers || 0), 0);
+    const hasYtDelta = ytChannels.some(ch => getDelta('youtube', ch.handle));
+    if (hasYtDelta) {
+      const sign = ytSubsDelta > 0 ? '+' : ''; const cls = ytSubsDelta >= 0 ? 'delta-up' : 'delta-down'; const arrow = ytSubsDelta > 0 ? '▲' : ytSubsDelta < 0 ? '▼' : '→';
+      document.getElementById('perfYtSubsDelta').innerHTML = `<span class="${ytSubsDelta === 0 ? 'delta-flat' : cls}">${ytSubsDelta === 0 ? '→' : arrow} ${sign}${ytSubsDelta.toLocaleString()} vs ${range}</span>`;
+    } else {
+      document.getElementById('perfYtSubsDelta').innerHTML = '';
+    }
+    document.getElementById('perfYtViewsDelta').innerHTML = '';
+  } else {
+    document.getElementById('perfYtSubs').textContent     = '—';
+    document.getElementById('perfYtSubsSub').textContent  = 'add YOUTUBE_API_KEY';
+    document.getElementById('perfYtViews').textContent    = '—';
+    document.getElementById('perfYtViewsSub').textContent = 'add YOUTUBE_API_KEY';
+    document.getElementById('perfYtSubsDelta').innerHTML  = '';
+    document.getElementById('perfYtViewsDelta').innerHTML = '';
+  }
+
+  // ── TikTok KPI (combined) ──
+  const tkAccounts = sc?.tiktok || [];
+  if (sc?.connected && tkAccounts.length > 0) {
+    const tkTotal = tkAccounts.reduce((s, a) => s + (a.followers || 0), 0);
+    document.getElementById('perfTkFollowers').textContent    = fmtNum(tkTotal);
+    document.getElementById('perfTkFollowersSub').textContent = tkAccounts.length > 1 ? `${tkAccounts.length} accounts` : '@' + tkAccounts[0].handle;
+    const tkDeltaTotal = tkAccounts.map(a => getDelta('tiktok', a.handle)).reduce((s, d) => s + (d?.followers || 0), 0);
+    const hasTkDelta = tkAccounts.some(a => getDelta('tiktok', a.handle));
+    if (hasTkDelta) {
+      const sign = tkDeltaTotal > 0 ? '+' : ''; const cls = tkDeltaTotal >= 0 ? 'delta-up' : 'delta-down'; const arrow = tkDeltaTotal > 0 ? '▲' : tkDeltaTotal < 0 ? '▼' : '→';
+      document.getElementById('perfTkFollowersDelta').innerHTML = `<span class="${tkDeltaTotal === 0 ? 'delta-flat' : cls}">${tkDeltaTotal === 0 ? '→' : arrow} ${sign}${tkDeltaTotal.toLocaleString()} vs ${range}</span>`;
+    } else {
+      document.getElementById('perfTkFollowersDelta').innerHTML = '';
+    }
+  } else {
+    document.getElementById('perfTkFollowers').textContent    = '—';
+    document.getElementById('perfTkFollowersSub').textContent = sc?.connected ? 'no handles configured' : 'add APIFY_API_KEY';
+    document.getElementById('perfTkFollowersDelta').innerHTML = '';
+  }
+
+  // ── Instagram KPI (combined) ──
+  const igAccounts = sc?.instagram || [];
+  if (sc?.connected && igAccounts.length > 0) {
+    const igTotal = igAccounts.reduce((s, a) => s + (a.followers || 0), 0);
+    document.getElementById('perfIgFollowers').textContent    = fmtNum(igTotal);
+    document.getElementById('perfIgFollowersSub').textContent = igAccounts.length > 1 ? `${igAccounts.length} accounts` : '@' + igAccounts[0].handle;
+    const igDeltaTotal = igAccounts.map(a => getDelta('instagram', a.handle)).reduce((s, d) => s + (d?.followers || 0), 0);
+    const hasIgDelta = igAccounts.some(a => getDelta('instagram', a.handle));
+    if (hasIgDelta) {
+      const sign = igDeltaTotal > 0 ? '+' : ''; const cls = igDeltaTotal >= 0 ? 'delta-up' : 'delta-down'; const arrow = igDeltaTotal > 0 ? '▲' : igDeltaTotal < 0 ? '▼' : '→';
+      document.getElementById('perfIgFollowersDelta').innerHTML = `<span class="${igDeltaTotal === 0 ? 'delta-flat' : cls}">${igDeltaTotal === 0 ? '→' : arrow} ${sign}${igDeltaTotal.toLocaleString()} vs ${range}</span>`;
+    } else {
+      document.getElementById('perfIgFollowersDelta').innerHTML = '';
+    }
+  } else {
+    document.getElementById('perfIgFollowers').textContent    = '—';
+    document.getElementById('perfIgFollowersSub').textContent = sc?.connected ? 'no handles configured' : 'add APIFY_API_KEY';
+    document.getElementById('perfIgFollowersDelta').innerHTML = '';
+  }
+
+  // ── X / Twitter KPI ──
+  const twAccounts = S.twitter?.accounts || [];
+  const twTotal = twAccounts.reduce((s, a) => s + (a.followers || 0), 0);
+  if (twAccounts.length > 0) {
+    document.getElementById('perfXFollowers').textContent    = fmtNum(twTotal);
+    document.getElementById('perfXFollowersSub').textContent = twAccounts.length > 1 ? `${twAccounts.length} accounts` : '@' + twAccounts[0]?.handle;
+    const twDeltaTotal = twAccounts.map(a => getDelta('twitter', a.handle)).reduce((s, d) => s + (d?.followers || 0), 0);
+    const hasTwDelta = twAccounts.some(a => getDelta('twitter', a.handle));
+    if (hasTwDelta) {
+      const sign = twDeltaTotal > 0 ? '+' : ''; const cls = twDeltaTotal >= 0 ? 'delta-up' : 'delta-down'; const arrow = twDeltaTotal > 0 ? '▲' : twDeltaTotal < 0 ? '▼' : '→';
+      document.getElementById('perfXFollowersDelta').innerHTML = `<span class="${twDeltaTotal === 0 ? 'delta-flat' : cls}">${twDeltaTotal === 0 ? '→' : arrow} ${sign}${twDeltaTotal.toLocaleString()} vs ${range}</span>`;
+    } else {
+      document.getElementById('perfXFollowersDelta').innerHTML = '';
+    }
+  } else {
+    document.getElementById('perfXFollowers').textContent    = '—';
+    document.getElementById('perfXFollowersSub').textContent = S.twitter?.connected === false ? 'loading…' : 'no accounts';
+    document.getElementById('perfXFollowersDelta').innerHTML = '';
+  }
+
+  // ── LinkedIn KPI ──
+  const liAccounts = S.linkedin?.accounts || [];
+  const liTotal = liAccounts.reduce((s, a) => s + (a.followers || 0), 0);
+  if (liAccounts.length > 0) {
+    document.getElementById('perfLiFollowers').textContent    = fmtNum(liTotal);
+    document.getElementById('perfLiFollowersSub').textContent = `${liAccounts.length} account${liAccounts.length !== 1 ? 's' : ''}`;
+    const liDeltaTotal = liAccounts.map(a => getDelta('linkedin', a.handle)).reduce((s, d) => s + (d?.followers || 0), 0);
+    const hasLiDelta = liAccounts.some(a => getDelta('linkedin', a.handle));
+    if (hasLiDelta) {
+      const sign = liDeltaTotal > 0 ? '+' : ''; const cls = liDeltaTotal >= 0 ? 'delta-up' : 'delta-down'; const arrow = liDeltaTotal > 0 ? '▲' : liDeltaTotal < 0 ? '▼' : '→';
+      document.getElementById('perfLiFollowersDelta').innerHTML = `<span class="${liDeltaTotal === 0 ? 'delta-flat' : cls}">${liDeltaTotal === 0 ? '→' : arrow} ${sign}${liDeltaTotal.toLocaleString()} vs ${range}</span>`;
+    } else {
+      document.getElementById('perfLiFollowersDelta').innerHTML = '';
+    }
+  } else {
+    document.getElementById('perfLiFollowers').textContent    = '—';
+    document.getElementById('perfLiFollowersSub').textContent = S.linkedin?.connected === false ? 'loading…' : 'no accounts';
+    document.getElementById('perfLiFollowersDelta').innerHTML = '';
+  }
+
+  // ── Avatar helper ──
+  function avatarHtml(url, label, color) {
+    const initials = (label || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    const bg = color || 'var(--teal)';
+    return url
+      ? `<img src="${url}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+        + `<div style="display:none;width:38px;height:38px;border-radius:50%;background:${bg};align-items:center;justify-content:center;font-weight:900;font-size:13px;color:var(--dark);flex-shrink:0">${initials}</div>`
+      : `<div style="display:flex;width:38px;height:38px;border-radius:50%;background:${bg};align-items:center;justify-content:center;font-weight:900;font-size:13px;color:var(--dark);flex-shrink:0">${initials}</div>`;
+  }
+
+  // ── YouTube card — unified, both channels ──
+  const ytCard = document.getElementById('perfYoutubeCard');
+  if (yt?.connected && ytChannels.length > 0) {
+    const channelRows = ytChannels.map(ch => {
+      const d = getDelta('youtube', ch.handle);
+      return `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+        <div style="font-weight:700;font-size:13px">${x(ch.label || ch.channelName || 'Channel')}</div>
+        <div style="display:flex;gap:20px">
+          <div style="text-align:right">
+            <div style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--teal)">${fmtNum(ch.subscribers)}</div>
+            <div style="font-size:10px;color:var(--muted)">subs</div>
+            <div class="kpi-delta" style="text-align:right">${deltaHtml(d)}</div>
+          </div>
+          <div style="text-align:right"><div style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--gold)">${fmtNum(ch.totalViews)}</div><div style="font-size:10px;color:var(--muted)">views</div></div>
+          <div style="text-align:right"><div style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--soft)">${ch.videoCount || 0}</div><div style="font-size:10px;color:var(--muted)">videos</div></div>
+        </div>
+      </div>`;
+    }).join('');
+
+    // Filter videos by date range
+    const now = Date.now();
+    const cutoff = now - rangeMs;
+    const allVideos = (yt.channels || []).flatMap(ch =>
+      (ch.recentVideos || []).map(v => ({ ...v, channelLabel: ch.label || ch.channelName || '', _chLabel: ch.label || ch.channelName || '' }))
+    ).filter(v => new Date(v.publishedAt).getTime() >= cutoff)
+      .sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
+
+    // Show Top Video panel
+    const topVideoPanel = document.getElementById('topVideoPanel');
+    if (allVideos.length > 0) {
+      const top = [...allVideos].sort((a,b) => b.views - a.views)[0];
+      topVideoPanel.style.display = 'block';
+      topVideoPanel.innerHTML = `
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:10px;font-weight:700;color:var(--gold);letter-spacing:0.08em;">🏆 TOP VIDEO THIS PERIOD</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:8px;">
+          ${top.thumbnail ? `<img src="${top.thumbnail}" style="width:60px;height:45px;object-fit:cover;border-radius:4px;flex-shrink:0;" onerror="this.style.display='none'">` : ''}
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${x(top.title)}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px;">${top.channelLabel} · ${new Date(top.publishedAt).toLocaleDateString()}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0;">
+            <div style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--teal);font-size:15px;">${fmtNum(top.views)}</div>
+            <div style="font-size:10px;color:var(--muted)">views</div>
+          </div>
+        </div>
+        <div style="font-size:10px;color:var(--gold);margin-top:6px;font-weight:700;">↑ Replicate this content</div>
+      `;
+    } else {
+      topVideoPanel.style.display = 'none';
+    }
+
+    const videoRows = allVideos.length
+      ? allVideos.slice(0, 6).map(v => `<tr>
+          <td style="max-width:0;width:100%">
+            <span style="font-size:11px;font-weight:700;background:rgba(0,0,0,0.06);color:var(--muted);padding:1px 5px;border-radius:3px;margin-right:6px;white-space:nowrap">${x(v._chLabel)}</span>
+            <span>${x(v.title && v.title.length > 45 ? v.title.slice(0, 45) + '…' : (v.title || ''))}</span>
+          </td>
+          <td class="mono" style="color:var(--teal);text-align:right;white-space:nowrap">${fmtNum(v.views)}</td>
+          <td class="mono muted" style="white-space:nowrap">${fmtDate(v.publishedAt)}</td>
+        </tr>`).join('')
+      : `<tr class="empty"><td colspan="3">No videos in the ${rangeLabel}</td></tr>`;
+
+    ytCard.innerHTML = `
+      <div class="card-label" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>YOUTUBE</span>
+        <span class="badge b-active">Connected</span>
+      </div>
+      ${channelRows}
+      <div class="card-label" style="margin-top:14px;margin-bottom:8px">Videos — ${rangeLabel}</div>
+      <table class="tbl">
+        <thead><tr><th>Title</th><th style="text-align:right">Views</th><th>Published</th></tr></thead>
+        <tbody>${videoRows}</tbody>
+      </table>`;
+  } else {
+    ytCard.innerHTML = `
+      <div class="connect-card">
+        <div class="connect-icon">▶</div>
+        <div class="connect-title">YouTube</div>
+        <div class="connect-desc">Set <code style="background:rgba(0,0,0,0.06);padding:2px 6px;border-radius:4px;">YOUTUBE_API_KEY</code> and channel IDs to see stats and recent videos.</div>
+        <span class="btn-soon">Add env vars</span>
+      </div>`;
+    const topVideoPanel = document.getElementById('topVideoPanel');
+    if (topVideoPanel) topVideoPanel.style.display = 'none';
+  }
+
+  // ── TikTok card — unified, both accounts ──
+  const tkCard = document.getElementById('perfTiktokCard');
+  if (sc?.connected && tkAccounts.length > 0) {
+    const tkRows = tkAccounts.map(a => {
+      const d = getDelta('tiktok', a.handle);
+      return `
+      <div class="perf-account-row">
+        ${avatarHtml(a.avatar, a.label || a.handle, 'var(--teal)')}
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:700;font-size:13px">${x(a.label || a.handle)}</div>
+          <div style="font-size:11px;color:var(--muted)">@${x(a.handle || '')}</div>
+        </div>
+        <div style="display:flex;gap:16px;align-items:flex-start">
+          <div style="text-align:right">
+            <div style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--teal)">${fmtNum(a.followers || 0)}</div>
+            <div style="font-size:10px;color:var(--muted)">followers</div>
+            <div class="kpi-delta" style="text-align:right">${deltaHtml(d)}</div>
+          </div>
+          <div style="text-align:right"><div style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--pink)">${fmtNum(a.likes || 0)}</div><div style="font-size:10px;color:var(--muted)">likes</div></div>
+          <div style="text-align:right"><div style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--soft)">${a.videos || 0}</div><div style="font-size:10px;color:var(--muted)">videos</div></div>
+        </div>
+      </div>`;
+    }).join('');
+    tkCard.innerHTML = `
+      <div class="card-label" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>TIKTOK</span>
+        <span class="badge b-active">Connected</span>
+      </div>
+      ${tkRows}`;
+  } else if (sc?.connected) {
+    tkCard.innerHTML = `
+      <div class="connect-card">
+        <div class="connect-icon">♪</div>
+        <div class="connect-title">TikTok</div>
+        <div class="connect-desc">Set <code style="background:rgba(0,0,0,0.06);padding:2px 6px;border-radius:4px;">TIKTOK_HANDLE_PERSONAL</code> or <code style="background:rgba(0,0,0,0.06);padding:2px 6px;border-radius:4px;">TIKTOK_HANDLE_BRAND</code> to pull follower stats.</div>
+        <span class="btn-soon">Add handle env vars</span>
+      </div>`;
+  } else {
+    tkCard.innerHTML = `
+      <div class="connect-card">
+        <div class="connect-icon">♪</div>
+        <div class="connect-title">TikTok</div>
+        <div class="connect-desc">Set <code style="background:rgba(0,0,0,0.06);padding:2px 6px;border-radius:4px;">APIFY_API_KEY</code> and <code style="background:rgba(0,0,0,0.06);padding:2px 6px;border-radius:4px;">TIKTOK_HANDLE_PERSONAL</code> to pull follower stats.</div>
+        <span class="btn-soon">Add APIFY_API_KEY</span>
+      </div>`;
+  }
+
+  // ── Instagram card — unified, both accounts ──
+  const igCard = document.getElementById('perfInstagramCard');
+  if (sc?.connected && igAccounts.length > 0) {
+    const igRows = igAccounts.map(a => {
+      const d = getDelta('instagram', a.handle);
+      return `
+      <div class="perf-account-row">
+        ${avatarHtml(a.avatar, a.label || a.handle, 'var(--pink)')}
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:700;font-size:13px">${x(a.label || a.handle)}</div>
+          <div style="font-size:11px;color:var(--muted)">@${x(a.handle || '')}</div>
+        </div>
+        <div style="display:flex;gap:16px;align-items:flex-start">
+          <div style="text-align:right">
+            <div style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--teal)">${fmtNum(a.followers || 0)}</div>
+            <div style="font-size:10px;color:var(--muted)">followers</div>
+            <div class="kpi-delta" style="text-align:right">${deltaHtml(d)}</div>
+          </div>
+          <div style="text-align:right"><div style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--muted)">${fmtNum(a.following || 0)}</div><div style="font-size:10px;color:var(--muted)">following</div></div>
+          <div style="text-align:right"><div style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--soft)">${fmtNum(a.posts || 0)}</div><div style="font-size:10px;color:var(--muted)">posts</div></div>
+        </div>
+      </div>`;
+    }).join('');
+    igCard.innerHTML = `
+      <div class="card-label" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>INSTAGRAM</span>
+        <span class="badge b-active">Connected</span>
+      </div>
+      ${igRows}`;
+  } else if (sc?.connected) {
+    igCard.innerHTML = `
+      <div class="connect-card">
+        <div class="connect-icon">📸</div>
+        <div class="connect-title">Instagram</div>
+        <div class="connect-desc">Set <code style="background:rgba(0,0,0,0.06);padding:2px 6px;border-radius:4px;">IG_HANDLE_PERSONAL</code> or <code style="background:rgba(0,0,0,0.06);padding:2px 6px;border-radius:4px;">IG_HANDLE_BRAND</code> to pull follower stats.</div>
+        <span class="btn-soon">Add handle env vars</span>
+      </div>`;
+  } else {
+    igCard.innerHTML = `
+      <div class="connect-card">
+        <div class="connect-icon">📸</div>
+        <div class="connect-title">Instagram</div>
+        <div class="connect-desc">Set <code style="background:rgba(0,0,0,0.06);padding:2px 6px;border-radius:4px;">APIFY_API_KEY</code> to pull Instagram profile stats.</div>
+        <span class="btn-soon">Add APIFY_API_KEY</span>
+      </div>`;
+  }
+
+  // ── X / Twitter card ──
+  const twCard = document.getElementById('perfTwitterCard');
+  if (twAccounts.length > 0) {
+    const twRows = twAccounts.map(a => {
+      const d = getDelta('twitter', a.handle);
+      return `
+      <div class="perf-account-row">
+        ${avatarHtml(a.avatar, a.label || a.handle, 'var(--soft)')}
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:700;font-size:13px">${x(a.label || a.name || a.handle)}</div>
+          <div style="font-size:11px;color:var(--muted)">@${x(a.handle || '')}</div>
+        </div>
+        <div style="display:flex;gap:16px;align-items:flex-start">
+          <div style="text-align:right">
+            <div style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--teal)">${fmtNum(a.followers)}</div>
+            <div style="font-size:10px;color:var(--muted)">followers</div>
+            <div class="kpi-delta" style="text-align:right">${deltaHtml(d)}</div>
+          </div>
+          ${a.following > 0 ? `<div style="text-align:right"><div style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--soft)">${fmtNum(a.following)}</div><div style="font-size:10px;color:var(--muted)">following</div></div>` : ''}
+          ${a.posts > 0 ? `<div style="text-align:right"><div style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--muted)">${fmtNum(a.posts)}</div><div style="font-size:10px;color:var(--muted)">posts</div></div>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+    twCard.innerHTML = `
+      <div class="card-label" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>X / TWITTER</span><span class="badge b-active">Live</span>
+      </div>${twRows}`;
+  } else {
+    twCard.innerHTML = `
+      <div class="connect-card" style="padding:24px">
+        <div style="font-size:26px;margin-bottom:8px;opacity:0.35">𝕏</div>
+        <div class="connect-title">X / Twitter</div>
+        <div class="connect-desc">${S.twitter?.error ? 'Error loading data' : 'Loading X profile data…'}</div>
+      </div>`;
+  }
+
+  // ── LinkedIn card ──
+  const liCard = document.getElementById('perfLinkedinCard');
+  if (liAccounts.length > 0) {
+    const liRows = liAccounts.map(a => {
+      const d = getDelta('linkedin', a.handle);
+      return `
+      <div class="perf-account-row">
+        ${avatarHtml(a.avatar, a.label, 'var(--gold)')}
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:700;font-size:13px">${x(a.label)}</div>
+          <div style="font-size:11px;color:var(--muted)">${a.type === 'company' ? 'Company page' : 'Personal profile'}</div>
+        </div>
+        <div style="display:flex;gap:16px;align-items:flex-start">
+          ${a.followers > 0 ? `<div style="text-align:right">
+            <div style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--teal)">${fmtNum(a.followers)}</div>
+            <div style="font-size:10px;color:var(--muted)">followers</div>
+            <div class="kpi-delta" style="text-align:right">${deltaHtml(d)}</div>
+          </div>` : ''}
+          ${a.connections > 0 ? `<div style="text-align:right"><div style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--gold)">${fmtNum(a.connections)}</div><div style="font-size:10px;color:var(--muted)">connections</div></div>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+    liCard.innerHTML = `
+      <div class="card-label" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>LINKEDIN</span><span class="badge b-active">Live</span>
+      </div>${liRows}`;
+  } else {
+    liCard.innerHTML = `
+      <div class="connect-card" style="padding:24px">
+        <div style="font-size:26px;margin-bottom:8px;opacity:0.35">in</div>
+        <div class="connect-title">LinkedIn</div>
+        <div class="connect-desc">${S.linkedin?.error ? 'Error loading data' : 'Loading LinkedIn profile data…'}</div>
+      </div>`;
+  }
+
+  // ── Views chart — filtered by range ──
+  if (window._viewsChart) { window._viewsChart.destroy(); window._viewsChart = null; }
+  const ctx = document.getElementById('viewsChart')?.getContext('2d');
+  if (ctx && yt?.connected) {
+    const now2 = Date.now();
+    const cutoff2 = now2 - rangeMs;
+    const chartVideos = (yt.channels || []).flatMap(ch =>
+      (ch.recentVideos || []).map(v => ({ ...v, channelLabel: ch.label || ch.channelName || 'Channel' }))
+    ).filter(v => new Date(v.publishedAt).getTime() >= cutoff2)
+      .sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt)).slice(0, 20);
+
+    const datasets = (yt.channels || []).map((ch, i) => ({
+      label: ch.label || ch.channelName || 'Channel ' + (i + 1),
+      data: chartVideos.filter(v => v.channelLabel === (ch.label || ch.channelName || 'Channel')).map(v => ({ x: v.title?.slice(0, 25) || '', y: v.views || 0 })),
+      borderColor: i === 0 ? '#00f2ea' : '#ff0050',
+      backgroundColor: i === 0 ? 'rgba(0,242,234,0.1)' : 'rgba(255,0,80,0.1)',
+      tension: 0.4, fill: true, pointRadius: 4,
+    }));
+
+    window._viewsChart = new Chart(ctx, {
+      type: 'bar',
+      data: { datasets },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: '#7a7268', font: { family: 'Lato', size: 11 } } } },
+        scales: {
+          x: { ticks: { color: '#7a7268', font: { size: 10 }, maxRotation: 30 }, grid: { color: 'rgba(20,18,16,0.06)' } },
+          y: { ticks: { color: '#7a7268', font: { size: 10 } }, grid: { color: 'rgba(20,18,16,0.06)' } }
+        }
+      }
+    });
+  }
+}
+
+// ─── Community / Skool ───────────────────────────────────────────────────────
+function renderCommunity() {
+  const sk = S.skool;
+  const card = document.getElementById('skoolCard');
+  if (!card) return;
+
+  if (!sk || !sk.connected) {
+    card.innerHTML = `
+      <div class="card-label" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>🏫 Cult Content — Skool</span>
+        <a href="https://www.skool.com/cult-content/about" target="_blank" style="font-size:11px;color:var(--teal);text-decoration:none;">Open ↗</a>
+      </div>
+      <div style="color:var(--red);font-size:12px;">⚠ ${x(sk?.error || 'Could not load')}</div>`;
+    return;
+  }
+
+  const onlineDot = sk.online > 0
+    ? `<span class="dot on" style="margin-right:4px;"></span>`
+    : `<span class="dot idle" style="margin-right:4px;"></span>`;
+
+  card.innerHTML = `
+    <div class="card-label" style="display:flex;align-items:center;justify-content:space-between;">
+      <span>🏫 Cult Content — Skool</span>
+      <a href="https://www.skool.com/cult-content/about" target="_blank" style="font-size:11px;color:var(--teal);text-decoration:none;">Open ↗</a>
+    </div>
+
+    <!-- Member count hero -->
+    <div style="display:flex;align-items:flex-end;gap:16px;margin-bottom:16px;">
+      <div>
+        <div style="font-family:'Montserrat',sans-serif;font-weight:900;font-size:48px;line-height:1;color:var(--teal)">${fmtNum(sk.members)}</div>
+        <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.08em;margin-top:4px;">MEMBERS</div>
+      </div>
+      <div style="padding-bottom:6px;">
+        <div style="display:flex;align-items:center;font-size:13px;font-weight:700;color:var(--green);">${onlineDot}${sk.online} online</div>
+      </div>
+    </div>
+
+    <!-- Stats row -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;">
+      <div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:8px;text-align:center;">
+        <div style="font-size:18px;font-weight:900;color:var(--gold)">${sk.courses}</div>
+        <div style="font-size:9px;font-weight:700;color:var(--muted);letter-spacing:0.05em;margin-top:2px;">COURSES</div>
+      </div>
+      <div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:8px;text-align:center;">
+        <div style="font-size:18px;font-weight:900;color:var(--gold)">${sk.modules}</div>
+        <div style="font-size:9px;font-weight:700;color:var(--muted);letter-spacing:0.05em;margin-top:2px;">MODULES</div>
+      </div>
+      <div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:8px;text-align:center;">
+        <div style="font-size:18px;font-weight:900;color:var(--green)">$${sk.price}<span style="font-size:10px;font-weight:400;color:var(--muted)">/mo</span></div>
+        <div style="font-size:9px;font-weight:700;color:var(--muted);letter-spacing:0.05em;margin-top:2px;">PRICE</div>
+      </div>
+    </div>
+
+    <div style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.5;">${x((sk.description||'').slice(0,100))}${(sk.description||'').length>100?'…':''}</div>
+
+    <div style="font-size:10px;color:var(--muted);display:flex;align-items:center;justify-content:space-between;">
+      <span>Updated ${new Date(sk.fetched_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>
+      <span style="color:var(--muted);">Webhook: <span style="color:var(--green)">✓ endpoint ready</span></span>
+    </div>`;
+
+  // Load webhook events separately
+  fetch('/api/skool/events').then(r => r.json()).then(data => {
+    const events = data.events || [];
+    const evCard = document.getElementById('skoolEventsCard');
+    const evList = document.getElementById('skoolEventsList');
+    if (!evCard || !evList || !events.length) return;
+    evCard.style.display = 'block';
+    evList.innerHTML = events.map(e => {
+      const name = e.member?.name || e.name || e.user?.name || 'New member';
+      const evt  = e.event || e.type || e.action || 'joined';
+      const ts   = e.received_at || e.created_at || '';
+      return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;">
+        <span style="font-size:18px;flex-shrink:0">${evt.includes('join') || evt.includes('member') ? '👤' : '📋'}</span>
+        <div style="flex:1;min-width:0;">
+          <span style="font-weight:700;">${x(name)}</span>
+          <span style="color:var(--muted);margin-left:6px;text-transform:capitalize;">${x(evt)}</span>
+        </div>
+        <span style="color:var(--muted);font-size:10px;flex-shrink:0;">${ts ? fmtDate(ts) : ''}</span>
+      </div>`;
+    }).join('');
+  }).catch(() => {});
+}
+
+// ─── Agent Manager ───────────────────────────────────────────────────────────
+const AM_SCHED_LABELS = { '0':'On-demand','900000':'Every 15 min','3600000':'Hourly','21600000':'Every 6h','86400000':'Daily','604800000':'Weekly' };
+const AM_TYPE_COLOR   = { webhook:'var(--teal)', command:'var(--gold)', 'ghl-workflow':'var(--pink)' };
+const AM_TYPE_LABEL   = { webhook:'Webhook', command:'Command', 'ghl-workflow':'GHL Workflow' };
+
+async function renderAgentManager() {
+  const listEl  = document.getElementById('agentListPanel');
+  const countEl = document.getElementById('agentCount');
+  if (!listEl) return;
+  try {
+    const data   = await fetch('/api/agents').then(r => r.json());
+    const agents = data.agents || [];
+    if (countEl) countEl.textContent = `${agents.length} agent${agents.length !== 1 ? 's' : ''}`;
+    if (!agents.length) {
+      listEl.innerHTML = '<div style="color:var(--muted);font-style:italic;font-size:12px;padding:8px 0;">No agents yet — click "+ New Agent" to create one.</div>';
+      return;
+    }
+    listEl.innerHTML = agents.map(a => {
+      const enabled    = a.enabled !== false;
+      const typeColor  = AM_TYPE_COLOR[a.type]  || 'var(--muted)';
+      const typeLabel  = AM_TYPE_LABEL[a.type]  || a.type;
+      const schedLabel = AM_SCHED_LABELS[String(a.scheduleIntervalMs || 0)] || 'Custom';
+      const lastRunTxt = a.lastRunAt ? fmtDate(a.lastRunAt) : 'Never';
+      const runColor   = a.lastRunStatus === 'error' ? 'var(--red)' : a.lastRunStatus === 'ok' ? 'var(--green)' : 'var(--muted)';
+      const tags       = (a.tags || []).filter(Boolean);
+      return `<div style="display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);" id="agent-row-${a.id}">
+        <div style="margin-top:4px;flex-shrink:0;"><span class="dot ${enabled ? 'on' : 'idle'}"></span></div>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <span style="font-weight:700;font-size:13px;">${x(a.name)}</span>
+            <span style="font-size:10px;font-weight:700;color:${typeColor};background:${typeColor}22;padding:2px 7px;border-radius:4px;">${typeLabel}</span>
+            ${schedLabel !== 'On-demand' ? `<span style="font-size:10px;color:var(--muted);font-weight:700;">⏱ ${schedLabel}</span>` : ''}
+            ${tags.map(t => `<span class="badge b-new" style="font-size:9px;">${x(t)}</span>`).join('')}
+          </div>
+          ${a.description ? `<div style="font-size:11px;color:var(--muted);margin-top:2px;">${x(a.description)}</div>` : ''}
+          <div style="font-size:10px;margin-top:4px;display:flex;gap:12px;flex-wrap:wrap;">
+            <span style="color:var(--muted);">Last run: <span style="color:${runColor};font-weight:700;">${lastRunTxt}${a.lastRunStatus ? ' · ' + a.lastRunStatus : ''}</span></span>
+            ${a.runCount > 0 ? `<span style="color:var(--muted);">${a.runCount} run${a.runCount !== 1 ? 's' : ''}</span>` : ''}
+          </div>
+        </div>
+        <div style="display:flex;gap:5px;flex-shrink:0;align-items:center;flex-wrap:wrap;">
+          ${a.type !== 'ghl-workflow' ? `<button class="btn btn-teal" id="run-btn-${a.id}" style="font-size:10px;padding:3px 9px;" onclick="runAgentNow('${a.id}')">▶ Run</button>` : ''}
+          <button class="btn btn-ghost" style="font-size:10px;padding:3px 9px;" onclick="editAgent('${a.id}')">Edit</button>
+          <button class="btn btn-ghost" style="font-size:10px;padding:3px 9px;color:var(--red);" onclick="deleteAgent('${a.id}')">✕</button>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    if (listEl) listEl.innerHTML = '<div style="color:var(--muted);font-size:12px;">Could not load agents.</div>';
+  }
+}
+
+function openAgentForm(agent) {
+  const card = document.getElementById('agentFormCard');
+  if (!card) return;
+  document.getElementById('afEditId').value   = agent?.id || '';
+  document.getElementById('afName').value     = agent?.name || '';
+  document.getElementById('afDesc').value     = agent?.description || '';
+  document.getElementById('afType').value     = agent?.type || 'webhook';
+  document.getElementById('afSchedule').value = String(agent?.scheduleIntervalMs || 0);
+  document.getElementById('afTags').value     = (agent?.tags || []).join(', ');
+  document.getElementById('afEnabled').checked = agent ? agent.enabled !== false : true;
+  document.getElementById('afResult').style.display = 'none';
+  document.getElementById('afSaveBtn').textContent  = 'Save Agent';
+  document.getElementById('agentFormTitle').textContent = agent ? 'Edit Agent' : 'New Agent';
+  onAgentTypeChange(agent?.action || {});
+  card.style.display = 'block';
+  card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function closeAgentForm() {
+  const card = document.getElementById('agentFormCard');
+  if (card) card.style.display = 'none';
+}
+
+function onAgentTypeChange(prefill) {
+  const type = document.getElementById('afType')?.value;
+  const el   = document.getElementById('afActionFields');
+  if (!el || !type) return;
+  const pf = (typeof prefill === 'object' && prefill !== null) ? prefill : {};
+  if (type === 'webhook') {
+    el.innerHTML = `
+      <div style="display:grid;grid-template-columns:100px 1fr;gap:8px;align-items:end;margin-bottom:8px;">
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.06em;margin-bottom:5px;">METHOD</div>
+          <select class="agent-input" id="afMethod" style="width:100%;">
+            <option value="POST" ${(pf.method||'POST')==='POST'?'selected':''}>POST</option>
+            <option value="GET"  ${pf.method==='GET'?'selected':''}>GET</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.06em;margin-bottom:5px;">WEBHOOK URL</div>
+          <input class="agent-input" id="afWebhookUrl" type="url" placeholder="https://…" value="${x(pf.webhookUrl||'')}" style="width:100%;box-sizing:border-box;" />
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.06em;margin-bottom:5px;">JSON PAYLOAD <span style="font-weight:400;">(optional)</span></div>
+        <textarea class="agent-input" id="afPayload" rows="3" placeholder='{"key":"value"}' style="width:100%;box-sizing:border-box;font-family:JetBrains Mono,monospace;font-size:11px;resize:vertical;">${x(pf.payload||'')}</textarea>
+      </div>`;
+  } else if (type === 'command') {
+    el.innerHTML = `
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.06em;margin-bottom:5px;">MESSAGE TO SEND TO LARK</div>
+        <input class="agent-input" id="afCommandText" type="text" placeholder="e.g. Daily pipeline report is ready" value="${x(pf.commandText||'')}" style="width:100%;box-sizing:border-box;" />
+      </div>`;
+  } else if (type === 'ghl-workflow') {
+    el.innerHTML = `
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.06em;margin-bottom:5px;">GHL WORKFLOW ID</div>
+        <input class="agent-input" id="afWorkflowId" type="text" placeholder="Paste workflow ID from GHL" value="${x(pf.workflowId||'')}" style="width:100%;box-sizing:border-box;" />
+        <div style="font-size:10px;color:var(--muted);margin-top:5px;">GHL workflows are triggered via contact enrollment. Stored here as a reference — manage them in GHL directly.</div>
+      </div>`;
+  }
+}
+
+async function saveAgentForm() {
+  const btn    = document.getElementById('afSaveBtn');
+  const editId = document.getElementById('afEditId')?.value;
+  const type   = document.getElementById('afType')?.value;
+  const name   = document.getElementById('afName')?.value?.trim();
+  const desc   = document.getElementById('afDesc')?.value?.trim();
+  const schedMs = parseInt(document.getElementById('afSchedule')?.value || '0');
+  const tags   = (document.getElementById('afTags')?.value || '').split(',').map(t => t.trim()).filter(Boolean);
+  const enabled = document.getElementById('afEnabled')?.checked !== false;
+  if (!name) { showAfMsg('Name is required.', 'var(--red)'); return; }
+  let action = {};
+  if (type === 'webhook') {
+    const url = document.getElementById('afWebhookUrl')?.value?.trim();
+    if (!url) { showAfMsg('Webhook URL is required.', 'var(--red)'); return; }
+    action = { webhookUrl: url, method: document.getElementById('afMethod')?.value || 'POST', payload: document.getElementById('afPayload')?.value?.trim() || '' };
+  } else if (type === 'command') {
+    const cmd = document.getElementById('afCommandText')?.value?.trim();
+    if (!cmd) { showAfMsg('Command message is required.', 'var(--red)'); return; }
+    action = { commandText: cmd };
+  } else if (type === 'ghl-workflow') {
+    action = { workflowId: document.getElementById('afWorkflowId')?.value?.trim() || '' };
+  }
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    const body   = { name, description: desc, type, enabled, scheduleIntervalMs: schedMs, action, tags };
+    const url    = editId ? `/api/agents/${editId}` : '/api/agents';
+    const method = editId ? 'PUT' : 'POST';
+    const r = await fetch(url, { method, headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) }).then(r => r.json());
+    if (r.ok) { closeAgentForm(); renderAgentManager(); }
+    else showAfMsg('Error: ' + (r.error || 'Unknown'), 'var(--red)');
+  } catch(e) { showAfMsg('Network error: ' + e.message, 'var(--red)'); }
+  btn.disabled = false; btn.textContent = 'Save Agent';
+}
+
+function showAfMsg(msg, color) {
+  const el = document.getElementById('afResult');
+  if (!el) return;
+  el.style.display = 'inline'; el.style.color = color; el.textContent = msg;
+}
+
+async function editAgent(id) {
+  try {
+    const data  = await fetch('/api/agents').then(r => r.json());
+    const agent = (data.agents || []).find(a => a.id === id);
+    if (agent) openAgentForm(agent);
+  } catch(e) { alert('Could not load agent: ' + e.message); }
+}
+
+async function deleteAgent(id) {
+  if (!confirm('Delete this agent?')) return;
+  try {
+    const r = await fetch(`/api/agents/${id}`, { method: 'DELETE' }).then(r => r.json());
+    if (r.ok) renderAgentManager();
+    else alert('Delete failed: ' + (r.error || 'Unknown'));
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+async function runAgentNow(id) {
+  const btn = document.getElementById(`run-btn-${id}`);
+  if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+  try {
+    const r = await fetch(`/api/agents/${id}/run`, { method: 'POST' }).then(res => res.json());
+    if (btn) { btn.disabled = false; btn.textContent = '▶ Run'; }
+    if (r.ok) {
+      const row = document.getElementById(`agent-row-${id}`);
+      if (row) { row.style.background = 'rgba(0,210,122,0.07)'; setTimeout(() => row.style.background = '', 2000); }
+    } else {
+      alert('Run failed: ' + (r.error || 'Unknown error'));
+    }
+    renderAgentManager();
+  } catch(e) {
+    if (btn) { btn.disabled = false; btn.textContent = '▶ Run'; }
+    alert('Error: ' + e.message);
+  }
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+function x(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function fmtNum(n) { return Number(n).toLocaleString(); }
+function fmtMoney(n) {
+  const v = Number(n);
+  if (isNaN(v) || v === 0) return '$0';
+  if (v >= 1000000) return '$' + (v/1000000).toFixed(1) + 'M';
+  if (v >= 1000)    return '$' + (v/1000).toFixed(1) + 'k';
+  return '$' + v.toFixed(0);
+}
+function fmtDate(ts) {
+  if (!ts) return '—';
+  const d = new Date(typeof ts === 'number' && ts < 1e12 ? ts * 1000 : ts);
+  if (isNaN(d)) return '—';
+  const diff = Date.now() - d;
+  if (diff < 0) return d.toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  if (diff < 60000)   return 'just now';
+  if (diff < 3600000) return Math.floor(diff/60000) + 'm ago';
+  if (diff < 86400000)return Math.floor(diff/3600000) + 'h ago';
+  if (diff < 604800000)return Math.floor(diff/86400000) + 'd ago';
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+function isToday(ts) {
+  if (!ts) return false;
+  const d = new Date(typeof ts === 'number' && ts < 1e12 ? ts * 1000 : ts);
+  const n = new Date();
+  return d.getFullYear()===n.getFullYear() && d.getMonth()===n.getMonth() && d.getDate()===n.getDate();
+}
+function badge(status) {
+  if (!status) return '<span class="muted">—</span>';
+  const s = status.toLowerCase().replace(/\s+/g,'');
+  const cls = s==='open'?'b-open':s==='won'?'b-won':s==='lost'?'b-lost':
+    (s==='confirmed'||s==='showed'||s==='published'||s==='active')?'b-active':
+    (s==='cancelled'||s==='noshow')?'b-cancelled':'b-open';
+  return `<span class="badge ${cls}">${x(status)}</span>`;
+}
+function stageChip(name, priority) {
+  if (!name || name === 'Unknown') return '<span class="muted">—</span>';
+  const p = priority || 0;
+  const color = p >= 8 ? 'var(--green)' : p >= 5 ? 'var(--teal)' : p >= 3 ? 'var(--gold)' : 'var(--muted)';
+  return `<span style="font-size:11px;font-weight:700;color:${color};white-space:nowrap">${x(name)}</span>`;
+}
+
+// ─── Refresh ──────────────────────────────────────────────────────────────────
+async function refresh(clearCache = false) {
+  const btn = document.getElementById('btnRefresh');
+  btn.disabled = true;
+  btn.textContent = '↺ Loading…';
+  if (clearCache) await fetch('/api/clear-cache', { method: 'POST' }).catch(()=>{});
+  await fetchAll();
+  renderAll();
+  btn.disabled = false;
+  btn.textContent = '↺ Refresh';
+  countdown = 60;
+}
+
+async function manualRefresh() { await refresh(true); }
+
+async function pingServer() {
+  const el = document.getElementById('agentServerStatus');
+  el.innerHTML = '<div class="status-row idle"><span class="dot idle"></span>Pinging…</div>';
+  const d = await fetch('/api/railway/health').then(r=>r.json()).catch(()=>({status:'offline'}));
+  el.innerHTML = d.status === 'online'
+    ? '<div class="status-row on"><span class="dot on"></span>Online</div>'
+    : '<div class="status-row off"><span class="dot off"></span>Offline</div>';
+}
+
+// ─── Countdown + auto-refresh ─────────────────────────────────────────────────
+timer = setInterval(() => {
+  countdown--;
+  document.getElementById('countdown').textContent = countdown;
+  if (countdown <= 0) { countdown = 60; refresh(); }
+}, 1000);
+
+// ─── Boot ─────────────────────────────────────────────────────────────────────
+const CFG_RAILWAY_URL = 'cultcontent-server-production.up.railway.app';
+
+// Pre-fill default date range inputs (last 7 days)
+(function initDateInputs() {
+  const end   = new Date();
+  const start = new Date(Date.now() - 7 * 86_400_000);
+  const fmt   = d => d.toISOString().slice(0, 10);
+  const start30 = new Date(Date.now() - 30 * 86_400_000);
+  const s = document.getElementById('reacherDateStart');
+  const e = document.getElementById('reacherDateEnd');
+  if (s) s.value = fmt(start30);
+  if (e) e.value = fmt(end);
+})();
+
+initUpload();
+initArcads();
+renderArcadsStats();
+loadConsultantStats();
+renderAgentManager();
+
+// Resume polling for any pending Arcads jobs from previous sessions
+_arcadsJobs.filter(j=>j.status==='pending').forEach(j=>pollArcadsJob(j.scriptId));
+
+refresh();
+</script>
+</body>
+</html>

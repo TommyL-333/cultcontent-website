@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Book a Call with Tommy Lynch &mdash; Cult Content</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+
+  <style>
+    /* GHL FULL-WIDTH CONTAINER OVERRIDE */
+    .c-section > .inner { max-width: 100% !important; width: 100% !important; padding: 0 !important; }
+    .c-row { max-width: 100% !important; }
+    .c-column { max-width: 100% !important; }
+
+    :root {
+      --teal:  #00f2ea;
+      --pink:  #ff0050;
+      --gold:  #c9a84c;
+      --dark0: #080710;
+      --dark1: #0d0b18;
+      --dark2: #131023;
+      --r:     14px;
+      --ease:  0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Lato', sans-serif;
+      background: var(--dark0);
+      color: #fff;
+      overflow-x: hidden;
+    }
+    h1,h2,h3,h4 { font-family: 'Montserrat', sans-serif; font-weight: 900; line-height: 1.1; }
+    p { line-height: 1.7; }
+
+    .gt {
+      background: linear-gradient(90deg, var(--teal), var(--pink));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 32px; height: 64px;
+      background: rgba(8,7,16,0.82);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .logo {
+      display: flex; align-items: center; gap: 10px;
+      text-decoration: none;
+    }
+    .logo-img { height: 38px; width: auto; display: block; }
+    .nav-links {
+      display: flex; align-items: center; gap: 28px;
+      list-style: none;
+    }
+    .nav-links a {
+      color: rgba(255,255,255,0.75); text-decoration: none;
+      font-size: 0.875rem; font-weight: 700; letter-spacing: 0.04em;
+      transition: color var(--ease);
+    }
+    .nav-links a:hover { color: #fff; }
+    .nav-social { display: flex; align-items: center; gap: 14px; }
+    .nav-social a {
+      color: rgba(255,255,255,0.55); font-size: 1rem;
+      transition: color var(--ease); text-decoration: none;
+    }
+    .nav-social a:hover { color: #fff; }
+    .nav-cta {
+      background: var(--teal); color: #000;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900; font-size: 0.75rem; letter-spacing: 0.08em;
+      padding: 10px 20px; border-radius: 6px; text-decoration: none;
+      text-transform: uppercase;
+      transition: background var(--ease), box-shadow var(--ease);
+    }
+    .nav-cta:hover {
+      background: #fff;
+      box-shadow: 0 0 20px rgba(0,242,234,0.4);
+    }
+    @media (max-width: 768px) {
+      nav { padding: 0 20px; }
+      .nav-links { display: none; }
+      .nav-social { display: none; }
+    }
+
+    /* ── HERO ── */
+    .book-hero {
+      min-height: 100vh;
+      padding: 100px 32px 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(0,242,234,0.06) 0%, transparent 70%),
+                  radial-gradient(ellipse 60% 40% at 80% 80%, rgba(255,0,80,0.05) 0%, transparent 70%),
+                  var(--dark0);
+    }
+
+    /* Subtle animated orbs */
+    .hero-orb {
+      position: absolute; pointer-events: none; border-radius: 50%;
+      filter: blur(80px);
+    }
+    .orb-1 {
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(0,242,234,0.07) 0%, transparent 70%);
+      top: -100px; right: -100px;
+      animation: orbFloat 20s ease-in-out infinite;
+    }
+    .orb-2 {
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(255,0,80,0.06) 0%, transparent 70%);
+      bottom: 0; left: -80px;
+      animation: orbFloat 25s ease-in-out infinite reverse;
+    }
+    @keyframes orbFloat {
+      0%, 100% { transform: translate(0, 0); }
+      33% { transform: translate(30px, -20px); }
+      66% { transform: translate(-20px, 15px); }
+    }
+
+    .hero-inner {
+      max-width: 1100px;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: center;
+      position: relative; z-index: 1;
+    }
+
+    .hero-left .eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.18em;
+      text-transform: uppercase; color: var(--teal);
+      margin-bottom: 20px;
+    }
+    .eyebrow-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--teal);
+      box-shadow: 0 0 8px var(--teal);
+    }
+
+    .hero-left h1 {
+      font-size: clamp(2.4rem, 5vw, 3.8rem);
+      margin-bottom: 20px;
+      line-height: 1.05;
+    }
+
+    .hero-left p.lead {
+      font-size: 1.05rem;
+      color: rgba(255,255,255,0.7);
+      margin-bottom: 36px;
+      max-width: 480px;
+    }
+
+    /* Trust badges */
+    .trust-row {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .trust-item {
+      display: flex; align-items: center; gap: 12px;
+      font-size: 0.88rem; color: rgba(255,255,255,0.65);
+    }
+    .trust-item i {
+      color: var(--teal); font-size: 0.9rem; width: 16px;
+    }
+
+    /* Tommy card */
+    .tommy-card {
+      background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      overflow: hidden;
+      position: relative;
+    }
+    .tommy-card::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(0,242,234,0.04) 0%, rgba(255,0,80,0.03) 100%);
+      pointer-events: none;
+    }
+    .tommy-photo {
+      width: 100%;
+      aspect-ratio: 3/4;
+      object-fit: cover;
+      object-position: top center;
+      display: block;
+    }
+    .tommy-info {
+      padding: 24px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .tommy-info .name {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900;
+      font-size: 1.25rem;
+      margin-bottom: 4px;
+    }
+    .tommy-info .title {
+      font-size: 0.82rem;
+      color: rgba(255,255,255,0.5);
+      letter-spacing: 0.04em;
+      margin-bottom: 14px;
+    }
+    .tommy-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(0,242,234,0.1);
+      border: 1px solid rgba(0,242,234,0.2);
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-size: 0.75rem; color: var(--teal);
+      font-weight: 700; letter-spacing: 0.06em;
+    }
+
+    /* ── CALENDAR SECTION ── */
+    .calendar-section {
+      background: var(--dark1);
+      padding: 80px 32px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    .calendar-inner {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .section-label {
+      text-align: center;
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.18em;
+      text-transform: uppercase; color: var(--teal);
+      margin-bottom: 14px;
+    }
+    .calendar-inner h2 {
+      text-align: center;
+      font-size: clamp(1.8rem, 4vw, 2.6rem);
+      margin-bottom: 12px;
+    }
+    .calendar-inner .sub {
+      text-align: center;
+      color: rgba(255,255,255,0.5);
+      font-size: 0.95rem;
+      margin-bottom: 48px;
+    }
+
+    .cal-embed-wrapper {
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.07);
+      background: #fff;
+      min-height: 700px;
+    }
+    .cal-embed-wrapper iframe {
+      width: 100%;
+      min-height: 700px;
+      border: none;
+      display: block;
+    }
+
+    /* ── WHAT TO EXPECT ── */
+    .expect-section {
+      padding: 80px 32px;
+      background: var(--dark0);
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    .expect-inner {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .expect-inner h2 {
+      text-align: center;
+      font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+      margin-bottom: 48px;
+    }
+    .expect-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .expect-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 14px;
+      padding: 28px 24px;
+    }
+    .expect-num {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900;
+      font-size: 2rem;
+      background: linear-gradient(90deg, var(--teal), var(--pink));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 10px;
+    }
+    .expect-card h3 {
+      font-size: 1rem;
+      margin-bottom: 8px;
+    }
+    .expect-card p {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.5);
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--dark1);
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding: 40px 32px;
+    }
+    .ft-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .ft-logo img { height: 32px; width: auto; }
+    .ft-links {
+      display: flex; gap: 24px; list-style: none;
+    }
+    .ft-links a {
+      color: rgba(255,255,255,0.4);
+      font-size: 0.82rem; text-decoration: none;
+      transition: color var(--ease);
+    }
+    .ft-links a:hover { color: #fff; }
+    .ft-bottom {
+      max-width: 1200px;
+      margin: 24px auto 0;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .ft-bottom p {
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.25);
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .hero-inner {
+        grid-template-columns: 1fr;
+        gap: 40px;
+        text-align: center;
+      }
+      .hero-left .eyebrow { justify-content: center; }
+      .hero-left p.lead { margin: 0 auto 36px; }
+      .tommy-card {
+        max-width: 360px;
+        margin: 0 auto;
+      }
+      .tommy-photo { aspect-ratio: 1/1; }
+      .trust-row { align-items: center; }
+      .expect-grid { grid-template-columns: 1fr; }
+      .ft-inner { flex-direction: column; text-align: center; }
+      .ft-bottom { flex-direction: column; gap: 8px; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a href="/home" class="logo">
+      <img src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/68529ceff63e1913ceb4e2e0.png" alt="Cult Content" class="logo-img">
+    </a>
+    <ul class="nav-links">
+      <li><a href="/home#culture">Culture</a></li>
+      <li><a href="/home#timeline">Timeline</a></li>
+      <li><a href="/home#results">Results</a></li>
+      <li><a href="/home#faqs">FAQs</a></li>
+    </ul>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <div class="nav-social">
+        <a href="https://www.tiktok.com/@cultcontent_" target="_blank"><i class="fa-brands fa-tiktok"></i></a>
+        <a href="https://www.instagram.com/cultcontent_/" target="_blank"><i class="fa-brands fa-instagram"></i></a>
+        <a href="https://www.youtube.com/@CultContent" target="_blank"><i class="fa-brands fa-youtube"></i></a>
+        <a href="https://x.com/cultcontent_" target="_blank"><i class="fa-brands fa-x-twitter"></i></a>
+      </div>
+      <a href="/book" class="nav-cta">Book a Call</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="book-hero">
+    <div class="hero-orb orb-1"></div>
+    <div class="hero-orb orb-2"></div>
+    <div class="hero-inner">
+
+      <div class="hero-left">
+        <div class="eyebrow">
+          <span class="eyebrow-dot"></span>
+          Strategy Call
+        </div>
+        <h1>Book a Call<br>with <span class="gt">Tommy Lynch</span></h1>
+        <p class="lead">
+          30 minutes. No pitch deck, no fluff. Just an honest conversation about what's possible for your brand on TikTok Shop.
+        </p>
+
+        <div class="trust-row">
+          <div class="trust-item">
+            <i class="fa-solid fa-check"></i>
+            <span>Free 30-minute strategy call</span>
+          </div>
+          <div class="trust-item">
+            <i class="fa-solid fa-check"></i>
+            <span>Talk directly with the founder &mdash; not a sales rep</span>
+          </div>
+          <div class="trust-item">
+            <i class="fa-solid fa-check"></i>
+            <span>Walk away with a clear growth roadmap</span>
+          </div>
+          <div class="trust-item">
+            <i class="fa-solid fa-check"></i>
+            <span>TikTok Shop Partner Agency &mdash; 100M+ views generated</span>
+          </div>
+          <div class="trust-item">
+            <i class="fa-solid fa-check"></i>
+            <span>Best for brands doing $30K+/month</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tommy-card">
+        <img
+          class="tommy-photo"
+          src="https://storage.googleapis.com/msgsndr/c216j58Vx9XxYa7WYMiA/media/695ee42e356160516e585bc9.jpg"
+          alt="Tommy Lynch - Founder, Cult Content"
+        />
+        <div class="tommy-info">
+          <div class="name">Tommy Lynch</div>
+          <div class="title">Founder &amp; CEO &middot; Cult Content</div>
+          <div class="tommy-badge">
+            <i class="fa-solid fa-star" style="font-size:0.65rem;"></i>
+            TikTok Shop Partner Agency
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- CALENDAR EMBED -->
+  <section class="calendar-section" id="calendar">
+    <div class="calendar-inner">
+      <div class="section-label">Schedule Your Call</div>
+      <h2>Pick a Time That Works for You</h2>
+      <p class="sub">All times shown in your local timezone.</p>
+
+      <div class="cal-embed-wrapper">
+        <iframe src="https://api.leadconnectorhq.com/widget/booking/kcHJd1uceIi0JhjWhEW3" style="width:100%;border:none;overflow:hidden;" scrolling="no" id="dwbNM9VtxrETCvHrdMhO_1774308288755"></iframe>
+        <script src="https://link.msgsndr.com/js/form_embed.js" type="text/javascript"></script>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHAT TO EXPECT -->
+  <section class="expect-section">
+    <div class="expect-inner">
+      <h2>What Happens on the Call</h2>
+      <div class="expect-grid">
+        <div class="expect-card">
+          <div class="expect-num">01</div>
+          <h3>Diagnose Your Shop</h3>
+          <p>We look at where you are today &mdash; content, affiliates, GMV &mdash; and find the gaps killing your growth.</p>
+        </div>
+        <div class="expect-card">
+          <div class="expect-num">02</div>
+          <h3>Map the Machine</h3>
+          <p>Tommy walks through the exact system Cult Content uses to turn TikTok audiences into consistent revenue.</p>
+        </div>
+        <div class="expect-card">
+          <div class="expect-num">03</div>
+          <h3>Decide Together</h3>
+          <p>If it&#39;s a fit, we talk next steps. If it&#39;s not, you leave with a clear picture of what to do next.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="ft-inner">
+      <div class="ft-logo">
+        <a href="/home">
+          <img src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/68529ceff63e1913ceb4e2e0.png" alt="Cult Content" />
+        </a>
+      </div>
+      <ul class="ft-links">
+        <li><a href="/home">Home</a></li>
+        <li><a href="/home#culture">About</a></li>
+        <li><a href="/home#timeline">Services</a></li>
+        <li><a href="/affiliate">Affiliates</a></li>
+      </ul>
+    </div>
+    <div class="ft-bottom">
+      <p>&copy; 2025 Cult Content. All rights reserved.</p>
+      <p>Built for operators.</p>
+    </div>
+  </footer>
+
+</body>
+</html>
