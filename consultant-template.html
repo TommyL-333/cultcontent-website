@@ -607,6 +607,56 @@
     }
     .booking-ctas { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
 
+    /* ── BECOME A CONSULTANT CTA ── */
+    .become-cta {
+      padding: 5rem 0;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      background: linear-gradient(135deg, rgba(0,242,234,0.04) 0%, rgba(255,0,80,0.04) 100%);
+    }
+    .become-cta-inner {
+      display: flex; align-items: center; justify-content: space-between; gap: 40px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(0,242,234,0.12);
+      border-radius: 24px;
+      padding: 3rem 3.5rem;
+    }
+    .become-cta-left { flex: 1; }
+    .become-badge {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: rgba(0,242,234,0.08);
+      border: 1px solid rgba(0,242,234,0.2);
+      border-radius: 100px;
+      padding: 5px 14px;
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--teal);
+      margin-bottom: 1.25rem;
+    }
+    .become-badge i { font-size: 0.65rem; }
+    .become-cta-left h2 {
+      font-size: clamp(1.4rem, 2.5vw, 2rem);
+      line-height: 1.2; margin-bottom: 0.9rem;
+    }
+    .become-cta-left p {
+      color: var(--muted); font-size: 0.95rem; line-height: 1.7; max-width: 480px;
+    }
+    .become-cta-right { flex-shrink: 0; }
+    .btn-apply {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: linear-gradient(90deg, #00f2ea, #ff0050);
+      color: #000; font-family: 'Montserrat', sans-serif;
+      font-weight: 900; font-size: 0.85rem; letter-spacing: 0.07em;
+      text-transform: uppercase; padding: 16px 34px;
+      border-radius: 100px; text-decoration: none; white-space: nowrap;
+      transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 0 32px rgba(0,242,234,0.2);
+    }
+    .btn-apply:hover { opacity: 0.88; transform: translateY(-2px); box-shadow: 0 4px 40px rgba(0,242,234,0.3); }
+    @media (max-width: 700px) {
+      .become-cta-inner { flex-direction: column; align-items: flex-start; padding: 2rem 1.75rem; gap: 24px; }
+      .become-cta-right { width: 100%; }
+      .btn-apply { width: 100%; justify-content: center; }
+    }
+
     /* ── FOOTER ── */
     footer {
       border-top: 1px solid rgba(255,255,255,0.06);
@@ -673,7 +723,7 @@
         <a href="https://www.youtube.com/@Cult-Content-CC" title="YouTube" target="_blank" rel="noopener"><i class="fa-brands fa-youtube"></i></a>
         <a href="https://www.linkedin.com/company/cultcontent" title="LinkedIn" target="_blank" rel="noopener"><i class="fa-brands fa-linkedin-in"></i></a>
       </div>
-      <a href="/book-with-tommy" class="nav-cta">Book a Call</a>
+      <a href="/book" class="nav-cta">Book a Call</a>
     </div>
     <button class="nav-mobile-btn" id="mobileMenuBtn" aria-label="Open menu">&#9776;</button>
   </nav>
@@ -683,7 +733,7 @@
     <a href="/consulting">Consulting</a>
     <a href="/partners">Partners</a>
     <a href="/creators">Community</a>
-    <a href="/book-with-tommy" class="mobile-cta">Book a Call</a>
+    <a href="/book" class="mobile-cta">Book a Call</a>
   </div>
 
   <!-- HERO -->
@@ -891,6 +941,28 @@
           </a>
           <a href="{{CONTACT_LINK}}" class="btn-secondary">
             <i class="fa-regular fa-envelope"></i> Send a Message
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BECOME A CONSULTANT CTA -->
+  <section class="become-cta">
+    <div class="container">
+      <div class="become-cta-inner">
+        <div class="become-cta-left">
+          <div class="become-badge">
+            <i class="fa-solid fa-star"></i>
+            Join the Network
+          </div>
+          <h2>Interested in becoming a<br><span class="gt">Cult Consultant?</span></h2>
+          <p>Get paid to share what you know. Join our network of TikTok Shop experts and get matched with brands who need your expertise.</p>
+        </div>
+        <div class="become-cta-right">
+          <a href="{{APPLY_LINK}}" class="btn-apply" target="_blank" rel="noopener">
+            <i class="fa-solid fa-arrow-right"></i>
+            Apply Here
           </a>
         </div>
       </div>
