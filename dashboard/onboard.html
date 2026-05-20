@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Client Onboarding — Cult Content</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0b14;--surface:#1a1429;--surface2:#221c35;--border:rgba(255,255,255,.08);
+  --teal:#00f2ea;--gold:#c9a84c;--muted:rgba(255,255,255,.4);--red:#ff3b30;--green:#00d27a;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:#fff;min-height:100vh}
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:18px 24px}
+.logo{font-size:17px;font-weight:900;letter-spacing:-.01em}
+.logo span{color:var(--teal)}
+.header-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.progress-wrap{max-width:700px;margin:28px auto 0;padding:0 20px}
+.step-labels{display:flex;justify-content:space-between;margin-bottom:10px}
+.step-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);transition:color .2s;text-align:center;flex:1}
+.step-label.active{color:var(--teal)}
+.step-label.done{color:rgba(0,210,122,.7)}
+.progress-bar{height:3px;background:rgba(255,255,255,.07);border-radius:4px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--teal),#7b2fff);border-radius:4px;transition:width .35s ease}
+.form-wrap{max-width:700px;margin:32px auto 80px;padding:0 20px}
+.step-pane{display:none}
+.step-pane.active{display:block}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:18px}
+.card-title{font-size:16px;font-weight:800;margin-bottom:4px}
+.card-sub{font-size:12px;color:var(--muted);margin-bottom:22px;line-height:1.55}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.row.full{grid-template-columns:1fr}
+.row.trio{grid-template-columns:1fr 1fr 1fr}
+@media(max-width:520px){.row,.row.trio{grid-template-columns:1fr}}
+.field{display:flex;flex-direction:column;gap:5px}
+label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+label .req{color:var(--teal)}
+input[type=text],input[type=email],input[type=tel],input[type=url],input[type=number],select,textarea{
+  background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;
+  color:#fff;font-size:14px;padding:11px 14px;outline:none;width:100%;font-family:inherit;
+  transition:border-color .18s,background .18s
+}
+input::placeholder,textarea::placeholder{color:rgba(255,255,255,.2)}
+input:focus,select:focus,textarea:focus{border-color:var(--teal);background:rgba(0,242,234,.04)}
+select option{background:#1a1429;color:#fff}
+textarea{resize:vertical;min-height:80px}
+.hint{font-size:10px;color:var(--muted);margin-top:3px;line-height:1.4}
+/* Yes/No/multi toggles */
+.yn-row{display:flex;gap:8px;flex-wrap:wrap}
+.yn-btn{flex:1;min-width:60px;padding:10px 8px;border:1px solid var(--border);border-radius:8px;background:rgba(255,255,255,.04);
+  color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .18s;text-align:center;white-space:nowrap}
+.yn-btn:hover{border-color:rgba(255,255,255,.2);color:#fff}
+.yn-btn.selected{border-color:var(--teal);background:rgba(0,242,234,.08);color:var(--teal)}
+/* Products */
+.product-list{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+.product-row{display:flex;flex-direction:column;gap:10px;padding:14px;border:1px solid var(--border);border-radius:10px;background:rgba(255,255,255,0.02)}
+.product-row-top{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:center}
+.product-row-costs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+@media(max-width:520px){.product-row-top{grid-template-columns:1fr;}.product-row-costs{grid-template-columns:1fr;}}
+.remove-btn{background:none;border:1px solid var(--border);border-radius:7px;color:var(--muted);
+  font-size:18px;width:36px;height:36px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  transition:color .15s,border-color .15s}
+.remove-btn:hover{color:var(--red);border-color:var(--red)}
+.add-btn{background:none;border:1px dashed rgba(0,242,234,.3);border-radius:8px;color:var(--teal);
+  font-size:13px;font-weight:600;padding:10px;width:100%;cursor:pointer;transition:all .18s}
+.add-btn:hover{background:rgba(0,242,234,.06);border-color:var(--teal)}
+/* Compensation */
+.comp-card{border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:12px;transition:border-color .2s}
+.comp-card.open{border-color:rgba(0,242,234,.3)}
+.comp-toggle{display:flex;align-items:center;gap:14px;padding:16px 18px;cursor:pointer;user-select:none;background:rgba(255,255,255,.02)}
+.comp-toggle:hover{background:rgba(255,255,255,.04)}
+.comp-icon{font-size:20px;flex-shrink:0}
+.comp-info{flex:1}
+.comp-name{font-size:14px;font-weight:700;margin-bottom:2px}
+.comp-desc{font-size:11px;color:var(--muted);line-height:1.45}
+.comp-switch{width:42px;height:24px;background:rgba(255,255,255,.1);border-radius:100px;
+  position:relative;transition:background .2s;flex-shrink:0}
+.comp-switch::after{content:'';position:absolute;left:3px;top:3px;width:18px;height:18px;
+  background:#fff;border-radius:50%;transition:transform .2s}
+.comp-card.open .comp-switch{background:var(--teal)}
+.comp-card.open .comp-switch::after{transform:translateX(18px)}
+.comp-fields{display:none;padding:16px 18px;background:rgba(0,0,0,.15);border-top:1px solid var(--border)}
+.comp-card.open .comp-fields{display:block}
+.leaderboard-places{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.place-row{display:grid;grid-template-columns:80px 1fr;gap:10px;align-items:center}
+.place-label{font-size:12px;font-weight:700;color:var(--muted)}
+.example-box{background:rgba(0,242,234,.06);border:1px solid rgba(0,242,234,.15);border-radius:8px;padding:10px 14px;font-size:12px;color:rgba(255,255,255,.65);line-height:1.55;margin-top:10px}
+/* Nav */
+.nav-row{display:flex;gap:12px;margin-top:20px;justify-content:space-between;align-items:center}
+.btn-back{background:none;border:1px solid var(--border);border-radius:10px;color:var(--muted);
+  font-size:14px;font-weight:600;padding:12px 24px;cursor:pointer;transition:all .18s}
+.btn-back:hover{border-color:rgba(255,255,255,.25);color:#fff}
+.btn-next{background:var(--teal);color:#000;border:none;border-radius:10px;font-size:14px;
+  font-weight:800;padding:12px 32px;cursor:pointer;transition:opacity .18s}
+.btn-next:hover{opacity:.88}
+.btn-next:disabled{opacity:.4;cursor:not-allowed}
+.btn-submit{background:linear-gradient(135deg,var(--teal),#7b2fff);color:#fff;border:none;
+  border-radius:10px;font-size:15px;font-weight:800;padding:14px 40px;cursor:pointer;width:100%;margin-top:6px}
+.btn-submit:hover{opacity:.9}
+.btn-submit:disabled{opacity:.4;cursor:not-allowed}
+/* Review */
+.review-section{margin-bottom:16px}
+.review-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:8px}
+.review-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px}
+.rv{background:rgba(255,255,255,.04);border-radius:8px;padding:10px 12px}
+.rv-label{font-size:10px;color:var(--muted);margin-bottom:2px}
+.rv-val{font-size:13px;font-weight:600;word-break:break-word}
+.incentive-pill{display:inline-block;background:rgba(0,242,234,.1);color:var(--teal);
+  border:1px solid rgba(0,242,234,.2);border-radius:100px;padding:4px 12px;font-size:11px;font-weight:600;margin:3px 4px 3px 0}
+/* Consent */
+.consent-box{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;
+  padding:14px 16px;font-size:11px;color:var(--muted);line-height:1.7;margin-bottom:14px}
+.consent-check{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;cursor:pointer}
+.consent-check input{margin-top:2px;accent-color:var(--teal)}
+.consent-check span{font-size:12px;color:rgba(255,255,255,.65);line-height:1.5}
+.form-error{background:rgba(255,59,48,.1);border:1px solid rgba(255,59,48,.25);border-radius:8px;
+  padding:10px 14px;font-size:13px;color:var(--red);margin-top:12px;display:none}
+.field-error{font-size:11px;color:var(--red);margin-top:3px}
+/* Success */
+#successState{display:none;text-align:center;padding:80px 20px}
+.success-icon{font-size:60px;margin-bottom:20px}
+.success-title{font-size:26px;font-weight:900;margin-bottom:10px}
+.success-msg{font-size:15px;color:var(--muted);line-height:1.7;max-width:400px;margin:0 auto}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo"><img src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/68529ceff63e1913ceb4e2e0.png" alt="Cult Content" style="height:32px;width:auto;display:block"></div>
+  <div class="header-sub">Client Onboarding — Takes ~5 minutes</div>
+</div>
+
+<div class="progress-wrap">
+  <div class="step-labels">
+    <span class="step-label active" id="lbl-1" onclick="jumpStep(1)" style="cursor:pointer">Brand Info</span>
+    <span class="step-label" id="lbl-2" onclick="jumpStep(2)" style="cursor:pointer">Shop Setup</span>
+    <span class="step-label" id="lbl-3" onclick="jumpStep(3)" style="cursor:pointer">Products &amp; Budget</span>
+    <span class="step-label" id="lbl-4" onclick="jumpStep(4)" style="cursor:pointer">Creator Program</span>
+    <span class="step-label" id="lbl-5" onclick="jumpStep(5)" style="cursor:pointer">Review</span>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:20%"></div></div>
+</div>
+
+<div class="form-wrap">
+<div id="mainForm">
+
+<!-- ── STEP 1: Brand Info ── -->
+<div class="step-pane active" id="step-1">
+  <div class="card">
+    <div class="card-title">Welcome to the cult 😉</div>
+    <div class="card-sub">Fill this out and we'll move fast, clean, and organized.</div>
+    <div class="row">
+      <div class="field">
+        <label>Brand Name <span class="req">*</span></label>
+        <input type="text" id="brandName" placeholder="e.g. Cult Content">
+      </div>
+      <div class="field">
+        <label>Website <span class="req">*</span></label>
+        <input type="url" id="website" placeholder="https://yourbrand.com">
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>First Name <span class="req">*</span></label>
+        <input type="text" id="firstName" placeholder="Jane">
+      </div>
+      <div class="field">
+        <label>Last Name <span class="req">*</span></label>
+        <input type="text" id="lastName" placeholder="Smith">
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>Phone <span class="req">*</span></label>
+        <input type="tel" id="phone" placeholder="+1 555-000-0000">
+      </div>
+      <div class="field">
+        <label>Email <span class="req">*</span></label>
+        <input type="email" id="email" placeholder="jane@brand.com">
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>TikTok Handle</label>
+        <div style="position:relative">
+          <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none">@</span>
+          <input type="text" id="tiktokHandle" placeholder="yourbrand" style="padding-left:24px">
+        </div>
+      </div>
+      <div class="field">
+        <label>TikTok Shop Handle</label>
+        <div style="position:relative">
+          <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none">@</span>
+          <input type="text" id="tiktokShopHandle" placeholder="yourbrandshop" style="padding-left:24px">
+        </div>
+      </div>
+    </div>
+    <div class="row full">
+      <div class="field">
+        <label>Brand Mission &amp; Story</label>
+        <textarea id="brandMission" placeholder="Tell us about your brand — what problem you solve, who you serve, what makes you different…"></textarea>
+      </div>
+    </div>
+  </div>
+  <div class="nav-row">
+    <div></div>
+    <button class="btn-next" onclick="goNext(1)">Continue →</button>
+  </div>
+</div>
+
+<!-- ── STEP 2: Shop Setup ── -->
+<div class="step-pane" id="step-2">
+  <div class="card">
+    <div class="card-title">TikTok Shop Setup</div>
+    <div class="card-sub">Help us understand where you are in your TikTok Shop journey.</div>
+
+    <div class="row" style="margin-bottom:20px">
+      <div class="field">
+        <label>Are you registered for TikTok Shop? <span class="req">*</span></label>
+        <div class="yn-row">
+          <button type="button" class="yn-btn" data-field="tiktokShop" data-val="Yes" onclick="setYN(this)">Yes</button>
+          <button type="button" class="yn-btn" data-field="tiktokShop" data-val="No" onclick="setYN(this)">No</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Is your Shopify integrated with TikTok? <span class="req">*</span></label>
+        <div class="yn-row">
+          <button type="button" class="yn-btn" data-field="shopifyIntegrated" data-val="Yes" onclick="setYN(this)">Yes</button>
+          <button type="button" class="yn-btn" data-field="shopifyIntegrated" data-val="No" onclick="setYN(this)">No</button>
+          <button type="button" class="yn-btn" data-field="shopifyIntegrated" data-val="N/A" onclick="setYN(this)">N/A</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="row" style="margin-bottom:20px">
+      <div class="field">
+        <label>Dedicated TikTok account manager? <span class="req">*</span></label>
+        <div class="yn-row">
+          <button type="button" class="yn-btn" data-field="tiktokAccountManager" data-val="Yes" onclick="setYN(this)">Yes</button>
+          <button type="button" class="yn-btn" data-field="tiktokAccountManager" data-val="No" onclick="setYN(this)">No</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Reviews imported (Reviews.io / similar)? <span class="req">*</span></label>
+        <div class="yn-row">
+          <button type="button" class="yn-btn" data-field="reviewsImported" data-val="Yes" onclick="setYN(this)">Yes</button>
+          <button type="button" class="yn-btn" data-field="reviewsImported" data-val="No" onclick="setYN(this)">No</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="row" style="margin-bottom:0">
+      <div class="field">
+        <label>Registered for Fulfilled by TikTok (FBT)? <span class="req">*</span></label>
+        <div class="yn-row">
+          <button type="button" class="yn-btn" data-field="fbt" data-val="Yes" onclick="setYN(this)">Yes</button>
+          <button type="button" class="yn-btn" data-field="fbt" data-val="No" onclick="setYN(this)">No</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Willing to send free samples?</label>
+        <div class="yn-row">
+          <button type="button" class="yn-btn selected" data-field="sendSamples" data-val="Yes" onclick="setYN(this)">Yes</button>
+          <button type="button" class="yn-btn" data-field="sendSamples" data-val="No" onclick="setYN(this)">No</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="nav-row">
+    <button class="btn-back" onclick="goBack(2)">← Back</button>
+    <button class="btn-next" onclick="goNext(2)">Continue →</button>
+  </div>
+</div>
+
+<!-- ── STEP 3: Products & Budget ── -->
+<div class="step-pane" id="step-3">
+  <div class="card">
+    <div class="card-title">Products to Promote</div>
+    <div class="card-sub">Add all products you want creators to promote. We'll build outreach copy and an affiliate resource hub for each one.</div>
+    <div class="product-list" id="productList"></div>
+    <button type="button" class="add-btn" onclick="addProduct()">+ Add Product</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Affiliate Budgets</div>
+    <div class="card-sub">These help us plan the right campaigns from day one.</div>
+    <div class="row">
+      <div class="field">
+        <label>Monthly Sample Budget <span class="req">*</span></label>
+        <input type="text" id="sampleBudget" placeholder="e.g. 50 units per product">
+        <div class="hint">Units of each product you're willing to send to creators per month</div>
+      </div>
+      <div class="field">
+        <label>Monthly Retainer Budget</label>
+        <input type="number" id="retainerBudget" placeholder="e.g. 2000" min="0">
+        <div class="hint">Rough max you'd spend on creator retainers/month — we won't exceed this</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav-row">
+    <button class="btn-back" onclick="goBack(3)">← Back</button>
+    <button class="btn-next" onclick="goNext(3)">Continue →</button>
+  </div>
+</div>
+
+<!-- ── STEP 4: Creator Compensation Program ── -->
+<div class="step-pane" id="step-4">
+
+  <!-- USPs -->
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-title">Product USPs</div>
+    <div class="card-sub">3 reasons creators will love promoting this brand. These appear on the creator landing page.</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div class="field">
+        <input type="text" id="usp1" placeholder="e.g. Clinically proven results in 30 days">
+      </div>
+      <div class="field">
+        <input type="text" id="usp2" placeholder="e.g. $60 average order value = higher commissions">
+      </div>
+      <div class="field">
+        <input type="text" id="usp3" placeholder="e.g. 4.8★ rating from 2,000+ reviews">
+      </div>
+    </div>
+  </div>
+
+  <!-- Talking points -->
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-title">Creator Talking Points</div>
+    <div class="card-sub">Key messages for creators to weave into their content. One per line.</div>
+    <div class="field">
+      <textarea id="talkingPoints" rows="5" placeholder="e.g. Before and after results&#10;Show unboxing + first impression&#10;Mention the 30-day money back guarantee"></textarea>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Creator Compensation Program</div>
+    <div class="card-sub">Toggle on the incentive programs you want to run. These will appear on your creator interest page and in all outreach messages. Everything is optional — you can always add more later.</div>
+
+    <!-- GMV Cashback -->
+    <div class="comp-card" id="comp-cashback">
+      <div class="comp-toggle" onclick="toggleComp('cashback')">
+        <div class="comp-icon">💸</div>
+        <div class="comp-info">
+          <div class="comp-name">GMV Cashback</div>
+          <div class="comp-desc">Creator hits a GMV target → receives that amount back as a cash bonus. An easy early win to get creators engaged and posting.</div>
+        </div>
+        <div class="comp-switch"></div>
+      </div>
+      <div class="comp-fields">
+        <div class="row" style="margin:0">
+          <div class="field">
+            <label>Cashback GMV Target <span class="req">*</span></label>
+            <input type="number" id="cashback-target" placeholder="e.g. 75" min="1">
+            <div class="hint">$ GMV creator must generate to receive the bonus</div>
+          </div>
+        </div>
+        <div class="example-box">Example: A creator generates $75 in GMV → they receive a $75 cash bonus. Simple, motivating, low-risk for you.</div>
+      </div>
+    </div>
+
+    <!-- Leaderboard -->
+    <div class="comp-card" id="comp-leaderboard">
+      <div class="comp-toggle" onclick="toggleComp('leaderboard')">
+        <div class="comp-icon">🏆</div>
+        <div class="comp-info">
+          <div class="comp-name">Leaderboard Challenge</div>
+          <div class="comp-desc">Rank creators by GMV generated over a period and pay bonuses to the top performers</div>
+        </div>
+        <div class="comp-switch"></div>
+      </div>
+      <div class="comp-fields">
+        <div class="row" style="margin-bottom:14px">
+          <div class="field">
+            <label>Minimum GMV to Qualify <span class="req">*</span></label>
+            <input type="number" id="lb-threshold" placeholder="e.g. 500" min="0">
+            <div class="hint">$ minimum GMV to appear on the leaderboard</div>
+          </div>
+          <div class="field">
+            <label>Number of Winning Places <span class="req">*</span></label>
+            <select id="lb-places" onchange="renderLeaderboardPlaces()">
+              <option value="2">2 places</option>
+              <option value="3" selected>3 places</option>
+              <option value="4">4 places</option>
+              <option value="5">5 places</option>
+            </select>
+          </div>
+        </div>
+        <div class="leaderboard-places" id="lbPlacesList"></div>
+      </div>
+    </div>
+
+    <!-- Volume Bonus -->
+    <div class="comp-card" id="comp-volumeBonus">
+      <div class="comp-toggle" onclick="toggleComp('volumeBonus')">
+        <div class="comp-icon">🎬</div>
+        <div class="comp-info">
+          <div class="comp-name">Volume Bonus</div>
+          <div class="comp-desc">Reward creators who hit a target number of posted videos with a lump-sum bonus</div>
+        </div>
+        <div class="comp-switch"></div>
+      </div>
+      <div class="comp-fields">
+        <div class="row" style="margin:0">
+          <div class="field">
+            <label>Video Quantity Target <span class="req">*</span></label>
+            <input type="number" id="vb-quantity" placeholder="e.g. 10" min="1">
+            <div class="hint">Number of videos required to earn the bonus</div>
+          </div>
+          <div class="field">
+            <label>Bonus Amount <span class="req">*</span></label>
+            <input type="number" id="vb-bonus" placeholder="e.g. 100" min="1">
+            <div class="hint">$ one-time bonus paid on hitting the target</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <div class="nav-row">
+    <button class="btn-back" onclick="goBack(4)">← Back</button>
+    <button class="btn-next" onclick="goNext(4)">Review →</button>
+  </div>
+</div>
+
+<!-- ── STEP 5: Review & Submit ── -->
+<div class="step-pane" id="step-5">
+  <div class="card">
+    <div class="card-title">Review &amp; Submit</div>
+    <div class="card-sub">Look good? Once you submit, our team gets notified and everything kicks off automatically.</div>
+    <div id="reviewContent"></div>
+  </div>
+
+  <div class="card">
+    <div class="consent-box">By submitting, you agree to receive SMS messages, emails, and other communications from Cult Content related to your account, campaign updates, and marketing materials. Message &amp; data rates may apply. Reply STOP to opt out of SMS.</div>
+    <label class="consent-check">
+      <input type="checkbox" id="consentSMS">
+      <span>I agree to receive SMS and email communications from Cult Content</span>
+    </label>
+    <label class="consent-check">
+      <input type="checkbox" id="consentTerms">
+      <span>I agree to Cult Content's <a href="https://cultcontent.cc/terms" target="_blank" style="color:var(--teal)">Terms of Service</a></span>
+    </label>
+    <div class="form-error" id="submitError"></div>
+    <button class="btn-submit" id="submitBtn" onclick="submitForm()">Submit Onboarding 🚀</button>
+  </div>
+
+  <div class="nav-row" style="margin-top:0">
+    <button class="btn-back" onclick="goBack(5)">← Back</button>
+    <div></div>
+  </div>
+</div>
+
+</div><!-- /mainForm -->
+
+<div id="successState">
+  <div class="success-icon">🎉</div>
+  <div class="success-title">Welcome to the cult!</div>
+  <div class="success-msg" id="successMsg">Our team has been notified and your onboarding pipeline has kicked off. Expect to hear from us within 24 hours.</div>
+</div>
+</div><!-- /form-wrap -->
+
+<script>
+// ── State ──
+const F = {
+  tiktokShop: '', shopifyIntegrated: '', tiktokAccountManager: '', reviewsImported: '', fbt: '', sendSamples: 'Yes',
+  products: [],
+  compensation: { cashback:{enabled:false}, leaderboard:{enabled:false}, volumeBonus:{enabled:false} },
+};
+let currentStep = 1;
+const TOTAL_STEPS = 5;
+
+// ── Step navigation ──
+function goNext(from) {
+  if (!validateStep(from)) return;
+  currentStep = from + 1;
+  showStep(currentStep);
+  if (currentStep === TOTAL_STEPS) buildReview();
+}
+function goBack(from) {
+  currentStep = from - 1;
+  showStep(currentStep);
+}
+function showStep(n) {
+  document.querySelectorAll('.step-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById(`step-${n}`).classList.add('active');
+  document.getElementById('progressFill').style.width = (n / TOTAL_STEPS * 100) + '%';
+  for (let i = 1; i <= TOTAL_STEPS; i++) {
+    const lbl = document.getElementById(`lbl-${i}`);
+    lbl.classList.toggle('active', i === n);
+    lbl.classList.toggle('done', i < n);
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function jumpStep(n) {
+  currentStep = n;
+  showStep(n);
+  if (n === TOTAL_STEPS) buildReview();
+}
+
+// ── Validation ──
+function validateStep(n) {
+  const req = (id, label) => {
+    const el = document.getElementById(id);
+    if (!el) return true;
+    const val = el.value?.trim();
+    if (!val) { el.focus(); markErr(el, `${label} is required`); return false; }
+    clearErr(el); return true;
+  };
+  const yn = (field, label) => {
+    if (!F[field]) { alert(`Please select an answer for: ${label}`); return false; }
+    return true;
+  };
+  if (n === 1) return req('brandName','Brand name') && req('website','Website') && req('firstName','First name') && req('lastName','Last name') && req('phone','Phone') && req('email','Email');
+  if (n === 2) return yn('tiktokShop','TikTok Shop registered?') && yn('shopifyIntegrated','Shopify integrated?') && yn('tiktokAccountManager','TikTok account manager?') && yn('reviewsImported','Reviews imported?') && yn('fbt','FBT registered?');
+  if (n === 3) {
+    if (!F.products.length || !F.products.some(p => p.name?.trim())) { alert('Please add at least one product.'); return false; }
+    return req('sampleBudget','Monthly sample budget');
+  }
+  return true;
+}
+function markErr(el, msg) {
+  let e = el.parentNode.querySelector('.field-error');
+  if (!e) { e = document.createElement('div'); e.className = 'field-error'; el.parentNode.appendChild(e); }
+  e.textContent = msg; el.style.borderColor = 'var(--red)';
+}
+function clearErr(el) {
+  const e = el.parentNode?.querySelector('.field-error');
+  if (e) e.textContent = ''; el.style.borderColor = '';
+}
+
+// ── Yes/No ──
+function setYN(btn) {
+  btn.parentNode.querySelectorAll('.yn-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  F[btn.dataset.field] = btn.dataset.val;
+}
+
+// ── Products ──
+function addProduct() {
+  F.products.push({ id: Date.now(), name: '', url: '', cogs: '', shipping: '', minPrice: '' });
+  renderProducts();
+}
+function removeProduct(id) {
+  F.products = F.products.filter(p => p.id !== id);
+  renderProducts();
+}
+function renderProducts() {
+  const list = document.getElementById('productList');
+  list.innerHTML = F.products.map((p, i) => `
+    <div class="product-row">
+      <div class="product-row-top">
+        <input type="text" placeholder="Product name" value="${esc(p.name)}"
+          oninput="F.products[${i}].name=this.value" style="font-size:13px">
+        <input type="url" placeholder="TikTok Shop link (optional)" value="${esc(p.url)}"
+          oninput="F.products[${i}].url=this.value" style="font-size:13px">
+        <button type="button" class="remove-btn" onclick="removeProduct(${p.id})">×</button>
+      </div>
+      <div class="product-row-costs">
+        <div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Cost of Goods (per unit)</div>
+          <div style="position:relative">
+            <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none">$</span>
+            <input type="number" min="0" step="0.01" placeholder="0.00" value="${esc(p.cogs)}"
+              oninput="F.products[${i}].cogs=this.value" style="font-size:13px;padding-left:22px;width:100%;box-sizing:border-box">
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Est. Shipping Cost (per unit)</div>
+          <div style="position:relative">
+            <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none">$</span>
+            <input type="number" min="0" step="0.01" placeholder="0.00" value="${esc(p.shipping)}"
+              oninput="F.products[${i}].shipping=this.value" style="font-size:13px;padding-left:22px;width:100%;box-sizing:border-box">
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Min. Retail Sale Price</div>
+          <div style="position:relative">
+            <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none">$</span>
+            <input type="number" min="0" step="0.01" placeholder="0.00" value="${esc(p.minPrice)}"
+              oninput="F.products[${i}].minPrice=this.value" style="font-size:13px;padding-left:22px;width:100%;box-sizing:border-box">
+          </div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+addProduct(); // start with one
+
+// ── Compensation ──
+function toggleComp(type) {
+  const card = document.getElementById(`comp-${type}`);
+  const open = !card.classList.contains('open');
+  card.classList.toggle('open', open);
+  F.compensation[type].enabled = open;
+  if (type === 'leaderboard' && open) renderLeaderboardPlaces();
+}
+function renderLeaderboardPlaces() {
+  const n = parseInt(document.getElementById('lb-places')?.value || '3');
+  const ordinals = ['1st','2nd','3rd','4th','5th'];
+  const list = document.getElementById('lbPlacesList');
+  const existing = Array.from(list?.querySelectorAll('input')||[]).map(i => i.value);
+  list.innerHTML = Array.from({length:n},(_,i)=>`
+    <div class="place-row">
+      <div class="place-label">${ordinals[i]} Place</div>
+      <input type="number" placeholder="e.g. ${[500,300,150,100,75][i]||50}" min="0"
+        id="lb-place-${i}" value="${existing[i]||''}" style="font-size:13px">
+    </div>`).join('');
+}
+renderLeaderboardPlaces();
+
+function collectCompensation() {
+  const c = F.compensation;
+  if (c.cashback.enabled)    c.cashback.target    = v('cashback-target');
+  if (c.leaderboard.enabled) {
+    c.leaderboard.threshold  = v('lb-threshold');
+    const n = parseInt(document.getElementById('lb-places')?.value||'3');
+    c.leaderboard.places     = Array.from({length:n},(_,i)=>document.getElementById(`lb-place-${i}`)?.value||'0');
+  }
+  if (c.volumeBonus.enabled) {
+    c.volumeBonus.quantity   = v('vb-quantity');
+    c.volumeBonus.bonus      = v('vb-bonus');
+  }
+}
+
+// ── Review ──
+function buildReview() {
+  collectCompensation();
+  const comp = F.compensation;
+  const ordinals = ['1st','2nd','3rd','4th','5th'];
+  const incentivePills = [];
+  if (comp.cashback?.enabled)    incentivePills.push(`💸 GMV Cashback ($${comp.cashback.target} target)`);
+  if (comp.leaderboard?.enabled) incentivePills.push(`🏆 Leaderboard (${(comp.leaderboard.places||[]).map((a,i)=>`${ordinals[i]}: $${a}`).join(', ')})`);
+  if (comp.volumeBonus?.enabled) incentivePills.push(`🎬 Volume Bonus ($${comp.volumeBonus.bonus} for ${comp.volumeBonus.quantity} videos)`);
+
+  document.getElementById('reviewContent').innerHTML = `
+    <div class="review-section">
+      <div class="review-title">Brand</div>
+      <div class="review-grid">
+        <div class="rv"><div class="rv-label">Brand Name</div><div class="rv-val">${esc(v('brandName'))}</div></div>
+        ${v('tiktokHandle')?`<div class="rv"><div class="rv-label">TikTok</div><div class="rv-val">@${esc(v('tiktokHandle'))}</div></div>`:''}
+        ${v('tiktokShopHandle')?`<div class="rv"><div class="rv-label">TikTok Shop</div><div class="rv-val">@${esc(v('tiktokShopHandle'))}</div></div>`:''}
+        <div class="rv"><div class="rv-label">Contact</div><div class="rv-val">${esc(v('firstName'))} ${esc(v('lastName'))}</div></div>
+        <div class="rv"><div class="rv-label">Email</div><div class="rv-val">${esc(v('email'))}</div></div>
+        <div class="rv"><div class="rv-label">Phone</div><div class="rv-val">${esc(v('phone'))}</div></div>
+        <div class="rv"><div class="rv-label">Website</div><div class="rv-val">${esc(v('website'))}</div></div>
+      </div>
+    </div>
+    <div class="review-section">
+      <div class="review-title">TikTok Shop Setup</div>
+      <div class="review-grid">
+        <div class="rv"><div class="rv-label">TikTok Shop</div><div class="rv-val">${esc(F.tiktokShop||'—')}</div></div>
+        <div class="rv"><div class="rv-label">Shopify Integrated</div><div class="rv-val">${esc(F.shopifyIntegrated||'—')}</div></div>
+        <div class="rv"><div class="rv-label">TikTok AM</div><div class="rv-val">${esc(F.tiktokAccountManager||'—')}</div></div>
+        <div class="rv"><div class="rv-label">Reviews Imported</div><div class="rv-val">${esc(F.reviewsImported||'—')}</div></div>
+        <div class="rv"><div class="rv-label">FBT Registered</div><div class="rv-val">${esc(F.fbt||'—')}</div></div>
+      </div>
+    </div>
+    <div class="review-section">
+      <div class="review-title">Products (${F.products.filter(p=>p.name).length})</div>
+      <div class="review-grid">
+        ${F.products.filter(p=>p.name).map(p=>`
+          <div class="rv"><div class="rv-label">Product</div><div class="rv-val">${esc(p.name)}${p.url?` <a href="${esc(p.url)}" target="_blank" style="color:var(--teal);font-size:11px;margin-left:6px">↗ Shop</a>`:''}</div></div>
+          <div class="rv" style="margin-left:12px">
+            <div class="rv-label">COGS</div><div class="rv-val">${p.cogs?'$'+Number(p.cogs).toFixed(2):'—'}</div>
+          </div>
+          <div class="rv" style="margin-left:12px">
+            <div class="rv-label">Shipping</div><div class="rv-val">${p.shipping?'$'+Number(p.shipping).toFixed(2):'—'}</div>
+          </div>
+          <div class="rv" style="margin-left:12px">
+            <div class="rv-label">Min Sale Price</div><div class="rv-val">${p.minPrice?'$'+Number(p.minPrice).toFixed(2):'—'}</div>
+          </div>`).join('')}
+      </div>
+    </div>
+    <div class="review-section">
+      <div class="review-title">Budgets</div>
+      <div class="review-grid">
+        <div class="rv"><div class="rv-label">Sample Budget</div><div class="rv-val">${esc(v('sampleBudget'))}</div></div>
+        <div class="rv"><div class="rv-label">Retainer Budget</div><div class="rv-val">${v('retainerBudget') ? '$'+esc(v('retainerBudget'))+'/mo' : '—'}</div></div>
+        <div class="rv"><div class="rv-label">Sending Samples</div><div class="rv-val">${esc(F.sendSamples)}</div></div>
+      </div>
+    </div>
+    <div class="review-section">
+      <div class="review-title">Creator Compensation</div>
+      ${incentivePills.length
+        ? `<div>${incentivePills.map(p=>`<span class="incentive-pill">${p}</span>`).join('')}</div>`
+        : `<div style="font-size:13px;color:var(--muted)">None selected — can be added later</div>`}
+    </div>
+    ${[v('usp1'),v('usp2'),v('usp3')].some(Boolean) ? `
+    <div class="review-section">
+      <div class="review-title">Product USPs</div>
+      <div class="review-grid">
+        ${[v('usp1'),v('usp2'),v('usp3')].filter(Boolean).map(u=>`<div class="rv"><div class="rv-val">${esc(u)}</div></div>`).join('')}
+      </div>
+    </div>` : ''}
+    ${v('talkingPoints') ? `
+    <div class="review-section">
+      <div class="review-title">Talking Points</div>
+      <div class="rv" style="max-width:100%"><div class="rv-val" style="white-space:pre-wrap;font-size:12px">${esc(v('talkingPoints'))}</div></div>
+    </div>` : ''}`;
+}
+
+// ── Submit ──
+async function submitForm() {
+  const errEl = document.getElementById('submitError');
+  errEl.style.display = 'none';
+  if (!document.getElementById('consentSMS').checked || !document.getElementById('consentTerms').checked) {
+    errEl.textContent = 'Please check both boxes to continue.';
+    errEl.style.display = 'block'; return;
+  }
+  collectCompensation();
+  const payload = {
+    brandName: v('brandName'), firstName: v('firstName'), lastName: v('lastName'),
+    phone: v('phone'), email: v('email'), website: v('website'),
+    tiktokHandle: v('tiktokHandle'), tiktokShopHandle: v('tiktokShopHandle'),
+    brandMission: v('brandMission'),
+    tiktokShop: F.tiktokShop, shopifyIntegrated: F.shopifyIntegrated,
+    tiktokAccountManager: F.tiktokAccountManager, reviewsImported: F.reviewsImported,
+    fbt: F.fbt, sendSamples: F.sendSamples,
+    products: F.products.filter(p => p.name?.trim()),
+    sampleBudget: v('sampleBudget'), retainerBudget: v('retainerBudget'),
+    compensation: F.compensation,
+    usp1: v('usp1'), usp2: v('usp2'), usp3: v('usp3'),
+    talkingPoints: v('talkingPoints'),
+    submittedAt: new Date().toISOString(),
+  };
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true; btn.textContent = 'Submitting…';
+  try {
+    const r = await fetch('/api/onboard/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const d = await r.json();
+    if (d.ok) {
+      document.getElementById('mainForm').style.display = 'none';
+      document.querySelector('.progress-wrap').style.display = 'none';
+      document.getElementById('successState').style.display = 'block';
+      if (d.message) document.getElementById('successMsg').textContent = d.message;
+    } else throw new Error(d.error || 'Submission failed');
+  } catch(e) {
+    errEl.textContent = 'Something went wrong — please try again or email hello@cultcontent.cc';
+    errEl.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Submit Onboarding 🚀';
+  }
+}
+
+// ── Helpers ──
+function v(id) { return document.getElementById(id)?.value?.trim() || ''; }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+</script>
+</body>
+</html>
