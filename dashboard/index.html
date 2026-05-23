@@ -1075,13 +1075,11 @@
   <!-- ── AFFILIATES ───────────────────────────────────────────── -->
   <section class="tab-pane" id="tab-affiliates">
 
-  <!-- ── Header row: title + date controls ─────────────────────────────── -->
+  <!-- ── Header row ────────────────────────────────────────────────────── -->
   <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
-    <h2 class="sec-title" style="margin:0">TikTok Affiliate Manager</h2>
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-      <span id="reacherRefreshStatus" style="font-size:11px;color:var(--muted)">Loading…</span>
+    <h2 class="sec-title" style="margin:0">Affiliate Agent</h2>
+    <div style="display:flex;align-items:center;gap:8px;">
       <a href="https://portal.reacherapp.com" target="_blank" class="btn btn-ghost" style="font-size:11px">Reacher ↗</a>
-      <button class="btn btn-teal" style="font-size:11px" onclick="loadAffiliate(true)">↺ Refresh</button>
     </div>
   </div>
 
@@ -1101,11 +1099,13 @@
       <!-- Toolbar -->
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
         <input id="ub-search" class="agent-input" type="text" placeholder="Search conversations…" style="flex:1;min-width:180px;font-size:13px;padding:7px 12px" oninput="ubFilterList()" />
-        <select id="ub-status-filter" class="agent-input" style="font-size:12px;padding:6px 10px" onchange="ubLoadConversations()">
+        <select id="ub-shop" class="agent-input" style="font-size:12px;padding:6px 10px" onchange="ubLoadConversations(true)">
+          <option value="">All Shops</option>
+        </select>
+        <select id="ub-status-filter" class="agent-input" style="font-size:12px;padding:6px 10px" onchange="ubLoadConversations(true)">
           <option value="all">All</option>
           <option value="unread">Unread</option>
-          <option value="open">Open</option>
-          <option value="starred">Starred</option>
+          <option value="unreplied">Unreplied</option>
         </select>
         <button class="btn btn-ghost" onclick="ubLoadConversations(true)" style="font-size:12px;padding:6px 14px">↻</button>
       </div>
@@ -1134,14 +1134,7 @@
           <div id="ub-reply-box" style="border-top:1px solid var(--border);padding:12px 14px;display:none">
             <div style="display:flex;gap:8px;align-items:flex-end">
               <textarea id="ub-reply-text" class="agent-input" rows="3" style="flex:1;font-size:13px;resize:none;line-height:1.5;padding:8px 12px" placeholder="Type a reply…" onkeydown="if(event.key==='Enter'&&event.metaKey)ubSendReply()"></textarea>
-              <div style="display:flex;flex-direction:column;gap:6px">
-                <select id="ub-reply-type" class="agent-input" style="font-size:11px;padding:4px 6px">
-                  <option value="SMS">SMS</option>
-                  <option value="Email">Email</option>
-                  <option value="WhatsApp">WhatsApp</option>
-                </select>
-                <button class="btn btn-teal" onclick="ubSendReply()" style="font-size:12px;font-weight:700;padding:7px 16px;white-space:nowrap">Send →</button>
-              </div>
+              <button class="btn btn-teal" onclick="ubSendReply()" style="font-size:12px;font-weight:700;padding:7px 16px;white-space:nowrap;align-self:flex-end">Send →</button>
             </div>
             <div id="ub-reply-status" style="font-size:11px;color:var(--muted);margin-top:6px;min-height:16px"></div>
           </div>
@@ -1242,177 +1235,54 @@
     </div>
   </div>
 
-  <!-- ══════════════════════════════════════════════════════════════════════
-       LEGACY AFFILIATE ANALYTICS (kept below new UI)
-  ══════════════════════════════════════════════════════════════════════ -->
-
-  <!-- ── Date range bar ────────────────────────────────────────────────── -->
-  <div class="card" style="padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-    <span style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.06em;white-space:nowrap;">DATE RANGE</span>
-    <div style="display:flex;gap:4px;">
-      <button class="range-btn" data-rng="7d"     onclick="setAffiliateRange(this,'7d')">7D</button>
-      <button class="range-btn active" data-rng="30d" onclick="setAffiliateRange(this,'30d')">30D</button>
-      <button class="range-btn" data-rng="90d"    onclick="setAffiliateRange(this,'90d')">90D</button>
-      <button class="range-btn" data-rng="custom" onclick="setAffiliateRange(this,'custom')">Custom</button>
-    </div>
-    <div id="reacherCustomDates" style="display:none;align-items:center;gap:6px;flex-wrap:wrap;">
-      <input type="date" id="reacherDateStart" class="agent-input" style="width:140px;padding:4px 8px;font-size:12px;" />
-      <span style="color:var(--muted);font-size:12px;">→</span>
-      <input type="date" id="reacherDateEnd"   class="agent-input" style="width:140px;padding:4px 8px;font-size:12px;" />
-      <button class="btn btn-teal" style="font-size:11px;padding:4px 12px" onclick="loadAffiliate(true)">Apply</button>
-    </div>
-    <span style="margin-left:auto;font-size:11px;color:var(--muted)" id="reacherDateLabel">last 30 days</span>
-  </div>
-
-  <!-- ── Agency Insights bar (NEW) ─────────────────────────────────────── -->
-  <div class="card" style="margin-bottom:16px;padding:16px 20px;" id="affiliateInsightsBar">
-    <div class="card-label" style="margin-bottom:12px;">Agency Insights</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;">
-
-      <!-- Top shop -->
-      <div style="background:rgba(0,210,122,0.06);border:1px solid rgba(0,210,122,0.18);border-radius:9px;padding:12px 14px;">
-        <div style="font-size:9px;font-weight:800;letter-spacing:0.1em;color:var(--muted);text-transform:uppercase;margin-bottom:5px;">Top Performing Shop</div>
-        <div id="insightTopShop" style="font-family:'Montserrat',sans-serif;font-weight:900;font-size:14px;color:var(--green);">—</div>
-        <div id="insightTopShopGmv" style="font-size:11px;color:var(--muted);margin-top:2px;"></div>
-      </div>
-
-      <!-- Shops at risk -->
-      <div style="background:rgba(255,59,48,0.05);border:1px solid rgba(255,59,48,0.15);border-radius:9px;padding:12px 14px;">
-        <div style="font-size:9px;font-weight:800;letter-spacing:0.1em;color:var(--muted);text-transform:uppercase;margin-bottom:5px;">Shops At Risk</div>
-        <div id="insightAtRisk" style="font-family:'Montserrat',sans-serif;font-weight:900;font-size:14px;color:var(--red);">—</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:2px;">GMV &lt;$500 or conv &lt;10%</div>
-      </div>
-
-      <!-- Est. commission payout -->
-      <div style="background:rgba(201,168,76,0.07);border:1px solid rgba(201,168,76,0.2);border-radius:9px;padding:12px 14px;">
-        <div style="font-size:9px;font-weight:800;letter-spacing:0.1em;color:var(--muted);text-transform:uppercase;margin-bottom:5px;">Est. Commission Payout</div>
-        <div id="insightCommission" style="font-family:'Montserrat',sans-serif;font-weight:900;font-size:14px;color:var(--gold);">—</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:2px;">~15% of GMV</div>
-      </div>
-
-      <!-- Automation coverage -->
-      <div style="background:rgba(0,242,234,0.06);border:1px solid rgba(0,242,234,0.18);border-radius:9px;padding:12px 14px;">
-        <div style="font-size:9px;font-weight:800;letter-spacing:0.1em;color:var(--muted);text-transform:uppercase;margin-bottom:5px;">Active Automation Coverage</div>
-        <div id="insightAutoCoverage" style="font-family:'Montserrat',sans-serif;font-weight:900;font-size:14px;color:var(--teal);">—</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:2px;">of shops with active sequences</div>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- ── Agency KPI row ────────────────────────────────────────────────── -->
-  <div class="kpi-row" style="margin-bottom:16px;">
-    <div class="kpi-card">
-      <div class="kpi-label">Agency GMV</div>
-      <div class="kpi-value green" id="reacherKpiGmv">—</div>
-      <div class="kpi-sub" id="reacherKpiGmvSub">all clients</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Total Creators</div>
-      <div class="kpi-value" id="reacherKpiCreators">—</div>
-      <div class="kpi-sub">in funnels</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Video Views</div>
-      <div class="kpi-value gold" id="reacherKpiViews">—</div>
-      <div class="kpi-sub">affiliate videos</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Videos Posted</div>
-      <div class="kpi-value" id="reacherKpiVideos">—</div>
-      <div class="kpi-sub">by affiliates</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Samples</div>
-      <div class="kpi-value" id="reacherKpiSamples">—</div>
-      <div class="kpi-sub">requests</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Active Automations</div>
-      <div class="kpi-value" id="reacherKpiAuto">—</div>
-      <div class="kpi-sub">running sequences</div>
-    </div>
-  </div>
-
-  <!-- ── Chart row: trend line + agency funnel ─────────────────────────── -->
-  <div class="two-col" style="margin-bottom:16px;align-items:start;">
-
-    <!-- Trend chart -->
-    <div class="card">
-      <div class="card-label" style="display:flex;align-items:center;justify-content:space-between;">
-        <span>Performance Trend</span>
-        <select id="reacherChartShop" class="agent-input" style="width:160px;padding:3px 6px;font-size:11px;" onchange="renderAffiliateChart()">
-          <option value="all">All clients (agency)</option>
-        </select>
-      </div>
-      <div style="position:relative;height:180px;">
-        <canvas id="reacherChart"></canvas>
-      </div>
-      <div style="display:flex;gap:14px;margin-top:8px;font-size:11px;">
-        <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:2px;background:var(--green);display:inline-block;border-radius:2px;"></span>GMV ($)</span>
-        <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:2px;background:var(--teal);display:inline-block;border-radius:2px;"></span>Video Views</span>
-        <span id="reacherChartStatus" style="color:var(--muted);font-style:italic;margin-left:auto;">Loading…</span>
-      </div>
-    </div>
-
-    <!-- Agency funnel -->
-    <div class="card">
-      <div class="card-label">Agency Creator Funnel</div>
-      <div id="reacherFunnelViz" style="display:flex;flex-direction:column;gap:6px;">
-        <div style="color:var(--muted);font-style:italic;font-size:12px;padding:8px 0;">Loading funnel…</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── Per-shop grid ──────────────────────────────────────────────────── -->
-  <div class="agent-section-label">🛍️ Client Shops</div>
-  <div id="reacherShopsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;margin-bottom:20px;">
-    <div class="card" style="grid-column:1/-1;padding:20px;text-align:center;color:var(--muted);font-style:italic;font-size:13px;">Loading shop data…</div>
-  </div>
-
-  <!-- ── Top Videos ────────────────────────────────────────────────────────────────── -->
-  <div class="agent-section-label">🎬 Top Videos</div>
+  <!-- ── Client Setup ──────────────────────────────────────────────────────── -->
+  <div class="agent-section-label">⚙️ Client Setup</div>
   <div class="card" style="margin-bottom:20px;padding:18px 20px;">
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
-      <select id="rvShopSel" class="agent-input" style="font-size:11px;padding:4px 8px;width:160px;" onchange="rvLoad()">
-        <option value="">All shops</option>
+
+    <!-- Client selector -->
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+      <select id="csClientSel" class="agent-input" style="font-size:12px;padding:5px 8px;width:200px;" onchange="csLoadClient()">
+        <option value="">Select a client…</option>
       </select>
-      <div style="display:flex;gap:4px;">
-        <button class="range-btn active" id="rvSortGmv" onclick="rvSetSort('gmv',this)">By GMV</button>
-        <button class="range-btn" id="rvSortViews" onclick="rvSetSort('views',this)">By Views</button>
+      <span id="csClientStatus" style="font-size:11px;color:var(--muted);"></span>
+      <a id="csPageLink" href="#" target="_blank" style="display:none;font-size:11px;color:var(--teal);text-decoration:none;margin-left:auto;">↗ View Creator Page</a>
+    </div>
+
+    <!-- Client setup panel (hidden until client selected) -->
+    <div id="csPanel" style="display:none;">
+
+      <!-- Campaign Links -->
+      <div style="margin-bottom:18px;">
+        <div style="font-size:10px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Campaign Signup Links</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:14px;width:22px;text-align:center;flex-shrink:0;">💰</span>
+            <input id="csCashbackUrl" class="agent-input" placeholder="Cashback campaign URL (from Reacher portal)" style="flex:1;font-size:12px;padding:6px 10px;" />
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:14px;width:22px;text-align:center;flex-shrink:0;">🎯</span>
+            <input id="csQuantityUrl" class="agent-input" placeholder="Video quantity challenge URL (from Reacher portal)" style="flex:1;font-size:12px;padding:6px 10px;" />
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:14px;width:22px;text-align:center;flex-shrink:0;">🏆</span>
+            <input id="csLeaderboardUrl" class="agent-input" placeholder="Leaderboard challenge URL (from Reacher portal)" style="flex:1;font-size:12px;padding:6px 10px;" />
+          </div>
+        </div>
       </div>
-      <button class="btn btn-ghost" style="font-size:11px;margin-left:auto;" onclick="rvLoad(true)">↺ Refresh</button>
-    </div>
-    <div id="rvTable" style="overflow-x:auto;">
-      <div style="color:var(--muted);font-size:12px;font-style:italic;padding:8px 0;">Select a shop to load videos</div>
-    </div>
-  </div>
 
-  <!-- ── Automation Performance ─────────────────────────────────────────── -->
-  <div class="agent-section-label">⚙️ Automation Performance</div>
-  <div class="card" style="margin-bottom:20px;padding:18px 20px;">
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
-      <select id="raShopSel" class="agent-input" style="font-size:11px;padding:4px 8px;width:160px;" onchange="raLoad()">
-        <option value="">Select a shop…</option>
-      </select>
-      <button class="btn btn-ghost" style="font-size:11px;margin-left:auto;" onclick="raLoad(true)">↺ Refresh</button>
-    </div>
-    <div id="raGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;">
-      <div style="color:var(--muted);font-size:12px;font-style:italic;padding:8px 0;">Select a shop to load automations</div>
-    </div>
-  </div>
+      <!-- Competitor Videos -->
+      <div style="margin-bottom:18px;">
+        <div style="font-size:10px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Competitor Videos <span style="font-weight:400;text-transform:none;">(TikTok URLs, one per line — up to 8)</span></div>
+        <textarea id="csCompetitorVideos" class="agent-input" rows="4" style="width:100%;font-size:12px;resize:vertical;" placeholder="https://www.tiktok.com/@creator/video/123&#10;https://www.tiktok.com/@creator/video/456"></textarea>
+      </div>
 
-  <!-- ── Top Creators ───────────────────────────────────────────────────── -->
-  <div class="agent-section-label">🏆 Top Creators</div>
-  <div class="card" style="margin-bottom:20px;padding:18px 20px;">
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
-      <select id="rcShopSel" class="agent-input" style="font-size:11px;padding:4px 8px;width:160px;" onchange="rcLoad()">
-        <option value="">Select a shop…</option>
-      </select>
-      <button class="btn btn-ghost" style="font-size:11px;margin-left:auto;" onclick="rcLoad(true)">↺ Refresh</button>
-    </div>
-    <div id="rcTable" style="overflow-x:auto;">
-      <div style="color:var(--muted);font-size:12px;font-style:italic;padding:8px 0;">Select a shop to load creators</div>
+      <!-- Action buttons -->
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <button class="btn btn-teal" style="font-size:12px;" onclick="csSave()" id="csSaveBtn">💾 Save & Push to Page</button>
+        <button class="btn" id="csActivateBtn" style="font-size:12px;background:rgba(0,210,122,0.12);color:var(--green);border:1px solid rgba(0,210,122,0.25);" onclick="csActivateDm()">▶ Activate DM Outreach</button>
+        <span id="csActionStatus" style="font-size:11px;color:var(--muted);"></span>
+      </div>
+
     </div>
   </div>
 
@@ -2514,10 +2384,10 @@ SKU	Date	Sample Reqs	Video Views	Add To Cart	Orders"></textarea>
       <!-- View toggle + hide completed -->
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:20px">
       <div style="display:flex;gap:4px;background:var(--surface2);border-radius:8px;padding:4px;width:fit-content">
-        <button id="miViewBtnClients" class="btn" onclick="miSetView('clients')" style="font-size:12px;padding:6px 16px;background:var(--teal);color:#fff;border-radius:5px">By Client</button>
+        <button id="miViewBtnClients" class="btn btn-ghost" onclick="miSetView('clients')" style="font-size:12px;padding:6px 16px">By Client</button>
         <button id="miViewBtnPeople" class="btn btn-ghost" onclick="miSetView('people')" style="font-size:12px;padding:6px 16px">By Person</button>
         <button id="miViewBtnThemes" class="btn btn-ghost" onclick="miSetView('themes')" style="font-size:12px;padding:6px 16px">Themes</button>
-        <button id="miViewBtnMeetings" class="btn btn-ghost" onclick="miSetView('meetings')" style="font-size:12px;padding:6px 16px">All Meetings</button>
+        <button id="miViewBtnMeetings" class="btn" onclick="miSetView('meetings')" style="font-size:12px;padding:6px 16px;background:var(--teal);color:#fff;border-radius:5px">All Meetings</button>
       </div>
       <label style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);cursor:pointer;user-select:none">
         <input type="checkbox" id="miShowDone" onchange="miRender()" style="accent-color:var(--teal);width:14px;height:14px">
@@ -2958,6 +2828,11 @@ SKU	Date	Sample Reqs	Video Views	Add To Cart	Orders"></textarea>
 
 <script>
 // ─── Global helpers ───────────────────────────────────────────────────────────
+// Global fetch wrapper
+async function apiFetch(url, opts) {
+  return fetch(url, opts);
+}
+
 function x(s) {
   if (s == null) return '';
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
@@ -2998,7 +2873,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     // Lazy-init tab-specific data
     if (btn.dataset.tab === 'shortvideo')  { svuLoadChannels(); }
     if (btn.dataset.tab === 'paidmedia')   loadPaidMedia();
-    if (btn.dataset.tab === 'affiliates')  { loadAffiliate(); rvEnsureShops(); ubLoadConversations(); }
+    if (btn.dataset.tab === 'affiliates')  { loadAffiliate(); rvEnsureShops(); csEnsureClients(); ubLoadConversations(); }
     if (btn.dataset.tab === 'pipeline')    renderPerformance();
     if (btn.dataset.tab === 'growth')      gpInit();
     if (btn.dataset.tab === 'community')   creatorsInit();
@@ -5190,18 +5065,37 @@ async function afCreateAutomation(btn) {
   btn.disabled = false; btn.textContent = 'Create';
 }
 
-// ─── Unibox (Inbox) ───────────────────────────────────────────────────────────
-let UB = { conversations: [], activeId: null, searchQuery: '' };
+// ─── Unibox (Reacher Creator Messages) ───────────────────────────────────────
+// activeHandle is the creator's TikTok handle (used as the conversation key).
+let UB = { conversations: [], activeHandle: null, searchQuery: '' };
 
 async function ubLoadConversations(force = false) {
   const list = document.getElementById('ub-conv-list');
   if (!list) return;
   if (!force && UB.conversations.length) { ubRenderList(); return; }
+
+  // Ensure shops are loaded first — needed to pick a shop_id
+  if (!AF.shops || !AF.shops.length) await afLoadShopsForUnibox();
+
+  // Auto-select first shop if none chosen
+  const shopSel = document.getElementById('ub-shop');
+  if (shopSel && !shopSel.value && AF.shops.length) {
+    shopSel.value = AF.shops[0].id;
+  }
+  const shopId = shopSel?.value || '';
+  if (!shopId) {
+    list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-style:italic">No shops connected to Reacher</div>';
+    return;
+  }
+
   list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-style:italic">Loading…</div>';
   try {
     const status = document.getElementById('ub-status-filter')?.value || 'all';
-    const r = await fetch(`/api/ghl/conversations?limit=50&status=${status}`).then(r => r.json());
-    UB.conversations = r.conversations || r.data || [];
+    const params = new URLSearchParams({ limit: 50, shop_id: shopId });
+    if (status === 'unread')    params.set('unread_only',    'true');
+    if (status === 'unreplied') params.set('unreplied_only', 'true');
+    const r = await fetch(`/api/reacher/conversations?${params}`).then(r => r.json());
+    UB.conversations = r.data || [];
     ubRenderList();
   } catch(e) {
     list.innerHTML = `<div style="padding:16px;color:var(--red);font-size:12px">Error: ${e.message}</div>`;
@@ -5218,56 +5112,65 @@ function ubRenderList() {
   if (!list) return;
   const q = UB.searchQuery;
   const convs = q
-    ? UB.conversations.filter(c => (c.fullName||c.contactName||'').toLowerCase().includes(q) || (c.lastMessageBody||'').toLowerCase().includes(q))
+    ? UB.conversations.filter(c => (c.creator_handle||'').toLowerCase().includes(q) || (c.last_message_text||'').toLowerCase().includes(q))
     : UB.conversations;
   if (!convs.length) {
     list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-style:italic">No conversations</div>';
     return;
   }
   list.innerHTML = convs.map(c => {
-    const name    = c.fullName || c.contactName || 'Unknown';
-    const preview = (c.lastMessageBody || '').slice(0, 60);
-    const time    = c.lastMessageDate ? fmtDate(c.lastMessageDate) : '';
-    const unread  = c.unreadCount > 0;
-    const active  = c.id === UB.activeId;
-    // Extract brand tag (client-*)
-    const brandTag = (c.tags || []).find(t => t.startsWith('client-'));
-    const brand    = brandTag ? brandTag.replace('client-','').replace(/-/g,' ') : '';
-    return `<div onclick="ubOpenThread('${c.id}','${x(name)}')"
+    const handle  = c.creator_handle || 'unknown';
+    const preview = (c.last_message_text || '').slice(0, 60);
+    const time    = c.last_message_time ? fmtDate(c.last_message_time) : '';
+    const unread  = (c.unread_count || 0) > 0;
+    const unreplied = c.last_message_sender === 'creator';
+    const active  = handle === UB.activeHandle;
+    const safeHandle = handle.replace(/'/g, "\\'");
+    return `<div onclick="ubOpenThread('${safeHandle}')"
       style="padding:12px 14px;cursor:pointer;border-bottom:1px solid var(--border);
-             background:${active?'rgba(0,242,234,0.07)':'transparent'};
-             transition:background .15s"
-      onmouseover="if('${c.id}'!==UB.activeId)this.style.background='var(--surface2)'"
+             background:${active?'rgba(0,242,234,0.07)':'transparent'};transition:background .15s"
+      onmouseover="if('${safeHandle}'!==UB.activeHandle)this.style.background='var(--surface2)'"
       onmouseout="this.style.background='${active?'rgba(0,242,234,0.07)':'transparent'}'">
       <div style="display:flex;align-items:baseline;justify-content:space-between;gap:6px;margin-bottom:3px">
-        <div style="font-size:13px;font-weight:${unread?'800':'600'};color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${x(name)}</div>
+        <div style="font-size:13px;font-weight:${unread?'800':'600'};color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">@${x(handle.replace(/^@/,''))}</div>
         <div style="font-size:10px;color:var(--muted);white-space:nowrap">${time}</div>
       </div>
       <div style="font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${x(preview)}</div>
-      ${brand ? `<div style="font-size:10px;color:var(--teal);margin-top:3px;text-transform:capitalize">${x(brand)}</div>` : ''}
-      ${unread ? `<span style="display:inline-block;background:var(--teal);color:#000;font-size:10px;font-weight:800;padding:1px 6px;border-radius:8px;margin-top:4px">${c.unreadCount}</span>` : ''}
+      <div style="display:flex;gap:5px;margin-top:4px;flex-wrap:wrap">
+        ${unread ? `<span style="background:var(--teal);color:#000;font-size:10px;font-weight:800;padding:1px 6px;border-radius:8px">${c.unread_count}</span>` : ''}
+        ${unreplied ? `<span style="background:rgba(255,165,0,.18);color:#ffaa00;font-size:10px;font-weight:700;padding:1px 6px;border-radius:8px">needs reply</span>` : ''}
+      </div>
     </div>`;
   }).join('');
 }
 
-async function ubOpenThread(convId, name) {
-  UB.activeId = convId;
-  ubRenderList(); // update active highlight
+async function ubOpenThread(handle) {
+  UB.activeHandle = handle;
+  ubRenderList();
   const header = document.getElementById('ub-thread-header');
   const msgs   = document.getElementById('ub-thread-msgs');
   const reply  = document.getElementById('ub-reply-box');
-  if (header) header.innerHTML = `<div style="font-size:14px;font-weight:800">${x(name)}</div><div style="font-size:11px;color:var(--muted);margin-left:auto">⌘+Enter to send</div>`;
+  if (header) header.innerHTML = `<div style="font-size:14px;font-weight:800">@${x(handle.replace(/^@/,''))}</div><div style="font-size:11px;color:var(--muted);margin-left:auto">⌘+Enter to send</div>`;
   if (msgs)   msgs.innerHTML = '<div style="color:var(--muted);font-style:italic;font-size:13px">Loading messages…</div>';
   if (reply)  reply.style.display = '';
   try {
-    const r = await fetch(`/api/ghl/conversations/${convId}/messages`).then(r => r.json());
-    const messages = r.messages || r.data || [];
+    const shopId = document.getElementById('ub-shop')?.value || '';
+    const encodedHandle = encodeURIComponent(handle);
+    const r = await fetch(`/api/reacher/conversations/${encodedHandle}/messages?shop_id=${shopId}`).then(r => r.json());
+    const messages = r.data || [];
     if (!msgs) return;
     if (!messages.length) { msgs.innerHTML = '<div style="color:var(--muted);font-style:italic;font-size:13px">No messages yet.</div>'; return; }
     msgs.innerHTML = messages.map(m => {
-      const out  = m.direction === 'outbound' || m.userId;
-      const body = m.body || m.message || '';
-      const ts   = m.dateAdded ? fmtDate(m.dateAdded) : '';
+      const out  = m.sender === 'shop';
+      const body = m.text || '';
+      const ts   = m.sent_at ? fmtDate(m.sent_at) : '';
+      // Image message
+      if (m.content_type === 'image' && m.image?.url) {
+        return `<div style="display:flex;flex-direction:column;align-items:${out?'flex-end':'flex-start'};gap:2px">
+          <img src="${m.image.url}" style="max-width:220px;border-radius:10px" loading="lazy">
+          <div style="font-size:10px;color:var(--muted)">${ts}</div>
+        </div>`;
+      }
       return `<div style="display:flex;flex-direction:column;align-items:${out?'flex-end':'flex-start'};gap:2px">
         <div style="max-width:75%;padding:9px 13px;border-radius:${out?'14px 14px 4px 14px':'14px 14px 14px 4px'};
                     background:${out?'var(--teal)':'var(--surface2)'};
@@ -5282,24 +5185,24 @@ async function ubOpenThread(convId, name) {
 }
 
 async function ubSendReply() {
-  if (!UB.activeId) return;
+  if (!UB.activeHandle) return;
   const textarea = document.getElementById('ub-reply-text');
-  const typeEl   = document.getElementById('ub-reply-type');
   const statusEl = document.getElementById('ub-reply-status');
   const message  = textarea?.value?.trim();
   if (!message) return;
   statusEl.textContent = 'Sending…';
   try {
-    await fetch(`/api/ghl/conversations/${UB.activeId}/reply`, {
+    const shopId = document.getElementById('ub-shop')?.value || '';
+    const encodedHandle = encodeURIComponent(UB.activeHandle);
+    const r = await fetch(`/api/reacher/conversations/${encodedHandle}/reply`, {
       method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ message, type: typeEl?.value || 'SMS' })
+      body: JSON.stringify({ message, shop_id: shopId })
     }).then(r => r.json());
+    if (r.ok === false) throw new Error(r.error || 'Send failed');
     textarea.value = '';
     statusEl.textContent = '✓ Sent';
     setTimeout(() => statusEl.textContent = '', 3000);
-    // Reload thread to show sent message
-    const conv = UB.conversations.find(c => c.id === UB.activeId);
-    ubOpenThread(UB.activeId, conv?.fullName || conv?.contactName || 'Contact');
+    ubOpenThread(UB.activeHandle);
   } catch(e) {
     statusEl.textContent = 'Error: ' + e.message;
   }
@@ -7046,6 +6949,134 @@ async function rvEnsureShops() {
       });
     });
   } catch(e) { console.error('rvEnsureShops:', e); }
+}
+
+// ── Client Setup ──────────────────────────────────────────────────────────────
+const _cs = { clients: [], current: null };
+
+async function csEnsureClients() {
+  if (_cs.clients.length) return;
+  try {
+    const r = await fetch('/api/creator-pages');
+    const d = await r.json();
+    _cs.clients = (d.pages || []).filter(p => p.name);
+    const sel = document.getElementById('csClientSel');
+    if (!sel) return;
+    _cs.clients.forEach(c => {
+      if (!sel.querySelector(`option[value="${c.id}"]`)) {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = c.name;
+        sel.appendChild(opt);
+      }
+    });
+    // Also populate rvEnsureShops equivalents for other selectors if needed
+  } catch(e) { console.error('csEnsureClients:', e); }
+}
+
+function csLoadClient() {
+  const sel = document.getElementById('csClientSel');
+  const brandId = sel?.value;
+  const panel = document.getElementById('csPanel');
+  const statusEl = document.getElementById('csClientStatus');
+  const pageLinkEl = document.getElementById('csPageLink');
+  if (!brandId) { panel.style.display = 'none'; return; }
+
+  const client = _cs.clients.find(c => c.id === brandId);
+  _cs.current = client || null;
+  panel.style.display = 'block';
+
+  // Populate fields from existing data
+  const cp = client?.creatorPage || {};
+  const campaigns = cp.campaigns || {};
+  document.getElementById('csCashbackUrl').value    = campaigns.cashbackUrl     || '';
+  document.getElementById('csQuantityUrl').value    = campaigns.quantityVideoUrl || '';
+  document.getElementById('csLeaderboardUrl').value = campaigns.leaderboardUrl  || '';
+  document.getElementById('csCompetitorVideos').value = (cp.competitorVideos || []).join('\n');
+
+  // Status indicators
+  const hasDm = !!cp.dmAutomationId;
+  document.getElementById('csActivateBtn').textContent = hasDm ? '▶ Activate DM Outreach' : '▶ Activate DM Outreach';
+  document.getElementById('csActivateBtn').style.opacity = hasDm ? '1' : '0.4';
+  document.getElementById('csActivateBtn').title = hasDm ? `Automation ID: ${cp.dmAutomationId}` : 'DM automation not yet created — run onboarding pipeline first';
+
+  const hasPage = !!cp.slug;
+  if (hasPage && client?.publicUrl) {
+    pageLinkEl.href = client.publicUrl;
+    pageLinkEl.style.display = 'inline';
+  } else {
+    pageLinkEl.style.display = 'none';
+  }
+  statusEl.textContent = hasPage ? `page: /creators/${cp.slug}` : 'no creator page yet';
+}
+
+async function csSave() {
+  const brandId = _cs.current?.id;
+  if (!brandId) return;
+  const btn = document.getElementById('csSaveBtn');
+  const statusEl = document.getElementById('csActionStatus');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  statusEl.textContent = '';
+  const competitorVideos = (document.getElementById('csCompetitorVideos').value || '')
+    .split('\n').map(s => s.trim()).filter(Boolean);
+  try {
+    const r = await fetch(`/api/brands/${brandId}/campaign-links`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        cashbackUrl:      document.getElementById('csCashbackUrl').value.trim() || null,
+        quantityVideoUrl: document.getElementById('csQuantityUrl').value.trim() || null,
+        leaderboardUrl:   document.getElementById('csLeaderboardUrl').value.trim() || null,
+        competitorVideos,
+      }),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Save failed');
+    // Update local cache
+    const ci = _cs.clients.findIndex(c => c.id === brandId);
+    if (ci !== -1) {
+      if (!_cs.clients[ci].creatorPage) _cs.clients[ci].creatorPage = {};
+      _cs.clients[ci].creatorPage.campaigns = d.campaigns;
+      _cs.clients[ci].creatorPage.competitorVideos = d.competitorVideos;
+    }
+    statusEl.style.color = 'var(--green)';
+    statusEl.textContent = '✓ Saved — creator page updated live';
+  } catch(e) {
+    statusEl.style.color = 'var(--red)';
+    statusEl.textContent = `Error: ${x(e.message)}`;
+  }
+  btn.disabled = false; btn.textContent = '💾 Save & Push to Page';
+}
+
+async function csActivateDm() {
+  const brandId = _cs.current?.id;
+  if (!brandId) return;
+  const btn = document.getElementById('csActivateBtn');
+  const statusEl = document.getElementById('csActionStatus');
+  if (!_cs.current?.creatorPage?.dmAutomationId) {
+    statusEl.style.color = 'var(--gold)';
+    statusEl.textContent = 'No DM automation found — run onboarding pipeline first';
+    return;
+  }
+  btn.disabled = true; btn.textContent = 'Activating…';
+  statusEl.textContent = '';
+  try {
+    const r = await fetch(`/api/brands/${brandId}/activate-dm`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ dailyCap: 20 }),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Activation failed');
+    statusEl.style.color = 'var(--green)';
+    statusEl.textContent = `✓ DM automation activated — 20 creators/day`;
+    btn.textContent = '✓ Active';
+    btn.style.background = 'rgba(0,210,122,0.2)';
+  } catch(e) {
+    statusEl.style.color = 'var(--red)';
+    statusEl.textContent = `Error: ${x(e.message)}`;
+    btn.disabled = false; btn.textContent = '▶ Activate DM Outreach';
+  }
 }
 
 // ── Top Videos ────────────────────────────────────────────────────────────────
@@ -9809,13 +9840,23 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ─── Meeting Intelligence (Lark-based) ───────────────────────────────────────
-const MI = { data: null, view: 'clients' };
+const MI = { data: null, view: 'meetings' };
 
 async function loadMeetingIntel() {
   try {
+    const safeJson = async (url) => {
+      const resp = await apiFetch(url);
+      if (!resp.ok) {
+        const text = await resp.text();
+        let msg = `Server error ${resp.status}`;
+        try { const j = JSON.parse(text); if (j.error) msg = j.error; } catch(_) {}
+        throw new Error(msg);
+      }
+      return resp.json();
+    };
     const [r, status] = await Promise.all([
-      fetch('/api/client-meetings').then(r => r.json()),
-      fetch('/api/lark/oauth/status').then(r => r.json()).catch(() => ({ connected: false })),
+      safeJson('/api/meetings'),
+      safeJson('/api/lark/oauth/status').catch(() => ({ connected: false })),
     ]);
     MI.data = r;
     MI.knownClients = r.knownClients || [];
@@ -9940,7 +9981,7 @@ async function miQuickStatus(meetingId, idx, el) {
     : { toggleStatus: true };
   el.disabled = true;
   try {
-    const r = await fetch(`/api/client-meetings/${meetingId}/action/${idx}`, {
+    const r = await fetch(`/api/meetings/${meetingId}/action/${idx}`, {
       method: 'PATCH', headers: {'Content-Type':'application/json'},
       body: JSON.stringify(body)
     }).then(r => r.json());
@@ -10012,7 +10053,16 @@ function miRenderByClient() {
     .filter(([, actions]) => actions.length > 0)
     .sort((a,b) => b[1].filter(a=>(a.status||'open')!=='closed').length - a[1].filter(a=>(a.status||'open')!=='closed').length);
 
-  if (!entries.length) return miEmptyState();
+  if (!entries.length) {
+    const hasAny = (MI.data?.meetings||[]).length > 0;
+    if (hasAny) return `<div style="text-align:center;padding:60px 0;color:var(--muted)">
+      <div style="font-size:40px;margin-bottom:12px">🏷️</div>
+      <div style="font-size:14px;font-weight:700;margin-bottom:8px">No open client tasks</div>
+      <div style="font-size:12px;margin-bottom:20px">Action items may be tagged "Internal" or already completed.<br>Switch to <strong>Meetings</strong> or <strong>People</strong> view to see everything.</div>
+      <button class="btn btn-ghost" onclick="miSetView('meetings')" style="font-size:12px;padding:7px 14px">→ Switch to Meetings View</button>
+    </div>`;
+    return miEmptyState();
+  }
   return entries.map(([client, actions]) => {
     const counts = { open:0, 'in-progress':0, blocked:0, closed:0 };
     actions.forEach(a => { const s = a.status||(a.done?'closed':'open'); counts[s] = (counts[s]||0)+1; });
@@ -10147,7 +10197,7 @@ function miEmptyState() {
 async function miToggleAction(meetingId, idx) {
   if (idx < 0) return;
   try {
-    const r = await fetch(`/api/client-meetings/${meetingId}/action/${idx}`, { method: 'PATCH' }).then(r=>r.json());
+    const r = await fetch(`/api/meetings/${meetingId}/action/${idx}`, { method: 'PATCH' }).then(r=>r.json());
     if (r.ok) {
       const m = (MI.data?.meetings||[]).find(m=>m.id===meetingId);
       if (m?.actionItems?.[idx]) m.actionItems[idx].done = r.done;
@@ -10175,7 +10225,7 @@ async function miDeleteMeeting(id, btn) {
   if (!confirm('Delete this meeting and all its action items?')) return;
   if (btn) { btn.disabled = true; btn.textContent = '...'; }
   try {
-    await fetch(`/api/client-meetings/${id}`, { method: 'DELETE' });
+    await fetch(`/api/meetings/${id}`, { method: 'DELETE' });
     MI.data.meetings = (MI.data.meetings||[]).filter(m=>m.id!==id);
     loadMeetingIntel(); // reload for fresh aggregates
   } catch(e) {
@@ -10221,7 +10271,7 @@ function miEditAction(meetingId, idx) {
 async function miDeleteAction(meetingId, idx, btn) {
   btn.disabled = true;
   try {
-    const r = await fetch(`/api/client-meetings/${meetingId}/action/${idx}`, { method: 'DELETE' }).then(r => r.json());
+    const r = await fetch(`/api/meetings/${meetingId}/action/${idx}`, { method: 'DELETE' }).then(r => r.json());
     if (r.ok) {
       const m = (MI.data?.meetings||[]).find(m=>m.id===meetingId);
       if (m?.actionItems) m.actionItems.splice(idx, 1);
@@ -10264,7 +10314,7 @@ async function miSaveEditAction() {
   const btn = document.getElementById('miEditSaveBtn');
   btn.disabled = true; btn.textContent = 'Saving…';
   try {
-    const r = await fetch(`/api/client-meetings/${meetingId}/action/${idx}`, {
+    const r = await fetch(`/api/meetings/${meetingId}/action/${idx}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ task, assignee, client, priority, status, notes })
@@ -10285,7 +10335,7 @@ async function miSyncFireflies(btn) {
   btn.disabled = true;
   btn.textContent = '⏳ Syncing…';
   try {
-    const r = await fetch('/api/client-meetings/sync-fireflies', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ days: 30 }) }).then(r => r.json());
+    const r = await fetch('/api/meetings/sync-fireflies', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ days: 30 }) }).then(r => r.json());
     if (r.ok) {
       btn.textContent = r.added > 0 ? `✓ +${r.added} meetings` : '✓ Up to date';
       setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 3000);
@@ -10306,7 +10356,7 @@ async function miImportFireflies(btn) {
   const orig = btn.textContent;
   btn.disabled = true; btn.textContent = '⏳ Importing…';
   try {
-    const r = await fetch('/api/client-meetings/import-fireflies', {
+    const r = await fetch('/api/meetings/import-fireflies', {
       method: 'POST', headers: {'Content-Type':'application/json'},
       body: JSON.stringify({ url: url.trim() })
     }).then(r => r.json());
@@ -10329,7 +10379,7 @@ async function miReanalyze(btn) {
   btn.disabled = true;
   btn.textContent = '⏳ Re-analyzing…';
   try {
-    const r = await fetch('/api/client-meetings/reanalyze', { method: 'POST' }).then(r => r.json());
+    const r = await fetch('/api/meetings/reanalyze', { method: 'POST' }).then(r => r.json());
     if (r.ok) {
       btn.textContent = `✓ Updated ${r.updated}/${r.total}`;
       setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 3000);
@@ -10430,7 +10480,7 @@ async function miSubmitMeeting() {
     .split(',').map(s=>s.trim()).filter(Boolean);
 
   try {
-    const r = await fetch('/api/client-meetings', {
+    const r = await fetch('/api/meetings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

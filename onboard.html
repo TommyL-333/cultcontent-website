@@ -161,6 +161,18 @@ textarea{resize:vertical;min-height:80px}
     </div>
     <div class="row">
       <div class="field">
+        <label>Shopify Store URL <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(if different from website)</span></label>
+        <input type="url" id="shopifyUrl" placeholder="https://yourbrand.myshopify.com">
+        <div class="hint">Leave blank if your website is your Shopify store</div>
+      </div>
+      <div class="field">
+        <label>Amazon Store URL <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(if applicable)</span></label>
+        <input type="url" id="amazonUrl" placeholder="https://amazon.com/stores/YourBrand">
+        <div class="hint">Used to enrich product data when Shopify isn't connected</div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
         <label>First Name <span class="req">*</span></label>
         <input type="text" id="firstName" placeholder="Jane">
       </div>
@@ -299,18 +311,40 @@ textarea{resize:vertical;min-height:80px}
   </div>
 
   <div class="card">
-    <div class="card-title">Affiliate Budgets</div>
-    <div class="card-sub">These help us plan the right campaigns from day one.</div>
-    <div class="row">
+    <div class="card-title">Creative Context</div>
+    <div class="card-sub">This powers the AI-generated creator brief your affiliates receive after signing up. The more detail here, the better the hooks, scripts, and talking points we generate.</div>
+    <div class="row full">
       <div class="field">
-        <label>Monthly Sample Budget <span class="req">*</span></label>
-        <input type="text" id="sampleBudget" placeholder="e.g. 50 units per product">
-        <div class="hint">Units of each product you're willing to send to creators per month</div>
+        <label>Who is your customer? <span class="req">*</span></label>
+        <input type="text" id="targetAudience" placeholder="e.g. Women 25–40, health-conscious, follow wellness TikTok, have tried supplements before without results">
+        <div class="hint">Age range, gender skew, what they watch, what they've already tried</div>
       </div>
+    </div>
+    <div class="row full">
       <div class="field">
-        <label>Monthly Retainer Budget</label>
-        <input type="number" id="retainerBudget" placeholder="e.g. 2000" min="0">
-        <div class="hint">Rough max you'd spend on creator retainers/month — we won't exceed this</div>
+        <label>What's the main problem your product solves? <span class="req">*</span></label>
+        <input type="text" id="mainProblem" placeholder="e.g. Chronic bloating and low energy that doesn't improve with diet alone">
+      </div>
+    </div>
+    <div class="row full">
+      <div class="field">
+        <label>What objections do customers have before buying?</label>
+        <input type="text" id="buyerObjections" placeholder="e.g. 'Is this different from what I've already tried?' / 'Is the price worth it?'">
+        <div class="hint">Common hesitations from reviews, support tickets, or DMs</div>
+      </div>
+    </div>
+    <div class="row full">
+      <div class="field">
+        <label>What results do your customers report?</label>
+        <input type="text" id="customerResults" placeholder="e.g. Less bloating within 2 weeks, steadier energy, fewer afternoon cravings">
+        <div class="hint">Use real customer language — this becomes the script's "after" state</div>
+      </div>
+    </div>
+    <div class="row full">
+      <div class="field">
+        <label>Reference TikTok Videos</label>
+        <textarea id="competitorVideos" rows="3" placeholder="Paste 1–3 TikTok video URLs (one per line) that show content you like or want to compete with"></textarea>
+        <div class="hint">Shown to creators as inspiration examples on their welcome page</div>
       </div>
     </div>
   </div>
@@ -324,12 +358,21 @@ textarea{resize:vertical;min-height:80px}
 <!-- ── STEP 4: Creator Compensation Program ── -->
 <div class="step-pane" id="step-4">
 
-  <!-- Talking points -->
+  <!-- Affiliate budgets -->
   <div class="card" style="margin-bottom:16px">
-    <div class="card-title">Creator Talking Points</div>
-    <div class="card-sub">Key messages for creators to weave into their content. One per line.</div>
-    <div class="field">
-      <textarea id="talkingPoints" rows="5" placeholder="e.g. Before and after results&#10;Show unboxing + first impression&#10;Mention the 30-day money back guarantee"></textarea>
+    <div class="card-title">Affiliate Budgets</div>
+    <div class="card-sub">These help us plan the right campaigns from day one.</div>
+    <div class="row">
+      <div class="field">
+        <label>Monthly Sample Budget <span class="req">*</span></label>
+        <input type="text" id="sampleBudget" placeholder="e.g. 50 units per product">
+        <div class="hint">Units of each product you're willing to send to creators per month</div>
+      </div>
+      <div class="field">
+        <label>Monthly Retainer Budget</label>
+        <input type="number" id="retainerBudget" placeholder="e.g. 2000" min="0">
+        <div class="hint">Rough max you'd spend on creator retainers/month — we won't exceed this</div>
+      </div>
     </div>
   </div>
 
@@ -539,8 +582,9 @@ function validateStep(n) {
   if (n === 2) return yn('tiktokShop','TikTok Shop registered?') && yn('shopifyIntegrated','Shopify integrated?') && yn('tiktokAccountManager','TikTok account manager?') && yn('reviewsImported','Reviews imported?') && yn('fbt','FBT registered?');
   if (n === 3) {
     if (!F.products.length || !F.products.some(p => p.name?.trim())) { alert('Please add at least one product.'); return false; }
-    return req('sampleBudget','Monthly sample budget');
+    return req('targetAudience','Target audience') && req('mainProblem','Main problem solved');
   }
+  if (n === 4) return req('sampleBudget','Monthly sample budget');
   return true;
 }
 function markErr(el, msg) {
@@ -721,6 +765,17 @@ function buildReview() {
       <div class="review-title">Talking Points</div>
       <div class="rv" style="max-width:100%"><div class="rv-val" style="white-space:pre-wrap;font-size:12px">${esc(v('talkingPoints'))}</div></div>
     </div>` : ''}
+    ${(v('targetAudience') || v('mainProblem')) ? `
+    <div class="review-section">
+      <div class="review-title">Creative Context</div>
+      <div class="review-grid">
+        ${v('targetAudience') ? `<div class="rv"><div class="rv-label">Customer</div><div class="rv-val">${esc(v('targetAudience'))}</div></div>` : ''}
+        ${v('mainProblem') ? `<div class="rv"><div class="rv-label">Problem Solved</div><div class="rv-val">${esc(v('mainProblem'))}</div></div>` : ''}
+        ${v('buyerObjections') ? `<div class="rv"><div class="rv-label">Objections</div><div class="rv-val">${esc(v('buyerObjections'))}</div></div>` : ''}
+        ${v('customerResults') ? `<div class="rv"><div class="rv-label">Customer Results</div><div class="rv-val">${esc(v('customerResults'))}</div></div>` : ''}
+        ${v('amazonUrl') ? `<div class="rv"><div class="rv-label">Amazon URL</div><div class="rv-val">${esc(v('amazonUrl'))}</div></div>` : ''}
+      </div>
+    </div>` : ''}
     ${(v('tcCommission') || v('openCommission')) ? `
     <div class="review-section">
       <div class="review-title">Commission Rates</div>
@@ -745,6 +800,10 @@ async function submitForm() {
     phone: v('phone'), email: v('email'), website: v('website'),
     tiktokHandle: v('tiktokHandle'), tiktokShopHandle: v('tiktokShopHandle'),
     brandMission: v('brandMission'),
+    shopifyUrl: v('shopifyUrl'), amazonUrl: v('amazonUrl'),
+    targetAudience: v('targetAudience'), mainProblem: v('mainProblem'),
+    buyerObjections: v('buyerObjections'), customerResults: v('customerResults'),
+    competitorVideos: v('competitorVideos').split('\n').map(s=>s.trim()).filter(Boolean),
     tiktokShop: F.tiktokShop, shopifyIntegrated: F.shopifyIntegrated,
     tiktokAccountManager: F.tiktokAccountManager, reviewsImported: F.reviewsImported,
     fbt: F.fbt, sendSamples: F.sendSamples,
@@ -766,10 +825,7 @@ async function submitForm() {
     });
     const d = await r.json();
     if (d.ok) {
-      document.getElementById('mainForm').style.display = 'none';
-      document.querySelector('.progress-wrap').style.display = 'none';
-      document.getElementById('successState').style.display = 'block';
-      if (d.message) document.getElementById('successMsg').textContent = d.message;
+      window.location.href = 'https://portal.cultcontent.cc/client/login';
     } else throw new Error(d.error || 'Submission failed');
   } catch(e) {
     errEl.textContent = 'Something went wrong — please try again or email hello@cultcontent.cc';

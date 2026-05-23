@@ -33,7 +33,9 @@ if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
 // Public-facing Railway URL — returned in upload responses so Buffer (and browsers) can fetch files
 // without hitting Cloudflare's 100 MB limit.  Override via PUBLIC_BASE_URL env var.
-const PUBLIC_BASE_URL = (process.env.PUBLIC_BASE_URL || process.env.DASHBOARD_URL || 'https://cult-command-center-production.up.railway.app').replace(/\/$/, '');
+const PUBLIC_BASE_URL   = (process.env.PUBLIC_BASE_URL || process.env.DASHBOARD_URL || 'https://cult-command-center-production.up.railway.app').replace(/\/$/, '');
+// Creator-facing pages live on portal.cultcontent.cc (publicly accessible, no CF Access)
+const CREATOR_BASE_URL  = (process.env.CREATOR_BASE_URL || 'https://portal.cultcontent.cc').replace(/\/$/, '');
 
 const app = express();
 
@@ -84,14 +86,23 @@ const ALLOWED_DOMAINS = (process.env.ALLOWED_EMAIL_DOMAINS || 'cultcontent.cc')
 function requireAuth(req, res, next) {
   // Skip auth in local dev (no CF_ACCESS_AUD configured)
   if (!process.env.CF_ACCESS_AUD) return next();
+  if (req.path.startsWith('/api/')) console.log(`[auth] ${req.method} ${req.path} email=${req.headers['cf-access-authenticated-user-email']||'(none)'}`);
 
   const email = req.headers['cf-access-authenticated-user-email'];
   if (!email) {
+    console.log(`[auth] BLOCKED ${req.method} ${req.path} — no CF Access header`);
+    if (req.path.startsWith('/api/')) {
+      // Plain text so both old and new JS parse attempts fail and surface the error
+      return res.status(401).type('text').send('Session expired — please refresh the page');
+    }
     return res.status(401).sendFile(path.join(__dirname, 'dashboard', '401.html'));
   }
 
   const domain = email.split('@')[1]?.toLowerCase();
   if (!ALLOWED_DOMAINS.includes(domain)) {
+    if (req.path.startsWith('/api/')) {
+      return res.status(403).json({ ok: false, error: `Access denied for ${email}` });
+    }
     return res.status(403).send(`Access denied. ${email} is not authorized.`);
   }
 
@@ -395,6 +406,22 @@ app.post('/api/onboard/submit', express.json({ limit: '2mb' }), async (req, res)
   runOnboardingPipeline(req.body).catch(e => console.error('[onboard] pipeline error:', e.message));
 });
 
+// GET /creators — public opportunities gallery (all active brand pages)
+app.get('/creators', (req, res) => {
+  res.set('Content-Type', 'text/html');
+  res.send(renderOpportunitiesPage());
+});
+
+// GET /creators/:brandSlug/welcome — post-signup welcome page
+app.get('/creators/:brandSlug/welcome', (req, res) => {
+  const { brandSlug } = req.params;
+  const brands = loadBrands();
+  const brand  = (brands.clients || []).find(b => b.creatorPage?.slug === brandSlug);
+  if (!brand || !brand.creatorPage) return res.status(404).send('Page not found');
+  res.set('Content-Type', 'text/html');
+  res.send(renderWelcomePage(brand, brand.creatorPage));
+});
+
 // GET /creators/:brandSlug — public creator interest page
 // active flag only hides the page if explicitly set to false; omitted or true = visible
 app.get('/creators/:brandSlug', (req, res) => {
@@ -407,41 +434,200 @@ app.get('/creators/:brandSlug', (req, res) => {
   res.send(renderCreatorPage(brand, brand.creatorPage));
 });
 
+// ─── Auto-send Target Collaboration when a creator applies ────────────────────
+// Fetches the brand's enrolled TikTok Shop affiliate products, builds a
+// single-creator TC automation in Reacher, and fires it off.
+// Runs fire-and-forget — errors are logged but never surface to the creator.
+async function sendCreatorTC(brand, brands, brandIdx, creatorHandle) {
+  const label = `[creator-tc:${brand.name}→@${creatorHandle}]`;
+  const cp = brand.creatorPage || {};
+
+  // Need TikTok Shop connected + Reacher shop + TC commission configured
+  if (!brand.tiktokShopToken?.access_token) {
+    console.log(`${label} skip — no TikTok Shop token`); return;
+  }
+  if (!brand.shopId) {
+    console.log(`${label} skip — no Reacher shopId`); return;
+  }
+  if (!cp.tcCommission) {
+    console.log(`${label} skip — no TC commission configured`); return;
+  }
+  if (!process.env.REACHER_API_KEY) {
+    console.log(`${label} skip — REACHER_API_KEY not set`); return;
+  }
+
+  // 1. Fetch products enrolled in the brand's TikTok Shop affiliate program
+  let products = [];
+  try {
+    const resp = await ttsBrandPost(brand, brands, brandIdx, '/affiliate/seller/202309/products/search', { page_size: 20 });
+    products = resp?.data?.products || [];
+  } catch(e) {
+    console.error(`${label} TTS products fetch error:`, e.message); return;
+  }
+  if (!products.length) {
+    console.log(`${label} skip — no affiliate products enrolled`); return;
+  }
+
+  // 2. Build product list with commission rate (Reacher expects decimal, e.g. 0.10 = 10%)
+  const commissionDecimal = cp.tcCommission / 100;
+  const tcProducts = products.slice(0, 10).map(p => ({
+    product_id:      String(p.product_id || p.id),
+    commission_rate: commissionDecimal,
+  }));
+
+  // 3. Build TC automation payload — single creator, runs for 3 days to ensure delivery
+  const endDate = new Date(Date.now() + 3 * 86_400_000).toISOString().split('T')[0];
+  const handle  = creatorHandle.replace(/^@/, '');
+  const inviteName = (brand.name || 'Collaboration').slice(0, 30);
+  const message = `Hi! We'd love to collaborate with you on ${brand.name}. We offer ${cp.tcCommission}% commission on our TikTok Shop products — click to view the details and accept the invite!`.slice(0, 500);
+
+  const payload = {
+    automation_name: `Creator App TC — ${brand.name} → @${handle}`,
+    shop:            String(brand.shopId),
+    schedule: {
+      Monday_maxCreators: 1, Tuesday_maxCreators: 1, Wednesday_maxCreators: 1,
+      Thursday_maxCreators: 1, Friday_maxCreators: 1, Saturday_maxCreators: 1,
+      Sunday_maxCreators: 1, timezone: 'America/New_York',
+    },
+    target_collab: {
+      invitation_name: inviteName,
+      message,
+      products:        tcProducts,
+      support_contact: { email: brand.loginEmail || 'hello@cultcontent.cc' },
+      content_type:    'no_preference',
+      sample_policy:   { offer_free_samples: false, auto_approve: false },
+    },
+    creators_to_include: { list_upload: [handle] },
+    end_date:     endDate,
+    idempotency_key: require('crypto').randomUUID(),
+  };
+
+  // 4. POST to Reacher
+  try {
+    const rc = reacherClient(brand.shopId);
+    const { data } = await rc.post('/automations/target-collab', payload);
+    console.log(`${label} TC automation created:`, data?.automation_id || data?.id || 'ok');
+  } catch(e) {
+    console.error(`${label} Reacher TC create error:`, e.response?.data || e.message);
+  }
+}
+
 // POST /api/creator-pages/submit — public creator interest form submission
 app.post('/api/creator-pages/submit', express.json(), async (req, res) => {
   try {
-    const { brandSlug, firstName, lastName, email, phone, tiktokHandle, followerRange, gmv, niche, message } = req.body || {};
+    const { brandSlug, name, firstName: fFirst, lastName: fLast, email, phone, tiktokHandle, discordUsername, followerRange, gmv, niche, message } = req.body || {};
+    // Support both "name" (full name) and "firstName"/"lastName" separately
+    let firstName = fFirst || '';
+    let lastName  = fLast  || '';
+    if (name && !firstName) {
+      const parts = name.trim().split(/\s+/);
+      firstName = parts[0];
+      lastName  = parts.slice(1).join(' ') || '';
+    }
     if (!brandSlug || !firstName || !email) return res.status(400).json({ ok: false, error: 'Missing required fields' });
     const brands = loadBrands();
     const brand  = (brands.clients || []).find(b => b.creatorPage?.slug === brandSlug);
     if (!brand) return res.status(404).json({ ok: false, error: 'Brand not found' });
     const tagName = brand.creatorPage?.tagName || `creator-interested-${brandSlug}`;
+    const handle  = (tiktokHandle || '').replace(/^@/, '').trim();
+    const digits  = (phone || '').replace(/\D/g, '');
+    const cleanPhone = digits.length === 10 ? `+1${digits}` : digits ? `+${digits}` : '';
+
     let contactId = null;
     try {
       const sr = await ghl.get('/contacts/', { params: { locationId: CFG.locationId, query: email, limit: 1 } });
       contactId = sr.data?.contacts?.[0]?.id || null;
     } catch(_) {}
-    const payload = { locationId: CFG.locationId, firstName: firstName||'', lastName: lastName||'', email, phone: phone||'', tags: [tagName, 'creator-interest-form'], source: `Creator Interest Page — ${brand.name}` };
+    const payload = { locationId: CFG.locationId, firstName, lastName, email, phone: cleanPhone, tags: [tagName, 'creator-interest-form', 'affiliate', `${brandSlug}-affiliate`], source: `Creator Interest Page — ${brand.name}` };
     if (contactId) {
       await ghl.put(`/contacts/${contactId}`, payload).catch(() => {});
-      await ghl.post(`/contacts/${contactId}/tags`, { tags: [tagName, 'creator-interest-form'] }).catch(() => {});
+      await ghl.post(`/contacts/${contactId}/tags`, { tags: [tagName, 'creator-interest-form', 'affiliate', `${brandSlug}-affiliate`] }).catch(() => {});
     } else {
       const cr = await ghl.post('/contacts/', payload);
       contactId = cr.data?.contact?.id;
     }
     if (contactId) {
       const noteLines = [
-        `TikTok Handle: ${tiktokHandle||'not provided'}`,
-        `Followers: ${followerRange||'not provided'}`,
-        `Monthly GMV: ${gmv||'not provided'}`,
-        `Niche: ${niche||'not provided'}`,
+        `TikTok Handle: ${handle ? '@' + handle : 'not provided'}`,
+        `Discord: ${discordUsername || 'not provided'}`,
+        followerRange ? `Followers: ${followerRange}` : null,
+        gmv           ? `Monthly GMV: ${gmv}` : null,
+        niche         ? `Niche: ${niche}` : null,
         `Interested in brand: ${brand.name}`,
-        message ? `Message: ${message}` : null
+        message ? `Message: ${message}` : null,
       ].filter(Boolean);
       await ghl.post(`/contacts/${contactId}/notes`, { body: noteLines.join('\n'), userId: '' }).catch(() => {});
     }
-    console.log(`[creator-pages] Submission for ${brand.name}: ${email} (${tiktokHandle||'no handle'})`);
-    res.json({ ok: true, contactId });
+
+    // SMS
+    if (contactId && cleanPhone) {
+      axios.post('https://services.leadconnectorhq.com/conversations/messages/outbound', {
+        type: 'SMS',
+        contactId,
+        message: `Welcome to the cult ${firstName}! We are here to serve you, if you need us, just text this number. Access all of our brand opportunities here: ${CREATOR_BASE_URL}/creators`,
+      }, { headers: { Authorization: `Bearer ${process.env.GHL_API_KEY}`, Version: '2021-04-15', 'Content-Type': 'application/json' } })
+      .catch(e => console.error('[creator-pages] SMS error:', e.response?.data || e.message));
+    }
+
+    // Discord role assignment with retry
+    const botToken = process.env.DISCORD_BOT_TOKEN;
+    const guildId  = process.env.DISCORD_GUILD_ID;
+    const roleId   = process.env.DISCORD_CREATOR_ROLE_ID;
+    const cleanDu  = (discordUsername || '').replace(/^@/, '').trim();
+
+    async function tryAssignCreatorRole() {
+      if (!botToken || !guildId || !roleId || !cleanDu) return { ok: false };
+      try {
+        const searchRes = await axios.get(`https://discord.com/api/v10/guilds/${guildId}/members/search`, {
+          params: { query: cleanDu, limit: 10 },
+          headers: { Authorization: `Bot ${botToken}` },
+        });
+        const members = searchRes.data || [];
+        const member  = members.find(m =>
+          m.user.username.toLowerCase() === cleanDu.toLowerCase() ||
+          (m.user.global_name || '').toLowerCase() === cleanDu.toLowerCase()
+        );
+        if (member) {
+          await axios.put(`https://discord.com/api/v10/guilds/${guildId}/members/${member.user.id}/roles/${roleId}`, null, { headers: { Authorization: `Bot ${botToken}` } });
+          return { ok: true };
+        }
+        return { ok: false, error: 'not_found' };
+      } catch(e) { return { ok: false, error: e.message }; }
+    }
+    function scheduleCreatorRoleRetry(attemptsLeft) {
+      if (attemptsLeft <= 0 || !cleanDu) return;
+      setTimeout(async () => {
+        const r = await tryAssignCreatorRole();
+        if (!r.ok && r.error === 'not_found') scheduleCreatorRoleRetry(attemptsLeft - 1);
+      }, 5 * 60 * 1000);
+    }
+    const discordResult = await tryAssignCreatorRole();
+    if (discordResult.error === 'not_found') scheduleCreatorRoleRetry(3);
+
+    // Lark alert
+    const larkText = [
+      `New Creator Signup - ${brand.name}`,
+      `Name: ${firstName}${lastName ? ' ' + lastName : ''} | ${email}${phone ? ' | ' + phone : ''}`,
+      handle        ? `TikTok: @${handle}` : null,
+      discordUsername ? `Discord: @${discordUsername.replace(/^@/,'')}` : null,
+      followerRange ? `Followers: ${followerRange}` : null,
+      gmv           ? `Monthly GMV: ${gmv}` : null,
+      contactId     ? `GHL: https://app.gohighlevel.com/contacts/${contactId}` : null,
+    ].filter(Boolean).join('\n');
+    axios.post(`${CFG.railwayUrl}/command`,
+      { text: larkText, context: 'Creator Signup', source: 'Creator Landing Page' },
+      { timeout: 10000 }
+    ).catch(e => console.error('[creator-pages] Lark notify error:', e.message));
+
+    // Auto-send TC invite (fire-and-forget)
+    if (handle) {
+      const brandIdx = brands.clients.findIndex(b => b.creatorPage?.slug === brandSlug);
+      sendCreatorTC(brand, brands, brandIdx, handle)
+        .catch(e => console.error('[creator-pages] TC fire error:', e.message));
+    }
+
+    console.log(`[creator-pages] Submission for ${brand.name}: ${email} (${handle ? '@'+handle : 'no handle'})`);
+    res.json({ ok: true, contactId, welcomeUrl: `/creators/${brandSlug}/welcome` });
   } catch(e) {
     console.error('[creator-pages/submit]', e.response?.data || e.message);
     res.status(500).json({ ok: false, error: 'Submission failed — please try again' });
@@ -1213,6 +1399,8 @@ const clientLoginLimiter = rateLimit({
 function requireClientSession(req, res, next) {
   if (!req.session?.clientBrandId) {
     if (req.path.startsWith('/api/')) return res.status(401).json({ error: 'Not authenticated' });
+    // Portal admin trying to reach /client pages without impersonating
+    if (req.session?.isPortalAdmin) return res.redirect('/portal-admin/clients');
     return res.redirect('/client');
   }
   next();
@@ -1279,6 +1467,84 @@ app.post('/client/set-password', clientLoginLimiter, express.json(), async (req,
 // POST /client/logout
 app.post('/client/logout', (req, res) => {
   req.session.destroy(() => res.json({ ok: true }));
+});
+
+// ─── Portal Admin ──────────────────────────────────────────────────────────────
+// Password stored in env PORTAL_ADMIN_PASSWORD. No CF Access needed.
+
+function requirePortalAdmin(req, res, next) {
+  if (!req.session?.isPortalAdmin) {
+    if (req.path.startsWith('/api/') || req.path.startsWith('/portal-admin/clients') || req.path.startsWith('/portal-admin/impersonate')) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+    return res.redirect('/portal-admin');
+  }
+  next();
+}
+
+// GET /portal-admin — login page
+app.get('/portal-admin', (req, res) => {
+  if (req.session?.isPortalAdmin) return res.redirect('/portal-admin/clients');
+  res.sendFile(path.join(__dirname, 'dashboard', 'portal-admin-login.html'));
+});
+
+// POST /portal-admin/login
+app.post('/portal-admin/login', express.json(), (req, res) => {
+  const adminPw = process.env.PORTAL_ADMIN_PASSWORD;
+  if (!adminPw) return res.status(500).json({ error: 'Admin password not configured.' });
+  if (!req.body?.password || req.body.password !== adminPw) {
+    return res.status(401).json({ error: 'Incorrect password.' });
+  }
+  req.session.isPortalAdmin = true;
+  res.json({ ok: true });
+});
+
+// GET /portal-admin/clients — returns client list as JSON (admin only)
+app.get('/portal-admin/clients', requirePortalAdmin, (req, res) => {
+  // If Accept is text/html, serve the admin page
+  if (req.headers.accept?.includes('text/html')) {
+    return res.sendFile(path.join(__dirname, 'dashboard', 'portal-admin.html'));
+  }
+  const brands = loadBrands();
+  const clients = (brands.clients || []).map(b => ({
+    id:              b.id,
+    name:            b.name,
+    email:           b.loginEmail || '',
+    hasPassword:     !!b.passwordHash,
+    tiktokConnected: !!(b.tiktokShopToken?.access_token),
+    bufferConnected: !!b.bufferConnected,
+    arcadsConnected: !!b.arcadsConnected,
+    storistaConnected: !!b.storistaConnected,
+    onboardedAt:     b.onboardedAt || null,
+  }));
+  res.json({ ok: true, clients });
+});
+
+// POST /portal-admin/impersonate — sets session as a client brand
+app.post('/portal-admin/impersonate', requirePortalAdmin, express.json(), (req, res) => {
+  const { brandId } = req.body || {};
+  if (!brandId) return res.status(400).json({ error: 'brandId required' });
+  const brands = loadBrands();
+  const brand = (brands.clients || []).find(b => b.id === brandId);
+  if (!brand) return res.status(404).json({ error: 'Brand not found' });
+  req.session.clientBrandId       = brand.id;
+  req.session.isPortalAdmin       = true; // keep admin flag
+  req.session.adminImpersonating  = brand.name;
+  res.json({ ok: true });
+});
+
+// POST /portal-admin/exit — stop impersonating, back to admin client list
+app.post('/portal-admin/exit', (req, res) => {
+  const wasAdmin = req.session?.isPortalAdmin;
+  req.session.clientBrandId      = undefined;
+  req.session.adminImpersonating = undefined;
+  if (wasAdmin) req.session.isPortalAdmin = true;
+  res.json({ ok: true });
+});
+
+// POST /portal-admin/logout
+app.post('/portal-admin/logout', (req, res) => {
+  req.session.destroy(() => res.redirect('/portal-admin'));
 });
 
 // Human-readable labels for Growth Partners task keys
@@ -1433,9 +1699,15 @@ app.get('/api/client/me', requireClientSession, async (req, res) => {
         estimatedCommission: brand.estimatedCommission || 0,
         referrals: brand.referrals || [],
         affiliatePageUrl: brand.affiliatePageUrl || '',
+        connections: {
+          bufferConnected:   !!brand.bufferConnected,
+          arcadsConnected:   !!brand.arcadsConnected,
+          storistaConnected: !!brand.storistaConnected,
+        },
       },
       tiktok: { connected: tiktokConnected, stats: tiktokStats, funnel: tiktokFunnel },
       tasks,
+      adminImpersonating: req.session.adminImpersonating || null,
     });
   } catch (e) {
     const brands = loadBrands();
@@ -1459,6 +1731,11 @@ app.patch('/api/client/settings', requireClientSession, express.json(), async (r
       brand.creatorPage.incentives = compensation;
     }
     if (affiliatePageUrl !== undefined) brand.affiliatePageUrl = affiliatePageUrl || '';
+    // Integration keys — store them, never return them in plain text
+    if (req.body.bufferToken)     { brand.bufferToken     = req.body.bufferToken;     brand.bufferConnected = true; }
+    if (req.body.arcadsClientId)  { brand.arcadsClientId  = req.body.arcadsClientId; }
+    if (req.body.arcadsApiKey)    { brand.arcadsApiKey     = req.body.arcadsApiKey;    brand.arcadsConnected = true; }
+    if (req.body.storistaApiKey)  { brand.storistaApiKey  = req.body.storistaApiKey;  brand.storistaConnected = true; }
     brands.clients[idx] = brand;
     saveBrands(brands);
     res.json({ ok: true });
@@ -1571,7 +1848,9 @@ app.post('/client/admin', express.json(), async (req, res) => {
 // GET /api/client/buffer/channels
 app.get('/api/client/buffer/channels', requireClientSession, async (req, res) => {
   try {
-    const token = process.env.BUFFER_ACCESS_TOKEN;
+    const brands = loadBrands();
+    const brand = brands.clients.find(b => b.id === req.session.clientBrandId);
+    const token = brand?.bufferToken || process.env.BUFFER_ACCESS_TOKEN;
     const orgId = process.env.BUFFER_ORG_ID || '69d6ddee1fcceb5bb1faa168';
     const query = `query { organization(id:"${orgId}") { channels { id name service serviceId avatarUrl } } }`;
     const { data } = await axios.post('https://api.buffer.com/graphql',
@@ -1587,7 +1866,9 @@ app.post('/api/client/buffer/post-to-channels', requireClientSession, express.js
   try {
     const { channelIds = [], text, mediaUrl, scheduledAt } = req.body || {};
     if (!channelIds.length) return res.status(400).json({ error: 'No channels selected' });
-    const token = process.env.BUFFER_ACCESS_TOKEN;
+    const brands = loadBrands();
+    const brand = brands.clients.find(b => b.id === req.session.clientBrandId);
+    const token = brand?.bufferToken || process.env.BUFFER_ACCESS_TOKEN;
     const results = [];
     for (const channelId of channelIds) {
       const mode = scheduledAt ? 'customScheduled' : 'shareNow';
@@ -1608,8 +1889,10 @@ app.post('/api/client/buffer/post-to-channels', requireClientSession, express.js
 // GET /api/client/arcads/stats
 app.get('/api/client/arcads/stats', requireClientSession, async (req, res) => {
   try {
-    const appKey = process.env.ARCADS_APP_KEY || process.env.ARCADS_CLIENT_ID;
-    const appSecret = process.env.ARCADS_API_KEY;
+    const brands = loadBrands();
+    const brand = brands.clients.find(b => b.id === req.session.clientBrandId);
+    const appKey    = brand?.arcadsClientId  || process.env.ARCADS_APP_KEY || process.env.ARCADS_CLIENT_ID;
+    const appSecret = brand?.arcadsApiKey    || process.env.ARCADS_API_KEY;
     const auth = 'Basic ' + Buffer.from(`${appKey}:${appSecret}`).toString('base64');
     const base = 'https://external-api.arcads.ai';
     const folderId = process.env.ARCADS_FOLDER_ID || 'cb163f1f-6863-47a2-b984-2f5d384fff1a';
@@ -1632,8 +1915,10 @@ app.get('/api/client/arcads/stats', requireClientSession, async (req, res) => {
 // GET /api/client/arcads/actors
 app.get('/api/client/arcads/actors', requireClientSession, async (req, res) => {
   try {
-    const appKey = process.env.ARCADS_APP_KEY || process.env.ARCADS_CLIENT_ID;
-    const appSecret = process.env.ARCADS_API_KEY;
+    const brands = loadBrands();
+    const brand = brands.clients.find(b => b.id === req.session.clientBrandId);
+    const appKey    = brand?.arcadsClientId  || process.env.ARCADS_APP_KEY || process.env.ARCADS_CLIENT_ID;
+    const appSecret = brand?.arcadsApiKey    || process.env.ARCADS_API_KEY;
     const auth = 'Basic ' + Buffer.from(`${appKey}:${appSecret}`).toString('base64');
     const productId = process.env.ARCADS_PRODUCT_ID || '3cd32041-cc56-4588-b179-cbb55c7dd263';
     const { data } = await axios.get(`https://external-api.arcads.ai/api/v1/situations`, {
@@ -1649,8 +1934,10 @@ app.post('/api/client/arcads/scripts', requireClientSession, express.json(), asy
   try {
     const { name, text, situationIds = [], actorCount = 3 } = req.body || {};
     if (!name || !text) return res.status(400).json({ error: 'name and text required' });
-    const appKey = process.env.ARCADS_APP_KEY || process.env.ARCADS_CLIENT_ID;
-    const appSecret = process.env.ARCADS_API_KEY;
+    const brands = loadBrands();
+    const brand = brands.clients.find(b => b.id === req.session.clientBrandId);
+    const appKey    = brand?.arcadsClientId  || process.env.ARCADS_APP_KEY || process.env.ARCADS_CLIENT_ID;
+    const appSecret = brand?.arcadsApiKey    || process.env.ARCADS_API_KEY;
     const auth = 'Basic ' + Buffer.from(`${appKey}:${appSecret}`).toString('base64');
     const base = 'https://external-api.arcads.ai';
     const productId = process.env.ARCADS_PRODUCT_ID || '3cd32041-cc56-4588-b179-cbb55c7dd263';
@@ -1809,6 +2096,172 @@ app.get('/api/tiktokshop/callback', async (req, res) => {
   }
 });
 
+// GET /api/client/storista/accounts
+app.get('/api/client/storista/accounts', requireClientSession, async (req, res) => {
+  try {
+    const brands = loadBrands();
+    const brand = brands.clients.find(b => b.id === req.session.clientBrandId);
+    const apiKey = brand?.storistaApiKey || process.env.STORISTA_API_KEY;
+    if (!apiKey) return res.json({ ok: true, accounts: [] });
+    const { data } = await axios.get('https://api-v2.storista.io/v1/tiktok/accounts',
+      { headers: { Authorization: `Bearer ${apiKey}` } });
+    res.json({ ok: true, accounts: data?.accounts || data || [] });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// GET /api/client/storista/products/:account
+app.get('/api/client/storista/products/:account', requireClientSession, async (req, res) => {
+  try {
+    const brands = loadBrands();
+    const brand = brands.clients.find(b => b.id === req.session.clientBrandId);
+    const apiKey = brand?.storistaApiKey || process.env.STORISTA_API_KEY;
+    if (!apiKey) return res.json({ ok: true, products: [] });
+    const { data } = await axios.get(`https://api-v2.storista.io/v1/tiktok/${req.params.account}/products`,
+      { headers: { Authorization: `Bearer ${apiKey}` } });
+    res.json({ ok: true, products: data?.products || data || [] });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ─── Creator Onboarding (PUBLIC — called from cultcontent.cc) ────────────────
+// CORS preflight
+app.options('/api/creator-onboard', (req, res) => {
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type');
+  res.sendStatus(204);
+});
+
+app.post('/api/creator-onboard', express.json(), async (req, res) => {
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type');
+
+  const { name = '', tiktokHandle = '', email = '', phone = '', discordUsername = '' } = req.body || {};
+  if (!name.trim() || !email.trim() || !phone.trim()) {
+    return res.status(400).json({ ok: false, error: 'Name, email and phone are required.' });
+  }
+
+  const nameParts = name.trim().split(/\s+/);
+  const firstName  = nameParts[0];
+  const lastName   = nameParts.slice(1).join(' ') || '';
+  const handle     = tiktokHandle.replace(/^@/, '').trim();
+  // Normalize phone — strip non-digits, prepend +1 if 10 digits
+  const digits     = phone.replace(/\D/g, '');
+  const cleanPhone = digits.length === 10 ? `+1${digits}` : `+${digits}`;
+
+  const results = { ghl: null, sms: null, discord: null };
+  let contactId = null;
+
+  // 1 — Create GHL contact
+  try {
+    const payload = {
+      firstName, lastName, email,
+      phone: cleanPhone,
+      tags: ['affiliate'],
+      locationId: process.env.GHL_LOC_ID,
+    };
+    if (handle) payload.customFields = [{ key: 'tiktok_handle', field_value: `@${handle}` }];
+
+    const ghlRes = await axios.post('https://services.leadconnectorhq.com/contacts/', payload, {
+      headers: { Authorization: `Bearer ${process.env.GHL_API_KEY}`, Version: '2021-04-15', 'Content-Type': 'application/json' },
+    });
+    contactId = ghlRes.data?.contact?.id;
+    results.ghl = { ok: true, contactId };
+  } catch (e) {
+    results.ghl = { ok: false, error: e.response?.data || e.message };
+    console.error('[creator-onboard] GHL error:', e.response?.data || e.message);
+  }
+
+  // 2 — Send GHL SMS
+  if (contactId) {
+    try {
+      await axios.post('https://services.leadconnectorhq.com/conversations/messages/outbound', {
+        type: 'SMS',
+        contactId,
+        message: `Welcome to the cult ${firstName}! We are here to serve you, if you need us, just text this number. Access all of our brand opportunities here: ${CREATOR_BASE_URL}/creators`,
+      }, {
+        headers: { Authorization: `Bearer ${process.env.GHL_API_KEY}`, Version: '2021-04-15', 'Content-Type': 'application/json' },
+      });
+      results.sms = { ok: true };
+    } catch (e) {
+      results.sms = { ok: false, error: e.response?.data || e.message };
+      console.error('[creator-onboard] SMS error:', e.response?.data || e.message);
+    }
+  }
+
+  // 3 — Discord role assignment (with automatic retry every 5min, up to 3 attempts)
+  const botToken = process.env.DISCORD_BOT_TOKEN;
+  const guildId  = process.env.DISCORD_GUILD_ID;
+  const roleId   = process.env.DISCORD_CREATOR_ROLE_ID;
+  const cleanDu  = discordUsername.replace(/^@/, '').trim();
+
+  async function tryAssignDiscordRole() {
+    if (!botToken || !guildId || !roleId || !cleanDu) return { ok: false, error: botToken ? 'No Discord username provided' : 'Discord not configured' };
+    try {
+      const searchRes = await axios.get(`https://discord.com/api/v10/guilds/${guildId}/members/search`, {
+        params: { query: cleanDu, limit: 10 },
+        headers: { Authorization: `Bot ${botToken}` },
+      });
+      const members = searchRes.data || [];
+      const member  = members.find(m =>
+        m.user.username.toLowerCase()    === cleanDu.toLowerCase() ||
+        (m.user.global_name || '').toLowerCase() === cleanDu.toLowerCase()
+      );
+      if (member) {
+        await axios.put(
+          `https://discord.com/api/v10/guilds/${guildId}/members/${member.user.id}/roles/${roleId}`,
+          null,
+          { headers: { Authorization: `Bot ${botToken}` } }
+        );
+        return { ok: true, userId: member.user.id, username: member.user.username };
+      }
+      return { ok: false, error: 'not_found' };
+    } catch (e) {
+      return { ok: false, error: e.response?.data?.message || e.message };
+    }
+  }
+
+  function scheduleDiscordRetry(attemptsLeft) {
+    if (attemptsLeft <= 0 || !cleanDu) return;
+    setTimeout(async () => {
+      console.log(`[creator-onboard] Discord retry for ${cleanDu}, attempts left: ${attemptsLeft}`);
+      const r = await tryAssignDiscordRole();
+      if (r.ok) {
+        console.log(`[creator-onboard] Discord role assigned on retry for ${cleanDu}`);
+      } else if (r.error === 'not_found') {
+        scheduleDiscordRetry(attemptsLeft - 1);
+      } else {
+        console.error(`[creator-onboard] Discord retry failed for ${cleanDu}:`, r.error);
+      }
+    }, 5 * 60 * 1000); // 5 minutes
+  }
+
+  results.discord = await tryAssignDiscordRole();
+  if (results.discord.error === 'not_found') {
+    results.discord.error = 'Username not found in server — will retry in 5 minutes.';
+    scheduleDiscordRetry(3); // retry up to 3 more times (5, 10, 15 min)
+  }
+
+  // 4 — Lark alert
+  try {
+    const larkToken = await getLarkToken();
+    const discordStr = discordUsername ? `@${discordUsername.replace(/^@/,'')}` : 'not provided';
+    const tiktokStr  = handle ? `@${handle}` : 'not provided';
+    await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
+      receive_id: process.env.LARK_ALERT_CHAT_ID,
+      msg_type: 'text',
+      content: JSON.stringify({ text:
+        `New Creator Signup\nName: ${name}\nTikTok: ${tiktokStr}\nEmail: ${email}\nPhone: ${phone}\nDiscord: ${discordStr}`
+      }),
+    }, { headers: { Authorization: `Bearer ${larkToken}`, 'Content-Type': 'application/json' } });
+  } catch(e) {
+    console.error('[creator-onboard] Lark error:', e.response?.data || e.message);
+  }
+
+  const discordInvite = process.env.DISCORD_INVITE_URL || 'https://discord.gg/cultcontent';
+  res.json({ ok: true, discordInvite, results });
+});
+
 app.use(requireAuth); // all other routes require auth in production
 
 // POST /api/client/admin/set-password — CF Access protected; sets/resets a client's login password
@@ -1873,6 +2326,14 @@ const ghl = axios.create({
     Version: '2021-07-28',
   },
 });
+
+// ─── Reacher API client ───────────────────────────────────────────────────────
+const REACHER_BASE = 'https://api.reacherapp.com/public/v1';
+function reacherClient(shopId) {
+  const headers = { 'x-api-key': process.env.REACHER_API_KEY || '', 'Content-Type': 'application/json' };
+  if (shopId) headers['x-shop-id'] = String(shopId);
+  return axios.create({ baseURL: REACHER_BASE, timeout: 20000, headers });
+}
 
 // ─── Simple TTL cache ──────────────────────────────────────────────────────────
 const cache = new Map();
@@ -3215,6 +3676,50 @@ app.get('/api/skool/events', async (req, res) => {
   }
 });
 
+// ─── Reacher Creator Messages — proxied through Railway (holds REACHER_API_KEY)
+// GET /api/reacher/conversations?shop_id=&unread_only=&unreplied_only=&limit=&offset=
+app.get('/api/reacher/conversations', async (req, res) => {
+  try {
+    const { shop_id, unread_only, unreplied_only, limit = 50, offset = 0 } = req.query;
+    if (!shop_id) return res.json({ data: [], total_count: 0, has_more: false });
+    const params = new URLSearchParams({ limit, offset });
+    if (unread_only    === 'true') params.set('unread_only',    'true');
+    if (unreplied_only === 'true') params.set('unreplied_only', 'true');
+    const { data } = await axios.get(`${CFG.railwayUrl}/affiliate/shops/${shop_id}/conversations?${params}`, { timeout: 15000 });
+    res.json(data);
+  } catch(e) { res.status(500).json({ ok: false, error: e.response?.data || e.message }); }
+});
+
+// GET /api/reacher/conversations/:handle/messages?shop_id=&page=1
+app.get('/api/reacher/conversations/:handle/messages', async (req, res) => {
+  try {
+    const { shop_id, page = 1 } = req.query;
+    const handle = req.params.handle;
+    if (!shop_id) return res.status(400).json({ ok: false, error: 'shop_id required' });
+    const { data } = await axios.get(
+      `${CFG.railwayUrl}/affiliate/shops/${shop_id}/conversations/${encodeURIComponent(handle)}/messages?page=${page}`,
+      { timeout: 15000 }
+    );
+    res.json(data);
+  } catch(e) { res.status(500).json({ ok: false, error: e.response?.data || e.message }); }
+});
+
+// POST /api/reacher/conversations/:handle/reply  { message, shop_id }
+app.post('/api/reacher/conversations/:handle/reply', express.json(), async (req, res) => {
+  try {
+    const handle  = req.params.handle;
+    const { message, shop_id } = req.body || {};
+    if (!message?.trim()) return res.status(400).json({ ok: false, error: 'message required' });
+    if (!shop_id)         return res.status(400).json({ ok: false, error: 'shop_id required' });
+    const { data } = await axios.post(
+      `${CFG.railwayUrl}/affiliate/shops/${shop_id}/conversations/${encodeURIComponent(handle)}/reply`,
+      { message: message.trim() },
+      { timeout: 15000 }
+    );
+    res.json({ ok: true, ...data });
+  } catch(e) { res.status(500).json({ ok: false, error: e.response?.data || e.message }); }
+});
+
 // ─── Stubs (OAuth integrations — connect later) ────────────────────────────────
 app.get('/api/gmail/stats',  (_, res) => res.json({ connected: false }));
 app.get('/api/gcal/events',  (_, res) => res.json({ connected: false }));
@@ -4393,10 +4898,11 @@ Rules:
 - Use "Internal" ONLY for purely internal Cult Content tasks with no external person/brand`;
 }
 
-// GET /api/client-meetings  — all meetings + aggregated intel
-app.get('/api/client-meetings', (req, res) => {
+// GET /api/meetings  — all meetings + aggregated intel
+app.get('/api/meetings', (req, res) => {
   const data = loadClientMeetings();
   const meetings = data.meetings || [];
+  console.log(`[client-meetings] GET — ${meetings.length} meeting(s) in file`);
   const brandsData = loadBrands();
   const knownClients = (brandsData.clients || []).map(c => c.name || c.id).filter(Boolean);
 
@@ -4428,8 +4934,8 @@ app.get('/api/client-meetings', (req, res) => {
   res.json({ ok: true, meetings: meetings.slice(0, 100), byClient, byPerson, recurringThemes, knownClients, teamMembers });
 });
 
-// POST /api/client-meetings  — add a meeting with AI analysis
-app.post('/api/client-meetings', async (req, res) => {
+// POST /api/meetings  — add a meeting with AI analysis
+app.post('/api/meetings', async (req, res) => {
   try {
     const { date, client, participants, notes, title, duration } = req.body;
     if (!notes) return res.status(400).json({ ok: false, error: 'notes required' });
@@ -4521,8 +5027,8 @@ Return only the JSON, no explanation.`
   }
 });
 
-// DELETE /api/client-meetings/:id
-app.delete('/api/client-meetings/:id', (req, res) => {
+// DELETE /api/meetings/:id
+app.delete('/api/meetings/:id', (req, res) => {
   const data = loadClientMeetings();
   const before = data.meetings.length;
   data.meetings = data.meetings.filter(m => m.id !== req.params.id);
@@ -4531,10 +5037,10 @@ app.delete('/api/client-meetings/:id', (req, res) => {
   res.json({ ok: true });
 });
 
-// PATCH /api/client-meetings/:id/action/:idx  — edit fields or quick status toggle
+// PATCH /api/meetings/:id/action/:idx  — edit fields or quick status toggle
 // Edit:   body with any of { task, assignee, client, priority, status, notes }
 // Toggle: body with { toggleStatus: true } — cycles open→in-progress→closed
-app.patch('/api/client-meetings/:id/action/:idx', async (req, res) => {
+app.patch('/api/meetings/:id/action/:idx', async (req, res) => {
   const data = loadClientMeetings();
   const m = data.meetings.find(m => m.id === req.params.id);
   if (!m) return res.status(404).json({ ok: false, error: 'Not found' });
@@ -4586,8 +5092,8 @@ app.patch('/api/client-meetings/:id/action/:idx', async (req, res) => {
   res.json({ ok: true, done: ai.done, actionItem: ai });
 });
 
-// DELETE /api/client-meetings/:id/action/:idx — remove a single action item
-app.delete('/api/client-meetings/:id/action/:idx', (req, res) => {
+// DELETE /api/meetings/:id/action/:idx — remove a single action item
+app.delete('/api/meetings/:id/action/:idx', (req, res) => {
   const data = loadClientMeetings();
   const m = data.meetings.find(m => m.id === req.params.id);
   if (!m) return res.status(404).json({ ok: false, error: 'Not found' });
@@ -4598,8 +5104,8 @@ app.delete('/api/client-meetings/:id/action/:idx', (req, res) => {
   res.json({ ok: true });
 });
 
-// POST /api/client-meetings/reanalyze — re-run AI on all stored meetings with current client list
-app.post('/api/client-meetings/reanalyze', requireAuth, async (req, res) => {
+// POST /api/meetings/reanalyze — re-run AI on all stored meetings with current client list
+app.post('/api/meetings/reanalyze', requireAuth, async (req, res) => {
   try {
     const data = loadClientMeetings();
     const _brandsRe = loadBrands();
@@ -4659,9 +5165,9 @@ Return JSON only — no explanation:
   }
 });
 
-// POST /api/client-meetings/import-fireflies — import a single transcript by Fireflies URL or ID
+// POST /api/meetings/import-fireflies — import a single transcript by Fireflies URL or ID
 // e.g. https://app.fireflies.ai/view/Trusted-Rituals-Onboarding::01KRGPSQ4XHFNB1KZY0Z8B3EB5
-app.post('/api/client-meetings/import-fireflies', requireAuth, async (req, res) => {
+app.post('/api/meetings/import-fireflies', requireAuth, async (req, res) => {
   try {
     const { url } = req.body || {};
     if (!url) return res.status(400).json({ ok: false, error: 'url required' });
@@ -4732,8 +5238,8 @@ app.post('/api/client-meetings/import-fireflies', requireAuth, async (req, res) 
   }
 });
 
-// POST /api/client-meetings/sync-fireflies — pull recent Fireflies transcripts into Meeting Intel
-app.post('/api/client-meetings/sync-fireflies', requireAuth, async (req, res) => {
+// POST /api/meetings/sync-fireflies — pull recent Fireflies transcripts into Meeting Intel
+app.post('/api/meetings/sync-fireflies', requireAuth, async (req, res) => {
   try {
     const keys = [process.env.FIREFLIES_API_KEY, process.env.FIREFLIES_API_KEY_2].filter(Boolean);
     if (!keys.length) return res.status(400).json({ ok: false, error: 'FIREFLIES_API_KEY not set' });
@@ -7368,7 +7874,44 @@ async function scrapeShopify(websiteUrl) {
       html.match(/<title>([^<]+)<\/title>/i)?.[1]?.replace(/\s*[\|—–-].*$/, '').trim() || '';
     result.brand.ogImage =
       html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)?.[1] || '';
+    result._html = html; // used by color extractor below, deleted after
   } catch(e) { console.log(`[shopify] homepage scrape failed for ${domain}:`, e.message); }
+
+  // Retry homepage without SSL verification (handles expired certs)
+  if (!result.brand.metaDescription && !result.brand.ogTitle) {
+    try {
+      const https = require('https');
+      const r2 = await axios.get(base, { timeout: 12000, headers: { 'User-Agent': ua }, httpsAgent: new https.Agent({ rejectUnauthorized: false }) });
+      const html = r2.data || '';
+      result.brand.metaDescription =
+        html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']{10,}?)["']/i)?.[1] ||
+        html.match(/<meta[^>]+content=["']([^"']{10,}?)["'][^>]+name=["']description["']/i)?.[1] ||
+        html.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']{10,}?)["']/i)?.[1] || '';
+      result.brand.ogTitle =
+        html.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i)?.[1] ||
+        html.match(/<title>([^<]+)<\/title>/i)?.[1]?.replace(/\s*[\|—–-].*$/, '').trim() || '';
+      result.brand.ogImage =
+        html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)?.[1] || '';
+      result._html = html;
+      console.log(`[shopify] homepage retried without SSL verification for ${domain}`);
+    } catch(e2) { console.log(`[shopify] homepage retry also failed for ${domain}:`, e2.message); }
+  }
+
+  // Extract brand primary/button color from theme CSS variables
+  if (result._html) {
+    const colorPatterns = [
+      /--color-button[^:]*:\s*(#[0-9a-fA-F]{3,6})/i,
+      /--colors-accent-[12][^:]*:\s*(#[0-9a-fA-F]{3,6})/i,
+      /--color-accent[^:]*:\s*(#[0-9a-fA-F]{3,6})/i,
+      /--color-primary[^:]*:\s*(#[0-9a-fA-F]{3,6})/i,
+      /--c-theme-button[^:]*:\s*(#[0-9a-fA-F]{3,6})/i,
+    ];
+    for (const pat of colorPatterns) {
+      const m = result._html.match(pat);
+      if (m) { result.brand.primaryColor = m[1]; break; }
+    }
+    delete result._html;
+  }
 
   return result;
 }
@@ -7377,18 +7920,66 @@ function buildIncentiveSummary(compensation) {
   if (!compensation) return '';
   const parts = [];
   const ordinals = ['1st','2nd','3rd','4th','5th','6th','7th','8th','9th','10th'];
-  if (compensation.cashback?.enabled)
-    parts.push(`$${compensation.cashback.amount} cashback per video`);
-  if (compensation.leaderboard?.enabled) {
-    const places = compensation.leaderboard.places || [];
-    const tiers  = places.map((amt, i) => `${ordinals[i]||i+1+'th'}: $${amt}`).join(', ');
-    parts.push(`Leaderboard challenge (min $${compensation.leaderboard.threshold} GMV) — ${tiers}`);
+  if (compensation.cashback?.enabled) {
+    const amt = compensation.cashback.target || compensation.cashback.amount;
+    if (amt) parts.push(`$${amt} cashback when you hit $${amt} GMV`);
   }
-  if (compensation.volumeBonus?.enabled)
-    parts.push(`$${compensation.volumeBonus.bonus} bonus for ${compensation.volumeBonus.quantity}+ videos`);
+  if (compensation.leaderboard?.enabled) {
+    const places = compensation.leaderboard.places || compensation.leaderboard.prizes || [];
+    const tiers  = places.map((amt, i) => `${ordinals[i]||i+1+'th'}: $${amt}`).join(', ');
+    parts.push(`Leaderboard challenge${compensation.leaderboard.threshold ? ` (min $${compensation.leaderboard.threshold} GMV)` : ''} — ${tiers}`);
+  }
+  if (compensation.volumeBonus?.enabled) {
+    const bonus = compensation.volumeBonus.bonus || compensation.volumeBonus.bonusAmount;
+    const qty   = compensation.volumeBonus.quantity || compensation.volumeBonus.videoCount;
+    parts.push(`$${bonus} bonus for ${qty}+ videos`);
+  }
   if (compensation.retainer?.enabled)
     parts.push(`Creator retainer: $${compensation.retainer.budget}/mo for ${compensation.retainer.postsRequired} posts`);
   return parts.join('\n• ');
+}
+
+// Scrape Amazon brand store or product page for product names, descriptions, prices
+async function scrapeAmazonProducts(amazonUrl) {
+  if (!amazonUrl) return { brand: {}, products: [], domain: '' };
+  try {
+    const res = await axios.get(amazonUrl, {
+      timeout: 12000,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      },
+    });
+    const html = res.data || '';
+    const products = [];
+
+    // Brand store grid — product titles appear in data-cy="title" spans or h2 tags
+    const titleRe = /data-cy="title"[^>]*>([^<]{5,120})<\/span>|<h2[^>]*class="[^"]*product-title[^"]*"[^>]*>\s*([^<]{5,120})\s*<\/h2>/gi;
+    let m;
+    while ((m = titleRe.exec(html)) !== null && products.length < 8) {
+      const title = (m[1] || m[2] || '').trim().replace(/&amp;/g,'&').replace(/&#\d+;/g,'');
+      if (title.length > 4) products.push({ name: title, description: '', price: '', url: amazonUrl });
+    }
+
+    // If brand store scrape found nothing, try single product page (ASIN in URL)
+    if (!products.length) {
+      const nameMatch = html.match(/<span id="productTitle"[^>]*>\s*([^<]{5,200})\s*<\/span>/i);
+      const priceMatch = html.match(/<span class="a-price-whole">(\d+)<\/span>/i);
+      const descMatch = html.match(/<div id="feature-bullets"[^>]*>([\s\S]{20,600}?)<\/div>/i);
+      if (nameMatch) {
+        const desc = descMatch ? descMatch[1].replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim().slice(0,200) : '';
+        products.push({ name: nameMatch[1].trim(), description: desc, price: priceMatch ? priceMatch[1] : '', url: amazonUrl });
+      }
+    }
+
+    const domain = amazonUrl.replace(/^https?:\/\//,'').split('/')[0];
+    console.log(`[amazon-scrape] Found ${products.length} products from ${domain}`);
+    return { brand: {}, products, domain };
+  } catch (e) {
+    console.warn('[amazon-scrape] Failed:', e.message);
+    return { brand: {}, products: [], domain: '' };
+  }
 }
 
 // AI — generate all content for the pipeline
@@ -7419,7 +8010,7 @@ Sending free samples: ${formData.sendSamples || 'Yes'}`;
   let resourceHub = null;
   try {
     const msg = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6', max_tokens: 4000,
+      model: 'claude-sonnet-4-6', max_tokens: 8000,
       messages: [{ role: 'user', content: `You are building an Affiliate Resource Hub for TikTok Shop creators promoting ${formData.brandName} products.
 
 ${brandCtx}
@@ -7485,6 +8076,130 @@ Return ONLY valid JSON.` }]
   } catch(_) {}
 
   return { resourceHub, reacherCopy, creatorPitch, mergedProducts };
+}
+
+// Generates a structured creative brief for creators — hooks, frameworks, scripts, talking points
+async function generateCreatorBrief(formData, shopifyData, aiContent) {
+  if (!process.env.ANTHROPIC_API_KEY) return null;
+  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+  const products    = aiContent?.mergedProducts || shopifyData?.products?.slice(0, 3) || [];
+  const resourceHub = aiContent?.resourceHub;
+  const brandName   = formData.brandName || 'this brand';
+
+  const productCtx = products.map(p =>
+    `${p.name}: ${(p.shopifyDescription || p.description || '').slice(0, 180)}`
+  ).join('\n');
+
+  // Use explicit brand-supplied creative context when available — more reliable than scraped data
+  const audienceCtx    = formData.targetAudience   || 'general consumer';
+  const problemCtx     = formData.mainProblem       || resourceHub?.products?.[0]?.problemSolution || 'improves daily life';
+  const objectionsCtx  = formData.buyerObjections   || '';
+  const resultsCtx     = formData.customerResults   || '';
+
+  const prompt = `You are building a TikTok creator content brief for a brand. Generate a structured brief that gives creators everything they need to make high-converting TikTok Shop videos.
+
+BRAND:
+Name: ${brandName}
+Mission: ${formData.brandMission || resourceHub?.brandMission || 'not provided'}
+Products:
+${productCtx || 'not provided'}
+Target audience: ${audienceCtx}
+Main problem solved: ${problemCtx}${objectionsCtx ? `\nCommon buyer objections: ${objectionsCtx}` : ''}${resultsCtx ? `\nResults customers report: ${resultsCtx}` : ''}
+
+HOOK TEMPLATES (fill in blanks with this brand's specific details — every hook must be complete and ready to use):
+- _____ don't want you to know this, but [brand secret/benefit]
+- [Product] is the only thing I use for [problem this solves] anymore and here's why
+- [Target audience], this is your answer to [main problem]
+- [Target audience], DON'T make the same mistake as me with [category]
+- Everything you know about [product category] is WRONG
+- After [time struggling with problem] I finally [desired outcome] with this
+- Don't waste your money on [old solution] — do this instead
+- [Timeframe] ago I discovered something that changed my [relevant life area] forever
+- Biggest myths about [problem this product solves]
+- My honest review of [product name] — is it worth it?
+- 3 reasons you need [product name] in your life
+- I'm never going back to [old solution] again
+- Best way to [desired outcome] in [year]
+- Why [target audience] are switching to [product name]
+- Five signs you should stop using [alternative product]
+- Did you know that [surprising fact about the problem/product]?
+
+UGC FRAMEWORKS TO CHOOSE FROM:
+- Problem → Solution: Hook with pain point, agitate it, introduce product as the fix, CTA
+- Before / After: Show transformation — life before product vs. after, visual or verbal
+- Why I Switched: Personal story of moving from old solution to this product, with reason
+- My Honest Review: Authentic pros/cons walkthrough with personal experience and verdict
+- 3 Reasons Why: Three tight, benefit-focused arguments for the product
+- POV You're Obsessed: First-person immersive experience of discovering and loving the product
+- Industry Secret: Position product as insider knowledge most people don't know about
+- Stop Wasting Your [X]: Call out wrong/old solution, introduce better one
+- Reply to Comment: TikTok comment overlay format — address an objection or common question
+- Features Focused: Walk through 3-5 key features with quick demonstrations
+
+COPYWRITING FRAMEWORKS:
+- PAS (Problem-Agitate-Solution): Name the problem, make it feel urgent, present the product as relief
+- BAB (Before-After-Bridge): Where viewer is now → where they could be → how the product bridges the gap
+- AIDA (Attention-Interest-Desire-Action): Stop scroll, build curiosity, create desire, direct to buy
+- FAB (Features-Advantages-Benefits): What it does → why that matters → how it improves their life
+
+Generate this EXACT JSON (no markdown, no explanation):
+{
+  "niche": "single word (Beauty/Fashion/Health/Food/Home/Pet/Accessories/etc)",
+  "targetAudience": "2-sentence description of the exact viewer this content is for",
+  "mainProblem": "the single core problem this product solves, in 1 sentence",
+  "hooks": [
+    { "text": "completely filled-in hook, ready to record, specific to this brand/product", "type": "curiosity|pain-point|transformation|social-proof|controversy|myth-bust" },
+    { "text": "...", "type": "..." },
+    { "text": "...", "type": "..." },
+    { "text": "...", "type": "..." },
+    { "text": "...", "type": "..." },
+    { "text": "...", "type": "..." },
+    { "text": "...", "type": "..." },
+    { "text": "...", "type": "..." }
+  ],
+  "frameworks": [
+    { "name": "Framework Name", "why": "1 sentence why this format works best for this product", "outline": ["Step 1 specific to this product", "Step 2", "Step 3"] },
+    { "name": "...", "why": "...", "outline": ["...", "...", "..."] },
+    { "name": "...", "why": "...", "outline": ["...", "...", "..."] }
+  ],
+  "sampleScripts": [
+    {
+      "framework": "PAS",
+      "title": "Short descriptive title",
+      "duration": "~30 seconds",
+      "script": "Full word-for-word script. Label sections: [HOOK] [PROBLEM] [SOLUTION] [CTA]. Write it as spoken dialogue, conversational and natural."
+    },
+    {
+      "framework": "BAB",
+      "title": "Short descriptive title",
+      "duration": "~30 seconds",
+      "script": "Full word-for-word script. Label sections: [BEFORE] [AFTER] [BRIDGE] [CTA]."
+    }
+  ],
+  "talkingPoints": {
+    "benefits": ["benefit 1", "benefit 2", "benefit 3", "benefit 4", "benefit 5"],
+    "objections": ["common objection: how to handle it in the video"],
+    "powerPhrases": ["memorable phrase 1", "memorable phrase 2", "memorable phrase 3"]
+  },
+  "doAndDont": {
+    "dos": ["specific do for this product/niche", "do 2", "do 3"],
+    "donts": ["specific dont for this product/niche", "dont 2", "dont 3"]
+  },
+  "benchmarks": {
+    "hookRate": ">30% (impressions ÷ 3-second plays)",
+    "holdRate": ">10-15% (thruplays ÷ 3-second plays)",
+    "ctr": ">1-1.5% (clicks ÷ impressions)"
+  }
+}`;
+
+  const msg = await anthropic.messages.create({
+    model: 'claude-sonnet-4-6',
+    max_tokens: 4000,
+    messages: [{ role: 'user', content: prompt }],
+  });
+
+  return JSON.parse(msg.content[0].text.trim().replace(/^```json\n?/, '').replace(/\n?```$/, ''));
 }
 
 // Copy Lark Affiliate Resource Hub template and return {token, url, name}
@@ -7570,13 +8285,41 @@ async function runOnboardingPipeline(formData) {
   const brandName = formData.brandName;
   console.log(`[onboard] Pipeline start: ${brandName}`);
 
-  // 1. Scrape Shopify
-  const shopifyData = await scrapeShopify(formData.website).catch(() => ({ brand:{}, products:[] }));
-  console.log(`[onboard] Scraped ${shopifyData.products.length} products from ${shopifyData.domain}`);
+  // Save a stub entry immediately so the submission is never lost even if the process is killed
+  const entryId = Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+  const stubEntry = { id: entryId, createdAt: new Date().toISOString(), status: 'processing', formData, shopifyData: null, aiContent: null, ghlContactId: null, larkDoc: null, creatorPage: null };
+  const stubPending = loadPendingOnboards();
+  stubPending.unshift(stubEntry);
+  savePendingOnboards(stubPending);
+
+  function updatePendingEntry(fields) {
+    const all = loadPendingOnboards();
+    const idx = all.findIndex(e => e.id === entryId);
+    if (idx !== -1) { Object.assign(all[idx], fields); savePendingOnboards(all); }
+  }
+
+  // 1. Scrape product data — try shopifyUrl first, fall back to website, then Amazon
+  const scrapeTarget = formData.shopifyUrl || formData.website;
+  let shopifyData = await scrapeShopify(scrapeTarget).catch(() => ({ brand:{}, products:[] }));
+
+  // If Shopify scrape returned nothing and Amazon URL was provided, try scraping that
+  if (!shopifyData.products?.length && formData.amazonUrl) {
+    shopifyData = await scrapeAmazonProducts(formData.amazonUrl).catch(() => shopifyData);
+    console.log(`[onboard] Amazon fallback scraped ${shopifyData.products?.length || 0} products`);
+  }
+
+  console.log(`[onboard] Scraped ${shopifyData.products.length} products from ${shopifyData.domain || scrapeTarget}`);
+  updatePendingEntry({ shopifyData });
 
   // 2. Generate AI content
   const aiContent = await generateOnboardingContent(formData, shopifyData).catch(e => {
     console.error('[onboard] AI gen error:', e.message); return null;
+  });
+  updatePendingEntry({ aiContent });
+
+  // 2b. Generate creator brief (hooks, frameworks, scripts)
+  const creatorBrief = await generateCreatorBrief(formData, shopifyData, aiContent).catch(e => {
+    console.error('[onboard] creator brief gen error:', e.message); return null;
   });
 
   // 3. Create GHL contact (or update if duplicate)
@@ -7608,45 +8351,7 @@ async function runOnboardingPipeline(formData) {
     console.error('[onboard] lark doc error:', e.message); return null;
   });
 
-  // 4b. Auto-create Reacher automations based on incentive program
-  if (formData.compensation && shopData?.shopId) {
-    const { cashback, leaderboard, volumeBonus } = formData.compensation;
-    const autoPromises = [];
-
-    if (cashback?.enabled) {
-      const msg = `Hi! I'm reaching out from ${brandName}. We have an exciting cashback program — if you generate $${cashback.target} in GMV, you receive that same amount back as a cash bonus. Interested in learning more?`;
-      autoPromises.push(
-        axios.post(`${CFG.railwayUrl}/affiliate/shops/${shopData.shopId}/automation/tc`,
-          { name: `${brandName} — GMV Cashback Outreach`, message: msg.slice(0, 500), trigger: 'new_signup' },
-          { timeout: 10000 }
-        ).catch(e => console.error('[onboard] cashback auto error:', e.message))
-      );
-    }
-    if (leaderboard?.enabled) {
-      const msg = `Join the ${brandName} creator leaderboard! Top performers this month win cash prizes. Post videos and climb the ranks — the more you sell, the more you earn.`;
-      autoPromises.push(
-        axios.post(`${CFG.railwayUrl}/affiliate/shops/${shopData.shopId}/automation/dm`,
-          { name: `${brandName} — Leaderboard Challenge`, message: msg, trigger: 'active_posters' },
-          { timeout: 10000 }
-        ).catch(e => console.error('[onboard] leaderboard auto error:', e.message))
-      );
-    }
-    if (volumeBonus?.enabled) {
-      const msg = `Great news! ${brandName} offers a volume bonus — post ${volumeBonus.quantity || 'X'} videos and earn an extra $${volumeBonus.bonus || '?'} bonus. Keep posting!`;
-      autoPromises.push(
-        axios.post(`${CFG.railwayUrl}/affiliate/shops/${shopData.shopId}/automation/tc`,
-          { name: `${brandName} — Volume Bonus`, message: msg.slice(0, 500), trigger: 'active_posters' },
-          { timeout: 10000 }
-        ).catch(e => console.error('[onboard] volume auto error:', e.message))
-      );
-    }
-    if (autoPromises.length) {
-      await Promise.allSettled(autoPromises);
-      console.log(`[onboard] Created ${autoPromises.length} Reacher automation(s) for ${brandName}`);
-    }
-  }
-
-  // 5. Create draft creator page (inactive until approved)
+  // 5. Create draft creator page (always first so URL exists for automations)
   let creatorPage = null;
   try {
     const slug          = slugify(brandName);
@@ -7665,20 +8370,31 @@ async function runOnboardingPipeline(formData) {
       slug, tagName: `creator-interested-${slug}`, active: true,
       headline: `Partner with ${brandName}`,
       subheadline: 'Join our TikTok Shop creator affiliate program',
-      pitch, accentColor: '#00f2ea',
+      pitch, accentColor: shopifyData?.brand?.primaryColor || '#00f2ea',
       incentives: formData.compensation,
       usps: [formData.usp1, formData.usp2, formData.usp3].filter(Boolean),
       talkingPoints: formData.talkingPoints || '',
       products: formData.products || [],
       tiktokHandle: formData.tiktokHandle || '',
+      tcCommission:   formData.tcCommission   ? parseFloat(formData.tcCommission)   : null,
+      openCommission: formData.openCommission ? parseFloat(formData.openCommission) : null,
+      targetAudience:  formData.targetAudience  || '',
+      mainProblem:     formData.mainProblem     || '',
+      buyerObjections: formData.buyerObjections || '',
+      customerResults: formData.customerResults || '',
+      competitorVideos: Array.isArray(formData.competitorVideos) ? formData.competitorVideos : [],
+      campaigns: {},
+      dmAutomationId: null,
+      brief: creatorBrief || null,
       createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
     };
     saveBrands(brandsData);
-    creatorPage = { slug, publicUrl: `${PUBLIC_BASE_URL}/creators/${slug}`, active: true };
-    console.log(`[onboard] Creator page draft: ${creatorPage.publicUrl}`);
+    creatorPage = { slug, publicUrl: `${CREATOR_BASE_URL}/creators/${slug}`, active: true };
+    console.log(`[onboard] Creator page live: ${creatorPage.publicUrl}`);
   } catch(e) { console.error('[onboard] creator page error:', e.message); }
 
   // 5b. Auto-match Reacher shop by brand name (fuzzy)
+  let matchedShopId = null;
   try {
     const shopsResp = await axios.get(`${CFG.railwayUrl}/affiliate/shops`, { timeout: 10000 });
     const shops = shopsResp.data?.data || shopsResp.data || [];
@@ -7689,33 +8405,71 @@ async function runOnboardingPipeline(formData) {
       return ns === nb || ns.includes(nb) || nb.includes(ns);
     });
     if (match) {
+      matchedShopId = match.shop_id;
       const bd = loadBrands();
       const bi = bd.clients.findIndex(b => slugify(b.name) === slugify(brandName));
       if (bi !== -1 && !bd.clients[bi].shopId) {
-        bd.clients[bi].shopId = match.shop_id;
+        bd.clients[bi].shopId = matchedShopId;
         saveBrands(bd);
-        console.log(`[onboard] Reacher auto-match: ${match.shop_name} → shopId ${match.shop_id}`);
+        console.log(`[onboard] Reacher auto-match: ${match.shop_name} → shopId ${matchedShopId}`);
       }
     } else {
       console.log(`[onboard] No Reacher shop match for: ${brandName}`);
     }
   } catch(e) { console.error('[onboard] Reacher shop lookup error:', e.message); }
 
-  // 6. Save pending review entry
-  const entry = {
-    id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
-    createdAt: new Date().toISOString(),
-    status: 'pending',
-    formData, shopifyData, aiContent, ghlContactId, larkDoc, creatorPage,
-  };
-  const pending = loadPendingOnboards();
-  pending.unshift(entry);
-  savePendingOnboards(pending);
+  // 5c. Create comprehensive creator outreach DM automation in Reacher
+  if (matchedShopId && creatorPage?.publicUrl) {
+    try {
+      const inc = formData.compensation || {};
+      const incentiveLine = buildIncentiveSummary(inc);
+      const firstProductName = (aiContent?.mergedProducts || formData.products || [])[0]?.name || '';
+      const aiDm = firstProductName && aiContent?.reacherCopy?.[firstProductName]?.dm_message;
+
+      let dmMessage;
+      if (aiDm) {
+        // AI-generated copy — append signup link if not already present
+        dmMessage = aiDm.includes(creatorPage.publicUrl)
+          ? aiDm
+          : `${aiDm}\n\nSign up here: ${creatorPage.publicUrl}`;
+      } else {
+        // Built-in fallback
+        const incentiveBlock = incentiveLine
+          ? `\n\nCreator Incentive Program:\n• ${incentiveLine}`
+          : '';
+        dmMessage = `Hey {creator_name}! 👋 We're ${brandName} — ${shopifyData?.brand?.metaDescription?.slice(0,120) || 'a fast-growing brand'} — and we're building our TikTok Shop creator team.${incentiveBlock}\n\nIf you're interested in collaborating, sign up here and we'll get you set up right away:\n${creatorPage.publicUrl}`;
+      }
+
+      const resp = await axios.post(
+        `${CFG.railwayUrl}/affiliate/shops/${matchedShopId}/automations/outreach-dm`,
+        {
+          name:    `${brandName} — Creator Outreach`,
+          message: dmMessage.slice(0, 2000),
+          creatorPageUrl: creatorPage.publicUrl,
+        },
+        { timeout: 15000 }
+      );
+      const dmAutomationId = resp.data?.automation_id || resp.data?.id || null;
+      if (dmAutomationId) {
+        const bd = loadBrands();
+        const bi = bd.clients.findIndex(b => slugify(b.name) === slugify(brandName));
+        if (bi !== -1) {
+          if (!bd.clients[bi].creatorPage) bd.clients[bi].creatorPage = {};
+          bd.clients[bi].creatorPage.dmAutomationId = dmAutomationId;
+          saveBrands(bd);
+        }
+        console.log(`[onboard] Creator outreach DM automation created: ${dmAutomationId}`);
+      }
+    } catch(e) { console.error('[onboard] DM automation error:', e.message); }
+  }
+
+  // 6. Finalise pending review entry (was saved as stub at pipeline start)
+  updatePendingEntry({ status: 'pending', ghlContactId, larkDoc, creatorPage });
 
   // 7. Send comprehensive Lark alert
   await sendLarkOnboardingAlert(formData, shopifyData, aiContent, larkDoc, creatorPage);
 
-  console.log(`[onboard] Pipeline complete: ${brandName} (id: ${entry.id})`);
+  console.log(`[onboard] Pipeline complete: ${brandName} (id: ${entryId})`);
 }
 
 // GET /api/onboard/pending
@@ -7779,305 +8533,236 @@ function extractTikTokVideoId(url) {
   return m ? m[1] : null;
 }
 
+function renderOpportunitiesPage() {
+  const brands = loadBrands();
+  const opportunities = (brands.clients || []).filter(b => b.creatorPage?.slug && b.creatorPage?.active !== false);
+
+  const cards = opportunities.map(brand => {
+    const cp         = brand.creatorPage;
+    const accent     = cp.accentColor || '#00f2ea';
+    const ar         = hexToRgb(accent);
+    const inc        = cp.incentives || {};
+    const pills      = [];
+    if (cp.tcCommission)          pills.push(`${cp.tcCommission}% commission`);
+    if (inc.cashback?.enabled) {
+      const amt = inc.cashback.target || inc.cashback.amount || inc.cashback.gmvTarget;
+      pills.push(amt ? `$${amt} cashback` : 'Cashback program');
+    }
+    if (inc.volumeBonus?.enabled) {
+      const bonus = inc.volumeBonus.bonus || inc.volumeBonus.bonusAmount;
+      const qty   = inc.volumeBonus.quantity || inc.volumeBonus.videoCount;
+      pills.push(bonus && qty ? `$${bonus} for ${qty} videos` : 'Video bonus');
+    }
+    if (inc.leaderboard?.enabled) pills.push('Monthly prizes');
+    const pillHtml     = pills.map(p => `<span style="background:rgba(${ar},.12);color:${accent};border:1px solid rgba(${ar},.25);border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;white-space:nowrap;">${p}</span>`).join('');
+    const headline     = cp.headline    || `Partner with ${brand.name}`;
+
+    return `
+    <a href="/creators/${cp.slug}" style="text-decoration:none;display:flex;flex-direction:column;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:20px;overflow:hidden;transition:border-color .2s,transform .15s,box-shadow .2s;cursor:pointer;" class="opp-card">
+      <div style="height:3px;background:linear-gradient(90deg,${accent},transparent);flex-shrink:0;"></div>
+      <div style="padding:22px 22px 18px;flex:1;display:flex;flex-direction:column;gap:14px;">
+        <!-- Brand name -->
+        <div style="font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:${accent};">${brand.name || 'Brand'}</div>
+        <!-- Headline -->
+        <div style="font-size:17px;font-weight:900;line-height:1.25;color:#fff;letter-spacing:-.01em;">${headline}</div>
+        <!-- Pills -->
+        ${pillHtml ? `<div style="display:flex;flex-wrap:wrap;gap:6px;">${pillHtml}</div>` : ''}
+        <!-- CTA -->
+        <div style="margin-top:auto;display:flex;align-items:center;justify-content:space-between;padding-top:14px;border-top:1px solid rgba(255,255,255,.05);">
+          <span style="font-size:13px;font-weight:700;color:${accent};">View opportunity</span>
+          <span style="font-size:18px;color:${accent};opacity:.7;">→</span>
+        </div>
+      </div>
+    </a>`;
+  }).join('');
+
+  const emptyState = `
+    <div style="grid-column:1/-1;text-align:center;padding:80px 20px;color:rgba(255,255,255,.25);">
+      <div style="font-size:48px;margin-bottom:16px;">🌱</div>
+      <div style="font-size:16px;font-weight:700;">Opportunities coming soon</div>
+      <div style="font-size:13px;margin-top:8px;">New brands are being onboarded. Check back shortly.</div>
+    </div>`;
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Manifest Abundance — TikTok Creator Opportunities</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:#080610;color:#fff;min-height:100vh}
+.hero{background:linear-gradient(160deg,#0d0b18 0%,#100e1c 50%,#080610 100%);padding:80px 24px 64px;text-align:center;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 800px 400px at 50% 0%,rgba(0,242,234,.06) 0%,transparent 70%);pointer-events:none;}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(0,242,234,.08);border:1px solid rgba(0,242,234,.2);border-radius:100px;padding:6px 18px;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#00f2ea;margin-bottom:28px;}
+h1{font-family:'Montserrat',sans-serif;font-size:clamp(36px,6vw,68px);font-weight:900;line-height:1.04;letter-spacing:-.03em;margin-bottom:18px;background:linear-gradient(135deg,#fff 0%,rgba(255,255,255,.6) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero-sub{font-size:clamp(14px,2vw,18px);color:rgba(255,255,255,.4);max-width:560px;margin:0 auto;line-height:1.65;}
+.count-badge{display:inline-block;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:100px;padding:4px 14px;font-size:12px;font-weight:700;color:rgba(255,255,255,.5);margin-top:28px;}
+.grid-wrap{max-width:1100px;margin:0 auto;padding:56px 24px 80px;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;}
+.opp-card:hover{border-color:rgba(255,255,255,.18)!important;transform:translateY(-3px);box-shadow:0 16px 40px rgba(0,0,0,.35);}
+footer{border-top:1px solid rgba(255,255,255,.05);padding:24px;text-align:center;font-size:11px;color:rgba(255,255,255,.18);}
+footer a{color:#00f2ea;text-decoration:none;}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="eyebrow">✦ TikTok Shop Creator Program</div>
+  <h1>Manifest Abundance</h1>
+  <p class="hero-sub">Find the opportunity that is most aligned with who you are — and start earning.</p>
+  <div class="count-badge">${opportunities.length} brand${opportunities.length !== 1 ? 's' : ''} currently partnering</div>
+</div>
+
+<div class="grid-wrap">
+  <div class="grid">
+    ${cards || emptyState}
+  </div>
+</div>
+
+<footer>Powered by <a href="https://cultcontent.cc" target="_blank">Cult Content</a> — TikTok Shop Creator Agency</footer>
+
+</body>
+</html>`;
+}
+
 function renderCreatorPage(brand, cp) {
-  const accent    = cp.accentColor || '#00f2ea';
-  const ar        = hexToRgb(accent);
-  const name      = brand.name || 'Brand';
-  const incentives = cp.incentives || {};
-  const products  = (cp.products || []).filter(p => p.name);
-  const usps      = (cp.usps || []).filter(Boolean);
-  const talking   = (cp.talkingPoints || '').split('\n').map(s => s.trim()).filter(Boolean);
-  const videos    = (cp.competitorVideos || []).filter(Boolean);
-  const tiktokHandle = cp.tiktokHandle || brand.tiktokHandle || '';
+  const accent   = cp.accentColor || '#00f2ea';
+  const ar       = hexToRgb(accent);
+  const name     = brand.name || 'Brand';
+  const inc      = cp.incentives || {};
 
-  // Build incentive pills + section
-  const pills = [];
-  let incentiveHtml = '';
-  if (incentives.cashback?.enabled) {
-    pills.push(`${incentives.cashback.percent || ''}% Cashback`);
-    incentiveHtml += `
-    <div class="incentive-card">
-      <div class="incentive-icon">💰</div>
-      <div class="incentive-label">CASHBACK RATE</div>
-      <div class="incentive-value">${incentives.cashback.percent || '—'}%</div>
-      <div class="incentive-sub">on every sale you drive${incentives.cashback.gmvTarget ? ` · $${Number(incentives.cashback.gmvTarget).toLocaleString()} GMV target` : ''}</div>
-    </div>`;
+  // Auto-generate reward copy lines
+  const rewardLines = [];
+  if (cp.tcCommission) rewardLines.push({ val: `${cp.tcCommission}%`, desc: 'commission on every sale you drive' });
+  if (inc.cashback?.enabled) {
+    const amt = inc.cashback.target || inc.cashback.amount || inc.cashback.gmvTarget;
+    if (amt) rewardLines.push({ val: `$${amt} cashback`, desc: `hit $${amt} GMV and earn it back as cash` });
   }
-  if (incentives.leaderboard?.enabled && incentives.leaderboard.prizes?.length) {
-    pills.push('Monthly Leaderboard');
-    const prizes = incentives.leaderboard.prizes;
-    incentiveHtml += `
-    <div class="incentive-card">
-      <div class="incentive-icon">🏆</div>
-      <div class="incentive-label">MONTHLY LEADERBOARD</div>
-      <div class="incentive-value">${prizes[0] || '—'}</div>
-      <div class="incentive-sub">top prize · ${prizes.slice(1).filter(Boolean).map((p,i)=>`${['2nd','3rd'][i]}: ${p}`).join(' · ')}${incentives.leaderboard.threshold ? ` · $${Number(incentives.leaderboard.threshold).toLocaleString()} min GMV` : ''}</div>
-    </div>`;
+  if (inc.volumeBonus?.enabled) {
+    const bonus = inc.volumeBonus.bonus || inc.volumeBonus.bonusAmount;
+    const qty   = inc.volumeBonus.quantity || inc.volumeBonus.videoCount;
+    if (bonus && qty) rewardLines.push({ val: `$${bonus} bonus`, desc: `post ${qty} videos and earn a one-time cash bonus` });
   }
-  if (incentives.volumeBonus?.enabled) {
-    pills.push(`$${incentives.volumeBonus.bonusAmount} Volume Bonus`);
-    incentiveHtml += `
-    <div class="incentive-card">
-      <div class="incentive-icon">🎯</div>
-      <div class="incentive-label">VOLUME BONUS</div>
-      <div class="incentive-value">$${incentives.volumeBonus.bonusAmount || '—'}</div>
-      <div class="incentive-sub">post ${incentives.volumeBonus.videoCount || '—'} videos and earn a bonus on top of cashback</div>
-    </div>`;
+  if (inc.leaderboard?.enabled) {
+    const places = inc.leaderboard.places || inc.leaderboard.prizes || [];
+    const topPrize = places[0];
+    if (topPrize) rewardLines.push({ val: `$${topPrize} top prize`, desc: `monthly leaderboard${inc.leaderboard.threshold ? ` — $${Number(inc.leaderboard.threshold).toLocaleString()} min GMV` : ''}` });
   }
-
-  const productsHtml = products.map(p => `
-    <div class="product-card">
-      <div class="product-name">${p.name}</div>
-      ${p.minPrice ? `<div class="product-price">From $${Number(p.minPrice).toFixed(2)}</div>` : ''}
-      ${p.url ? `<a href="${p.url}" target="_blank" rel="noopener" class="product-link">View on TikTok Shop →</a>` : ''}
-    </div>`).join('');
-
-  const uspHtml = usps.map(u => `<li class="usp-item"><span class="usp-check">✓</span>${u}</li>`).join('');
-
-  const talkingHtml = talking.map(t => `<li class="talking-item">${t}</li>`).join('');
-
-  const videosHtml = videos.map(url => {
-    const vid = extractTikTokVideoId(url);
-    if (!vid) return '';
-    return `<div class="video-wrap">
-      <iframe src="https://www.tiktok.com/embed/v2/${vid}"
-        width="325" height="576"
-        style="border:none;border-radius:12px;max-width:100%"
-        allow="fullscreen;autoplay"
-        scrolling="no"
-        loading="lazy">
-      </iframe>
-    </div>`;
-  }).filter(Boolean).join('');
 
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Partner with ${name} — TikTok Shop Affiliate Program</title>
+<title>Partner with ${name} — Creator Program</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a0a0f;color:#fff;min-height:100vh}
-/* ── Hero ── */
 .hero{background:linear-gradient(160deg,#0d0b14 0%,#12101e 60%,#0a0a0f 100%);border-bottom:1px solid rgba(255,255,255,.06);padding:72px 20px 60px;text-align:center}
 .brand-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(${ar},.1);border:1px solid rgba(${ar},.25);border-radius:100px;padding:6px 16px;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:${accent};margin-bottom:24px}
-h1{font-size:clamp(28px,5vw,52px);font-weight:900;line-height:1.06;margin-bottom:16px;letter-spacing:-.02em;max-width:760px;margin-left:auto;margin-right:auto}
-.hero-sub{font-size:clamp(13px,2vw,17px);color:rgba(255,255,255,.45);max-width:520px;margin:0 auto 32px;line-height:1.65}
-.pills{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:0}
-.pill{background:rgba(${ar},.1);color:${accent};border:1px solid rgba(${ar},.25);border-radius:100px;padding:6px 16px;font-size:12px;font-weight:700}
-/* ── Sections ── */
-.section{padding:60px 20px}
-.section-inner{max-width:900px;margin:0 auto}
+.live-dot{width:6px;height:6px;border-radius:50%;background:${accent};box-shadow:0 0 6px ${accent};animation:pulse 2s ease-in-out infinite;display:inline-block}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+h1{font-size:clamp(26px,5vw,50px);font-weight:900;line-height:1.06;letter-spacing:-.02em;max-width:720px;margin:0 auto 16px}
+.hero-sub{font-size:clamp(13px,2vw,16px);color:rgba(255,255,255,.45);max-width:500px;margin:0 auto 40px;line-height:1.7}
+.section{padding:56px 20px}
+.section-inner{max-width:860px;margin:0 auto}
 .section-label{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:${accent};margin-bottom:10px}
-.section-title{font-size:clamp(20px,3vw,30px);font-weight:900;margin-bottom:8px;letter-spacing:-.01em}
-.section-sub{font-size:14px;color:rgba(255,255,255,.45);line-height:1.6;margin-bottom:36px}
+.section-title{font-size:clamp(18px,3vw,28px);font-weight:900;margin-bottom:8px;letter-spacing:-.01em}
+.section-sub{font-size:13px;color:rgba(255,255,255,.4);line-height:1.6;margin-bottom:32px}
 .divider{border:none;border-top:1px solid rgba(255,255,255,.06);margin:0}
-/* ── Incentives ── */
-.incentives-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
-.incentive-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:24px;text-align:center;transition:border-color .2s}
-.incentive-card:hover{border-color:rgba(${ar},.4)}
-.incentive-icon{font-size:28px;margin-bottom:10px}
-.incentive-label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:6px}
-.incentive-value{font-size:32px;font-weight:900;color:${accent};line-height:1;margin-bottom:6px}
-.incentive-sub{font-size:12px;color:rgba(255,255,255,.4);line-height:1.5}
-/* ── Products ── */
-.products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
-.product-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:20px}
-.product-name{font-size:15px;font-weight:700;margin-bottom:6px}
-.product-price{font-size:13px;color:${accent};font-weight:700;margin-bottom:10px}
-.product-link{font-size:12px;color:${accent};text-decoration:none;font-weight:600}
-.product-link:hover{text-decoration:underline}
-/* ── USPs ── */
-.usp-list{list-style:none;display:flex;flex-direction:column;gap:14px}
-.usp-item{display:flex;align-items:flex-start;gap:12px;font-size:16px;font-weight:600;line-height:1.4}
-.usp-check{flex-shrink:0;width:24px;height:24px;background:rgba(${ar},.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;color:${accent};font-weight:900}
-/* ── Videos ── */
-.videos-scroll{display:flex;gap:16px;overflow-x:auto;padding-bottom:8px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
-.video-wrap{flex-shrink:0}
-/* ── Talking Points ── */
-.talking-list{list-style:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
-.talking-item{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:14px 16px;font-size:14px;color:rgba(255,255,255,.75);line-height:1.5;position:relative;padding-left:30px}
-.talking-item::before{content:'→';position:absolute;left:12px;color:${accent};font-weight:900}
-/* ── Form ── */
-.form-wrap{max-width:600px;margin:0 auto}
+/* rewards */
+.rewards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.reward-card{background:rgba(${ar},.08);border:1.5px solid rgba(${ar},.22);border-radius:14px;padding:20px 18px;display:flex;flex-direction:column;gap:6px}
+.reward-val{font-size:22px;font-weight:900;color:${accent};line-height:1.1}
+.reward-desc{font-size:13px;color:rgba(255,255,255,.5);line-height:1.45}
+/* form */
+.form-card{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:40px;max-width:560px;margin:0 auto}
 .form-head{font-size:22px;font-weight:900;margin-bottom:6px}
-.form-sub{font-size:13px;color:rgba(255,255,255,.4);margin-bottom:28px}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
-.row.full{grid-template-columns:1fr}
-@media(max-width:500px){.row{grid-template-columns:1fr}}
-.field{display:flex;flex-direction:column;gap:5px}
-label{font-size:10px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.06em}
-input,select,textarea{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:#fff;font-size:14px;padding:12px 14px;outline:none;transition:border-color .18s;width:100%;font-family:inherit}
-input::placeholder,textarea::placeholder{color:rgba(255,255,255,.2)}
-input:focus,select:focus,textarea:focus{border-color:${accent}}
-select option{background:#12101e;color:#fff}
-.btn-submit{width:100%;background:${accent};color:#000;border:none;border-radius:10px;font-size:16px;font-weight:900;padding:16px;cursor:pointer;margin-top:10px;transition:opacity .2s,transform .1s;letter-spacing:.01em}
+.form-sub{font-size:13px;color:rgba(255,255,255,.4);margin-bottom:28px;line-height:1.6}
+.f-row{margin-bottom:16px}
+.f-row label{display:block;font-size:10px;font-weight:700;color:rgba(255,255,255,.38);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
+.f-row input{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:#fff;font-size:14px;padding:12px 14px;outline:none;transition:border-color .18s;width:100%;font-family:inherit}
+.f-row input::placeholder{color:rgba(255,255,255,.2)}
+.f-row input:focus{border-color:${accent}}
+.f-hint{font-size:11px;color:rgba(255,255,255,.25);margin-top:5px}
+.btn-submit{width:100%;background:${accent};color:#000;border:none;border-radius:10px;font-size:16px;font-weight:900;padding:16px;cursor:pointer;margin-top:8px;transition:opacity .2s,transform .1s;letter-spacing:.01em}
 .btn-submit:hover{opacity:.88}
 .btn-submit:active{transform:scale(.98)}
 .btn-submit:disabled{opacity:.45;cursor:not-allowed}
-.err{color:#ff5b5b;font-size:12px;margin-top:8px;display:none}
-.success{display:none;text-align:center;padding:56px 0}
-.success-icon{font-size:56px;margin-bottom:20px}
-.success-title{font-size:24px;font-weight:900;margin-bottom:10px}
-.success-msg{font-size:14px;color:rgba(255,255,255,.45);line-height:1.7}
-/* ── Footer ── */
+.f-err{color:#ff5b5b;font-size:12px;margin-top:10px;display:none}
 footer{border-top:1px solid rgba(255,255,255,.06);padding:24px 20px;text-align:center;font-size:11px;color:rgba(255,255,255,.2)}
 footer a{color:${accent};text-decoration:none}
 </style>
 </head>
 <body>
 
-<!-- ── HERO ── -->
 <div class="hero">
-  <div class="brand-badge">${name} × Cult Content</div>
-  <h1>Partner with <span style="color:${accent}">${name}</span> on TikTok Shop</h1>
-  <div class="hero-sub">Join our affiliate creator program — earn cashback on every sale you drive plus monthly bonuses.</div>
-  ${pills.length ? `<div class="pills">${pills.map(p=>`<span class="pill">${p}</span>`).join('')}</div>` : ''}
+  <div class="brand-badge"><span class="live-dot"></span>&nbsp;${name} Creator Program</div>
+  <h1>${cp.headline || `Partner with ${name} on TikTok Shop`}</h1>
+  <div class="hero-sub">Join our affiliate creator program and start earning. Sign up below to get access to all campaigns and your Discord role.</div>
 </div>
 
-${incentiveHtml ? `
+${rewardLines.length ? `
 <hr class="divider">
-<!-- ── INCENTIVES ── -->
-<div class="section" style="background:rgba(${ar},.03)">
+<div class="section" style="background:rgba(${ar},.02)">
   <div class="section-inner">
-    <div class="section-label">Creator Incentive Program</div>
+    <div class="section-label">Creator Rewards</div>
     <div class="section-title">How you get paid</div>
     <div class="section-sub">Stack multiple income streams every month.</div>
-    <div class="incentives-grid">${incentiveHtml}</div>
+    <div class="rewards-grid">${rewardLines.map(r => `<div class="reward-card"><div class="reward-val">${r.val}</div><div class="reward-desc">${r.desc}</div></div>`).join('')}</div>
   </div>
 </div>` : ''}
 
-${productsHtml ? `
 <hr class="divider">
-<!-- ── PRODUCTS ── -->
-<div class="section">
+<div class="section" id="signup">
   <div class="section-inner">
-    <div class="section-label">Products to Promote</div>
-    <div class="section-title">What you'll be featuring</div>
-    <div class="section-sub">High-converting products with strong customer reviews.</div>
-    <div class="products-grid">${productsHtml}</div>
-  </div>
-</div>` : ''}
-
-${uspHtml ? `
-<hr class="divider">
-<!-- ── WHY THIS BRAND ── -->
-<div class="section" style="background:rgba(255,255,255,.02)">
-  <div class="section-inner" style="max-width:640px">
-    <div class="section-label">Why creators love ${name}</div>
-    <div class="section-title">Built to convert</div>
-    <div class="section-sub">Products your audience will actually want to buy.</div>
-    <ul class="usp-list">${uspHtml}</ul>
-  </div>
-</div>` : ''}
-
-${videosHtml ? `
-<hr class="divider">
-<!-- ── EXAMPLE CONTENT ── -->
-<div class="section">
-  <div class="section-inner">
-    <div class="section-label">Content That Converts</div>
-    <div class="section-title">Examples to inspire your videos</div>
-    <div class="section-sub">High-performing content formats for this niche.</div>
-    <div class="videos-scroll">${videosHtml}</div>
-  </div>
-</div>` : ''}
-
-${talkingHtml ? `
-<hr class="divider">
-<!-- ── TALKING POINTS ── -->
-<div class="section" style="background:rgba(255,255,255,.02)">
-  <div class="section-inner">
-    <div class="section-label">Creator Brief</div>
-    <div class="section-title">Key talking points</div>
-    <div class="section-sub">Weave these into your content for the best results.</div>
-    <ul class="talking-list">${talkingHtml}</ul>
-  </div>
-</div>` : ''}
-
-<hr class="divider">
-<!-- ── APPLY FORM ── -->
-<div class="section">
-  <div class="section-inner">
-    <div class="form-wrap">
-      <div id="formWrap">
-        <div class="form-head">Apply to partner with ${name}</div>
-        <div class="form-sub">Takes 2 minutes — our team reviews every application within 48 hours.</div>
-        <form id="form">
-          <div class="row">
-            <div class="field"><label>First name *</label><input name="firstName" required placeholder="Jane"></div>
-            <div class="field"><label>Last name *</label><input name="lastName" required placeholder="Smith"></div>
-          </div>
-          <div class="row">
-            <div class="field"><label>Email *</label><input name="email" type="email" required placeholder="jane@email.com"></div>
-            <div class="field"><label>Phone</label><input name="phone" type="tel" placeholder="+1 555-000-0000"></div>
-          </div>
-          <div class="row">
-            <div class="field"><label>TikTok handle *</label><input name="tiktokHandle" required placeholder="@yourhandle"></div>
-            <div class="field">
-              <label>Follower count *</label>
-              <select name="followerRange" required>
-                <option value="" disabled selected>Select range</option>
-                <option>1K – 10K</option><option>10K – 50K</option>
-                <option>50K – 100K</option><option>100K – 500K</option><option>500K+</option>
-              </select>
-            </div>
-          </div>
-          <div class="row">
-            <div class="field">
-              <label>Monthly TikTok GMV</label>
-              <select name="gmv">
-                <option value="">No shop / not sure</option>
-                <option>&lt;$1K/mo</option><option>$1K–$5K/mo</option>
-                <option>$5K–$20K/mo</option><option>$20K+/mo</option>
-              </select>
-            </div>
-            <div class="field">
-              <label>Primary niche</label>
-              <select name="niche">
-                <option value="">Select niche</option>
-                <option>Beauty &amp; Skincare</option><option>Health &amp; Wellness</option>
-                <option>Fashion &amp; Style</option><option>Home &amp; Lifestyle</option>
-                <option>Food &amp; Beverage</option><option>Fitness</option><option>Tech &amp; Gadgets</option><option>Other</option>
-              </select>
-            </div>
-          </div>
-          <div class="row full">
-            <div class="field">
-              <label>Anything else? (optional)</label>
-              <textarea name="message" placeholder="Tell us about your content or why you're excited to partner…" rows="3"></textarea>
-            </div>
-          </div>
-          <div class="err" id="formErr"></div>
-          <button type="submit" class="btn-submit" id="submitBtn">Apply Now →</button>
-        </form>
-      </div>
-      <div class="success" id="successWrap">
-        <div class="success-icon">🎉</div>
-        <div class="success-title">Application submitted!</div>
-        <div class="success-msg">Thanks! Our team will review your application and reach out within 48 hours.${tiktokHandle ? `<br><br>Follow <strong style="color:${accent}">@${tiktokHandle}</strong> on TikTok for updates.` : ''}</div>
-      </div>
+    <div class="form-card" id="formCard">
+      <div class="form-head">Join the ${name} Creator Program</div>
+      <div class="form-sub">Takes 30 seconds. You'll get instant access to all campaigns and your Verified Creator role in our Discord community.</div>
+      <form id="cpForm">
+        <div class="f-row"><label>Full Name *</label><input name="name" required placeholder="Jane Smith" autocomplete="name"></div>
+        <div class="f-row"><label>TikTok Handle *</label><input name="tiktokHandle" required placeholder="@yourhandle"></div>
+        <div class="f-row"><label>Email *</label><input name="email" type="email" required placeholder="jane@email.com" autocomplete="email"></div>
+        <div class="f-row"><label>Phone *</label><input name="phone" type="tel" required placeholder="+1 555-000-0000" autocomplete="tel"></div>
+        <div class="f-row">
+          <label>Discord Username</label>
+          <input name="discordUsername" placeholder="yourname">
+          <div class="f-hint">Needed to unlock your Verified Creator role.</div>
+        </div>
+        <div class="f-err" id="cpErr"></div>
+        <button type="submit" class="btn-submit" id="cpBtn">Join Now</button>
+      </form>
     </div>
   </div>
 </div>
 
 <footer>Powered by <a href="https://cultcontent.cc" target="_blank">Cult Content</a> — TikTok Shop Creator Agency</footer>
+
 <script>
-document.getElementById('form').addEventListener('submit',async function(e){
+document.getElementById('cpForm').addEventListener('submit', async function(e) {
   e.preventDefault();
-  const btn=document.getElementById('submitBtn'),err=document.getElementById('formErr');
-  btn.disabled=true;btn.textContent='Submitting…';err.style.display='none';
-  const body=Object.fromEntries(new FormData(this));
-  body.brandSlug='${cp.slug}';
-  try{
-    const r=await fetch('/api/creator-pages/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-    const d=await r.json();
-    if(d.ok){document.getElementById('formWrap').style.display='none';document.getElementById('successWrap').style.display='block';}
-    else throw new Error(d.error||'Unknown error');
-  }catch(ex){
-    btn.disabled=false;btn.textContent='Apply Now →';
-    err.textContent='Something went wrong — please try again or email hello@cultcontent.cc';
-    err.style.display='block';
+  var btn = document.getElementById('cpBtn');
+  var err = document.getElementById('cpErr');
+  btn.disabled = true; btn.textContent = 'Submitting...'; err.style.display = 'none';
+  var data = Object.fromEntries(new FormData(this));
+  data.brandSlug = '${cp.slug}';
+  try {
+    var r = await fetch('/api/creator-pages/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+    var d = await r.json();
+    if (d.ok && d.welcomeUrl) {
+      window.location.href = d.welcomeUrl;
+    } else if (d.ok) {
+      btn.textContent = 'Done!';
+    } else {
+      throw new Error(d.error || 'Unknown error');
+    }
+  } catch(ex) {
+    btn.disabled = false; btn.textContent = 'Join Now';
+    err.textContent = ex.message || 'Something went wrong - please try again.';
+    err.style.display = 'block';
   }
 });
 </script>
@@ -8085,7 +8770,347 @@ document.getElementById('form').addEventListener('submit',async function(e){
 </html>`;
 }
 
+function renderWelcomePage(brand, cp) {
+  const accent   = cp.accentColor || '#00f2ea';
+  const ar       = hexToRgb(accent);
+  const name     = brand.name || 'Brand';
+  const campaigns = cp.campaigns || {};
+  const discordInvite = process.env.DISCORD_INVITE_URL || 'https://discord.gg/cultcontent';
+
+  const products = (cp.products || []).filter(p => p.name);
+  const usps     = (cp.usps || []).filter(Boolean);
+  const talking  = (cp.talkingPoints || '').split('\n').map(s => s.trim()).filter(Boolean);
+  const videos   = (cp.competitorVideos || []).filter(Boolean);
+  const brief    = cp.brief || null;
+
+  const campaignBtns = [];
+  if (campaigns.cashbackUrl)      campaignBtns.push({ label: 'Cashback Campaign',        sub: 'Earn cashback on every sale you drive',       url: campaigns.cashbackUrl });
+  if (campaigns.quantityVideoUrl) campaignBtns.push({ label: 'Video Quantity Challenge', sub: 'Post 10 videos and earn a cash bonus',        url: campaigns.quantityVideoUrl });
+  if (campaigns.leaderboardUrl)   campaignBtns.push({ label: 'Leaderboard Challenge',    sub: 'Compete for top GMV and win monthly prizes',  url: campaigns.leaderboardUrl });
+
+  const btnsHtml = campaignBtns.map(c => `
+    <a href="${c.url}" target="_blank" rel="noopener" class="camp-btn">
+      <div class="camp-btn-text">
+        <div class="camp-btn-label">${c.label}</div>
+        <div class="camp-btn-sub">${c.sub}</div>
+      </div>
+      <div class="camp-btn-arrow">&#8594;</div>
+    </a>`).join('');
+
+  // ── Brief sections ──────────────────────────────────────────────────────────
+  const typeLabel = { curiosity:'Curiosity', 'pain-point':'Pain Point', transformation:'Transformation', 'social-proof':'Social Proof', controversy:'Controversy', 'myth-bust':'Myth Bust' };
+
+  const hooksHtml = brief?.hooks?.length ? `
+<hr class="page-divider">
+<div class="section">
+  <div class="section-inner">
+    <div class="section-label" style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:${accent};margin-bottom:10px">Content Brief</div>
+    <div class="section-title">Your hook library</div>
+    <div class="section-sub">Copy any of these word-for-word as your video's first 3 seconds. The hook makes or breaks your stop-rate.</div>
+    <div class="hooks-grid">${brief.hooks.map(h => `
+      <div class="hook-card">
+        <div class="hook-text">${h.text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+        <div class="hook-type">${typeLabel[h.type] || h.type}</div>
+      </div>`).join('')}
+    </div>
+  </div>
+</div>` : '';
+
+  const frameworksHtml = brief?.frameworks?.length ? `
+<hr class="page-divider">
+<div class="section" style="background:rgba(255,255,255,.015)">
+  <div class="section-inner" style="max-width:680px">
+    <div class="section-label" style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:${accent};margin-bottom:10px">Video Formats</div>
+    <div class="section-title">Recommended UGC frameworks</div>
+    <div class="section-sub">These formats work best for this product. Pick one and follow the structure.</div>
+    <div class="frameworks-list">${brief.frameworks.map(f => `
+      <div class="fw-card">
+        <div class="fw-name">${f.name.replace(/</g,'&lt;')}</div>
+        <div class="fw-why">${f.why.replace(/</g,'&lt;')}</div>
+        <ol class="fw-steps">${(f.outline||[]).map((s,i) => `<li class="fw-step"><span class="fw-num">${i+1}</span><span>${s.replace(/</g,'&lt;')}</span></li>`).join('')}</ol>
+      </div>`).join('')}
+    </div>
+  </div>
+</div>` : '';
+
+  const scriptsHtml = brief?.sampleScripts?.length ? `
+<hr class="page-divider">
+<div class="section">
+  <div class="section-inner" style="max-width:680px">
+    <div class="section-label" style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:${accent};margin-bottom:10px">Sample Scripts</div>
+    <div class="section-title">Ready-to-record scripts</div>
+    <div class="section-sub">Use these as-is or riff off them. Tap to expand.</div>
+    <div class="scripts-list">${brief.sampleScripts.map((s,i) => `
+      <div class="script-card" id="sc${i}">
+        <div class="script-header" onclick="toggleScript(${i})">
+          <span class="script-fw-badge">${s.framework}</span>
+          <span class="script-title">${(s.title||'Script').replace(/</g,'&lt;')}</span>
+          <span class="script-duration">${s.duration||'~30s'}</span>
+          <span class="script-toggle">&#8964;</span>
+        </div>
+        <div class="script-body">${(s.script||'').replace(/</g,'&lt;').replace(/\n/g,'\n')}</div>
+      </div>`).join('')}
+    </div>
+  </div>
+</div>` : '';
+
+  const tpHtml = brief?.talkingPoints ? `
+<hr class="page-divider">
+<div class="section" style="background:rgba(255,255,255,.015)">
+  <div class="section-inner" style="max-width:720px">
+    <div class="section-label" style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:${accent};margin-bottom:10px">Talking Points</div>
+    <div class="section-title">What to say</div>
+    <div class="section-sub">Key benefits to weave into your video, plus power phrases that drive action.</div>
+    ${brief.talkingPoints.benefits?.length ? `<ul class="brief-benefits">${brief.talkingPoints.benefits.map(b=>`<li class="brief-benefit">${b.replace(/</g,'&lt;')}</li>`).join('')}</ul>` : ''}
+    ${brief.talkingPoints.powerPhrases?.length ? `<div style="margin-top:4px"><div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:10px">Power Phrases</div><div class="power-phrases">${brief.talkingPoints.powerPhrases.map(p=>`<span class="power-phrase">${p.replace(/</g,'&lt;')}</span>`).join('')}</div></div>` : ''}
+  </div>
+</div>` : '';
+
+  const ddHtml = (brief?.doAndDont?.dos?.length || brief?.doAndDont?.donts?.length) ? `
+<hr class="page-divider">
+<div class="section">
+  <div class="section-inner" style="max-width:720px">
+    <div class="section-label" style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:${accent};margin-bottom:10px">Creator Guidelines</div>
+    <div class="section-title">Do's and don'ts</div>
+    <div class="section-sub">Follow these to maximise your conversion rate.</div>
+    <div class="dd-grid">
+      <div class="dd-col dos">
+        <div class="dd-label">Do</div>
+        <ul class="dd-list">${(brief.doAndDont.dos||[]).map(d=>`<li class="dd-item">${d.replace(/</g,'&lt;')}</li>`).join('')}</ul>
+      </div>
+      <div class="dd-col donts">
+        <div class="dd-label">Don't</div>
+        <ul class="dd-list">${(brief.doAndDont.donts||[]).map(d=>`<li class="dd-item">${d.replace(/</g,'&lt;')}</li>`).join('')}</ul>
+      </div>
+    </div>
+  </div>
+</div>` : '';
+
+  const benchmarksHtml = brief?.benchmarks ? `
+<hr class="page-divider">
+<div class="section" style="background:rgba(255,255,255,.015)">
+  <div class="section-inner" style="max-width:600px">
+    <div class="section-label" style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:${accent};margin-bottom:10px">Performance Targets</div>
+    <div class="section-title">What good looks like</div>
+    <div class="section-sub">These are the benchmarks we use to gauge whether a video is performing. Aim for these on every post.</div>
+    <div class="benchmarks-row">
+      <div class="bm-card"><div class="bm-metric">&gt;30%</div><div class="bm-label">Hook Rate</div></div>
+      <div class="bm-card"><div class="bm-metric">&gt;10%</div><div class="bm-label">Hold Rate</div></div>
+      <div class="bm-card"><div class="bm-metric">&gt;1%</div><div class="bm-label">Click-Through Rate</div></div>
+    </div>
+  </div>
+</div>` : '';
+
+  const productsHtml = products.map(p => `
+    <div class="product-card">
+      <div class="product-name">${p.name}</div>
+      ${p.minPrice ? `<div class="product-price">From $${Number(p.minPrice).toFixed(2)}</div>` : ''}
+      ${p.url ? `<a href="${p.url}" target="_blank" rel="noopener" class="product-link">View on TikTok Shop</a>` : ''}
+    </div>`).join('');
+
+  const uspHtml     = usps.map(u => `<li class="usp-item"><span class="usp-check">&#10003;</span>${u}</li>`).join('');
+  const talkingHtml = talking.map(t => `<li class="talking-item">${t}</li>`).join('');
+  const videosHtml  = videos.map(url => {
+    const vid = extractTikTokVideoId(url);
+    if (!vid) return '';
+    return `<div class="video-wrap"><iframe src="https://www.tiktok.com/embed/v2/${vid}" width="325" height="576" style="border:none;border-radius:12px;max-width:100%" allow="fullscreen;autoplay" scrolling="no" loading="lazy"></iframe></div>`;
+  }).filter(Boolean).join('');
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Welcome — ${name} Creator Program</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a0a0f;color:#fff;min-height:100vh;padding:48px 20px}
+.top{display:flex;flex-direction:column;align-items:center;text-align:center;max-width:520px;margin:0 auto 48px}
+.card{width:100%;max-width:520px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.08);border-radius:24px;padding:48px 40px;margin:0 auto}
+@media(max-width:560px){.card{padding:36px 24px}}
+.success-icon{font-size:52px;margin-bottom:22px}
+h1{font-size:clamp(22px,4vw,30px);font-weight:900;letter-spacing:-.02em;margin-bottom:10px}
+.welcome-sub{font-size:14px;color:rgba(255,255,255,.42);line-height:1.7;margin-bottom:0;max-width:380px}
+.section-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:${accent};margin-bottom:14px;text-align:left}
+.camp-btn{display:flex;align-items:center;gap:14px;background:rgba(${ar},.07);border:1.5px solid rgba(${ar},.25);border-radius:14px;padding:18px 20px;color:#fff;text-decoration:none;margin-bottom:10px;transition:background .18s,transform .1s,border-color .18s;text-align:left}
+.camp-btn:hover{background:rgba(${ar},.15);border-color:rgba(${ar},.5);transform:translateY(-1px)}
+.camp-btn-text{flex:1}
+.camp-btn-label{font-size:14px;font-weight:900;margin-bottom:3px}
+.camp-btn-sub{font-size:12px;color:rgba(255,255,255,.42);line-height:1.4}
+.camp-btn-arrow{font-size:18px;color:${accent};opacity:.7;flex-shrink:0}
+.discord-btn{display:flex;align-items:center;justify-content:center;gap:10px;background:#5865F2;color:#fff;text-decoration:none;border-radius:14px;padding:16px 24px;font-size:14px;font-weight:900;letter-spacing:.03em;margin-top:24px;transition:transform .15s,box-shadow .15s}
+.discord-btn:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(88,101,242,.35)}
+.discord-icon{width:20px;height:20px;fill:#fff;flex-shrink:0}
+.divider{border:none;border-top:1px solid rgba(255,255,255,.06);margin:28px 0}
+/* products */
+.section{padding:48px 20px}
+.section-inner{max-width:860px;margin:0 auto}
+.section-title{font-size:clamp(18px,3vw,26px);font-weight:900;margin-bottom:8px;letter-spacing:-.01em}
+.section-sub{font-size:13px;color:rgba(255,255,255,.4);line-height:1.6;margin-bottom:28px}
+.page-divider{border:none;border-top:1px solid rgba(255,255,255,.06);margin:0}
+.products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.product-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:20px}
+.product-name{font-size:15px;font-weight:700;margin-bottom:6px}
+.product-price{font-size:13px;color:${accent};font-weight:700;margin-bottom:10px}
+.product-link{font-size:12px;color:${accent};text-decoration:none;font-weight:600}
+/* usps */
+.usp-list{list-style:none;display:flex;flex-direction:column;gap:12px}
+.usp-item{display:flex;align-items:flex-start;gap:12px;font-size:15px;font-weight:600;line-height:1.4}
+.usp-check{flex-shrink:0;width:22px;height:22px;background:rgba(${ar},.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;color:${accent};font-weight:900}
+/* videos */
+.videos-scroll{display:flex;gap:16px;overflow-x:auto;padding-bottom:8px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+.video-wrap{flex-shrink:0}
+/* talking points */
+.talking-list{list-style:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.talking-item{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:14px 16px 14px 32px;font-size:14px;color:rgba(255,255,255,.7);line-height:1.5;position:relative}
+.talking-item::before{content:'';position:absolute;left:14px;top:18px;width:6px;height:6px;border-radius:50%;background:${accent}}
+/* brief — hooks */
+.hooks-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.hook-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+.hook-text{font-size:15px;font-weight:600;color:#fff;line-height:1.45}
+.hook-type{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(${ar},.8);background:rgba(${ar},.1);border-radius:100px;padding:3px 10px;align-self:flex-start}
+/* brief — frameworks */
+.frameworks-list{display:flex;flex-direction:column;gap:14px}
+.fw-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:20px 22px}
+.fw-name{font-size:14px;font-weight:900;margin-bottom:4px;color:${accent}}
+.fw-why{font-size:13px;color:rgba(255,255,255,.5);margin-bottom:12px;line-height:1.5}
+.fw-steps{list-style:none;display:flex;flex-direction:column;gap:6px}
+.fw-step{display:flex;gap:10px;font-size:13px;color:rgba(255,255,255,.75);line-height:1.4}
+.fw-num{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:rgba(${ar},.15);color:${accent};font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;margin-top:1px}
+/* brief — scripts */
+.scripts-list{display:flex;flex-direction:column;gap:16px}
+.script-card{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.07);border-radius:14px;overflow:hidden}
+.script-header{display:flex;align-items:center;gap:12px;padding:16px 20px;cursor:pointer;user-select:none;background:rgba(255,255,255,.02)}
+.script-header:hover{background:rgba(255,255,255,.04)}
+.script-fw-badge{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;background:rgba(${ar},.12);color:${accent};border-radius:100px;padding:4px 12px;flex-shrink:0}
+.script-title{font-size:14px;font-weight:700;flex:1}
+.script-duration{font-size:11px;color:rgba(255,255,255,.3);flex-shrink:0}
+.script-toggle{font-size:16px;color:rgba(255,255,255,.3);flex-shrink:0;transition:transform .2s}
+.script-body{display:none;padding:0 20px 20px;font-size:13.5px;color:rgba(255,255,255,.7);line-height:1.75;white-space:pre-wrap}
+.script-card.open .script-toggle{transform:rotate(180deg)}
+.script-card.open .script-body{display:block}
+/* brief — talking points */
+.brief-benefits{list-style:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-bottom:20px}
+.brief-benefit{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:12px 14px 12px 32px;font-size:13px;color:rgba(255,255,255,.75);line-height:1.4;position:relative}
+.brief-benefit::before{content:'✓';position:absolute;left:11px;top:12px;font-size:11px;font-weight:900;color:${accent}}
+.power-phrases{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.power-phrase{background:rgba(${ar},.08);border:1px solid rgba(${ar},.2);border-radius:100px;padding:6px 14px;font-size:12px;font-weight:600;color:rgba(255,255,255,.8)}
+/* brief — do/dont */
+.dd-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:560px){.dd-grid{grid-template-columns:1fr}}
+.dd-col{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:18px}
+.dd-col.dos{border-color:rgba(0,210,122,.15)}
+.dd-col.donts{border-color:rgba(255,60,60,.12)}
+.dd-label{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px}
+.dd-col.dos .dd-label{color:#00d27a}
+.dd-col.donts .dd-label{color:#ff6060}
+.dd-list{list-style:none;display:flex;flex-direction:column;gap:8px}
+.dd-item{font-size:13px;color:rgba(255,255,255,.7);line-height:1.4;padding-left:18px;position:relative}
+.dd-item::before{position:absolute;left:0;font-size:12px;font-weight:900}
+.dd-col.dos .dd-item::before{content:'✓';color:#00d27a}
+.dd-col.donts .dd-item::before{content:'✕';color:#ff6060}
+/* benchmarks */
+.benchmarks-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:520px){.benchmarks-row{grid-template-columns:1fr}}
+.bm-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:16px;text-align:center}
+.bm-metric{font-size:22px;font-weight:900;color:${accent};margin-bottom:4px}
+.bm-label{font-size:11px;font-weight:700;color:rgba(255,255,255,.4);letter-spacing:.05em;text-transform:uppercase}
+footer{border-top:1px solid rgba(255,255,255,.06);padding:24px 20px;text-align:center;font-size:11px;color:rgba(255,255,255,.18)}
+footer a{color:${accent};text-decoration:none}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="success-icon">&#127881;</div>
+  <h1>You're in the ${name} program!</h1>
+  <div class="welcome-sub">Check your texts for your creator hub link. Now sign up for the campaigns below and join the community.</div>
+</div>
+
+<div class="card">
+  ${btnsHtml ? `
+  <div class="section-label">Sign Up for Campaigns</div>
+  ${btnsHtml}
+  <div class="divider"></div>` : ''}
+
+  <div class="section-label">Join the Community</div>
+  <a href="${discordInvite}" target="_blank" rel="noopener" class="discord-btn">
+    <svg class="discord-icon" viewBox="0 0 127.14 96.36" xmlns="http://www.w3.org/2000/svg"><path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/></svg>
+    Join the Discord
+  </a>
+</div>
+
+${hooksHtml}
+${frameworksHtml}
+${scriptsHtml}
+${tpHtml}
+${ddHtml}
+${benchmarksHtml}
+
+${productsHtml ? `
+<hr class="page-divider">
+<div class="section">
+  <div class="section-inner">
+    <div class="section-label" style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:${accent};margin-bottom:10px">Products to Promote</div>
+    <div class="section-title">What you'll be featuring</div>
+    <div class="section-sub">High-converting products with strong customer reviews.</div>
+    <div class="products-grid">${productsHtml}</div>
+  </div>
+</div>` : ''}
+
+${uspHtml ? `
+<hr class="page-divider">
+<div class="section" style="background:rgba(255,255,255,.02)">
+  <div class="section-inner" style="max-width:600px">
+    <div class="section-label" style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:${accent};margin-bottom:10px">Why creators love ${name}</div>
+    <div class="section-title">Built to convert</div>
+    <div class="section-sub">Products your audience will actually want to buy.</div>
+    <ul class="usp-list">${uspHtml}</ul>
+  </div>
+</div>` : ''}
+
+${videosHtml ? `
+<hr class="page-divider">
+<div class="section">
+  <div class="section-inner">
+    <div class="section-label" style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:${accent};margin-bottom:10px">Content That Converts</div>
+    <div class="section-title">Examples to inspire your videos</div>
+    <div class="section-sub">High-performing content formats for this niche.</div>
+    <div class="videos-scroll">${videosHtml}</div>
+  </div>
+</div>` : ''}
+
+${talkingHtml ? `
+<hr class="page-divider">
+<div class="section" style="background:rgba(255,255,255,.02)">
+  <div class="section-inner">
+    <div class="section-label" style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:${accent};margin-bottom:10px">Creator Brief</div>
+    <div class="section-title">Key talking points</div>
+    <div class="section-sub">Weave these into your content for the best results.</div>
+    <ul class="talking-list">${talkingHtml}</ul>
+  </div>
+</div>` : ''}
+
+<footer>Powered by <a href="https://cultcontent.cc" target="_blank">Cult Content</a></footer>
+
+<script>
+function toggleScript(i){
+  var c=document.getElementById('sc'+i);
+  if(c)c.classList.toggle('open');
+}
+</script>
+</body>
+</html>`;
+}
+
 // (Public /creators/:brandSlug and /api/creator-pages/submit are registered before requireAuth above)
+
+// GET /api/creator-pages/:slug/brief — public, returns the generated creator brief for a brand
+app.get('/api/creator-pages/:slug/brief', (req, res) => {
+  const brands = loadBrands();
+  const brand  = (brands.clients || []).find(b => b.creatorPage?.slug === req.params.slug);
+  if (!brand) return res.status(404).json({ ok: false, error: 'Brand not found' });
+  res.json({ ok: true, brief: brand.creatorPage?.brief || null, brandName: brand.name });
+});
 
 // GET /api/creator-pages — List all brands with creator page status
 app.get('/api/creator-pages', requireAuth, (req, res) => {
@@ -8095,7 +9120,7 @@ app.get('/api/creator-pages', requireAuth, (req, res) => {
     id:        b.id,
     name:      b.name,
     creatorPage: b.creatorPage || null,
-    publicUrl: b.creatorPage?.slug ? `${baseUrl}/creators/${b.creatorPage.slug}` : null,
+    publicUrl: b.creatorPage?.slug ? `${CREATOR_BASE_URL}/creators/${b.creatorPage.slug}` : null,
   }));
   res.json({ ok: true, pages, baseUrl });
 });
@@ -8123,7 +9148,7 @@ app.post('/api/creator-pages/:brandId/setup', requireAuth, (req, res) => {
   };
 
   saveBrands(data);
-  const publicUrl = `${PUBLIC_BASE_URL}/creators/${slug}`;
+  const publicUrl = `${CREATOR_BASE_URL}/creators/${slug}`;
   console.log(`[creator-pages] Setup page for ${brand.name}: ${publicUrl}`);
   res.json({ ok: true, brand: data.clients[idx], publicUrl });
 });
@@ -8141,8 +9166,50 @@ app.put('/api/creator-pages/:brandId', requireAuth, (req, res) => {
     updatedAt: new Date().toISOString(),
   };
   saveBrands(data);
-  const publicUrl = `${PUBLIC_BASE_URL}/creators/${data.clients[idx].creatorPage.slug}`;
+  const publicUrl = `${CREATOR_BASE_URL}/creators/${data.clients[idx].creatorPage.slug}`;
   res.json({ ok: true, brand: data.clients[idx], publicUrl });
+});
+
+// PATCH /api/brands/:brandId/campaign-links — save Reacher campaign URLs + competitor videos
+app.patch('/api/brands/:brandId/campaign-links', requireAuth, express.json(), (req, res) => {
+  const brands = loadBrands();
+  const idx = (brands.clients || []).findIndex(b => b.id === req.params.brandId);
+  if (idx === -1) return res.status(404).json({ error: 'Brand not found' });
+  if (!brands.clients[idx].creatorPage) brands.clients[idx].creatorPage = {};
+  const cp = brands.clients[idx].creatorPage;
+  if (!cp.campaigns) cp.campaigns = {};
+  const { cashbackUrl, quantityVideoUrl, leaderboardUrl, competitorVideos } = req.body;
+  if (cashbackUrl     !== undefined) cp.campaigns.cashbackUrl     = cashbackUrl     || null;
+  if (quantityVideoUrl !== undefined) cp.campaigns.quantityVideoUrl = quantityVideoUrl || null;
+  if (leaderboardUrl  !== undefined) cp.campaigns.leaderboardUrl  = leaderboardUrl  || null;
+  if (competitorVideos !== undefined) cp.competitorVideos = (Array.isArray(competitorVideos) ? competitorVideos : []).slice(0, 8).filter(Boolean);
+  cp.updatedAt = new Date().toISOString();
+  saveBrands(brands);
+  console.log(`[campaign-links] Updated for brand ${req.params.brandId}`);
+  res.json({ ok: true, campaigns: cp.campaigns, competitorVideos: cp.competitorVideos });
+});
+
+// POST /api/brands/:brandId/activate-dm — activate the paused outreach DM automation
+app.post('/api/brands/:brandId/activate-dm', requireAuth, express.json(), async (req, res) => {
+  const brands = loadBrands();
+  const brand = (brands.clients || []).find(b => b.id === req.params.brandId);
+  if (!brand) return res.status(404).json({ error: 'Brand not found' });
+  const automationId = brand.creatorPage?.dmAutomationId;
+  const shopId = brand.shopId;
+  if (!automationId) return res.status(400).json({ error: 'No DM automation found — run onboarding pipeline first' });
+  if (!shopId) return res.status(400).json({ error: 'No Reacher shop linked to this brand' });
+  try {
+    const { data } = await axios.patch(
+      `${CFG.railwayUrl}/affiliate/shops/${shopId}/automations/${automationId}/activate`,
+      { dailyCap: req.body.dailyCap || 20 },
+      { timeout: 15000 }
+    );
+    console.log(`[activate-dm] Activated automation ${automationId} for ${brand.name}`);
+    res.json({ ok: true, automationId, result: data });
+  } catch(e) {
+    console.error('[activate-dm] error:', e.response?.data || e.message);
+    res.status(500).json({ error: e.response?.data?.detail || e.message });
+  }
 });
 
 // GET /api/creator-pages/:brandId/competitor-videos
@@ -8284,4 +9351,72 @@ app.post('/api/ai/generate-image', async (req, res) => {
 app.listen(CFG.port, () => {
   console.log(`\n⚡ Cult Content Command Center`);
   console.log(`   http://localhost:${CFG.port}\n`);
+
+  // One-time fix — correct Lode WTR cashback target 96 → 100
+  try {
+    const bd = loadBrands();
+    const lode = (bd.clients || []).find(b => (b.name || '').toLowerCase().includes('lode'));
+    if (lode?.creatorPage?.incentives?.cashback?.target == 96) {
+      lode.creatorPage.incentives.cashback.target = 100;
+      saveBrands(bd);
+      console.log('[startup] Fixed Lode WTR cashback target: 96 → 100');
+    }
+    // Also fix in pending onboards
+    const po = loadPendingOnboards();
+    let poDirty = false;
+    for (const e of po) {
+      if ((e.formData?.brandName || '').toLowerCase().includes('lode') && e.formData?.compensation?.cashback?.target == 96) {
+        e.formData.compensation.cashback.target = 100;
+        if (e.aiContent) e.aiContent = null; // re-gen on approve
+        poDirty = true;
+      }
+    }
+    if (poDirty) { savePendingOnboards(po); console.log('[startup] Fixed Lode WTR cashback in pending onboards'); }
+  } catch(e) { console.error('[startup] Lode WTR cashback fix error:', e.message); }
+
+  // One-time cleanup — remove test/placeholder brands
+  try {
+    const testNames = ['test brand', 'test', 'organic social marketing'];
+    const bd = loadBrands();
+    const before = (bd.clients || []).length;
+    bd.clients = (bd.clients || []).filter(b => !testNames.includes((b.name || '').toLowerCase().trim()));
+    if (bd.clients.length < before) {
+      saveBrands(bd);
+      console.log(`[startup] Removed ${before - bd.clients.length} test brand(s)`);
+    }
+  } catch(e) { console.error('[startup] test brand cleanup error:', e.message); }
+
+  // Startup diagnostics — log data file sizes so we can verify persistence
+  try {
+    const mData = loadClientMeetings();
+    const bData = loadBrands();
+    const mCount = (mData.meetings || []).length;
+    const cCount = (bData.clients || []).length;
+    const clientNames = (bData.clients || []).map(c => c.name).join(', ') || '(none)';
+    console.log(`[startup] client-meetings.json: ${mCount} meeting(s)`);
+    console.log(`[startup] brands.json: ${cCount} client(s) — ${clientNames}`);
+    if (mCount > 0) {
+      const firstDate = mData.meetings[mData.meetings.length - 1]?.date || 'unknown';
+      const lastDate  = mData.meetings[0]?.date || 'unknown';
+      console.log(`[startup] meeting range: ${firstDate} → ${lastDate}`);
+    }
+  } catch(e) {
+    console.error('[startup] diagnostic error:', e.message);
+  }
+
+  // Resume any pipeline runs that were interrupted by a restart/deploy
+  try {
+    const all = loadPendingOnboards();
+    const interrupted = all.filter(e => e.status === 'processing');
+    if (interrupted.length) {
+      // Remove the stale stubs — runOnboardingPipeline will create fresh ones
+      savePendingOnboards(all.filter(e => e.status !== 'processing'));
+      console.log(`[startup] Resuming ${interrupted.length} interrupted onboarding pipeline(s)...`);
+      for (const entry of interrupted) {
+        runOnboardingPipeline(entry.formData).catch(e => console.error(`[startup] resume pipeline error (${entry.formData?.brandName}):`, e.message));
+      }
+    }
+  } catch(e) {
+    console.error('[startup] resume pipelines error:', e.message);
+  }
 });
