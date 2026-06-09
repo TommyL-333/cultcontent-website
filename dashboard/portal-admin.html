@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — Client Portal</title>
+  <style>
+    :root {
+      --bg:     #12101a;
+      --card:   #1c1828;
+      --border: #2a2540;
+      --teal:   #00f2ea;
+      --gold:   #c9a84c;
+      --green:  #00d27a;
+      --red:    #ff3b30;
+      --text:   #e2e8f0;
+      --muted:  #64748b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, sans-serif;
+      min-height: 100vh;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 28px;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .header-left { display: flex; align-items: center; gap: 16px; }
+    .logo { height: 30px; }
+    .admin-badge {
+      background: rgba(201,168,76,0.15);
+      border: 1px solid rgba(201,168,76,0.3);
+      color: var(--gold);
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+    .logout-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.78rem;
+      padding: 6px 14px;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .logout-btn:hover { border-color: var(--red); color: var(--red); }
+
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 36px 24px 60px;
+    }
+
+    .page-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .page-sub {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-bottom: 32px;
+    }
+    .count-pill {
+      display: inline-block;
+      background: rgba(0,242,234,0.1);
+      border: 1px solid rgba(0,242,234,0.2);
+      color: var(--teal);
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 2px 9px;
+      border-radius: 20px;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+
+    /* Grid */
+    .client-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 18px;
+    }
+
+    /* Client card */
+    .client-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      transition: border-color 0.15s;
+    }
+    .client-card:hover { border-color: rgba(0,242,234,0.25); }
+
+    .client-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .client-name {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+    }
+    .client-email {
+      font-size: 0.77rem;
+      color: var(--muted);
+      margin-top: 3px;
+      word-break: break-all;
+    }
+    .onboarded-at {
+      font-size: 0.68rem;
+      color: var(--muted);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* Badges */
+    .badge-row { display: flex; flex-wrap: wrap; gap: 7px; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid;
+      white-space: nowrap;
+    }
+    .badge.yes {
+      background: rgba(0,210,122,0.1);
+      border-color: rgba(0,210,122,0.3);
+      color: #00d27a;
+    }
+    .badge.no {
+      background: rgba(100,116,139,0.08);
+      border-color: rgba(100,116,139,0.2);
+      color: var(--muted);
+    }
+    .badge .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      flex-shrink: 0;
+    }
+
+    /* GMV row */
+    .gmv-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      background: rgba(0,0,0,0.2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+    .gmv-block { }
+    .gmv-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .gmv-val {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--teal);
+      line-height: 1;
+    }
+    .gmv-val.rev { color: var(--gold); }
+    .gmv-val.empty { color: var(--muted); font-size: 0.88rem; font-weight: 400; }
+    .gmv-freshness {
+      font-size: 0.65rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* Metrics grid */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .metric-block {
+      background: rgba(0,0,0,0.2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+    .metric-label {
+      font-size: 0.6rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+    .metric-val {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #e2e8f0;
+      line-height: 1;
+    }
+    .metric-val.empty { color: var(--muted); font-size: 0.8rem; font-weight: 400; }
+    .metric-trend {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.68rem;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+    .metric-trend.up   { color: #00d27a; }
+    .metric-trend.down { color: #ff5b5b; }
+    .metric-trend.flat { color: var(--muted); }
+    .metric-na {
+      font-size: 0.62rem;
+      color: var(--muted);
+      margin-top: 4px;
+      font-style: italic;
+    }
+    .metrics-loading { font-size: 0.75rem; color: var(--muted); text-align: center; padding: 8px 0; }
+
+    /* View button */
+    .view-btn {
+      display: block;
+      width: 100%;
+      background: var(--teal);
+      color: var(--bg);
+      font-size: 0.84rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 9px;
+      padding: 10px;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      text-align: center;
+      margin-top: auto;
+    }
+    .view-btn:hover { opacity: 0.88; }
+    .view-btn:disabled { opacity: 0.5; cursor: default; }
+
+    /* View toggle */
+    .view-toggle {
+      padding: 7px 18px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    .view-toggle.active {
+      background: rgba(0,242,234,0.12);
+      border-color: rgba(0,242,234,0.35);
+      color: var(--teal);
+    }
+
+    /* Billing sub-tabs */
+    .billing-subtab { background: transparent; border: 1px solid var(--border); border-radius: 8px; color: var(--muted); font-size: 0.78rem; font-weight: 600; padding: 5px 14px; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+    .billing-subtab.active { background: var(--teal); color: var(--bg); border-color: var(--teal); }
+    .billing-subtab:not(.active):hover { border-color: var(--teal); color: var(--teal); }
+
+    /* Countdown chip */
+    .billing-countdown { font-size: 0.78rem; color: var(--muted); background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.25); border-radius: 20px; padding: 4px 12px; display: inline-block; }
+    .billing-countdown strong { color: var(--gold); }
+
+    /* Billing cards */
+    .billing-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .billing-card.sent { border-color: rgba(0,210,122,0.3); }
+    .billing-name { font-size: 1rem; font-weight: 700; }
+    .billing-email { font-size: 0.75rem; color: var(--muted); margin-top:2px; }
+    .billing-line { display:flex; justify-content:space-between; font-size:0.82rem; padding: 5px 0; border-bottom: 1px solid var(--border); }
+    .billing-line:last-of-type { border-bottom: none; }
+    .billing-line .lbl { color: var(--muted); }
+    .billing-line .amt { font-weight: 600; color: var(--text); }
+    .billing-total { display:flex; justify-content:space-between; padding: 10px 0 4px; border-top: 1px solid var(--border); }
+    .billing-total .lbl { font-weight: 700; font-size: 0.9rem; }
+    .billing-total .amt { font-size: 1.1rem; font-weight: 800; color: var(--teal); }
+    .gmv-edit { background: transparent; border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 0.82rem; padding: 3px 7px; width: 100px; text-align: right; font-family: inherit; outline: none; }
+    .gmv-edit:focus { border-color: var(--teal); }
+    .billing-email-input { background: transparent; border: 1px solid var(--border); border-radius: 6px; color: var(--muted); font-size: 0.75rem; padding: 3px 8px; width: 100%; box-sizing: border-box; margin-top: 4px; font-family: inherit; outline: none; }
+    .billing-email-input:focus { border-color: var(--teal); color: var(--text); }
+    /* Payment method badge */
+    .pm-badge { display:inline-flex; align-items:center; gap:5px; font-size:0.72rem; font-weight:600; border-radius:12px; padding:3px 9px; }
+    .pm-badge.has-pm { background: rgba(0,210,122,0.12); color: var(--green); border: 1px solid rgba(0,210,122,0.25); }
+    .pm-badge.no-pm  { background: rgba(255,204,0,0.1); color: var(--yellow); border: 1px solid rgba(255,204,0,0.25); cursor:pointer; }
+    .pm-badge.no-pm:hover { background: rgba(255,204,0,0.18); }
+    .send-btn {
+      width: 100%;
+      background: var(--teal);
+      color: var(--bg);
+      font-size: 0.85rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 9px;
+      padding: 11px;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      font-family: inherit;
+      margin-top: auto;
+    }
+    .send-btn:hover { opacity: 0.88; }
+    .send-btn:disabled { opacity: 0.45; cursor: default; }
+    .send-btn.sent { background: var(--green); }
+    .send-btn.charge { background: var(--gold); color: #12101a; }
+    .invoice-link { font-size: 0.75rem; color: var(--teal); text-decoration: none; text-align: center; display: block; margin-top: 4px; }
+    .invoice-link:hover { text-decoration: underline; }
+    .no-email-warn { font-size: 0.75rem; color: #ffcc00; background: rgba(255,204,0,0.08); border: 1px solid rgba(255,204,0,0.2); border-radius: 6px; padding: 5px 10px; }
+
+    /* Billing history table */
+    .hist-table { width:100%; border-collapse:collapse; font-size:0.8rem; }
+    .hist-table th { text-align:left; color:var(--muted); font-weight:600; padding:6px 10px; border-bottom:1px solid var(--border); }
+    .hist-table td { padding:7px 10px; border-bottom:1px solid rgba(255,255,255,0.04); }
+    .hist-table tr:last-child td { border-bottom:none; }
+    .hist-client-header { font-weight:700; font-size:0.88rem; padding: 16px 0 6px; }
+    .hist-status { display:inline-block; border-radius:10px; padding:2px 8px; font-size:0.7rem; font-weight:700; }
+    .hist-status.paid  { background:rgba(0,210,122,0.15); color:var(--green); }
+    .hist-status.open  { background:rgba(255,204,0,0.12); color:var(--yellow); }
+    .hist-status.void  { background:rgba(100,116,139,0.15); color:#64748b; }
+    .hist-status.uncollectible { background:rgba(255,59,48,0.12); color:var(--red); }
+
+    /* Empty / loading states */
+    .empty-state {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.88rem;
+      padding: 60px 20px;
+      grid-column: 1 / -1;
+    }
+    .spinner {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--border);
+      border-top-color: var(--teal);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Error */
+    .error-msg {
+      background: rgba(255,59,48,0.1);
+      border: 1px solid rgba(255,59,48,0.25);
+      border-radius: 10px;
+      color: #ff6b6b;
+      font-size: 0.83rem;
+      padding: 14px 18px;
+      margin-bottom: 24px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <img class="logo" src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/68529ceff63e1913ceb4e2e0.png" alt="Cult Content">
+    <span class="admin-badge">Admin</span>
+  </div>
+  <button class="logout-btn" onclick="doLogout()">Sign Out</button>
+</header>
+
+<main>
+  <h1 class="page-title">Client Portal <span class="count-pill" id="clientCount">—</span></h1>
+  <p class="page-sub">View and manage all brand accounts.</p>
+
+  <!-- View toggle -->
+  <div style="display:flex;gap:8px;margin-bottom:22px;">
+    <button class="view-toggle active" id="btnClients" onclick="setView('clients')">👤 Clients</button>
+    <button class="view-toggle" id="btnBilling" onclick="setView('billing')">💰 Billing</button>
+  </div>
+
+  <div class="error-msg" id="errMsg"></div>
+
+  <!-- Clients view -->
+  <div id="viewClients">
+    <div class="client-grid" id="clientGrid">
+      <div class="empty-state"><span class="spinner"></span>Loading clients…</div>
+    </div>
+  </div>
+
+  <!-- Billing view -->
+  <div id="viewBilling" style="display:none;">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+      <div>
+        <div style="font-size:1.05rem;font-weight:700;" id="billingPeriod">Loading…</div>
+        <div style="font-size:0.78rem;color:var(--muted);margin-top:3px;" id="billingSubtitle">Fetching billing data…</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span class="billing-countdown" id="billingCountdown" style="display:none;"></span>
+        <button class="billing-subtab active" id="bstabCurrent" onclick="setBillingTab('current')">Current Month</button>
+        <button class="billing-subtab" id="bstabHistory" onclick="setBillingTab('history')">History</button>
+      </div>
+    </div>
+
+    <!-- Current month cards -->
+    <div id="billingCurrent">
+      <div id="billingGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;">
+        <div class="empty-state"><span class="spinner"></span>Loading billing data…</div>
+      </div>
+    </div>
+
+    <!-- History -->
+    <div id="billingHistory" style="display:none;">
+      <div id="billingHistoryContent">
+        <div class="empty-state"><span class="spinner"></span>Loading history…</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+  function esc(s) {
+    if (!s) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function fmtDate(iso) {
+    if (!iso) return '';
+    try {
+      return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    } catch(_) { return ''; }
+  }
+
+  function fmtMoney(n) {
+    if (!n && n !== 0) return null;
+    if (n >= 1000) return '$' + (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+    return '$' + n.toFixed(2).replace(/\.00$/, '');
+  }
+
+  function timeAgo(ts) {
+    if (!ts) return '';
+    const mins = Math.floor((Date.now() - ts) / 60000);
+    if (mins < 2)   return 'just now';
+    if (mins < 60)  return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24)   return `${hrs}h ago`;
+    return `${Math.floor(hrs / 24)}d ago`;
+  }
+
+  function badge(condition, yesLabel, noLabel) {
+    if (condition) {
+      return `<span class="badge yes"><span class="dot"></span>${esc(yesLabel)}</span>`;
+    }
+    return `<span class="badge no"><span class="dot"></span>${esc(noLabel)}</span>`;
+  }
+
+  async function load() {
+    try {
+      const res = await fetch('/portal-admin/clients', {
+        headers: { 'Accept': 'application/json' }
+      });
+      if (res.status === 401) { window.location.href = '/portal-admin'; return; }
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || 'Failed to load clients');
+      render(data.clients || []);
+    } catch (err) {
+      const errEl = document.getElementById('errMsg');
+      errEl.textContent = err.message || 'Failed to load clients.';
+      errEl.style.display = 'block';
+      document.getElementById('clientGrid').innerHTML = '<div class="empty-state">Could not load client list.</div>';
+    }
+  }
+
+  function render(clients) {
+    const grid = document.getElementById('clientGrid');
+    const countEl = document.getElementById('clientCount');
+    countEl.textContent = clients.length;
+
+    if (!clients.length) {
+      grid.innerHTML = '<div class="empty-state">No clients yet.</div>';
+      return;
+    }
+
+    grid.innerHTML = clients.map(c => `
+      <div class="client-card">
+        <div class="client-card-top">
+          <div>
+            <div class="client-name">${esc(c.name)}</div>
+            <div class="client-email">${esc(c.email) || '<em style="color:#64748b">No email</em>'}</div>
+          </div>
+          ${c.onboardedAt ? `<div class="onboarded-at">${fmtDate(c.onboardedAt)}</div>` : ''}
+        </div>
+        <div class="badge-row">
+          ${badge(c.hasPassword, 'Password set', 'Password not set')}
+          ${c.tiktokConnected && !c.hasShopCipher
+            ? `<span class="badge no" style="cursor:pointer;border-color:rgba(201,168,76,0.4);color:#c9a84c" onclick="clearTikTok('${esc(c.id)}',this)" title="Token missing shop_cipher — click to clear so brand can reconnect">⚠️ TikTok (broken)</span>`
+            : badge(c.tiktokConnected, 'TikTok connected', 'TikTok not connected')
+          }
+          ${c.bufferConnected ? badge(true, 'Buffer', 'Buffer') : ''}
+          ${c.arcadsConnected ? badge(true, 'Arcads', 'Arcads') : ''}
+          ${c.storistaConnected ? badge(true, 'Storista', 'Storista') : ''}
+        </div>
+        <div class="gmv-row">
+          <div class="gmv-block">
+            <div class="gmv-label">30-Day Net GMV</div>
+            ${c.gmv ? `<div class="gmv-val">${fmtMoney(c.gmv)}</div>` : `<div class="gmv-val empty">No data</div>`}
+            ${c.cachedGmvAt ? `<div class="gmv-freshness">Updated ${timeAgo(c.cachedGmvAt)}</div>` : ''}
+          </div>
+          <div class="gmv-block">
+            <div class="gmv-label">Rev Share (${Math.round(c.commissionRate * 100)}%)</div>
+            ${c.gmv ? `<div class="gmv-val rev">${fmtMoney(c.revShare)}</div>` : `<div class="gmv-val empty">—</div>`}
+          </div>
+        </div>
+        ${c.tiktokConnected ? `
+        <div class="metrics-grid" id="metrics-${esc(c.id)}">
+          <div class="metric-block">
+            <div class="metric-label">This Wk GMV</div>
+            <div class="metric-val empty" id="m-gmv-${esc(c.id)}">—</div>
+            <div class="metric-trend flat" id="m-gmv-trend-${esc(c.id)}"></div>
+          </div>
+          <div class="metric-block">
+            <div class="metric-label">This Wk Orders</div>
+            <div class="metric-val empty" id="m-orders-${esc(c.id)}">—</div>
+            <div class="metric-trend flat" id="m-orders-trend-${esc(c.id)}"></div>
+          </div>
+          <div class="metric-block">
+            <div class="metric-label">Avg Order Val</div>
+            <div class="metric-val empty" id="m-aov-${esc(c.id)}">—</div>
+            <div class="metric-trend flat" id="m-aov-trend-${esc(c.id)}"></div>
+          </div>
+          <div class="metric-block" id="m-impressions-block-${esc(c.id)}">
+            <div class="metric-label">Impressions</div>
+            <div class="metric-val empty" id="m-impressions-${esc(c.id)}">—</div>
+            <div class="metric-trend flat" id="m-impressions-trend-${esc(c.id)}"></div>
+          </div>
+          <div class="metric-block" id="m-ctr-block-${esc(c.id)}">
+            <div class="metric-label">CTR</div>
+            <div class="metric-val empty" id="m-ctr-${esc(c.id)}">—</div>
+            <div class="metric-trend flat" id="m-ctr-trend-${esc(c.id)}"></div>
+          </div>
+          <div class="metric-block" id="m-conv-block-${esc(c.id)}">
+            <div class="metric-label">Conv. Rate</div>
+            <div class="metric-val empty" id="m-conv-${esc(c.id)}">—</div>
+            <div class="metric-trend flat" id="m-conv-trend-${esc(c.id)}"></div>
+          </div>
+        </div>` : ''}
+        <button class="view-btn" onclick="impersonate('${esc(c.id)}', this)">
+          View Dashboard →
+        </button>
+      </div>
+    `).join('');
+
+    // Lazy-load WoW metrics for each connected brand
+    clients.filter(c => c.tiktokConnected).forEach(c => loadMetrics(c.id));
+  }
+
+  async function loadMetrics(brandId) {
+    try {
+      const res = await fetch(`/portal-admin/shop-metrics/${brandId}`);
+      if (!res.ok) return;
+      const d = await res.json();
+      if (!d.ok || d.noToken) return;
+
+      function setMetric(id, val, trendObj) {
+        const el = document.getElementById(id);
+        if (el) { el.textContent = val; el.classList.remove('empty'); }
+        const tEl = document.getElementById(id + '-trend');
+        if (tEl && trendObj) {
+          const { dir, pct } = trendObj;
+          tEl.className = `metric-trend ${dir}`;
+          const arrow = dir === 'up' ? '↑' : dir === 'down' ? '↓' : '→';
+          tEl.textContent = pct != null ? `${arrow} ${pct}% vs last wk` : `${arrow} vs last wk`;
+        }
+      }
+
+      function fmtNum(n) {
+        if (n == null) return null;
+        const v = parseFloat(n);
+        if (isNaN(v)) return null;
+        if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + 'M';
+        if (v >= 1_000) return (v / 1_000).toFixed(1) + 'K';
+        return String(Math.round(v));
+      }
+
+      function fmtPct(n) {
+        if (n == null) return null;
+        const v = parseFloat(n);
+        if (isNaN(v)) return null;
+        // TikTok may return as 0-100 or 0-1
+        const pct = v > 1 ? v : v * 100;
+        return pct.toFixed(2) + '%';
+      }
+
+      // Order-based metrics (always available)
+      setMetric(`m-gmv-${brandId}`,    d.thisWeek.gmv    > 0 ? fmtMoney(d.thisWeek.gmv)             : '$0',   d.trends.gmv);
+      setMetric(`m-orders-${brandId}`, d.thisWeek.orders > 0 ? String(d.thisWeek.orders) + ' orders' : '0',    d.trends.orders);
+      setMetric(`m-aov-${brandId}`,    d.thisWeek.aov    > 0 ? fmtMoney(d.thisWeek.aov)              : '$0',   d.trends.aov);
+
+      // Analytics metrics:
+      //   impressions — sum of total_performance.product_impressions across all products
+      //   ctr         — weighted-avg CTR across all products (impressions-weighted)
+      //   convRate    — avg_conversation_rate from shop/performance (0–1 float)
+      const a = d.analytics?.thisWeek;
+      if (a) {
+        const impVal  = a.impressions != null ? fmtNum(a.impressions) : null;
+        // CTR from product analytics is already a decimal (e.g. 0.0350 = 3.50%)
+        const ctrVal  = a.ctr        != null ? (parseFloat(a.ctr) * 100).toFixed(2) + '%' : null;
+        // convRate from shop/performance is 0–1 float (e.g. 0.0609 = 6.09%)
+        const convVal = a.convRate   != null ? (parseFloat(a.convRate) * 100).toFixed(2) + '%' : null;
+
+        if (impVal  != null) setMetric(`m-impressions-${brandId}`, impVal,  d.trends.impressions);
+        if (ctrVal  != null) setMetric(`m-ctr-${brandId}`,         ctrVal,  d.trends.ctr);
+        if (convVal != null) setMetric(`m-conv-${brandId}`,        convVal, d.trends.convRate);
+
+        // Dim blocks with no data
+        [['impressions', impVal], ['ctr', ctrVal], ['conv', convVal]].forEach(([key, val]) => {
+          if (val == null) {
+            const blk = document.getElementById(`m-${key}-block-${brandId}`);
+            if (blk) blk.style.opacity = '0.45';
+            const tEl = document.getElementById(`m-${key}-trend-${brandId}`);
+            if (tEl) { tEl.className = 'metric-na'; tEl.textContent = 'no data'; }
+          }
+        });
+      }
+    } catch(e) { /* silent fail */ }
+  }
+
+  async function clearTikTok(brandId, el) {
+    if (!confirm('Clear TikTok token? The brand will need to reconnect from their dashboard.')) return;
+    el.textContent = '…';
+    try {
+      const res  = await fetch(`/portal-admin/clear-tiktok/${brandId}`, { method: 'POST' });
+      const data = await res.json();
+      if (data.ok) { alert(`Done — ${data.name} can now reconnect TikTok.`); load(); }
+      else alert(data.error || 'Failed');
+    } catch(e) { alert('Network error'); }
+  }
+
+  async function impersonate(brandId, btn) {
+    btn.disabled = true;
+    btn.textContent = 'Loading…';
+    try {
+      const res = await fetch('/portal-admin/impersonate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ brandId }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        window.location.href = '/client/dashboard';
+      } else {
+        alert(data.error || 'Failed to impersonate brand.');
+        btn.disabled = false;
+        btn.textContent = 'View Dashboard →';
+      }
+    } catch (err) {
+      alert('Network error — please try again.');
+      btn.disabled = false;
+      btn.textContent = 'View Dashboard →';
+    }
+  }
+
+  async function doLogout() {
+    await fetch('/portal-admin/logout', { method: 'POST' });
+    window.location.href = '/portal-admin';
+  }
+
+  // ── View toggle ────────────────────────────────────────────────────────────
+  function setView(v) {
+    document.getElementById('viewClients').style.display = v === 'clients' ? '' : 'none';
+    document.getElementById('viewBilling').style.display = v === 'billing' ? '' : 'none';
+    document.getElementById('btnClients').classList.toggle('active', v === 'clients');
+    document.getElementById('btnBilling').classList.toggle('active', v === 'billing');
+    if (v === 'billing' && !window._billingLoaded) loadBilling();
+  }
+
+  function setBillingTab(tab) {
+    document.getElementById('billingCurrent').style.display = tab === 'current' ? '' : 'none';
+    document.getElementById('billingHistory').style.display = tab === 'history' ? '' : 'none';
+    document.getElementById('bstabCurrent').classList.toggle('active', tab === 'current');
+    document.getElementById('bstabHistory').classList.toggle('active', tab === 'history');
+    if (tab === 'history' && !window._historyLoaded) loadHistory();
+  }
+
+  // ── Billing ─────────────────────────────────────────────────────────────────
+  async function loadBilling() {
+    window._billingLoaded = true;
+    const grid = document.getElementById('billingGrid');
+    try {
+      const res  = await fetch('/portal-admin/billing/preview');
+      if (res.status === 401) { window.location.href = '/portal-admin'; return; }
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || 'Failed');
+
+      document.getElementById('billingPeriod').textContent = `${data.period} Invoices`;
+      document.getElementById('billingSubtitle').textContent =
+        `Data: ${data.dataPeriod} · Review each invoice, then approve to charge or send.`;
+
+      // Countdown chip
+      const cdEl = document.getElementById('billingCountdown');
+      if (data.daysUntilBilling != null) {
+        cdEl.innerHTML = `Next invoice: <strong>${data.nextBillingLabel}</strong> in <strong>${data.daysUntilBilling}d</strong>`;
+        cdEl.style.display = 'inline-block';
+      }
+
+      renderBilling(data.previews || []);
+    } catch(err) {
+      grid.innerHTML = `<div class="empty-state">Could not load billing data — ${err.message}</div>`;
+    }
+  }
+
+  function renderBilling(previews) {
+    const grid = document.getElementById('billingGrid');
+    if (!previews.length) { grid.innerHTML = '<div class="empty-state">No clients to bill.</div>'; return; }
+
+    grid.innerHTML = previews.map(p => {
+      const alreadySent  = !!p.lastInvoicedAt;
+      const noEmail      = !p.billingEmail;
+      const sentAgo      = p.lastInvoicedAt ? timeAgo(p.lastInvoicedAt) : null;
+      const commPct      = Math.round(p.commRate * 100);
+      const hasPM        = !!p.hasPaymentMethod;
+      const pmBadge      = hasPM
+        ? `<span class="pm-badge has-pm">💳 Auto-charge on file</span>`
+        : `<span class="pm-badge no-pm" onclick="openSetupLink('${esc(p.id)}','${esc(p.name)}')">⚠️ No payment method — click to add</span>`;
+      const btnLabel     = alreadySent
+        ? `✓ ${sentAgo} — Resend?`
+        : hasPM ? `⚡ Charge Now` : `✅ Approve &amp; Send Invoice`;
+      const btnClass     = `send-btn${alreadySent ? ' sent' : hasPM ? ' charge' : ''}`;
+
+      const pendingChip = p.pendingTierChange
+        ? `<div style="margin-top:8px;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3);border-radius:6px;padding:5px 10px;font-size:0.73rem;color:#c9a84c;">
+            ⏳ Plan change requested: <strong>$${p.pendingTierChange.retainer.toLocaleString()}/mo + ${Math.round(p.pendingTierChange.commRate*100)}% GMV</strong> — effective ${esc(p.pendingTierChange.effectiveLabel)}
+           </div>`
+        : '';
+
+      return `
+      <div class="billing-card${alreadySent ? ' sent' : ''}" id="bc-${esc(p.id)}">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap;">
+          <div>
+            <div class="billing-name">${esc(p.name)}</div>
+            ${noEmail
+              ? `<input class="billing-email-input" type="email" id="email-${esc(p.id)}" placeholder="Billing email (required)" value="">`
+              : `<div class="billing-email">${esc(p.billingEmail)}</div>`
+            }
+          </div>
+          ${pmBadge}
+        </div>
+        ${pendingChip}
+
+        <div>
+          <div class="billing-line">
+            <span class="lbl">Monthly Retainer</span>
+            <span class="amt" style="display:flex;align-items:center;gap:4px;">
+              $<input class="gmv-edit" type="number" id="ret-${esc(p.id)}" value="${p.retainer}" oninput="recalcCard('${esc(p.id)}')">
+            </span>
+          </div>
+          <div class="billing-line">
+            <span class="lbl">Net Sales (${esc(p.dataPeriod || p.period)})</span>
+            <span class="amt" style="display:flex;align-items:center;gap:4px;">
+              $<input class="gmv-edit" type="number" id="gmv-${esc(p.id)}" value="${p.gmv.toFixed(2)}" oninput="recalcCard('${esc(p.id)}')">
+            </span>
+          </div>
+          <div class="billing-line">
+            <span class="lbl">Rev Share %</span>
+            <span class="amt" style="display:flex;align-items:center;gap:4px;">
+              <input class="gmv-edit" type="number" id="comm-${esc(p.id)}" value="${commPct}" min="0" max="100" oninput="recalcCard('${esc(p.id)}')">%
+            </span>
+          </div>
+          <div class="billing-line">
+            <span class="lbl">Rev Share Amount</span>
+            <span class="amt" id="rs-${esc(p.id)}">$${p.revShare.toFixed(2)}</span>
+          </div>
+        </div>
+
+        <div class="billing-total">
+          <span class="lbl">Total Due</span>
+          <span class="amt" id="tot-${esc(p.id)}">$${p.total.toFixed(2)}</span>
+        </div>
+
+        <button class="${btnClass}" id="sendbtn-${esc(p.id)}"
+          onclick="sendInvoice('${esc(p.id)}','${esc(p.name)}',${hasPM})">
+          ${btnLabel}
+        </button>
+        ${p.lastInvoiceUrl ? `<a class="invoice-link" href="${esc(p.lastInvoiceUrl)}" target="_blank">🔗 View last invoice ↗</a>` : ''}
+      </div>`;
+    }).join('');
+  }
+
+  function recalcCard(id) {
+    const retainer = parseFloat(document.getElementById(`ret-${id}`)?.value  || 0);
+    const gmv      = parseFloat(document.getElementById(`gmv-${id}`)?.value  || 0);
+    const commPct  = parseFloat(document.getElementById(`comm-${id}`)?.value || 0);
+    const commRate = commPct / 100;
+    const revShare = parseFloat((gmv * commRate).toFixed(2));
+    const total    = parseFloat((retainer + revShare).toFixed(2));
+    const rsEl  = document.getElementById(`rs-${id}`);
+    const totEl = document.getElementById(`tot-${id}`);
+    if (rsEl)  rsEl.textContent  = '$' + revShare.toFixed(2);
+    if (totEl) totEl.textContent = '$' + total.toFixed(2);
+  }
+
+  async function openSetupLink(brandId, name) {
+    const res  = await fetch(`/portal-admin/billing/setup-link/${brandId}`);
+    const data = await res.json();
+    if (data.ok && data.url) {
+      window.open(data.url, '_blank');
+    } else {
+      alert('Could not generate setup link: ' + (data.error || 'Unknown error'));
+    }
+  }
+
+  async function sendInvoice(brandId, name, hasPM) {
+    const btn      = document.getElementById(`sendbtn-${brandId}`);
+    const retainer = parseFloat(document.getElementById(`ret-${brandId}`)?.value  || 0);
+    const gmv      = parseFloat(document.getElementById(`gmv-${brandId}`)?.value  || 0);
+    const commPct  = parseFloat(document.getElementById(`comm-${brandId}`)?.value || 0);
+    const commRate = commPct / 100;
+    const emailEl  = document.getElementById(`email-${brandId}`);
+    const emailOverride = emailEl?.value?.trim() || null;
+    if (emailEl && !emailOverride) { emailEl.style.borderColor = '#ff3b30'; emailEl.focus(); return; }
+    const total = retainer + parseFloat((gmv * commRate).toFixed(2));
+    if (total <= 0) { alert('Total is $0 — add a retainer or GMV before sending.'); return; }
+    const action = hasPM ? `charge $${total.toFixed(2)} to their card/bank on file` : `send a $${total.toFixed(2)} invoice by email`;
+    if (!confirm(`${name}: ${action}?\n\nThis action cannot be undone.`)) return;
+    btn.disabled = true;
+    btn.textContent = hasPM ? 'Charging…' : 'Sending…';
+    try {
+      const res  = await fetch(`/portal-admin/billing/send/${brandId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ gmv, retainer, commRate, ...(emailOverride ? { billingEmail: emailOverride } : {}) }),
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || 'Failed');
+      btn.classList.remove('charge');
+      btn.classList.add('sent');
+      btn.textContent = data.charged ? '⚡ Charged!' : '✓ Invoice Sent!';
+      btn.disabled = false;
+      const card = document.getElementById(`bc-${brandId}`);
+      let link = card.querySelector('.invoice-link');
+      if (!link) { link = document.createElement('a'); link.className = 'invoice-link'; card.appendChild(link); }
+      link.href = data.invoiceUrl;
+      link.target = '_blank';
+      link.textContent = data.charged ? '🔗 View receipt ↗' : '🔗 View invoice ↗';
+      // Invalidate history cache so it refreshes next time
+      window._historyLoaded = false;
+    } catch(err) {
+      alert('Error: ' + err.message);
+      btn.disabled = false;
+      btn.textContent = hasPM ? '⚡ Charge Now' : '✅ Approve & Send Invoice';
+    }
+  }
+
+  // ── Billing History ──────────────────────────────────────────────────────────
+  async function loadHistory() {
+    window._historyLoaded = true;
+    const el = document.getElementById('billingHistoryContent');
+    try {
+      const res  = await fetch('/portal-admin/billing/history');
+      if (res.status === 401) { window.location.href = '/portal-admin'; return; }
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || 'Failed');
+      renderHistory(data.clients || []);
+    } catch(err) {
+      el.innerHTML = `<div class="empty-state">Could not load history — ${err.message}</div>`;
+    }
+  }
+
+  function renderHistory(clients) {
+    const el = document.getElementById('billingHistoryContent');
+    const hasAny = clients.some(c => c.invoices?.length > 0);
+    if (!hasAny) { el.innerHTML = '<div class="empty-state">No invoice history yet.</div>'; return; }
+
+    el.innerHTML = clients.filter(c => c.invoices?.length > 0).map(c => {
+      const rows = c.invoices.map(inv => {
+        const date   = inv.paidAt || inv.created;
+        const dateStr = date ? new Date(date * 1000).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }) : '—';
+        const statusClass = inv.status === 'paid' ? 'paid' : inv.status === 'open' ? 'open' : inv.status === 'void' ? 'void' : 'uncollectible';
+        const method = inv.method === 'charge_automatically' ? '⚡ Auto' : '📧 Invoice';
+        return `<tr>
+          <td>${esc(inv.period) || '—'}</td>
+          <td>$${inv.amountPaid}</td>
+          <td><span class="hist-status ${statusClass}">${esc(inv.status)}</span></td>
+          <td>${dateStr}</td>
+          <td>${method}</td>
+          <td>${inv.hostedUrl ? `<a href="${esc(inv.hostedUrl)}" target="_blank" style="color:var(--teal);text-decoration:none;font-size:0.75rem;">View ↗</a>` : '—'}</td>
+        </tr>`;
+      }).join('');
+      return `
+        <div class="hist-client-header">${esc(c.name)}</div>
+        <table class="hist-table">
+          <thead><tr><th>Period</th><th>Amount</th><th>Status</th><th>Date</th><th>Method</th><th></th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+    }).join('');
+  }
+
+  load();
+</script>
+</body>
+</html>

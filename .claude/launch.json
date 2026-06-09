@@ -2,17 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "ascension-landing",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["serve", "-p", "3456", "ascension-landing"],
-      "port": 3456
-    },
-    {
       "name": "dashboard",
       "runtimeExecutable": "node",
       "runtimeArgs": ["dashboard-server.js"],
-      "port": 3457,
-      "autoPort": true
+      "port": 3457
     }
   ]
 }

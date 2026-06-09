@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Get Your Creator Pass &mdash; Culture Commerce Carnival</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      min-height: 100%;
+      background: transparent !important;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      color: #f0f0f0;
+      margin: 0;
+      padding: 0;
+    }
+
+    #page-bg {
+      min-height: 100vh;
+      width: 100%;
+      background: #111111;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 72px 20px;
+    }
+
+    .wrap {
+      width: 100%;
+      max-width: 480px;
+    }
+
+    /* Brand */
+    .brand {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 44px;
+      text-decoration: none;
+    }
+    .brand img { height: 28px; }
+    .brand-name {
+      font-size: .74rem;
+      font-weight: 800;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.4);
+    }
+
+    /* Pill */
+    .pill {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: #00F2EA;
+      background: rgba(0,242,234,.08);
+      border: 1px solid rgba(0,242,234,.2);
+      border-radius: 20px;
+      padding: 4px 14px;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      font-size: clamp(32px, 6vw, 46px);
+      font-weight: 900;
+      line-height: 1.07;
+      letter-spacing: -.025em;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+    h1 .cyan { color: #00F2EA; }
+
+    .sub {
+      font-size: 14px;
+      color: #555;
+      line-height: 1.8;
+      margin-bottom: 36px;
+    }
+    .sub strong { color: #999; }
+
+    /* Card */
+    .card {
+      background: #111;
+      border: 1px solid #1e1e1e;
+      border-radius: 16px;
+      padding: 32px 28px;
+      margin-bottom: 16px;
+    }
+
+    .card-label {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: #2e2e2e;
+      margin-bottom: 24px;
+    }
+
+    /* Fields */
+    .field { margin-bottom: 18px; }
+    .field:last-of-type { margin-bottom: 0; }
+
+    label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: #555;
+      margin-bottom: 8px;
+    }
+
+    input {
+      width: 100%;
+      background: #0d0d0d;
+      border: 1px solid #222;
+      border-radius: 9px;
+      color: #f0f0f0;
+      font-size: 15px;
+      font-family: inherit;
+      padding: 13px 14px;
+      outline: none;
+      transition: border-color .15s;
+    }
+    input:focus { border-color: #00F2EA; }
+    input::placeholder { color: #2e2e2e; }
+
+    .handle-wrap {
+      position: relative;
+    }
+    .handle-at {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #333;
+      font-size: 15px;
+      pointer-events: none;
+    }
+    .handle-wrap input { padding-left: 28px; }
+
+    .field-hint {
+      font-size: 11px;
+      color: #2a2a2a;
+      margin-top: 7px;
+      line-height: 1.5;
+    }
+
+    /* Error */
+    .error-msg {
+      display: none;
+      background: rgba(255,0,80,.07);
+      border: 1px solid rgba(255,0,80,.2);
+      color: #ff6688;
+      font-size: 13px;
+      border-radius: 8px;
+      padding: 11px 14px;
+      margin-bottom: 16px;
+    }
+    .error-msg.show { display: block; }
+
+    /* Submit button */
+    .btn-submit {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      background: #00F2EA;
+      color: #000;
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: .04em;
+      border: none;
+      border-radius: 10px;
+      padding: 15px 20px;
+      cursor: pointer;
+      transition: opacity .15s;
+      margin-top: 24px;
+      font-family: inherit;
+    }
+    .btn-submit:hover { opacity: .87; }
+    .btn-submit:disabled { opacity: .3; cursor: not-allowed; }
+
+    .spinner {
+      width: 17px;
+      height: 17px;
+      border: 2px solid rgba(0,0,0,.25);
+      border-top-color: #000;
+      border-radius: 50%;
+      animation: spin .55s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Perks */
+    .perks { display: flex; flex-direction: column; gap: 11px; }
+    .perk {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 13px;
+      color: #666;
+      line-height: 1.5;
+    }
+    .perk i {
+      color: #00F2EA;
+      font-size: 11px;
+      width: 14px;
+      text-align: center;
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+
+    /* Fine print */
+    .fine {
+      font-size: 11px;
+      color: #222;
+      text-align: center;
+      line-height: 1.65;
+      margin-top: 14px;
+    }
+
+    /* ── States ── */
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* Success */
+    .check-ring {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      border: 2px solid #00F2EA;
+      background: rgba(0,242,234,.07);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 26px;
+      font-size: 28px;
+      color: #00F2EA;
+    }
+
+    .success-card {
+      background: #111;
+      border: 1px solid #1e1e1e;
+      border-radius: 16px;
+      padding: 36px 28px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .success-steps {
+      background: #111;
+      border: 1px solid #1e1e1e;
+      border-radius: 12px;
+      padding: 24px 24px;
+      text-align: left;
+    }
+
+    .sstep {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .sstep:last-child { margin-bottom: 0; }
+    .sstep-n {
+      flex-shrink: 0;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: rgba(0,242,234,.08);
+      border: 1px solid rgba(0,242,234,.2);
+      color: #00F2EA;
+      font-size: 10px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 1px;
+    }
+    .sstep-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #ddd;
+      margin-bottom: 2px;
+    }
+    .sstep-desc {
+      font-size: 12px;
+      color: #444;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+<div id="page-bg">
+<div class="wrap">
+
+  <!-- ── Apply form ── -->
+  <div id="view-form" class="view active">
+
+    <a href="https://cultcontent.cc" class="brand">
+      <img src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/68529ceff63e1913ceb4e2e0.png" alt="Cult Content" />
+      <span class="brand-name">Cult Content</span>
+    </a>
+
+    <div class="pill">Creator Access</div>
+    <h1>Get your free<br><span class="cyan">creator pass.</span></h1>
+    <p class="sub">The Culture Commerce Carnival is free for creators. Apply below &mdash; any creator with <strong>1,000+ followers</strong> gets approved. We&rsquo;ll send your code before the event.</p>
+
+    <div class="card">
+      <div class="card-label">Your info</div>
+
+      <div id="form-error" class="error-msg"></div>
+
+      <div class="field">
+        <label for="inp-name">Full name</label>
+        <input id="inp-name" type="text" placeholder="Your name" autocomplete="name" />
+      </div>
+
+      <div class="field">
+        <label for="inp-email">Email</label>
+        <input id="inp-email" type="email" placeholder="you@email.com" autocomplete="email" />
+      </div>
+
+      <div class="field">
+        <label for="inp-handle">TikTok handle</label>
+        <div class="handle-wrap">
+          <span class="handle-at">@</span>
+          <input id="inp-handle" type="text" placeholder="yourhandle" autocomplete="off" autocorrect="off" autocapitalize="off" />
+        </div>
+        <div class="field-hint">Your primary TikTok account. Must have 1,000+ followers.</div>
+      </div>
+
+      <button class="btn-submit" id="submit-btn" onclick="submitApply()">
+        Apply for My Pass <i class="fa-solid fa-arrow-right"></i>
+      </button>
+    </div>
+
+    <div class="card">
+      <div class="perks">
+        <div class="perk"><i class="fa-solid fa-check"></i><span>Free entry to the main event at National Harbor</span></div>
+        <div class="perk"><i class="fa-solid fa-check"></i><span>Access to brand booths &mdash; collect product samples from sponsors</span></div>
+        <div class="perk"><i class="fa-solid fa-check"></i><span>Creator networking + main stage performances</span></div>
+        <div class="perk"><i class="fa-solid fa-check"></i><span>Priority treatment from brand sponsors on the floor</span></div>
+        <div class="perk"><i class="fa-solid fa-check"></i><span>Carnival attractions all day at National Harbor</span></div>
+      </div>
+    </div>
+
+    <p class="fine">Applications are reviewed before codes are sent. By applying you agree to the event terms.</p>
+
+  </div>
+
+  <!-- ── Success ── -->
+  <div id="view-success" class="view">
+
+    <a href="https://cultcontent.cc" class="brand">
+      <img src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/68529ceff63e1913ceb4e2e0.png" alt="Cult Content" />
+      <span class="brand-name">Cult Content</span>
+    </a>
+
+    <div class="success-card">
+      <div class="check-ring">&#10003;</div>
+      <div class="pill">Application Received</div>
+      <h1>You&rsquo;re on<br><span class="cyan">the list.</span></h1>
+      <p style="font-size:14px;color:#555;line-height:1.8;margin-top:12px;">
+        We got your application. Check your inbox &mdash; your promo code is on its way.
+      </p>
+    </div>
+
+    <div class="success-steps">
+      <div class="card-label" style="margin-bottom:20px;">What happens next</div>
+      <div class="sstep">
+        <div class="sstep-n">1</div>
+        <div>
+          <div class="sstep-title">Code incoming</div>
+          <div class="sstep-desc">Check your email for your promo code. Use it at checkout on Posh to claim your free creator ticket.</div>
+        </div>
+      </div>
+      <div class="sstep">
+        <div class="sstep-n">2</div>
+        <div>
+          <div class="sstep-title">Grab your ticket</div>
+          <div class="sstep-desc">Head to the event page on Posh and apply the code at checkout. Your spot is held once you claim it.</div>
+        </div>
+      </div>
+      <div class="sstep">
+        <div class="sstep-n">3</div>
+        <div>
+          <div class="sstep-title">Show up &amp; create</div>
+          <div class="sstep-desc">Come ready to meet brands, collect samples, and make content. National Harbor &mdash; date TBA.</div>
+        </div>
+      </div>
+    </div>
+
+    <p class="fine" style="margin-top:16px;">Questions? <a href="mailto:Tommy@cultcontent.cc" style="color:#333;">Tommy@cultcontent.cc</a></p>
+
+  </div>
+
+</div>
+</div>
+
+<script>
+  const RAILWAY = 'https://cultcontent-server-production.up.railway.app';
+
+  function showError(msg) {
+    const el = document.getElementById('form-error');
+    el.textContent = msg;
+    el.classList.add('show');
+  }
+
+  function clearError() {
+    document.getElementById('form-error').classList.remove('show');
+  }
+
+  async function submitApply() {
+    clearError();
+
+    const name   = document.getElementById('inp-name').value.trim();
+    const email  = document.getElementById('inp-email').value.trim();
+    const handle = document.getElementById('inp-handle').value.trim().replace(/^@/, '');
+
+    if (!name)               return showError('Please enter your name.');
+    if (!email || !email.includes('@')) return showError('Please enter a valid email address.');
+    if (!handle)             return showError('Please enter your TikTok handle.');
+
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Submitting...';
+
+    try {
+      await fetch(`${RAILWAY}/ccc-creator-apply/submit`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ name, email, tiktok_handle: handle }),
+      });
+    } catch (_) {
+      // Still show success — don't block the user on a network hiccup
+    }
+
+    document.getElementById('view-form').classList.remove('active');
+    document.getElementById('view-success').classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cult Content — Financial Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#0a0a0f; color:#e8e8f0; font-family:'SF Pro Display',-apple-system,sans-serif; min-height:100vh; }
+
+/* ── Header & Tabs ── */
+header { padding:20px 40px 0; border-bottom:1px solid #1e1e2e; }
+.header-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+header h1 { font-size:17px; font-weight:600; color:#fff; }
+.mode-badge { display:flex; align-items:center; gap:6px; background:#1a1a2e; border:1px solid #2a2a4a; padding:5px 12px; border-radius:20px; font-size:12px; color:#666; }
+.dot { width:7px; height:7px; border-radius:50%; background:#444; }
+.dot.live { background:#4ade80; box-shadow:0 0 6px #4ade80; animation:pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1}50%{opacity:.5} }
+
+.tabs { display:flex; gap:0; }
+.tab-btn {
+  padding:10px 24px; font-size:13px; font-weight:500; color:#555;
+  border:none; background:none; cursor:pointer; border-bottom:2px solid transparent;
+  transition:all .2s; font-family:inherit; letter-spacing:.01em;
+}
+.tab-btn:hover { color:#aaa; }
+.tab-btn.active { color:#fff; border-bottom-color:#6060dd; }
+
+/* ── Layout ── */
+.tab-panel { display:none; padding:28px 40px; max-width:1400px; margin:0 auto; }
+.tab-panel.active { display:block; }
+
+/* ── Cards ── */
+.cards { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px; }
+.card { background:#111118; border:1px solid #1e1e2e; border-radius:12px; padding:20px 22px; }
+.card .lbl { font-size:10px; text-transform:uppercase; letter-spacing:.1em; color:#555; margin-bottom:8px; }
+.card .val { font-size:26px; font-weight:700; }
+.card .sub { font-size:11px; color:#555; margin-top:5px; }
+
+/* ── Section title ── */
+.sec { font-size:10px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:#444; margin:24px 0 12px; }
+
+/* ── Chart / Table boxes ── */
+.box { background:#111118; border:1px solid #1e1e2e; border-radius:12px; padding:22px; }
+.box h3 { font-size:13px; font-weight:600; margin-bottom:3px; }
+.box .sub { font-size:11px; color:#555; margin-bottom:16px; }
+.box canvas { max-height:220px; }
+.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.grid31 { display:grid; grid-template-columns:2fr 1fr; gap:14px; }
+.grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
+
+/* ── Tables ── */
+table { width:100%; border-collapse:collapse; font-size:13px; }
+th { font-size:10px; text-transform:uppercase; letter-spacing:.1em; color:#444; text-align:left; padding:0 10px 10px; border-bottom:1px solid #1e1e2e; }
+th:not(:first-child) { text-align:right; }
+td { padding:10px 10px; border-bottom:1px solid #111120; color:#ccc; }
+td:not(:first-child) { text-align:right; }
+tr:last-child td { border-bottom:none; }
+tr.total td { border-top:1px solid #2a2a3a; font-weight:700; color:#fff; }
+
+/* ── Bar rows ── */
+.bar-row { margin-bottom:12px; }
+.bar-lbl { display:flex; justify-content:space-between; margin-bottom:4px; font-size:12px; }
+.bar-lbl span:first-child { color:#aaa; }
+.bar-lbl span:last-child { color:#fff; font-weight:600; }
+.bar-track { background:#1a1a2e; border-radius:4px; height:5px; }
+.bar-fill { height:5px; border-radius:4px; }
+
+/* ── Colors ── */
+.green { color:#4ade80; } .red { color:#f87171; } .yellow { color:#fbbf24; } .blue { color:#60a5fa; } .purple { color:#a78bfa; } .dim { color:#444; }
+
+/* ── Tags ── */
+.tag { display:inline-block; background:#1a1a2e; border:1px solid #2a2a4a; color:#8888cc; font-size:9px; padding:1px 7px; border-radius:8px; margin-left:5px; vertical-align:middle; }
+.tag.live { background:#0d1a10; border-color:#1a3a20; color:#4ade80; }
+.tag.warn { background:#1a1000; border-color:#3a2a00; color:#fbbf24; }
+
+/* ── Projections ── */
+.scenario-row { display:flex; gap:8px; margin-bottom:18px; }
+.sc-btn { padding:6px 16px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid #2a2a3a; background:#111118; color:#555; transition:all .2s; font-family:inherit; }
+.sc-btn.active { background:#1a1a3a; border-color:#4444aa; color:#8888dd; }
+.sc-btn.conservative.active { background:#1a1400; border-color:#4a3800; color:#fbbf24; }
+.sc-btn.optimistic.active { background:#0a1a10; border-color:#1a4a2a; color:#4ade80; }
+
+.inp-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:18px; }
+.inp-block { background:#111118; border:1px solid #1e1e2e; border-radius:12px; padding:18px; }
+.inp-block h4 { font-size:12px; font-weight:600; margin-bottom:12px; color:#aaa; }
+.inp-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:9px; }
+.inp-row label { font-size:11px; color:#666; flex:1; }
+.inp-row input[type=number] { background:#0a0a14; border:1px solid #2a2a3a; border-radius:6px; color:#fff; font-size:12px; font-family:inherit; padding:4px 7px; width:85px; text-align:right; outline:none; }
+.inp-row input[type=number]:focus { border-color:#4444aa; }
+.inp-row input[type=range] { width:75px; accent-color:#6060dd; }
+.rval { font-size:11px; color:#aaa; min-width:28px; text-align:right; }
+.prefix { font-size:11px; color:#444; margin-right:3px; }
+
+/* ── Proj table ── */
+.ptable { width:100%; border-collapse:collapse; font-size:12px; }
+.ptable th { font-size:9px; text-transform:uppercase; letter-spacing:.1em; color:#444; padding:0 10px 9px; border-bottom:1px solid #1e1e2e; text-align:right; }
+.ptable th:first-child { text-align:left; }
+.ptable td { padding:9px 10px; border-bottom:1px solid #111120; text-align:right; color:#bbb; }
+.ptable td:first-child { text-align:left; font-weight:500; }
+.ptable tr:last-child td { border-bottom:none; }
+.ptable tr.psum td { border-top:1px solid #2a2a3a; font-weight:700; color:#fff; }
+
+/* ── 30-day view ── */
+.invoice-card {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:12px 14px; background:#0d0d14; border:1px solid #1e1e2e;
+  border-radius:10px; margin-bottom:8px;
+}
+.invoice-card .inv-left { flex:1; }
+.invoice-card .inv-name { font-size:13px; font-weight:500; }
+.invoice-card .inv-meta { font-size:11px; color:#555; margin-top:2px; }
+.invoice-card .inv-amount { font-size:16px; font-weight:700; color:#4ade80; }
+.invoice-card .inv-status { font-size:10px; text-transform:uppercase; letter-spacing:.08em; margin-left:10px; }
+
+.aff-platform {
+  background:#111118; border:1px solid #1e1e2e; border-radius:12px;
+  padding:16px 18px; display:flex; align-items:center; gap:12px;
+}
+.aff-platform .aff-icon { font-size:22px; }
+.aff-platform .aff-info { flex:1; }
+.aff-platform .aff-name { font-size:13px; font-weight:600; }
+.aff-platform .aff-status { font-size:11px; color:#555; margin-top:2px; }
+.aff-platform .aff-amount { text-align:right; }
+.aff-platform .aff-est { font-size:14px; font-weight:700; }
+.aff-platform .aff-lbl { font-size:10px; color:#555; }
+.aff-input { background:#0a0a14; border:1px solid #2a2a3a; border-radius:6px; color:#fff; font-size:12px; font-family:inherit; padding:4px 8px; width:90px; text-align:right; outline:none; }
+.connect-btn { font-size:11px; background:#1a1a2e; border:1px solid #2a2a4a; color:#8888cc; padding:4px 10px; border-radius:8px; cursor:pointer; white-space:nowrap; transition:all .2s; }
+.connect-btn:hover { background:#2a2a4a; color:#fff; }
+
+.thirty-summary {
+  display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:22px;
+}
+.thirty-card { background:#111118; border:1px solid #1e1e2e; border-radius:12px; padding:18px 20px; }
+.thirty-card .lbl { font-size:10px; text-transform:uppercase; letter-spacing:.1em; color:#555; margin-bottom:7px; }
+.thirty-card .val { font-size:24px; font-weight:700; }
+.thirty-card .sub { font-size:11px; color:#555; margin-top:4px; }
+
+/* ── Integration chips ── */
+.int-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:22px; }
+.int-chip { display:flex; align-items:center; gap:7px; background:#111118; border:1px solid #1e1e2e; border-radius:8px; padding:8px 12px; font-size:12px; }
+.int-chip.live { border-color:#1a3a20; }
+.int-chip.pending { border-color:#2a2a10; }
+.int-chip .chip-status { font-size:10px; color:#555; }
+.int-chip.live .chip-status { color:#4ade80; }
+.int-chip.pending .chip-status { color:#fbbf24; }
+
+footer { padding:20px 40px; border-top:1px solid #1e1e2e; font-size:11px; color:#333; margin-top:24px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <h1>💀 Cult Content — Financial Dashboard</h1>
+    <div class="mode-badge">
+      <div class="dot" id="modeDot"></div>
+      <span id="modeText">Connecting…</span>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('cashflow',this)">📊 Cash Flow</button>
+    <button class="tab-btn" onclick="switchTab('outlook',this)">📈 12-Month Outlook</button>
+    <button class="tab-btn" onclick="switchTab('thirty',this)">⚡ Next 30 Days</button>
+    <button class="tab-btn" onclick="switchTab('history',this)">🗂 History</button>
+  </div>
+</header>
+
+<!-- ════════════════════════════════════════════════════════════
+     TAB 1 — CASH FLOW (2026 YTD)
+════════════════════════════════════════════════════════════ -->
+<div id="tab-cashflow" class="tab-panel active">
+
+  <div class="cards">
+    <div class="card">
+      <div class="lbl">2026 YTD Revenue</div>
+      <div class="val green">$33,232</div>
+      <div class="sub">Jan – Apr (partial) · Rho account</div>
+    </div>
+    <div class="card">
+      <div class="lbl">2026 YTD Expenses</div>
+      <div class="val red">$33,593</div>
+      <div class="sub">Jan – Apr (partial)</div>
+    </div>
+    <div class="card">
+      <div class="lbl">Net P&L YTD</div>
+      <div class="val red" style="font-size:22px;">–$361</div>
+      <div class="sub">Nearly breakeven through Apr</div>
+    </div>
+    <div class="card">
+      <div class="lbl">Stripe MRR</div>
+      <div class="val purple" id="live_mrr_cf">—</div>
+      <div class="sub">Live from Stripe</div>
+    </div>
+  </div>
+
+  <div class="grid31" style="margin-bottom:16px;">
+    <div class="box">
+      <h3>Monthly Revenue vs Expenses</h3>
+      <div class="sub">2026 YTD — Rho business account</div>
+      <canvas id="cf_monthly"></canvas>
+    </div>
+    <div class="box">
+      <h3>Revenue Mix</h3>
+      <div class="sub">By source (YTD)</div>
+      <canvas id="cf_rev"></canvas>
+    </div>
+  </div>
+
+  <div class="grid2" style="margin-bottom:24px;">
+    <div class="box">
+      <h3>Expense Breakdown</h3>
+      <div class="sub">By category (YTD)</div>
+      <canvas id="cf_exp"></canvas>
+    </div>
+    <div class="box">
+      <h3>Top Revenue Sources</h3>
+      <div class="sub">Cumulative Jan–Apr 2026</div>
+      <div style="padding-top:6px;">
+        <div class="bar-row">
+          <div class="bar-lbl"><span>American Funds</span><span class="green">$9,000</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:57%;background:#818cf8;"></div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-lbl"><span>Intuit (client invoices)</span><span class="green">$7,950</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:50%;background:#60a5fa;"></div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-lbl"><span>Bullseye</span><span class="green">$7,783</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:49%;background:#4ade80;"></div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-lbl"><span>Stripe</span><span class="green">$6,131</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:39%;background:#34d399;"></div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-lbl"><span>PayPal / Other</span><span class="green">$368</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:3%;background:#fbbf24;"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">Intelligence</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:28px;">
+
+    <div style="background:#0d1a10;border:1px solid #1a3a20;border-radius:12px;padding:16px 18px;">
+      <div style="font-size:11px;font-weight:700;color:#4ade80;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">🟢 Opportunity</div>
+      <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:4px;">Stripe MRR started March — double down on what's driving it</div>
+      <div style="font-size:12px;color:#888;line-height:1.6;">$0 in Jan/Feb, $4,513 in March, $1,618 in first 14 days of April. Something changed. Identify the exact offer or channel driving this and put more volume behind it immediately.</div>
+    </div>
+
+    <div style="background:#0d1a10;border:1px solid #1a3a20;border-radius:12px;padding:16px 18px;">
+      <div style="font-size:11px;font-weight:700;color:#4ade80;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">🟢 Opportunity</div>
+      <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:4px;">Software affiliates — you're paying for 7 tools, get paid for them</div>
+      <div style="font-size:12px;color:#888;line-height:1.6;">JoinBrands, Reacher, Cruva, Yuka, Growi, Buffer, Arcads — if even 3 clients sign up through your links, that's meaningful passive income. Add affiliate links to your onboarding sequence and resource hub.</div>
+    </div>
+
+    <div style="background:#0d101a;border:1px solid #1a1f3a;border-radius:12px;padding:16px 18px;">
+      <div style="font-size:11px;font-weight:700;color:#60a5fa;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">🔵 Tax / Legal</div>
+      <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:4px;">Thomas Lynch — $6,500 needs a clear role before filing</div>
+      <div style="font-size:12px;color:#888;line-height:1.6;">If it's salary: should be on payroll with withholding. If it's an owner draw: fine, but document it. If it's a loan repayment: needs a paper trail. Ambiguity here = tax liability.</div>
+    </div>
+
+    <div style="background:#0d101a;border:1px solid #1a1f3a;border-radius:12px;padding:16px 18px;">
+      <div style="font-size:11px;font-weight:700;color:#60a5fa;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">🔵 Debt</div>
+      <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:4px;">GGR / QuickBooks — $2,625 still outstanding</div>
+      <div style="font-size:12px;color:#888;line-height:1.6;">You paid $1,000 in March. Resolve the remaining $2,625 before it escalates further. Call GGR (mcash@ggrinc.com) and negotiate a settlement — collection agencies often take 50–70 cents on the dollar.</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     TAB 2 — 12-MONTH OUTLOOK
+════════════════════════════════════════════════════════════ -->
+<div id="tab-outlook" class="tab-panel">
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+    <div>
+      <div style="font-size:15px;font-weight:600;">12-Month Revenue Projection</div>
+      <div style="font-size:11px;color:#555;margin-top:2px;">Edit inputs below · Stripe data pulls live when connected</div>
+    </div>
+    <div id="liveStripeCards" style="display:none;gap:10px;align-items:center;">
+      <div style="background:#0d1a10;border:1px solid #1a3a20;border-radius:8px;padding:8px 14px;font-size:12px;">
+        <span style="color:#555;">Live MRR</span> <span id="live_mrr" style="color:#4ade80;font-weight:700;margin-left:8px;">—</span>
+      </div>
+      <div style="background:#0d1014;border:1px solid #1a2030;border-radius:8px;padding:8px 14px;font-size:12px;">
+        <span style="color:#555;">Last 30d</span> <span id="live_30d" style="color:#60a5fa;font-weight:700;margin-left:8px;">—</span>
+      </div>
+      <div style="background:#0d1014;border:1px solid #1a2030;border-radius:8px;padding:8px 14px;font-size:12px;">
+        <span style="color:#555;">Balance</span> <span id="live_bal" style="color:#a78bfa;font-weight:700;margin-left:8px;">—</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="scenario-row">
+    <button class="sc-btn conservative" onclick="setScenario('conservative')">Conservative</button>
+    <button class="sc-btn base active" onclick="setScenario('base')">Base Case</button>
+    <button class="sc-btn optimistic" onclick="setScenario('optimistic')">Optimistic</button>
+    <span id="scen_label" style="font-size:11px;color:#444;padding:6px 0;"></span>
+  </div>
+
+  <div class="inp-grid">
+    <div class="inp-block">
+      <h4>💳 Stripe / GHL Recurring</h4>
+      <div class="inp-row">
+        <label>Current MRR</label>
+        <div style="display:flex;align-items:center;"><span class="prefix">$</span>
+        <input type="number" id="stripe_mrr" value="3000" oninput="recalc()"></div>
+      </div>
+      <div class="inp-row">
+        <label>Monthly growth %</label>
+        <input type="range" id="stripe_growth" min="0" max="50" value="10" oninput="updateRange(this,'stripe_growth_v');recalc()">
+        <span class="rval" id="stripe_growth_v">10%</span>
+      </div>
+    </div>
+    <div class="inp-block">
+      <h4>🎯 Bullseye Retainer</h4>
+      <div class="inp-row">
+        <label>Monthly retainer</label>
+        <div style="display:flex;align-items:center;"><span class="prefix">$</span>
+        <input type="number" id="bull_mrr" value="5000" oninput="recalc()"></div>
+      </div>
+      <div class="inp-row">
+        <label>Growth % / mo</label>
+        <input type="range" id="bull_growth" min="0" max="30" value="5" oninput="updateRange(this,'bull_growth_v');recalc()">
+        <span class="rval" id="bull_growth_v">5%</span>
+      </div>
+    </div>
+    <div class="inp-block">
+      <h4>🏫 Skool Community</h4>
+      <div class="inp-row">
+        <label>Current members</label>
+        <input type="number" id="sk_members" value="0" oninput="recalc()">
+      </div>
+      <div class="inp-row">
+        <label>Price / member</label>
+        <div style="display:flex;align-items:center;"><span class="prefix">$</span>
+        <input type="number" id="sk_price" value="47" oninput="recalc()"></div>
+      </div>
+      <div class="inp-row">
+        <label>New members / mo</label>
+        <input type="number" id="sk_new" value="0" oninput="recalc()">
+      </div>
+    </div>
+    <div class="inp-block">
+      <h4>🔗 TAP Affiliate GMV</h4>
+      <div class="inp-row">
+        <label>Monthly GMV</label>
+        <div style="display:flex;align-items:center;"><span class="prefix">$</span>
+        <input type="number" id="tap_gmv" value="0" oninput="recalc()"></div>
+      </div>
+      <div class="inp-row">
+        <label>Commission (2%)</label>
+        <span style="font-size:12px;color:#555;">auto-calculated</span>
+      </div>
+    </div>
+    <div class="inp-block">
+      <h4>💡 Other Revenue</h4>
+      <div class="inp-row">
+        <label>Monthly other</label>
+        <div style="display:flex;align-items:center;"><span class="prefix">$</span>
+        <input type="number" id="other_rev" value="0" oninput="recalc()"></div>
+      </div>
+    </div>
+    <div class="inp-block">
+      <h4>🔥 Monthly Burn</h4>
+      <div class="inp-row">
+        <label>Labor</label>
+        <div style="display:flex;align-items:center;"><span class="prefix">$</span>
+        <input type="number" id="exp_labor" value="2500" oninput="recalc()"></div>
+      </div>
+      <div class="inp-row">
+        <label>Software</label>
+        <div style="display:flex;align-items:center;"><span class="prefix">$</span>
+        <input type="number" id="exp_soft" value="2438" oninput="recalc()"></div>
+      </div>
+      <div class="inp-row">
+        <label>Other</label>
+        <div style="display:flex;align-items:center;"><span class="prefix">$</span>
+        <input type="number" id="exp_other" value="1000" oninput="recalc()"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cards" style="margin-bottom:18px;">
+    <div class="card">
+      <div class="lbl">Starting MRR</div>
+      <div class="val purple" id="m_mrr">—</div>
+      <div class="sub">Stripe + Bullseye combined</div>
+    </div>
+    <div class="card">
+      <div class="lbl">Monthly Burn</div>
+      <div class="val red" id="m_burn">—</div>
+      <div class="sub">Labor + Software + Other</div>
+    </div>
+    <div class="card">
+      <div class="lbl">Breakeven Month</div>
+      <div class="val yellow" id="m_be">—</div>
+      <div class="sub">First month net positive</div>
+    </div>
+    <div class="card">
+      <div class="lbl">12-Mo Revenue</div>
+      <div class="val green" id="m_arr">—</div>
+      <div class="sub">Total projected</div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:16px;">
+    <div class="bar-lbl" style="margin-bottom:6px;">
+      <span style="font-size:12px;color:#aaa;">🏫 Skool / Alchemist goal: <span id="g_alch">0 / 1,500</span></span>
+    </div>
+    <div class="bar-track" style="height:7px;">
+      <div class="bar-fill" id="g_alch_bar" style="width:0%;background:#a78bfa;height:7px;"></div>
+    </div>
+  </div>
+
+  <div class="grid31" style="margin-bottom:18px;">
+    <div class="box">
+      <h3>Revenue vs Burn — 12 Month View</h3>
+      <div class="sub">Projected by scenario</div>
+      <canvas id="proj_chart" style="max-height:260px;"></canvas>
+    </div>
+    <div class="box">
+      <h3>Month 1 Revenue Mix</h3>
+      <div class="sub">By stream</div>
+      <canvas id="mix_chart"></canvas>
+    </div>
+  </div>
+
+  <div class="box">
+    <table class="ptable">
+      <thead>
+        <tr>
+          <th>Month</th><th>Stripe</th><th>Bullseye</th><th>Skool</th>
+          <th>TAP</th><th>Other</th><th>Total Rev</th><th>Burn</th><th>Net</th>
+        </tr>
+      </thead>
+      <tbody id="proj_body"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     TAB 3 — NEXT 30 DAYS
+════════════════════════════════════════════════════════════ -->
+<div id="tab-thirty" class="tab-panel">
+
+  <!-- Bottom line -->
+  <div style="background:#111118;border:1px solid #2a2a3a;border-radius:14px;padding:24px 28px;margin-bottom:22px;text-align:center;">
+    <div style="font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#444;margin-bottom:8px;">Next 30 Days — Net</div>
+    <div id="t30_net" style="font-size:52px;font-weight:800;letter-spacing:-.02em;color:#4ade80;">—</div>
+    <div id="t30_net_label" style="font-size:12px;color:#555;margin-top:6px;">calculating…</div>
+  </div>
+
+  <!-- Summary row -->
+  <div class="thirty-summary">
+    <div class="thirty-card">
+      <div class="lbl">Monthly Burn</div>
+      <div class="val red" id="t30_burn_total">—</div>
+      <div class="sub">All outflows this month</div>
+    </div>
+    <div class="thirty-card">
+      <div class="lbl">Expected Revenue</div>
+      <div class="val green" id="t30_rev_total">—</div>
+      <div class="sub">Invoices + Stripe + TAP + affiliates</div>
+    </div>
+    <div class="thirty-card">
+      <div class="lbl">Net Position</div>
+      <div class="val" id="t30_net_card" style="color:#4ade80;">—</div>
+      <div class="sub">Revenue minus burn</div>
+    </div>
+  </div>
+
+  <!-- Integrations -->
+  <div class="int-row">
+    <div class="int-chip live" id="chip_stripe">
+      <span>💳 Stripe</span>
+      <span class="chip-status" id="chip_stripe_s">Connecting…</span>
+    </div>
+    <div class="int-chip live" id="chip_ghl">
+      <span>📋 GHL Invoices</span>
+      <span class="chip-status" id="chip_ghl_s">Connecting…</span>
+    </div>
+    <div class="int-chip pending">
+      <span>🔗 TAP</span>
+      <span class="chip-status">Manual</span>
+    </div>
+    <div class="int-chip pending">
+      <span>🎯 Bullseye</span>
+      <span class="chip-status">Manual</span>
+    </div>
+  </div>
+
+  <div class="grid2" style="margin-bottom:18px;">
+
+    <!-- GHL Invoices -->
+    <div class="box">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div>
+          <h3>Unpaid GHL Invoices <span class="tag live" id="ghl_badge">live</span></h3>
+          <div class="sub" style="margin-bottom:0;">Open AR — auto-refreshed from GHL</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:22px;font-weight:700;color:#4ade80;" id="t30_ghl_total">—</div>
+          <div style="font-size:10px;color:#555;">total outstanding</div>
+        </div>
+      </div>
+      <div id="invoiceList"><div style="color:#444;font-size:11px;">Loading invoices…</div></div>
+    </div>
+
+    <!-- Stripe renewals -->
+    <div class="box">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div>
+          <h3>Stripe Subscriptions <span class="tag live" id="stripe_badge">live</span></h3>
+          <div class="sub" style="margin-bottom:0;">MRR renewing this month</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:22px;font-weight:700;color:#4ade80;" id="t30_stripe_total">—</div>
+          <div style="font-size:10px;color:#555;">recurring this month</div>
+        </div>
+      </div>
+      <div id="renewalList"><div style="color:#444;font-size:11px;">Loading…</div></div>
+    </div>
+
+  </div>
+
+  <!-- TAP + Bullseye -->
+  <div class="grid2" style="margin-bottom:18px;">
+    <div class="box">
+      <h3>🔗 TAP Affiliate Commission</h3>
+      <div class="sub">2% of GMV processed this month</div>
+      <div class="inp-row" style="margin-top:8px;">
+        <label>Est. GMV this month</label>
+        <div style="display:flex;align-items:center;gap:4px;">
+          <span class="prefix">$</span>
+          <input type="number" id="tap_gmv_30" value="0" class="aff-input" style="width:100px;" oninput="updateThirtyNet()">
+        </div>
+      </div>
+      <div style="margin-top:10px;font-size:12px;color:#555;">
+        2% cut → <span id="tap_cut" style="color:#4ade80;font-weight:700;">$0</span>
+        &nbsp;·&nbsp; Total TAP: <span id="t30_tap_total" style="color:#4ade80;font-weight:700;">$0</span>
+      </div>
+    </div>
+    <div class="box">
+      <h3>🎯 Bullseye Retainer</h3>
+      <div class="sub">Expected payment this month</div>
+      <div class="inp-row" style="margin-top:8px;">
+        <label>Bullseye payment</label>
+        <div style="display:flex;align-items:center;gap:4px;">
+          <span class="prefix">$</span>
+          <input type="number" id="bullseye_30" value="0" class="aff-input" style="width:100px;" oninput="updateThirtyNet()">
+        </div>
+      </div>
+      <div style="margin-top:10px;font-size:12px;color:#555;">
+        Bullseye total: <span id="t30_bullseye_total" style="color:#4ade80;font-weight:700;">$0</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Burn table + Math -->
+  <div class="grid31" style="margin-bottom:18px;">
+    <div class="box">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div>
+          <h3>Monthly Burn <span class="tag">editable</span></h3>
+          <div class="sub" style="margin-bottom:0;">Click any amount to adjust</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:22px;font-weight:700;color:#f87171;" id="t30_burn_total_2">—</div>
+          <div style="font-size:10px;color:#555;">total burn</div>
+        </div>
+      </div>
+      <table>
+        <thead><tr>
+          <th>Item</th><th>Category</th><th>Amount</th>
+        </tr></thead>
+        <tbody id="burnRows"></tbody>
+      </table>
+    </div>
+    <div class="box">
+      <h3>The Math</h3>
+      <div class="sub">30-day position</div>
+      <div style="display:flex;flex-direction:column;gap:10px;padding-top:4px;">
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #1e1e2e;">
+          <span style="font-size:12px;color:#666;">GHL invoices</span>
+          <span style="font-weight:600;color:#4ade80;" id="math_ghl">$0</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #1e1e2e;">
+          <span style="font-size:12px;color:#666;">Stripe MRR</span>
+          <span style="font-weight:600;color:#4ade80;" id="math_stripe">$0</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #1e1e2e;">
+          <span style="font-size:12px;color:#666;">TAP + Bullseye + Affiliates</span>
+          <span style="font-weight:600;color:#4ade80;" id="math_aff">$0</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #2a2a3a;border-top:1px solid #2a2a3a;">
+          <span style="font-size:12px;font-weight:700;color:#aaa;">Total In</span>
+          <span style="font-weight:700;color:#4ade80;font-size:15px;" id="math_in">$0</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #1e1e2e;">
+          <span style="font-size:12px;color:#666;">Burn</span>
+          <span style="font-weight:600;color:#f87171;" id="math_out">$0</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:12px 0;margin-top:4px;">
+          <span style="font-size:13px;font-weight:700;color:#fff;">Net</span>
+          <span style="font-weight:800;font-size:18px;" id="math_net">$0</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Software Affiliates -->
+  <div class="sec">Software Affiliate Revenue (Est.)</div>
+  <div style="background:#111118;border:1px solid #1e1e2e;border-radius:12px;padding:18px 20px;margin-bottom:22px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div>
+        <div style="font-size:13px;font-weight:600;">Affiliate Commissions This Month</div>
+        <div style="font-size:11px;color:#555;margin-top:2px;">Enter expected payouts per platform</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:20px;font-weight:700;color:#fbbf24;" id="t30_aff_total">$0</div>
+        <div style="font-size:10px;color:#555;">total aff est.</div>
+      </div>
+    </div>
+    <div id="affRows" style="display:flex;flex-direction:column;gap:10px;"></div>
+    <button onclick="addAffRow()" style="margin-top:12px;font-size:11px;background:#111118;border:1px solid #2a2a4a;color:#8888cc;padding:5px 12px;border-radius:8px;cursor:pointer;font-family:inherit;">+ Add platform</button>
+  </div>
+
+  <!-- Intelligence -->
+  <div class="sec">30-Day Intelligence</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:28px;">
+    <div style="background:#0d1a10;border:1px solid #1a3a20;border-radius:12px;padding:16px 18px;">
+      <div style="font-size:11px;font-weight:700;color:#4ade80;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">🟢 Action</div>
+      <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:4px;">You just freed ~$600/mo — redirect it</div>
+      <div style="font-size:12px;color:#888;line-height:1.6;">Cancelled MakeUGC, LinkedIn Business Premium, Kalodata, and Cruva. That's ~$600/mo back. Put it toward Reacher expansion or save toward GGR debt payoff.</div>
+    </div>
+    <div style="background:#100d14;border:1px solid #2a1a3a;border-radius:12px;padding:16px 18px;">
+      <div style="font-size:11px;font-weight:700;color:#a78bfa;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">🟣 Watch</div>
+      <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:4px;">Reacher billing — you're paying $448/mo not $150</div>
+      <div style="font-size:12px;color:#888;line-height:1.6;">12 charges totaling $2,244 since January. Your burn table had it at $149.75. Check your plan — you may have multiple workspaces or a plan you didn't intend to upgrade to.</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     TAB 4 — HISTORY (QuickBooks Checking Nov 2024 – Apr 2026)
+════════════════════════════════════════════════════════════ -->
+<div id="tab-history" class="tab-panel">
+
+  <div class="cards" style="grid-template-columns:repeat(4,1fr);margin-bottom:24px;">
+    <div class="card">
+      <div class="lbl">Total Inflows</div>
+      <div class="val green">$120,593</div>
+      <div class="sub">Nov 2024 – Mar 2026</div>
+    </div>
+    <div class="card">
+      <div class="lbl">Total Outflows</div>
+      <div class="val red">$118,821</div>
+      <div class="sub">across 16 complete months</div>
+    </div>
+    <div class="card">
+      <div class="lbl">Best Month</div>
+      <div class="val" style="color:#a78bfa;">Dec 2025</div>
+      <div class="sub">+$8,460 net · $27,939 in</div>
+    </div>
+    <div class="card">
+      <div class="lbl">Account Status</div>
+      <div class="val yellow">$0</div>
+      <div class="sub">QBs Checking · ops moved to Rho</div>
+    </div>
+  </div>
+
+  <div style="background:#111118;border:1px solid #2a2a3a;border-radius:10px;padding:14px 18px;margin-bottom:22px;display:flex;gap:12px;align-items:center;">
+    <span style="font-size:18px;">🏦</span>
+    <div>
+      <div style="font-size:13px;font-weight:600;color:#aaa;">QuickBooks Checking — Green Dot Bank (acct ending 7201)</div>
+      <div style="font-size:11px;color:#555;margin-top:3px;">Statement periods run 17th → 16th. Mixed personal/business use. Received client payments via Intuit + Bullseye; paid contractors via PayPal/Wise/Upwork. Separate from Rho (primary business account). Nov 2025 statement unavailable — balance inferred from adjacent periods.</div>
+    </div>
+  </div>
+
+  <div class="box" style="margin-bottom:22px;">
+    <h3>Monthly Cash Flow — Nov 2024 through Apr 2026</h3>
+    <div class="sub">Credits (green) vs Debits (red) · Running balance (yellow line) · Nov 2025 data unavailable</div>
+    <canvas id="hist_chart" style="max-height:280px;"></canvas>
+  </div>
+
+  <div class="box">
+    <h3>Monthly Breakdown</h3>
+    <div class="sub" style="margin-bottom:16px;">All figures from QuickBooks Checking statements (Green Dot Bank)</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Period</th>
+          <th>Credits In</th>
+          <th>Debits Out</th>
+          <th>Net</th>
+          <th>End Balance</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody id="histRows"></tbody>
+    </table>
+  </div>
+
+  <div class="sec">Business Narrative</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:28px;">
+    <div style="background:#0d1014;border:1px solid #1a2030;border-radius:12px;padding:16px 18px;">
+      <div style="font-size:10px;font-weight:700;color:#60a5fa;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">📉 Phase 1 · Nov 2024 – Mar 2025</div>
+      <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:5px;">Pre-revenue / bootstrapping</div>
+      <div style="font-size:12px;color:#888;line-height:1.6;">Account near zero. Small client payments via Intuit ($1k–$4k). Minimal outflows. Business in early formation — no consistent revenue stream yet.</div>
+    </div>
+    <div style="background:#0d1014;border:1px solid #1a2030;border-radius:12px;padding:16px 18px;">
+      <div style="font-size:10px;font-weight:700;color:#fbbf24;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">📈 Phase 2 · Apr 2025 – Oct 2025</div>
+      <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:5px;">Growth & client scaling</div>
+      <div style="font-size:12px;color:#888;line-height:1.6;">Revenue climbs from $6k → $20k/month. Bullseye retainer starts (~Oct). SF trips in Aug–Sep burned cash. Jun–Jul saw strong client billings via Intuit.</div>
+    </div>
+    <div style="background:#0d1014;border:1px solid #1a2030;border-radius:12px;padding:16px 18px;">
+      <div style="font-size:10px;font-weight:700;color:#4ade80;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">🚀 Phase 3 · Nov 2025 – Feb 2026</div>
+      <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:5px;">Peak revenue → account winds down</div>
+      <div style="font-size:12px;color:#888;line-height:1.6;">Dec 2025 was the all-time best: $27,939 in. Jan 2026 drained $12,706 (large contractor + Bullseye payments). Operations then migrated to Rho.</div>
+    </div>
+  </div>
+
+</div>
+
+<footer>Cult Content LLC &nbsp;·&nbsp; Tommy Lynch &nbsp;·&nbsp; Tommy@cultcontent.cc</footer>
+
+<script>
+const SERVER = 'https://cultcontent-server-production.up.railway.app';
+const ML = ['May 26','Jun 26','Jul 26','Aug 26','Sep 26','Oct 26','Nov 26','Dec 26','Jan 27','Feb 27','Mar 27','Apr 27'];
+let scenario = 'base', projChart, mixChart;
+let stripeData = null, invoiceTotal = 0, stripeRenewalTotal = 0;
+
+// ── Tab switching ──────────────────────────────────────────────
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  btn.classList.add('active');
+  if (id === 'cashflow' && !window._cf_init) { initCashflowCharts(); window._cf_init = true; }
+  if (id === 'outlook'  && !window._proj_init) { recalc(); window._proj_init = true; }
+  if (id === 'history'  && !window._hist_init) { initHistory(); window._hist_init = true; }
+}
+
+// ── Cash Flow charts ──────────────────────────────────────────
+function initCashflowCharts() {
+  new Chart(document.getElementById('cf_monthly').getContext('2d'), {
+    type:'bar',
+    data:{ labels:['January','February','March','April (partial)'],
+      datasets:[
+        { label:'Revenue', data:[7125,7871,16618,1618], backgroundColor:'rgba(74,222,128,.7)', borderRadius:5 },
+        { label:'Expenses', data:[8067,7119,13913,4494], backgroundColor:'rgba(248,113,113,.55)', borderRadius:5 }
+      ]},
+    options:{ responsive:true, plugins:{ legend:{ labels:{ color:'#666', font:{size:11} } } },
+      scales:{ x:{ grid:{color:'#1a1a2e'}, ticks:{color:'#555'} }, y:{ grid:{color:'#1a1a2e'}, ticks:{color:'#555', callback:v=>'$'+v.toLocaleString()} } } }
+  });
+  new Chart(document.getElementById('cf_rev').getContext('2d'), {
+    type:'doughnut',
+    data:{ labels:['American Funds','Bullseye','Intuit','Stripe','PayPal'],
+      datasets:[{ data:[9000,7783,7950,6131,368], backgroundColor:['#818cf8','#4ade80','#60a5fa','#34d399','#fbbf24'], borderWidth:0 }] },
+    options:{ responsive:true, cutout:'65%', plugins:{ legend:{ position:'bottom', labels:{ color:'#666', font:{size:10}, padding:8, boxWidth:8 } } } }
+  });
+  new Chart(document.getElementById('cf_exp').getContext('2d'), {
+    type:'doughnut',
+    data:{ labels:['Labor','Software','Events','Travel','Other'],
+      datasets:[{ data:[15954,8247,5080,2604,3079], backgroundColor:['#f87171','#818cf8','#fbbf24','#34d399','#60a5fa'], borderWidth:0 }] },
+    options:{ responsive:true, cutout:'65%', plugins:{ legend:{ position:'bottom', labels:{ color:'#666', font:{size:10}, padding:8, boxWidth:8 } } } }
+  });
+}
+
+// ── Projections ───────────────────────────────────────────────
+function updateRange(el, id) { document.getElementById(id).textContent = el.value + '%'; }
+function setScenario(s) {
+  scenario = s;
+  document.querySelectorAll('.sc-btn').forEach(b => b.classList.toggle('active', b.classList.contains(s)));
+  recalc();
+}
+
+function getInp() {
+  const m = { conservative:{r:.7,g:.5}, base:{r:1,g:1}, optimistic:{r:1.3,g:1.5} }[scenario];
+  return {
+    s_mrr: +document.getElementById('stripe_mrr').value || 0,
+    s_gr:  (+document.getElementById('stripe_growth').value||0)/100*m.g,
+    b_mrr: +document.getElementById('bull_mrr').value || 0,
+    b_gr:  (+document.getElementById('bull_growth').value||0)/100*m.g,
+    sk_m:  +document.getElementById('sk_members').value || 0,
+    sk_p:  +document.getElementById('sk_price').value || 47,
+    sk_n:  +document.getElementById('sk_new').value || 0,
+    tap:   +document.getElementById('tap_gmv').value || 0,
+    other: (+document.getElementById('other_rev').value||0)*m.r,
+    labor: +document.getElementById('exp_labor').value||0,
+    soft:  +document.getElementById('exp_soft').value||0,
+    etc:   +document.getElementById('exp_other').value||0,
+  };
+}
+
+function recalc() {
+  if (!document.getElementById('tab-outlook').classList.contains('active') && window._proj_init) return;
+  const i = getInp();
+  const burn = i.labor + i.soft + i.etc;
+  const rows = [];
+  let s = i.s_mrr, b = i.b_mrr, sk = i.sk_m, tap = i.tap;
+  for (let m = 0; m < 12; m++) {
+    if (m > 0) { s *= (1+i.s_gr); b *= (1+i.b_gr); sk += i.sk_n; tap *= 1.1; }
+    const skr = sk * i.sk_p, tapr = tap * .02;
+    const total = s + b + skr + tapr + i.other;
+    rows.push({ s:Math.round(s), b:Math.round(b), sk:Math.round(skr), tap:Math.round(tapr), other:Math.round(i.other), total:Math.round(total), exp:Math.round(burn), net:Math.round(total-burn) });
+  }
+  const totalRev = rows.reduce((a,r)=>a+r.total,0);
+  const be = rows.findIndex(r=>r.net>=0);
+  document.getElementById('m_mrr').textContent  = '$'+Math.round(i.s_mrr+i.b_mrr).toLocaleString();
+  document.getElementById('m_burn').textContent = '$'+burn.toLocaleString();
+  document.getElementById('m_be').textContent   = be<0?'Need more rev':ML[be];
+  document.getElementById('m_arr').textContent  = '$'+totalRev.toLocaleString();
+  const alch = Math.round(i.sk_m + i.sk_n*6);
+  document.getElementById('g_alch').textContent = alch.toLocaleString()+' / 1,500';
+  document.getElementById('g_alch_bar').style.width = Math.min(100,alch/15)+'%';
+  const labels = { conservative:'Conservative — 70% of base, slower growth', base:'Base case — current trajectory', optimistic:'Optimistic — 130% of base, accelerated growth' };
+  document.getElementById('scen_label').textContent = labels[scenario] + ' · Edit inputs above to adjust';
+  const tbody = document.getElementById('proj_body');
+  tbody.innerHTML = rows.map((r,i)=>`<tr>
+    <td>${ML[i]}${i===0?'<span class="tag" style="font-size:8px;">current</span>':''}</td>
+    <td>$${r.s.toLocaleString()}</td><td>$${r.b.toLocaleString()}</td>
+    <td>${r.sk?'$'+r.sk.toLocaleString():'<span class="dim">—</span>'}</td>
+    <td>${r.tap?'$'+r.tap.toLocaleString():'<span class="dim">—</span>'}</td>
+    <td>$${r.other.toLocaleString()}</td>
+    <td style="font-weight:600;">$${r.total.toLocaleString()}</td>
+    <td class="red">$${r.exp.toLocaleString()}</td>
+    <td class="${r.net>=0?'green':'red'}" style="font-weight:700;">${r.net>=0?'+':''}$${r.net.toLocaleString()}</td>
+  </tr>`).join('') +
+  `<tr class="psum"><td>12-mo Total</td><td></td><td></td><td></td><td></td><td></td>
+    <td class="green">$${totalRev.toLocaleString()}</td>
+    <td class="red">$${(burn*12).toLocaleString()}</td>
+    <td class="${totalRev-burn*12>=0?'green':'red'}">$${(totalRev-burn*12).toLocaleString()}</td></tr>`;
+  if (projChart) projChart.destroy();
+  projChart = new Chart(document.getElementById('proj_chart').getContext('2d'), {
+    data:{ labels:ML,
+      datasets:[
+        { type:'bar', label:'Revenue', data:rows.map(r=>r.total), backgroundColor:'rgba(74,222,128,.65)', borderRadius:4 },
+        { type:'bar', label:'Expenses', data:rows.map(r=>r.exp), backgroundColor:'rgba(248,113,113,.5)', borderRadius:4 },
+        { type:'line', label:'Net', data:rows.map(r=>r.net), borderColor:'#fbbf24', backgroundColor:'transparent', pointBackgroundColor:'#fbbf24', tension:.35 }
+      ]},
+    options:{ responsive:true, plugins:{ legend:{ labels:{ color:'#666', font:{size:11} } } },
+      scales:{ x:{ grid:{color:'#1a1a2e'}, ticks:{color:'#555'} }, y:{ grid:{color:'#1a1a2e'}, ticks:{color:'#555', callback:v=>'$'+v.toLocaleString()} } } }
+  });
+  if (mixChart) mixChart.destroy();
+  const r0 = rows[0];
+  mixChart = new Chart(document.getElementById('mix_chart').getContext('2d'), {
+    type:'doughnut',
+    data:{ labels:['Stripe/GHL','Bullseye','Skool','TAP','Other'],
+      datasets:[{ data:[r0.s,r0.b,r0.sk,r0.tap,r0.other], backgroundColor:['#4ade80','#60a5fa','#a78bfa','#fbbf24','#f87171'], borderWidth:0 }] },
+    options:{ responsive:true, cutout:'60%', plugins:{ legend:{ position:'bottom', labels:{ color:'#666', font:{size:10}, padding:6, boxWidth:7 } } } }
+  });
+  window._proj_init = true;
+}
+
+// ── 30-Day: itemized burn (updated — Kalodata & LinkedIn removed)
+const BURN_ITEMS = [
+  ['Albert Powa',        'Labor',       1500  ],
+  ['Wise (contractors)', 'Labor',       1000  ],
+  ['Reacher',            'Outreach',    149.75],
+  ['Instantly',          'Outreach',    250   ],
+  ['Leadgenjay',         'Outreach',    105   ],
+  ['Fastmoss',           'Analytics',   199   ],
+  ['Anthropic (Claude)', 'AI',          375   ],
+  ['OpenAI',             'AI',          60    ],
+  ['Zapier',             'Automation',  55    ],
+  ['Google Workspace',   'Productivity',126   ],
+  ['Slack',              'Comms',       42    ],
+  ['Lark',               'Comms',       86    ],
+  ['Buffer',             'Comms',       30    ],
+  ['Pikes AI',           'Content',     49    ],
+  ['Arcads.ai',          'Content',     385   ],
+  ['Verizon',            'Phone',       391   ],
+  ['Content360',         'Misc',        67    ],
+  ['Skool',              'Misc',        69    ],
+  ['GGR debt payment',   'Debt',        1000  ],
+];
+
+function initBurnTable() {
+  const tbody = document.getElementById('burnRows');
+  tbody.innerHTML = BURN_ITEMS.map((item, idx) => `
+    <tr style="border-bottom:1px solid #0d0d14;">
+      <td style="padding:7px 12px;color:#ccc;">${item[0]}</td>
+      <td style="padding:7px 12px;color:#444;font-size:11px;">${item[1]}</td>
+      <td style="padding:7px 12px;text-align:right;">
+        <input type="number" value="${item[2]}"
+          style="background:transparent;border:none;color:#f87171;font-size:12px;font-weight:600;width:70px;text-align:right;font-family:inherit;outline:none;cursor:pointer;"
+          data-burn="${idx}" oninput="updateThirtyNet()" onfocus="this.style.background='#1a1a2e'" onblur="this.style.background='transparent'">
+      </td>
+    </tr>`).join('');
+  updateThirtyNet();
+}
+
+function initAffRows() {
+  const platforms = [
+    { name:'JoinBrands',  icon:'🤝', default:0 },
+    { name:'Reacher',     icon:'📡', default:0 },
+    { name:'Yuka',        icon:'🌿', default:0 },
+    { name:'Growi',       icon:'🌱', default:0 },
+    { name:'Buffer',      icon:'📣', default:0 },
+    { name:'Arcads.ai',   icon:'🎬', default:0 },
+  ];
+  const wrap = document.getElementById('affRows');
+  wrap.innerHTML = platforms.map((p,i) => `
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="font-size:16px;">${p.icon}</span>
+      <span style="flex:1;font-size:11px;color:#aaa;">${p.name}</span>
+      <div style="display:flex;align-items:center;gap:3px;">
+        <span style="font-size:11px;color:#444;">$</span>
+        <input type="number" value="${p.default}" class="aff-input"
+          style="background:#0a0a14;border:1px solid #2a2a3a;border-radius:6px;color:#fbbf24;font-size:12px;font-weight:600;width:80px;text-align:right;font-family:inherit;padding:3px 6px;outline:none;"
+          oninput="updateThirtyNet()">
+      </div>
+    </div>`).join('');
+  updateThirtyNet();
+}
+
+function addAffRow() {
+  const wrap = document.getElementById('affRows');
+  const div = document.createElement('div');
+  div.style.cssText = 'display:flex;align-items:center;gap:8px;';
+  div.innerHTML = `<span style="font-size:16px;">🔗</span>
+    <input type="text" placeholder="Platform name…"
+      style="flex:1;background:#0a0a14;border:1px solid #2a2a3a;border-radius:6px;color:#aaa;font-size:11px;padding:4px 7px;outline:none;font-family:inherit;">
+    <div style="display:flex;align-items:center;gap:3px;">
+      <span style="font-size:11px;color:#444;">$</span>
+      <input type="number" value="0" class="aff-input"
+        style="background:#0a0a14;border:1px solid #2a2a3a;border-radius:6px;color:#fbbf24;font-size:12px;font-weight:600;width:80px;text-align:right;font-family:inherit;padding:3px 6px;outline:none;"
+        oninput="updateThirtyNet()">
+    </div>`;
+  wrap.appendChild(div);
+}
+
+function updateThirtyNet() {
+  const burnInputs = document.querySelectorAll('[data-burn]');
+  const burn = [...burnInputs].reduce((s,el)=>s+(+el.value||0), 0);
+  const burnStr = '$'+Math.round(burn).toLocaleString();
+  document.getElementById('t30_burn_total').textContent = burnStr;
+  if (document.getElementById('t30_burn_total_2')) document.getElementById('t30_burn_total_2').textContent = burnStr;
+
+  const ghl      = invoiceTotal;
+  const stripe   = stripeRenewalTotal;
+  const tapGmv   = +(document.getElementById('tap_gmv_30')?.value || 0);
+  const tapCut   = Math.round(tapGmv * 0.02);
+  const bullseye = +(document.getElementById('bullseye_30')?.value || 0);
+  const aff      = [...document.querySelectorAll('.aff-input')].reduce((s,el)=>s+(+el.value||0), 0);
+  const totalIn  = ghl + stripe + tapCut + bullseye + aff;
+  const net      = totalIn - burn;
+
+  const tapCutEl = document.getElementById('tap_cut');
+  if (tapCutEl) tapCutEl.textContent = '$'+tapCut.toLocaleString();
+  const tapTotEl = document.getElementById('t30_tap_total');
+  if (tapTotEl) tapTotEl.textContent = '$'+tapCut.toLocaleString();
+  const bullEl = document.getElementById('t30_bullseye_total');
+  if (bullEl) bullEl.textContent = '$'+Math.round(bullseye).toLocaleString();
+
+  document.getElementById('t30_ghl_total').textContent    = '$'+Math.round(ghl).toLocaleString();
+  document.getElementById('t30_stripe_total').textContent = '$'+Math.round(stripe).toLocaleString();
+  document.getElementById('t30_aff_total').textContent    = '$'+Math.round(aff).toLocaleString();
+  document.getElementById('t30_rev_total').textContent    = '$'+Math.round(totalIn).toLocaleString();
+
+  document.getElementById('math_ghl').textContent    = '$'+Math.round(ghl).toLocaleString();
+  document.getElementById('math_stripe').textContent = '$'+Math.round(stripe).toLocaleString();
+  document.getElementById('math_aff').textContent    = '$'+Math.round(aff + tapCut + bullseye).toLocaleString();
+  document.getElementById('math_in').textContent     = '$'+Math.round(totalIn).toLocaleString();
+  document.getElementById('math_out').textContent    = '–$'+Math.round(burn).toLocaleString();
+  document.getElementById('math_net').textContent    = (net>=0?'+':'-')+' $'+Math.abs(Math.round(net)).toLocaleString();
+  document.getElementById('math_net').style.color    = net>=0?'#4ade80':'#f87171';
+
+  const netEl = document.getElementById('t30_net');
+  netEl.textContent   = (net>=0?'+':'-')+' $'+Math.abs(Math.round(net)).toLocaleString();
+  netEl.style.color   = net>=0?'#4ade80':'#f87171';
+
+  if (document.getElementById('t30_net_card')) {
+    document.getElementById('t30_net_card').textContent = (net>=0?'+':'-')+' $'+Math.abs(Math.round(net)).toLocaleString();
+    document.getElementById('t30_net_card').style.color = net>=0?'#4ade80':'#f87171';
+  }
+
+  document.getElementById('t30_net_label').textContent =
+    net>=0 ? `$${Math.round(totalIn).toLocaleString()} in – $${Math.round(burn).toLocaleString()} burn = net positive`
+           : `$${Math.round(totalIn).toLocaleString()} in – $${Math.round(burn).toLocaleString()} burn = shortfall`;
+}
+
+// ── History tab ────────────────────────────────────────────────
+const HISTORY = [
+  { period:'Nov 2024', credits:0,      debits:106,    balance:53,    notes:'Account near-empty; $106 PayPal fees/misc' },
+  { period:'Dec 2024', credits:1187,   debits:1069,   balance:171,   notes:'First Intuit client deposit ($1,187)' },
+  { period:'Jan 2025', credits:4000,   debits:499,    balance:3672,  notes:'$4,000 Intuit client payment' },
+  { period:'Feb 2025', credits:334,    debits:3482,   balance:524,   notes:'Heavy contractor outflows (Upwork/PayPal)' },
+  { period:'Mar 2025', credits:1000,   debits:819,    balance:705,   notes:'Small client deposit; light burn' },
+  { period:'Apr 2025', credits:6431,   debits:5249,   balance:1887,  notes:'Multiple Intuit invoices; Deel + Upwork payments' },
+  { period:'May 2025', credits:4757,   debits:5857,   balance:787,   notes:'Outflows exceeded inflows; net -$1,100' },
+  { period:'Jun 2025', credits:13268,  debits:11192,  balance:2863,  notes:'Strong client billing; Wise contractor payments' },
+  { period:'Jul 2025', credits:12612,  debits:10077,  balance:5398,  notes:'Consistent client revenue; $5,500 Jinfiniti area' },
+  { period:'Aug 2025', credits:7490,   debits:7327,   balance:5561,  notes:'SF trip costs offset revenue; near breakeven' },
+  { period:'Sep 2025', credits:16912,  debits:21466,  balance:1007,  notes:'Peak outflows — SF travel + Thomas Lynch $6,500' },
+  { period:'Oct 2025', credits:20044,  debits:15301,  balance:5841,  notes:'Bullseye retainer kicks in; strong recovery' },
+  { period:'Nov 2025', credits:null,   debits:null,   balance:3819,  notes:'⚠ Statement unavailable — balance inferred', missing:true },
+  { period:'Dec 2025', credits:27939,  debits:19479,  balance:12279, notes:'🏆 Best month ever — Bullseye surge + client invoices' },
+  { period:'Jan 2026', credits:2619,   debits:12706,  balance:2192,  notes:'Account drained — large contractor + Bullseye pmt' },
+  { period:'Feb 2026', credits:2000,   debits:4136,   balance:56,    notes:'Wind-down; ops shifting to Rho' },
+  { period:'Mar 2026', credits:0,      debits:56,     balance:0,     notes:'Final fees; account effectively closed' },
+  { period:'Apr 2026', credits:0,      debits:0,      balance:0,     notes:'Account inactive — Rho is primary' },
+];
+
+function hfmt(n) { return n == null ? '—' : '$'+Math.round(n).toLocaleString(); }
+
+function initHistory() {
+  const tbody = document.getElementById('histRows');
+  tbody.innerHTML = HISTORY.map(r => {
+    const net = r.credits == null ? null : r.credits - r.debits;
+    const netCls = net == null ? 'dim' : net >= 0 ? 'green' : 'red';
+    const netStr = net == null ? '—' : (net >= 0 ? '+' : '') + hfmt(net);
+    return `<tr style="${r.missing ? 'opacity:.55;' : ''}">
+      <td style="font-weight:500;">${r.period}${r.missing ? ' <span class="tag warn">missing</span>' : ''}</td>
+      <td class="green">${r.credits != null ? hfmt(r.credits) : '<span class="dim">—</span>'}</td>
+      <td class="red">${r.debits != null ? hfmt(r.debits) : '<span class="dim">—</span>'}</td>
+      <td class="${netCls}" style="font-weight:700;">${netStr}</td>
+      <td style="font-weight:600;">${hfmt(r.balance)}</td>
+      <td style="font-size:11px;color:#555;">${r.notes}</td>
+    </tr>`;
+  }).join('') +
+  `<tr class="total">
+    <td>Total (excl. Nov 2025)</td>
+    <td class="green">$120,593</td>
+    <td class="red">$118,821</td>
+    <td class="green" style="font-weight:700;">+$1,772</td>
+    <td>—</td>
+    <td style="font-size:11px;color:#555;">17-month net (Nov 2024 – Apr 2026)</td>
+  </tr>`;
+
+  const labels  = HISTORY.map(r => r.period);
+  const credits = HISTORY.map(r => r.credits);
+  const debits  = HISTORY.map(r => r.debits);
+  const balance = HISTORY.map(r => r.balance);
+
+  new Chart(document.getElementById('hist_chart').getContext('2d'), {
+    data: {
+      labels,
+      datasets: [
+        { type:'bar', label:'Credits In', data:credits, backgroundColor:'rgba(74,222,128,.65)', borderRadius:4, order:2 },
+        { type:'bar', label:'Debits Out', data:debits,  backgroundColor:'rgba(248,113,113,.55)', borderRadius:4, order:2 },
+        {
+          type:'line', label:'Running Balance', data:balance,
+          borderColor:'#fbbf24', backgroundColor:'rgba(251,191,36,.08)', fill:true,
+          pointBackgroundColor: HISTORY.map(r => r.missing ? '#555' : '#fbbf24'),
+          pointRadius: HISTORY.map(r => r.missing ? 3 : 4),
+          tension:.35, spanGaps:true, yAxisID:'y2', order:1
+        }
+      ]
+    },
+    options:{
+      responsive:true,
+      interaction:{ mode:'index', intersect:false },
+      plugins:{ legend:{ labels:{ color:'#666', font:{size:11} } } },
+      scales:{
+        x:{ grid:{color:'#1a1a2e'}, ticks:{color:'#555', font:{size:10}, maxRotation:45} },
+        y:{ grid:{color:'#1a1a2e'}, ticks:{color:'#555', callback:v=>'$'+v.toLocaleString()}, title:{display:true,text:'Monthly Flow',color:'#444',font:{size:10}} },
+        y2:{ position:'right', grid:{drawOnChartArea:false}, ticks:{color:'#fbbf24', callback:v=>'$'+v.toLocaleString()}, title:{display:true,text:'Balance',color:'#fbbf24',font:{size:10}} }
+      }
+    }
+  });
+  window._hist_init = true;
+}
+
+// ── Live Stripe data ───────────────────────────────────────────
+async function loadStripe() {
+  try {
+    const r = await fetch(SERVER+'/stripe-data');
+    const d = await r.json();
+    if (d.error) { setMode(false); return; }
+    stripeData = d;
+    setMode(true, d.fetchedAt);
+
+    const mrr = d.subscriptions?.mrr || 0;
+    if (mrr) {
+      document.getElementById('stripe_mrr').value = mrr;
+      document.getElementById('live_mrr').textContent = '$'+mrr.toLocaleString();
+      document.getElementById('live_mrr_cf').textContent = '$'+mrr.toLocaleString();
+      document.getElementById('liveStripeCards').style.display = 'flex';
+    }
+    document.getElementById('live_30d').textContent = '$'+(d.revenue?.last30Days||0).toLocaleString();
+    document.getElementById('live_bal').textContent = '$'+Math.round(d.balance?.available||0).toLocaleString();
+
+    stripeRenewalTotal = mrr;
+
+    const rl = document.getElementById('renewalList');
+    if (mrr > 0) {
+      rl.innerHTML = `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #111120;">
+          <span style="color:#aaa;">${d.subscriptions.activeCount} active subscription${d.subscriptions.activeCount!==1?'s':''}</span>
+          <span style="color:#4ade80;font-weight:700;">$${mrr.toLocaleString()}/mo</span>
+        </div>` +
+        (d.recentTransactions?.slice(0,3)||[]).map(t=>
+          `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #0d0d14;">
+            <span style="color:#666;font-size:11px;">${t.description||t.customer} · ${t.date}</span>
+            <span style="color:#4ade80;font-size:11px;">$${t.amount.toLocaleString()}</span>
+          </div>`).join('');
+      document.getElementById('stripe_badge').textContent = 'live';
+    } else {
+      rl.innerHTML = '<div style="color:#444;font-size:11px;padding:4px 0;">No active subscriptions found in Stripe</div>';
+      document.getElementById('stripe_badge').textContent = 'live · $0';
+    }
+
+    document.getElementById('chip_stripe').classList.add('live');
+    document.getElementById('chip_stripe_s').textContent = '✓ Live';
+    document.getElementById('chip_stripe_s').style.color = '#4ade80';
+
+    updateThirtyNet();
+    if (window._proj_init) recalc();
+  } catch(e) {
+    setMode(false);
+    document.getElementById('renewalList').innerHTML = '<div style="color:#555;font-size:11px;">Could not reach server</div>';
+    document.getElementById('stripe_badge').textContent = 'offline';
+  }
+}
+
+async function loadInvoices() {
+  const list  = document.getElementById('invoiceList');
+  const badge = document.getElementById('ghl_badge');
+  const total = document.getElementById('t30_ghl_total');
+  try {
+    const r = await fetch(SERVER+'/ghl-invoices');
+    const d = await r.json();
+    const invoices = d.invoices || [];
+    document.getElementById('chip_ghl_s').textContent = '✓ Live';
+    document.getElementById('chip_ghl_s').style.color = '#4ade80';
+
+    if (!invoices.length) {
+      list.innerHTML = '<div style="color:#444;font-size:11px;padding:4px 0;">No pending invoices</div>';
+      badge.textContent = 'live · $0'; total.textContent = '$0';
+      return;
+    }
+    invoiceTotal = invoices.reduce((s,inv)=>s+(inv.amount||0),0);
+    badge.textContent = 'live'; total.textContent = '$'+Math.round(invoiceTotal).toLocaleString();
+    list.innerHTML = invoices.map(inv=>`
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #0d0d14;">
+        <div>
+          <div style="font-size:12px;font-weight:500;color:#ccc;">${inv.title}</div>
+          <div style="font-size:10px;color:#444;margin-top:1px;">${inv.contact} · Due ${inv.dueDate||'—'}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:13px;font-weight:700;color:#4ade80;">$${(inv.amount||0).toLocaleString()}</div>
+          <div style="font-size:9px;text-transform:uppercase;color:#fbbf24;">${inv.status}</div>
+        </div>
+      </div>`).join('');
+    updateThirtyNet();
+  } catch(e) {
+    list.innerHTML = '<div style="color:#555;font-size:11px;">Could not load — '+e.message+'</div>';
+    badge.textContent = 'error'; total.textContent = '$0';
+  }
+}
+
+function setMode(live, ts) {
+  document.getElementById('modeDot').className = 'dot' + (live?' live':'');
+  document.getElementById('modeText').textContent = live
+    ? 'Live · Stripe connected · '+new Date(ts).toLocaleTimeString()
+    : 'Manual Mode — Stripe not connected';
+}
+
+// ── Boot ──────────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  initCashflowCharts();  window._cf_init = true;
+  initBurnTable();
+  initAffRows();
+  recalc();  window._proj_init = true;
+  loadStripe();
+  loadInvoices();
+  setInterval(()=>{ loadStripe(); loadInvoices(); }, 30*60*1000);
+});
+</script>
+</body>
+</html>

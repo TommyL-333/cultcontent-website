@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Creators — Cult Content</title>
+  <title>Join the Creator Network - Cult Content</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
@@ -149,6 +149,8 @@
     @keyframes glow     { 0%,100%{box-shadow:0 0 28px rgba(0,242,234,0.3),0 0 18px rgba(255,0,80,0.2)} 50%{box-shadow:0 0 55px rgba(0,242,234,0.5),0 0 40px rgba(255,0,80,0.32)} }
     @keyframes floatUp  { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-9px)} }
     @keyframes scanline { 0%{top:-10%} 100%{top:110%} }
+    @keyframes spin     { to{transform:rotate(360deg)} }
+    @keyframes pop      { from{transform:scale(0);opacity:0} to{transform:scale(1);opacity:1} }
 
     /* ── PAGE ── */
     .page { position: relative; z-index: 1; }
@@ -163,7 +165,6 @@
       position: relative;
     }
 
-    /* Perspective checkerboard floor — sits outside hero so it's never clipped */
     .hero-floor {
       position: absolute; bottom: 0; left: 0; right: 0; height: 60%;
       background: repeating-conic-gradient(
@@ -174,7 +175,6 @@
       mask-image: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 35%, transparent 72%);
     }
 
-    /* scanline sweep */
     .hero::after {
       content: "";
       position: absolute; left: 0; right: 0; height: 2px;
@@ -183,7 +183,6 @@
       pointer-events: none;
     }
 
-    /* faint dot grid */
     .hero-grid {
       position: absolute; inset: 0; pointer-events: none;
       background-image: radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px);
@@ -222,7 +221,6 @@
       font-weight: 300; line-height: 1.75; letter-spacing: 0.01em;
     }
 
-    /* free badge */
     .free-badge {
       display: inline-flex; align-items: center; gap: 8px;
       font-family: 'Montserrat', sans-serif; font-weight: 900;
@@ -258,9 +256,7 @@
       background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
     }
     .video-inner { max-width: 900px; margin: 0 auto; }
-    .video-label {
-      text-align: center; margin-bottom: 32px;
-    }
+    .video-label { text-align: center; margin-bottom: 32px; }
     .section-eyebrow {
       display: inline-block; font-size: 0.6rem; font-weight: 700;
       letter-spacing: 0.28em; text-transform: uppercase;
@@ -278,15 +274,10 @@
     }
 
     .video-portal {
-      border-radius: 22px;
-      border: 1px solid rgba(255,255,255,0.1);
-      overflow: hidden;
-      position: relative;
+      border-radius: 22px; border: 1px solid rgba(255,255,255,0.1);
+      overflow: hidden; position: relative;
       background: rgba(255,255,255,0.02);
-      box-shadow:
-        0 0 0 1px rgba(0,242,234,0.07),
-        0 30px 90px rgba(0,0,0,0.7),
-        0 0 70px rgba(0,242,234,0.07);
+      box-shadow: 0 0 0 1px rgba(0,242,234,0.07), 0 30px 90px rgba(0,0,0,0.7), 0 0 70px rgba(0,242,234,0.07);
     }
     .video-portal::before {
       content: "";
@@ -294,20 +285,15 @@
       background: linear-gradient(90deg, transparent, rgba(0,242,234,0.4), rgba(255,0,80,0.3), transparent);
       z-index: 2;
     }
-    .video-aspect {
-      position: relative; padding-bottom: 56.25%; height: 0;
-    }
-    .video-aspect iframe,
-    .video-placeholder {
+    .video-aspect { position: relative; padding-bottom: 56.25%; height: 0; }
+    .video-aspect iframe, .video-placeholder {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;
     }
     .video-placeholder {
       display: flex; flex-direction: column;
       align-items: center; justify-content: center; gap: 14px;
-      background:
-        radial-gradient(ellipse 80% 60% at 50% 50%, rgba(0,242,234,0.05), transparent 65%),
-        radial-gradient(ellipse 60% 50% at 50% 50%, rgba(180,0,255,0.06), transparent 65%),
-        #0c0a1c;
+      background: radial-gradient(ellipse 80% 60% at 50% 50%, rgba(0,242,234,0.05), transparent 65%),
+                  radial-gradient(ellipse 60% 50% at 50% 50%, rgba(180,0,255,0.06), transparent 65%), #0c0a1c;
     }
     .play-icon {
       width: 72px; height: 72px; border-radius: 50%;
@@ -324,50 +310,36 @@
     }
 
     /* ── BENEFITS ── */
-    .benefits {
-      padding: 80px 32px 100px;
-      position: relative;
-    }
+    .benefits { padding: 80px 32px 100px; position: relative; }
     .benefits::before {
       content: "";
       position: absolute; top: 0; left: 10%; right: 10%; height: 1px;
       background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
     }
-
     .benefits-label { text-align: center; margin-bottom: 52px; }
-
     .benefits-grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 16px;
-      max-width: 1160px; margin: 0 auto;
+      display: grid; grid-template-columns: repeat(5, 1fr);
+      gap: 16px; max-width: 1160px; margin: 0 auto;
     }
-
     .benefit-card {
-      position: relative; overflow: hidden;
-      border-radius: 20px;
+      position: relative; overflow: hidden; border-radius: 20px;
       border: 1px solid rgba(255,255,255,0.08);
       background: linear-gradient(160deg, rgba(255,255,255,0.055) 0%, rgba(255,255,255,0.015) 100%);
-      padding: 32px 22px 28px;
-      display: flex; flex-direction: column; gap: 14px;
+      padding: 32px 22px 28px; display: flex; flex-direction: column; gap: 14px;
       transition: transform var(--ease), border-color var(--ease);
-      cursor: default;
-      backdrop-filter: blur(10px);
+      cursor: default; backdrop-filter: blur(10px);
     }
     .benefit-card::before {
-      content: "";
-      position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      content: ""; position: absolute; top: 0; left: 0; right: 0; height: 1px;
       background: linear-gradient(90deg, transparent, rgba(0,242,234,0.55), transparent);
       opacity: 0; transition: opacity var(--ease);
     }
     .benefit-card:hover { transform: translateY(-6px); border-color: rgba(0,242,234,0.2); }
     .benefit-card:hover::before { opacity: 1; }
-
     .benefit-icon {
       width: 46px; height: 46px; border-radius: 12px;
       display: flex; align-items: center; justify-content: center;
-      animation: floatUp 4s ease-in-out infinite;
-      flex-shrink: 0;
+      animation: floatUp 4s ease-in-out infinite; flex-shrink: 0;
     }
     .benefit-icon svg { width: 22px; height: 22px; }
     .benefit-card:nth-child(2) .benefit-icon { animation-delay: -1s; }
@@ -378,14 +350,8 @@
     .icon-pink   { background: rgba(255,0,80,0.12);   border: 1px solid rgba(255,0,80,0.25);  color: var(--pink); }
     .icon-gold   { background: rgba(201,168,76,0.12); border: 1px solid rgba(201,168,76,0.25);color: var(--gold); }
     .icon-purple { background: rgba(167,143,255,0.12);border: 1px solid rgba(167,143,255,0.25);color: #c4b5fd; }
-
-    .benefit-title {
-      font-family: 'Montserrat', sans-serif; font-weight: 900;
-      font-size: 0.95rem; color: #fff; line-height: 1.3;
-    }
-    .benefit-desc {
-      font-size: 0.8rem; color: rgba(255,255,255,0.4); line-height: 1.65; flex: 1;
-    }
+    .benefit-title { font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 0.95rem; color: #fff; line-height: 1.3; }
+    .benefit-desc  { font-size: 0.8rem; color: rgba(255,255,255,0.4); line-height: 1.65; flex: 1; }
     .benefit-tag {
       display: inline-block; width: fit-content;
       font-size: 0.58rem; font-weight: 700; letter-spacing: 0.16em;
@@ -396,67 +362,147 @@
     .tag-gold   { background: rgba(201,168,76,0.1); color: var(--gold); border: 1px solid rgba(201,168,76,0.22); }
     .tag-purple { background: rgba(167,143,255,0.1);color: #c4b5fd;     border: 1px solid rgba(167,143,255,0.22); }
 
-    /* ── BOTTOM CTA ── */
-    .bottom-cta {
-      text-align: center;
+    /* ── FORM SECTION ── */
+    .form-section {
       padding: 0 32px 100px;
+      position: relative;
     }
-    .bottom-cta-inner {
-      max-width: 560px; margin: 0 auto;
+    .form-section::before {
+      content: "";
+      position: absolute; top: 0; left: 10%; right: 10%; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+    }
+    .form-wrap {
+      max-width: 520px; margin: 0 auto;
       border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 28px;
-      padding: 60px 40px;
-      background:
-        radial-gradient(ellipse 80% 100% at 50% 0%, rgba(180,0,255,0.14), transparent 65%),
-        rgba(255,255,255,0.025);
+      border-radius: 28px; padding: 52px 44px 48px;
+      background: radial-gradient(ellipse 80% 100% at 50% 0%, rgba(180,0,255,0.14), transparent 65%),
+                  rgba(255,255,255,0.025);
       position: relative; overflow: hidden;
       backdrop-filter: blur(12px);
     }
-    /* corner bracket marks */
-    .bottom-cta-inner::before, .bottom-cta-inner::after {
-      content: "";
-      position: absolute; width: 18px; height: 18px;
+    .form-wrap::before, .form-wrap::after {
+      content: ""; position: absolute; width: 18px; height: 18px;
       border-color: rgba(0,242,234,0.3); border-style: solid;
     }
-    .bottom-cta-inner::before { top: 14px; left: 14px; border-width: 1px 0 0 1px; }
-    .bottom-cta-inner::after  { bottom: 14px; right: 14px; border-width: 0 1px 1px 0; }
+    .form-wrap::before { top: 14px; left: 14px; border-width: 1px 0 0 1px; }
+    .form-wrap::after  { bottom: 14px; right: 14px; border-width: 0 1px 1px 0; }
 
-    .bottom-cta h2 {
+    .form-eyebrow {
+      display: inline-flex; align-items: center; gap: 7px;
+      font-size: 0.6rem; font-weight: 700; letter-spacing: 0.22em;
+      text-transform: uppercase; color: rgba(255,255,255,0.35);
+      margin-bottom: 18px;
+    }
+    .form-eyebrow-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: var(--teal); box-shadow: 0 0 6px var(--teal);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    .form-section h2 {
       font-family: 'Montserrat', sans-serif; font-weight: 900;
       font-size: clamp(1.5rem, 2.8vw, 2.1rem); color: #fff;
-      letter-spacing: -0.02em; margin-bottom: 14px; line-height: 1.2;
+      letter-spacing: -0.02em; margin-bottom: 8px; line-height: 1.2;
     }
-    .bottom-cta p {
-      font-size: 0.9rem; color: rgba(255,255,255,0.38); line-height: 1.7; margin-bottom: 32px;
-    }
-    .bottom-cta-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-
-    .btn-primary {
-      display: inline-flex; align-items: center; gap: 8px;
+    .form-section h2 em {
+      font-style: normal;
       background: linear-gradient(90deg, var(--teal), var(--pink));
-      color: #000; font-family: 'Montserrat', sans-serif;
-      font-weight: 900; font-size: 0.8rem; letter-spacing: 0.08em;
-      text-transform: uppercase; padding: 13px 30px; border-radius: 100px;
-      text-decoration: none; transition: transform var(--ease), filter var(--ease);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     }
-    .btn-primary:hover { transform: translateY(-2px); filter: brightness(1.08); }
-    .btn-ghost {
-      display: inline-flex; align-items: center;
-      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.13);
-      color: rgba(255,255,255,0.55); font-family: 'Montserrat', sans-serif;
-      font-weight: 700; font-size: 0.8rem; letter-spacing: 0.08em;
-      text-transform: uppercase; padding: 13px 30px; border-radius: 100px;
-      text-decoration: none; transition: border-color var(--ease), color var(--ease), transform var(--ease);
+    .form-sub { font-size: 0.88rem; color: rgba(255,255,255,0.35); line-height: 1.65; margin-bottom: 32px; }
+
+    .f-row { margin-bottom: 16px; }
+    .f-row label {
+      display: block; font-size: 0.68rem; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: rgba(255,255,255,0.45); margin-bottom: 7px;
     }
-    .btn-ghost:hover { border-color: rgba(0,242,234,0.32); color: #fff; transform: translateY(-2px); }
+    .f-row input {
+      width: 100%;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px; padding: 13px 16px;
+      font-family: 'Lato', sans-serif; font-size: 0.95rem;
+      color: #fff; outline: none;
+      transition: border-color 0.18s, box-shadow 0.18s;
+    }
+    .f-row input::placeholder { color: rgba(255,255,255,0.22); }
+    .f-row input:focus {
+      border-color: rgba(0,242,234,0.5);
+      box-shadow: 0 0 0 3px rgba(0,242,234,0.08);
+    }
+    .f-hint { font-size: 0.72rem; color: rgba(255,255,255,0.25); margin-top: 5px; }
+
+    .f-submit {
+      position: relative; overflow: hidden;
+      width: 100%; margin-top: 10px;
+      padding: 16px 24px;
+      background: linear-gradient(90deg, var(--teal), var(--pink));
+      color: #000; border: none; border-radius: 100px;
+      font-family: 'Montserrat', sans-serif; font-size: 0.88rem;
+      font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase;
+      cursor: pointer;
+      transition: transform var(--ease), filter var(--ease);
+      animation: glow 4s ease-in-out infinite;
+    }
+    .f-submit:hover { transform: translateY(-1px); filter: brightness(1.07); }
+    .f-submit:active { transform: none; }
+    .f-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; animation: none; }
+    .f-submit-inner { display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .f-spinner {
+      width: 17px; height: 17px;
+      border: 2px solid rgba(0,0,0,0.25); border-top-color: #000;
+      border-radius: 50%; animation: spin 0.7s linear infinite; display: none;
+    }
+
+    .f-error {
+      background: rgba(255,0,80,0.08); border: 1px solid rgba(255,0,80,0.22);
+      border-radius: 10px; padding: 12px 16px;
+      font-size: 0.82rem; color: #ff6685; margin-top: 14px; display: none;
+    }
+
+    .f-trust {
+      display: flex; align-items: center; justify-content: center;
+      gap: 18px; flex-wrap: wrap; margin-top: 22px;
+    }
+    .f-trust-item { font-size: 0.72rem; color: rgba(255,255,255,0.28); }
+
+    /* ── SUCCESS STATE ── */
+    .f-success {
+      display: none; flex-direction: column;
+      align-items: center; text-align: center; padding: 12px 0;
+    }
+    .f-success-icon {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--teal), var(--pink));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px; margin-bottom: 22px;
+      box-shadow: 0 0 50px rgba(0,242,234,0.28), 0 0 35px rgba(255,0,80,0.18);
+      animation: pop 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .f-success h3 {
+      font-family: 'Montserrat', sans-serif; font-weight: 900;
+      font-size: 1.6rem; color: #fff; margin-bottom: 10px; letter-spacing: -0.01em;
+    }
+    .f-success p { font-size: 0.9rem; color: rgba(255,255,255,0.38); line-height: 1.7; margin-bottom: 28px; max-width: 360px; }
+    .discord-btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: #5865F2; color: #fff; text-decoration: none;
+      border-radius: 100px; padding: 14px 32px;
+      font-family: 'Montserrat', sans-serif; font-weight: 900;
+      font-size: 0.85rem; letter-spacing: 0.06em; text-transform: uppercase;
+      transition: transform var(--ease), box-shadow var(--ease);
+    }
+    .discord-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 28px rgba(88,101,242,0.4); }
+    .discord-btn svg { width: 20px; height: 20px; fill: #fff; }
 
     /* ── FOOTER ── */
     footer {
       border-top: 1px solid rgba(255,255,255,0.05);
       padding: 28px 52px;
       display: flex; align-items: center; justify-content: space-between;
-      flex-wrap: wrap; gap: 14px;
-      position: relative; z-index: 1;
+      flex-wrap: wrap; gap: 14px; position: relative; z-index: 1;
     }
     .footer-copy { font-size: 0.75rem; color: rgba(255,255,255,0.2); }
     .footer-links { display: flex; gap: 24px; }
@@ -467,24 +513,19 @@
     .footer-links a:hover { color: rgba(255,255,255,0.7); }
 
     /* ── RESPONSIVE ── */
-    @media (max-width: 1024px) {
-      .benefits-grid { grid-template-columns: repeat(3, 1fr); }
-    }
+    @media (max-width: 1024px) { .benefits-grid { grid-template-columns: repeat(3, 1fr); } }
     @media (max-width: 640px) {
       .benefits-grid { grid-template-columns: 1fr 1fr; }
       h1 { font-size: clamp(2.4rem, 9vw, 3rem); }
       footer { padding: 24px; flex-direction: column; align-items: flex-start; }
-      .bottom-cta-inner { padding: 40px 24px; }
-      .video-section, .benefits { padding-left: 20px; padding-right: 20px; }
+      .form-wrap { padding: 36px 24px 32px; }
+      .video-section, .benefits, .form-section { padding-left: 20px; padding-right: 20px; }
     }
-    @media (max-width: 400px) {
-      .benefits-grid { grid-template-columns: 1fr; }
-    }
+    @media (max-width: 400px) { .benefits-grid { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
 
-  <!-- atmosphere -->
   <div class="atmos" aria-hidden="true">
     <div class="atmos-orb ao1"></div>
     <div class="atmos-orb ao2"></div>
@@ -493,7 +534,6 @@
     <div class="fog fog2"></div>
   </div>
 
-  <!-- nav -->
   <nav>
     <a href="/" class="logo">
       <img src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/68529ceff63e1913ceb4e2e0.png" alt="Cult Content" class="logo-img">
@@ -504,7 +544,7 @@
       <li><a href="/founders-story">My Story</a></li>
       <li><a href="/consulting">Consulting</a></li>
       <li><a href="/partners">Partners</a></li>
-      <li><a href="/creators">Community</a></li>
+      <li><a href="/creators" class="active">Community</a></li>
     </ul>
     <div class="nav-right">
       <div class="nav-social">
@@ -528,7 +568,7 @@
 
   <div class="page">
 
-    <!-- ── HERO ── -->
+    <!-- HERO -->
     <section class="hero">
       <div class="hero-floor" aria-hidden="true"></div>
       <div class="hero-grid" aria-hidden="true"></div>
@@ -544,7 +584,7 @@
       </h1>
 
       <p class="hero-sub">
-        Cult Content puts creators at the center of a new era &mdash; where your audience is your asset and every post is a paycheck.
+        Cult Content puts creators at the center of a new era - where your audience is your asset and every post is a paycheck.
       </p>
 
       <div class="free-badge">
@@ -552,32 +592,25 @@
         Always free to join
       </div>
 
-      <a href="https://discord.com/invite/a5WNMe8Xuu" target="_blank" rel="noopener" class="hero-btn">
-        Join Now
-        <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+      <a href="#join" class="hero-btn">
+        Apply Now
       </a>
     </section>
 
-    <!-- ── VIDEO ── -->
+    <!-- VIDEO -->
     <section class="video-section">
       <div class="video-inner">
         <div class="video-label">
           <div class="section-eyebrow">Watch &amp; See</div>
           <h2 class="section-title">See What We're <em>Building</em></h2>
         </div>
-
         <div class="video-portal">
           <div class="video-aspect">
-            <!--
-              Replace YOUR_VIDEO_ID below with your YouTube video ID.
-              e.g. src="https://www.youtube.com/embed/dQw4w9WgXcQ"
-            -->
             <iframe
-              src="https://www.youtube.com/embed/YOUR_VIDEO_ID"
+              src="https://www.youtube.com/embed/vB5Tmla2lLI"
               title="Cult Content Creator Program"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowfullscreen
-              id="creator-video">
+              allowfullscreen id="creator-video">
             </iframe>
             <div class="video-placeholder" id="video-placeholder">
               <div class="play-icon">
@@ -590,15 +623,13 @@
       </div>
     </section>
 
-    <!-- ── BENEFITS ── -->
+    <!-- BENEFITS -->
     <section class="benefits">
       <div class="benefits-label">
         <div class="section-eyebrow">What you get</div>
         <h2 class="section-title">Built for creators who <em>actually convert</em></h2>
       </div>
-
       <div class="benefits-grid">
-
         <div class="benefit-card">
           <div class="benefit-icon icon-teal">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
@@ -607,7 +638,6 @@
           <p class="benefit-desc">Receive products before you ever pitch a brand. Test what you're selling, keep what you love.</p>
           <span class="benefit-tag tag-teal">Free product</span>
         </div>
-
         <div class="benefit-card">
           <div class="benefit-icon icon-pink">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
@@ -616,16 +646,14 @@
           <p class="benefit-desc">We negotiate rates most solo creators never see. More per sale, same content you'd make anyway.</p>
           <span class="benefit-tag tag-pink">Up to 30%</span>
         </div>
-
         <div class="benefit-card">
           <div class="benefit-icon icon-gold">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
           </div>
           <div class="benefit-title">Daily Retainer Opportunities</div>
-          <p class="benefit-desc">Paid retainers drop every day inside the network. First come, consistent earners &mdash; first served.</p>
+          <p class="benefit-desc">Paid retainers drop every day inside the network. First come, consistent earners - first served.</p>
           <span class="benefit-tag tag-gold">Daily drops</span>
         </div>
-
         <div class="benefit-card">
           <div class="benefit-icon icon-purple">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -634,32 +662,81 @@
           <p class="benefit-desc">Connect, co-create, and grow together. In-person events where deals get made and friendships form.</p>
           <span class="benefit-tag tag-purple">Community</span>
         </div>
-
         <div class="benefit-card">
           <div class="benefit-icon icon-teal">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
           </div>
           <div class="benefit-title">Totally Free to Join</div>
-          <p class="benefit-desc">No upfront cost. No hidden fees. No exclusive lock-in. We win when you win &mdash; that's the whole model.</p>
+          <p class="benefit-desc">No upfront cost. No hidden fees. No exclusive lock-in. We win when you win - that's the whole model.</p>
           <span class="benefit-tag tag-teal">Always free</span>
         </div>
-
       </div>
     </section>
 
-    <!-- ── BOTTOM CTA ── -->
-    <section class="bottom-cta" id="join">
-      <div class="bottom-cta-inner">
-        <h2>You're one step<br/>away from everything.</h2>
-        <p>Join a growing network of creators building real income on TikTok Shop. Sign up free &mdash; no application required.</p>
-        <div class="bottom-cta-btns">
-          <a href="https://discord.com/invite/a5WNMe8Xuu" target="_blank" rel="noopener" class="btn-primary">Join Now &mdash; It's Free</a>
-          <a href="/alchemists-club" class="btn-ghost">Alchemists Club</a>
+    <!-- FORM -->
+    <section class="form-section" id="join">
+      <div class="form-wrap">
+
+        <!-- Form view -->
+        <div id="f-form-view">
+          <div class="form-eyebrow"><span class="form-eyebrow-dot"></span> Now accepting creators</div>
+          <h2>You're one step<br/>away from <em>true abundance.</em></h2>
+          <p class="form-sub">Apply in 30 seconds. Start earning commissions on the brands you believe in.</p>
+
+          <form id="cc-form" novalidate>
+            <div class="f-row">
+              <label for="f-name">Full Name</label>
+              <input id="f-name" type="text" placeholder="Jane Smith" autocomplete="name">
+            </div>
+            <div class="f-row">
+              <label for="f-tiktok">TikTok Handle</label>
+              <input id="f-tiktok" type="text" placeholder="@yourhandle">
+            </div>
+            <div class="f-row">
+              <label for="f-email">Email</label>
+              <input id="f-email" type="email" placeholder="you@example.com" autocomplete="email">
+            </div>
+            <div class="f-row">
+              <label for="f-phone">Phone Number</label>
+              <input id="f-phone" type="tel" placeholder="(555) 000-0000" autocomplete="tel">
+            </div>
+            <div class="f-row">
+              <label for="f-discord">Discord Username</label>
+              <input id="f-discord" type="text" placeholder="yourname">
+              <p class="f-hint">Needed to unlock your Verified Creator role in the community.</p>
+            </div>
+
+            <button class="f-submit" type="submit" id="f-submit">
+              <span class="f-submit-inner">
+                <span class="f-spinner" id="f-spinner"></span>
+                <span id="f-btn-label">Apply Now</span>
+              </span>
+            </button>
+            <div class="f-error" id="f-error"></div>
+          </form>
+
+          <div class="f-trust">
+            <div class="f-trust-item">No spam, ever</div>
+            <div class="f-trust-item">Lifelong partnership</div>
+            <div class="f-trust-item">Instant access</div>
+          </div>
         </div>
+
+        <!-- Success view -->
+        <div class="f-success" id="f-success">
+          <div class="f-success-icon"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="36" height="36"><path d="M5 13l4 4L19 7" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <h3>You're in!</h3>
+          <p>Welcome to the Cult Content Creator Network. Check your texts - we sent you the link to your creator hub.</p>
+          <a href="#" id="f-discord-link" class="discord-btn" target="_blank" rel="noopener">
+            <svg viewBox="0 0 127.14 96.36" xmlns="http://www.w3.org/2000/svg"><path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/></svg>
+            Join the Discord
+          </a>
+        </div>
+
       </div>
     </section>
 
-    <!-- ── FOOTER ── -->
+    <!-- FOOTER -->
     <footer>
       <span class="footer-copy">© 2026 Cult Content</span>
       <div class="footer-links">
@@ -675,32 +752,73 @@
 
   <script>
     (function(){
-      const links = document.querySelectorAll('.nav-links a');
-      const path = window.location.pathname.replace(/\/$/, '') || '/';
-      links.forEach(a => { if ((a.getAttribute('href').replace(/\/$/, '') || '/') === path) a.classList.add('active'); });
       const btn = document.getElementById('mobileMenuBtn');
       const drawer = document.getElementById('mobileDrawer');
       if (btn && drawer) {
         btn.addEventListener('click', e => { e.stopPropagation(); drawer.classList.toggle('open'); });
         document.addEventListener('click', e => { if (!drawer.contains(e.target) && e.target !== btn) drawer.classList.remove('open'); });
       }
-    })();
-  </script>
-
-  <script>
-    // Show placeholder when no real video ID is set
-    (function() {
+      // video placeholder
       var iframe = document.getElementById('creator-video');
       var ph = document.getElementById('video-placeholder');
       if (iframe && ph) {
         if ((iframe.getAttribute('src') || '').includes('YOUR_VIDEO_ID')) {
-          iframe.style.display = 'none';
-          ph.style.display = 'flex';
-        } else {
-          ph.style.display = 'none';
-        }
+          iframe.style.display = 'none'; ph.style.display = 'flex';
+        } else { ph.style.display = 'none'; }
       }
     })();
+  </script>
+
+  <script>
+  (function(){
+    var API = 'https://portal.cultcontent.cc/api/creator-onboard';
+    var form     = document.getElementById('cc-form');
+    var formView = document.getElementById('f-form-view');
+    var success  = document.getElementById('f-success');
+    var btn      = document.getElementById('f-submit');
+    var lbl      = document.getElementById('f-btn-label');
+    var spin     = document.getElementById('f-spinner');
+    var err      = document.getElementById('f-error');
+    var dLink    = document.getElementById('f-discord-link');
+
+    function setLoading(on) {
+      btn.disabled = on;
+      spin.style.display = on ? 'inline-block' : 'none';
+      lbl.textContent = on ? 'Submitting...' : 'Apply Now';
+    }
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      err.style.display = 'none';
+      var name    = document.getElementById('f-name').value.trim();
+      var tiktok  = document.getElementById('f-tiktok').value.trim();
+      var email   = document.getElementById('f-email').value.trim();
+      var phone   = document.getElementById('f-phone').value.trim();
+      var discord = document.getElementById('f-discord').value.trim();
+      if (!name || !email || !phone) {
+        err.textContent = 'Please fill in your name, email, and phone number.';
+        err.style.display = 'block'; return;
+      }
+      setLoading(true);
+      fetch(API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name, tiktokHandle: tiktok, email: email, phone: phone, discordUsername: discord })
+      })
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        if (!data.ok) throw new Error(data.error || 'Something went wrong.');
+        if (data.discordInvite) dLink.href = data.discordInvite;
+        formView.style.display = 'none';
+        success.style.display = 'flex';
+      })
+      .catch(function(e){
+        err.textContent = e.message || 'Something went wrong. Please try again.';
+        err.style.display = 'block';
+      })
+      .finally(function(){ setLoading(false); });
+    });
+  })();
   </script>
 
 </body>

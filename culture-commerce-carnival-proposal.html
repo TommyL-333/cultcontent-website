@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Culture Commerce Carnival &mdash; Sponsorship Proposal</title>
+  <style>
+    :root {
+      --red: #FF0050;
+      --cyan: #00F2EA;
+      --gold: #F5A623;
+      --bg: #080808;
+      --bg2: #111111;
+      --bg3: #1a1a1a;
+      --border: #222222;
+      --muted: #777777;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: #f0f0f0;
+      line-height: 1.65;
+      font-size: 16px;
+      width: 100%;
+    }
+
+    a { color: var(--cyan); text-decoration: none; }
+
+    /* ── HERO ── */
+    .hero {
+      width: 100%;
+      background-image:
+        linear-gradient(to bottom, rgba(8,8,8,.5) 0%, rgba(8,8,8,.7) 55%, rgba(8,8,8,.98) 100%),
+        url('https://streetsense.com/wp-content/uploads/2023/02/natharbor-1.jpg');
+      background-size: cover;
+      background-position: center 40%;
+      background-repeat: no-repeat;
+      padding: 90px 48px 80px;
+      text-align: center;
+      position: relative;
+      min-height: 520px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .hero-inner { position: relative; z-index: 1; max-width: 800px; margin: 0 auto; }
+    .hero-presenter {
+      font-size: 11px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: #aaa;
+      margin-bottom: 16px;
+    }
+    .hero-presenter span { color: #fff; font-weight: 600; }
+    .hero-takeover {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 5px;
+      text-transform: uppercase;
+      color: #fff;
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.22);
+      border-radius: 100px;
+      padding: 6px 18px;
+      margin-bottom: 22px;
+    }
+    .hero h1 {
+      font-size: clamp(36px, 6vw, 72px);
+      font-weight: 800;
+      line-height: 1.08;
+      letter-spacing: -2px;
+      color: #fff;
+      margin-bottom: 20px;
+    }
+    .hero h1 em {
+      font-style: normal;
+      background: linear-gradient(135deg, var(--cyan) 0%, var(--red) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-sub {
+      font-size: 18px;
+      color: #bbb;
+      max-width: 520px;
+      margin: 0 auto 36px;
+    }
+    .hero-pills {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .pill {
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.13);
+      border-radius: 100px;
+      padding: 7px 16px;
+      font-size: 12px;
+      color: #ccc;
+    }
+    .pill strong { color: #fff; }
+
+    /* ── LAYOUT ── */
+    .wrap { width: 100%; padding: 0 48px; }
+    @media (max-width: 600px) { .wrap { padding: 0 20px; } .hero { padding: 70px 24px 60px; } }
+
+    section { padding: 72px 0; border-bottom: 1px solid var(--border); }
+    section:last-of-type { border-bottom: none; }
+
+    .label {
+      display: inline-block;
+      background: rgba(0,242,234,.07);
+      border: 1px solid rgba(0,242,234,.18);
+      color: var(--cyan);
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      padding: 5px 13px;
+      border-radius: 100px;
+      margin-bottom: 22px;
+    }
+    .label-gold {
+      background: rgba(245,166,35,.08);
+      border-color: rgba(245,166,35,.25);
+      color: var(--gold);
+    }
+    .label-red {
+      background: rgba(255,0,80,.08);
+      border-color: rgba(255,0,80,.25);
+      color: #ff6690;
+    }
+
+    h2 {
+      font-size: clamp(28px, 4vw, 44px);
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -.5px;
+      color: #fff;
+      margin-bottom: 18px;
+    }
+    p { color: #bbb; margin-bottom: 16px; }
+    p:last-child { margin-bottom: 0; }
+
+    /* ── STATS ── */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-top: 40px;
+    }
+    .stat { background: var(--bg2); padding: 26px 18px; text-align: center; }
+    .stat-n {
+      font-size: 32px;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--cyan), var(--red));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+      margin-bottom: 5px;
+    }
+    .stat-l { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; }
+
+    /* ── AUDIENCE ── */
+    .audience-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+      margin-top: 40px;
+    }
+    .audience-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px 22px;
+      text-align: center;
+    }
+    .audience-pct {
+      font-size: 42px;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 6px;
+      background: linear-gradient(135deg, var(--cyan), var(--red));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .audience-desc { font-size: 13px; color: #bbb; }
+    .audience-desc strong { color: #fff; display: block; margin-bottom: 3px; font-size: 14px; }
+    .geo-strip {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 28px;
+      margin-top: 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .geo-label { font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--muted); flex-shrink: 0; }
+    .geo-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+    .geo-tag {
+      background: rgba(0,242,234,.07);
+      border: 1px solid rgba(0,242,234,.15);
+      color: var(--cyan);
+      font-size: 12px;
+      padding: 4px 12px;
+      border-radius: 100px;
+    }
+    .niche-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .niche-bar { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+    .niche-name { font-size: 12px; font-weight: 600; color: #fff; margin-bottom: 8px; }
+    .niche-track { background: #1e1e1e; border-radius: 4px; height: 6px; overflow: hidden; }
+    .niche-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--cyan), var(--red)); }
+    .niche-pct { font-size: 11px; color: var(--muted); margin-top: 5px; }
+
+    /* ── SCARCITY BADGES ── */
+    .avail-badge {
+      display: inline-block;
+      background: var(--red);
+      color: #fff;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 100px;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+    .sold-badge {
+      display: inline-block;
+      background: #333;
+      color: #888;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 100px;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+
+    /* ── PRICING SECTION BREAK ── */
+    .pricing-break {
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 72px 48px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .pricing-break::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 80% at 20% 50%, rgba(255,0,80,.07) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 80% at 80% 50%, rgba(0,242,234,.06) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .pricing-break h2 {
+      font-size: clamp(32px, 5vw, 56px);
+      font-weight: 800;
+      letter-spacing: -1px;
+      color: #fff;
+      margin-bottom: 12px;
+      position: relative;
+    }
+    .pricing-break p {
+      font-size: 16px;
+      color: #777;
+      max-width: 480px;
+      margin: 0 auto;
+      position: relative;
+    }
+    .pricing-break .pb-label {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--red), var(--cyan));
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      padding: 6px 16px;
+      border-radius: 100px;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    /* ── ALL-INCLUSIVE BOX ── */
+    .handled-box {
+      background: rgba(0,242,234,.05);
+      border: 1px solid rgba(0,242,234,.15);
+      border-radius: 12px;
+      padding: 22px 28px;
+      margin-top: 40px;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    .handled-icon {
+      font-size: 24px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .handled-text { font-size: 14px; color: #bbb; }
+    .handled-text strong { color: #fff; display: block; margin-bottom: 4px; font-size: 15px; }
+
+    /* ── MARKETPLACE HERO CARD ── */
+    .marketplace-card {
+      background: linear-gradient(135deg, #0d0020, #00080f);
+      border: 1px solid rgba(245,166,35,.35);
+      border-radius: 18px;
+      padding: 52px 48px;
+      text-align: center;
+      margin-top: 48px;
+      position: relative;
+      overflow: hidden;
+    }
+    .marketplace-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 70% 50% at 30% 60%, rgba(255,0,80,.1) 0%, transparent 60%),
+        radial-gradient(ellipse 70% 50% at 70% 40%, rgba(0,242,234,.08) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .marketplace-card .inner { position: relative; z-index: 1; }
+    .marketplace-card .gold-badge {
+      display: inline-block;
+      background: var(--gold);
+      color: #000;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      border-radius: 100px;
+      margin-bottom: 20px;
+    }
+    .marketplace-card h3 {
+      font-size: clamp(24px, 3.5vw, 38px);
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 12px;
+      letter-spacing: -.5px;
+    }
+    .marketplace-card .price {
+      font-size: 56px;
+      font-weight: 800;
+      color: var(--gold);
+      line-height: 1;
+      margin: 20px 0 8px;
+    }
+    .marketplace-card .price-note { font-size: 14px; color: #888; margin-bottom: 32px; }
+    .marketplace-card p { max-width: 580px; margin: 0 auto 32px; font-size: 15px; }
+    .mp-benefits {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      text-align: left;
+      margin-bottom: 36px;
+    }
+    .mp-benefit {
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 10px;
+      padding: 14px 18px;
+      font-size: 13px;
+      color: #ccc;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .mp-benefit::before { content: '\2713'; color: var(--gold); flex-shrink: 0; font-weight: 700; }
+    .exclusivity-note {
+      background: rgba(245,166,35,.08);
+      border: 1px solid rgba(245,166,35,.2);
+      border-radius: 10px;
+      padding: 14px 20px;
+      font-size: 13px;
+      color: #e0c580;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* ── GRID CARDS ── */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 40px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 40px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 40px; }
+    @media (max-width: 700px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 26px;
+    }
+    .card-tag { font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--cyan); margin-bottom: 10px; }
+    .card-price { font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+    .card-avail { font-size: 11px; color: var(--muted); margin-bottom: 12px; }
+    .card h4 { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+    .card p { font-size: 13px; color: #777; margin-bottom: 12px; }
+    .card ul { list-style: none; padding: 0; margin: 0; }
+    .card ul li {
+      font-size: 13px; color: #bbb; padding: 5px 0;
+      border-bottom: 1px solid #1c1c1c;
+      display: flex; gap: 9px;
+    }
+    .card ul li:last-child { border-bottom: none; }
+    .card ul li::before { content: '\2192'; color: var(--cyan); flex-shrink: 0; }
+
+    /* ── SPONSORSHIP TIERS ── */
+    .tiers {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+      margin-top: 40px;
+    }
+    .tier {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 26px 20px;
+      position: relative;
+    }
+    .tier.tier-carnival { border-color: rgba(255,0,80,.4); background: linear-gradient(160deg,#150008,#0d0d0d); }
+    .tier.tier-free { border-style: dashed; }
+    .tier-crown {
+      position: absolute; top: -11px; left: 50%; transform: translateX(-50%);
+      background: var(--red); color: #fff;
+      font-size: 9px; font-weight: 800; letter-spacing: 2px;
+      text-transform: uppercase; padding: 4px 11px;
+      border-radius: 100px; white-space: nowrap;
+    }
+    .tier-name { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+    .tier-price { font-size: 28px; font-weight: 800; color: #fff; line-height: 1; margin-bottom: 4px; }
+    .tier-price sub { font-size: 14px; font-weight: 400; color: var(--muted); }
+    .tier-location { font-size: 12px; color: var(--cyan); margin-bottom: 4px; }
+    .tier-count { font-size: 11px; color: #555; margin-bottom: 12px; }
+    .tier-desc { font-size: 12px; color: #777; margin-bottom: 14px; line-height: 1.5; }
+    .tier ul { list-style: none; padding: 0; margin: 0; }
+    .tier ul li { font-size: 12px; color: #bbb; padding: 4px 0; display: flex; gap: 7px; border-bottom: 1px solid #1a1a1a; }
+    .tier ul li:last-child { border-bottom: none; }
+    .tier ul li::before { content: '\2713'; color: var(--cyan); flex-shrink: 0; font-weight: 700; }
+    .tier.tier-carnival ul li::before { color: var(--red); }
+    .tier-deliverable {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid #1e1e1e;
+      font-size: 11px;
+      color: #555;
+    }
+    .tier-deliverable strong { color: var(--cyan); }
+
+    /* ── CARNIVAL EXPERIENCE ── */
+    .carnival-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-top: 36px;
+    }
+    .carnival-item {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 16px;
+      text-align: center;
+    }
+    .carnival-item .ci-icon { font-size: 28px; margin-bottom: 8px; }
+    .carnival-item .ci-name { font-size: 13px; font-weight: 600; color: #fff; }
+    .carnival-item .ci-note { font-size: 11px; color: #666; margin-top: 3px; }
+
+    .vip-box {
+      background: linear-gradient(135deg, #120020, #08100a);
+      border: 1px solid rgba(245,166,35,.25);
+      border-radius: 12px;
+      padding: 28px 32px;
+      margin-top: 28px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .vip-badge {
+      background: var(--gold);
+      color: #000;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 8px 16px;
+      border-radius: 8px;
+      flex-shrink: 0;
+    }
+    .vip-desc { font-size: 14px; color: #ccc; }
+    .vip-desc strong { color: #fff; }
+
+    /* ── VENUE ── */
+    .venue-spaces {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-top: 36px;
+    }
+    .venue-space { background: var(--bg2); padding: 24px 22px; }
+    .vs-name { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+    .vs-desc { font-size: 12px; color: #666; }
+
+    /* ── TRACK RECORD ── */
+    .record-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-top: 36px;
+    }
+    @media (max-width: 640px) { .record-grid { grid-template-columns: 1fr; } }
+    .record-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px 26px;
+    }
+    .rc-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
+    .rc-label.green { color: #3ecf8e; }
+    .rc-label.amber { color: #f59e0b; }
+    .record-card h4 { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 12px; }
+    .record-card ul { list-style: none; padding: 0; margin: 0; }
+    .record-card ul li { font-size: 13px; color: #bbb; padding: 5px 0; border-bottom: 1px solid #1c1c1c; display: flex; gap: 9px; }
+    .record-card ul li:last-child { border-bottom: none; }
+    .record-card.green ul li::before { content: '\2713'; color: #3ecf8e; flex-shrink: 0; font-weight: 700; }
+    .record-card.amber ul li::before { content: '\2191'; color: #f59e0b; flex-shrink: 0; font-weight: 700; }
+
+    /* ── TEAM ── */
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+      margin-top: 36px;
+    }
+    .team-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 22px;
+    }
+    .tc-name { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 3px; }
+    .tc-role { font-size: 11px; color: var(--cyan); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; }
+    .tc-bio { font-size: 12px; color: #777; line-height: 1.55; }
+
+    /* ── ADD-ON TABLE ── */
+    .addon-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 36px;
+      font-size: 14px;
+    }
+    .addon-table th {
+      text-align: left;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .addon-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid #181818;
+      color: #bbb;
+      vertical-align: top;
+    }
+    .addon-table tr:last-child td { border-bottom: none; }
+    .addon-table tbody tr:hover td { background: var(--bg2); }
+    .addon-price { font-weight: 700; color: var(--cyan); white-space: nowrap; }
+    .addon-name { font-weight: 600; color: #fff; }
+    .addon-desc { font-size: 12px; color: #666; margin-top: 3px; }
+    .addon-avail { font-size: 11px; color: #555; white-space: nowrap; }
+
+    /* ── CHECKOUT BUTTONS ── */
+    .tier-cta {
+      display: block;
+      width: 100%;
+      margin-top: 18px;
+      padding: 11px 0;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      transition: opacity .15s;
+    }
+    .tier-cta:hover { opacity: .85; }
+    .tier-cta-cyan { background: var(--cyan); color: #000; }
+    .tier-cta-red { background: var(--red); color: #fff; }
+    .tier-cta-gold { background: var(--gold); color: #000; }
+    .tier-cta-ghost { background: transparent; border: 1px solid #333; color: #999; }
+    .addon-cta {
+      display: inline-block;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      text-decoration: none;
+      background: var(--cyan);
+      color: #000;
+      white-space: nowrap;
+    }
+    .addon-cta:hover { opacity: .85; }
+
+    /* ── CTA ── */
+    .cta-box {
+      background: linear-gradient(135deg, #0d0020, #00080f);
+      border: 1px solid rgba(0,242,234,.2);
+      border-radius: 16px;
+      padding: 52px 40px;
+      text-align: center;
+      margin-top: 48px;
+    }
+    .cta-box h2 { margin-bottom: 14px; }
+    .cta-box p { max-width: 560px; margin: 0 auto 32px; }
+    .cta-btns { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; margin-bottom: 32px; }
+    .btn {
+      display: inline-block;
+      padding: 14px 28px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+    }
+    .btn-primary { background: var(--red); color: #fff; }
+    .btn-gold { background: var(--gold); color: #000; }
+    .btn-ghost { background: transparent; border: 1px solid rgba(255,255,255,.18); color: #ccc; }
+    .cta-contacts {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+    .cta-contact { text-align: center; }
+    .cta-contact-name { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 2px; }
+    .cta-contact-role { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px; }
+    .cta-contact-email { font-size: 13px; color: var(--cyan); }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      padding: 36px 48px;
+      text-align: center;
+    }
+    footer p { font-size: 12px; color: #555; margin: 0; }
+    footer strong { color: #888; }
+  </style>
+</head>
+<body>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-inner">
+    <p class="hero-presenter">Presented by <span>Cult Content</span> &times; <span>Unskrypted</span></p>
+    <div class="hero-takeover">National Harbor Takeover</div>
+    <h1>Culture<br><em>Commerce</em><br>Carnival</h1>
+    <p class="hero-sub">An immersive creator &amp; brand marketplace event at National Harbor, MD &mdash; where culture, commerce, and community collide.</p>
+    <div class="hero-pills">
+      <span class="pill"><strong>Location</strong> National Harbor, MD</span>
+      <span class="pill"><strong>Date</strong> Aug / Sep 2026</span>
+      <span class="pill"><strong>Attendees</strong> 3,000+</span>
+      <span class="pill"><strong>Vendors</strong> 100 On-Site</span>
+      <span class="pill"><strong>Samples</strong> 20,000+</span>
+      <span class="pill"><strong>Broadcast</strong> Live Streamed</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- WHO'S IN THE ROOM -->
+  <section>
+    <span class="label">The Audience</span>
+    <h2>Who&rsquo;s in the room.</h2>
+    <p>3,000+ people at National Harbor for one day &mdash; including 1,000 application-only social commerce creators, 100 product vendors, VIP brand guests, and a general public audience drawn by the waterfront location and WPGC &amp; WKYS radio promotion. Your brand is in front of creators and real consumers at the same time.</p>
+
+    <div class="audience-grid">
+      <div class="audience-card">
+        <div class="audience-pct">70K+</div>
+        <div class="audience-desc"><strong>Creator Database</strong>Mid-Atlantic social commerce creators &mdash; direct email outreach to every invite</div>
+      </div>
+      <div class="audience-card">
+        <div class="audience-pct">1,000</div>
+        <div class="audience-desc"><strong>Invited Creators</strong>Application-only. Every creator is vetted, niche-matched to vendors, and ready to make content on-site.</div>
+      </div>
+      <div class="audience-card">
+        <div class="audience-pct">3,000+</div>
+        <div class="audience-desc"><strong>Total Attendees</strong>Creators, brand guests, VIPs, and general public drawn by the National Harbor waterfront and radio promotion.</div>
+      </div>
+      <div class="audience-card">
+        <div class="audience-pct">50</div>
+        <div class="audience-desc"><strong>VIP Guests</strong>Curated brand representatives, media, and priority partners with dedicated Belvedere lounge access.</div>
+      </div>
+    </div>
+
+    <div class="geo-strip">
+      <span class="geo-label">Geographic Focus</span>
+      <div class="geo-tags">
+        <span class="geo-tag">Washington DC</span>
+        <span class="geo-tag">Maryland</span>
+        <span class="geo-tag">Virginia</span>
+        <span class="geo-tag">North Carolina</span>
+        <span class="geo-tag">Pennsylvania</span>
+        <span class="geo-tag">New Jersey</span>
+        <span class="geo-tag">Delaware</span>
+      </div>
+    </div>
+
+    <div class="niche-grid">
+      <div class="niche-bar">
+        <div class="niche-name">Beauty &amp; Personal Care</div>
+        <div class="niche-track"><div class="niche-fill" style="width:70%"></div></div>
+        <div class="niche-pct">~35%</div>
+      </div>
+      <div class="niche-bar">
+        <div class="niche-name">Fashion &amp; Lifestyle</div>
+        <div class="niche-track"><div class="niche-fill" style="width:60%"></div></div>
+        <div class="niche-pct">~30%</div>
+      </div>
+      <div class="niche-bar">
+        <div class="niche-name">Food &amp; Beverage</div>
+        <div class="niche-track"><div class="niche-fill" style="width:40%"></div></div>
+        <div class="niche-pct">~20%</div>
+      </div>
+      <div class="niche-bar">
+        <div class="niche-name">Home, Fitness &amp; Other</div>
+        <div class="niche-track"><div class="niche-fill" style="width:30%"></div></div>
+        <div class="niche-pct">~15%</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRACK RECORD -->
+  <section>
+    <span class="label">Track Record</span>
+    <h2>We&rsquo;ve done this before.<br>Here&rsquo;s the proof.</h2>
+    <p>Dream Big DC was the first social commerce creator matchmaking event in Washington D.C. Minimal budget. Zero paid ads. It sold itself &mdash; and sold out. CCC is that same model at ten times the scale.</p>
+
+    <div class="stats" style="margin-top:32px;">
+      <div class="stat"><div class="stat-n">738</div><div class="stat-l">Creator RSVPs</div></div>
+      <div class="stat"><div class="stat-n">180+</div><div class="stat-l">Check-Ins</div></div>
+      <div class="stat"><div class="stat-n">20</div><div class="stat-l">Brands On-Site</div></div>
+      <div class="stat"><div class="stat-n">500+</div><div class="stat-l">Active Discord Community</div></div>
+    </div>
+
+    <div class="record-grid">
+      <div class="record-card green">
+        <div class="rc-label green">Dream Big DC &mdash; What Worked</div>
+        <h4>Proven DC Demand</h4>
+        <ul>
+          <li>738 RSVPs with minimal lead time &amp; zero ad spend</li>
+          <li>180+ creator check-ins at a first-ever event</li>
+          <li>20 participating brands with on-site product sellers</li>
+          <li>500+ creators now in active Discord community</li>
+          <li>Established Cult Content as the DC hub for social commerce</li>
+        </ul>
+      </div>
+      <div class="record-card amber">
+        <div class="rc-label amber">What CCC Does Better</div>
+        <h4>Upgraded Across the Board</h4>
+        <ul>
+          <li>National Harbor waterfront vs. indoor venue</li>
+          <li>100 vendors vs. 20 &mdash; a real marketplace floor</li>
+          <li>Seller outreach starts 12+ weeks out with deadlines</li>
+          <li>Dedicated onboarding station &mdash; every creator activated on arrival</li>
+          <li>Full RSVP-to-attendance funnel: SMS, Discord, day-of incentives</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- EVENT OVERVIEW -->
+  <section>
+    <span class="label">The Event</span>
+    <h2>What is the Culture<br>Commerce Carnival?</h2>
+    <p>CCC is an outdoor marketplace event at National Harbor &mdash; 3,000+ people, one day, one waterfront. The core is 1,000 application-only social commerce creators matched to 100 curated product vendors. Around that is a full public carnival: live music, entertainment, food, and brand activations drawing walk-up traffic from one of the DMV&rsquo;s busiest destinations. The whole thing is live-streamed.</p>
+    <p>Creators get in free. Vendors are curated. Every vendor brings 200 product samples. The result is a room where commerce actually happens &mdash; not just a networking event with badge lanyards.</p>
+
+    <div class="stats">
+      <div class="stat"><div class="stat-n">3,000+</div><div class="stat-l">Total Attendees</div></div>
+      <div class="stat"><div class="stat-n">100</div><div class="stat-l">Vendors On-Site</div></div>
+      <div class="stat"><div class="stat-n">20,000+</div><div class="stat-l">Product Samples</div></div>
+      <div class="stat"><div class="stat-n">1M+</div><div class="stat-l">DMV Radio Reach</div></div>
+      <div class="stat"><div class="stat-n">50</div><div class="stat-l">VIP Guests</div></div>
+      <div class="stat"><div class="stat-n">Live</div><div class="stat-l">Streamed &amp; Broadcast</div></div>
+    </div>
+  </section>
+
+  <!-- CARNIVAL EXPERIENCE -->
+  <section>
+    <span class="label">The Experience</span>
+    <h2>Not a conference.<br>A carnival.</h2>
+    <p>Every element of CCC is designed to generate content, drive engagement, and make people want to be there. The carnival theme is the vehicle &mdash; energy, color, and shareable moments at every turn. Creators don&rsquo;t attend. They perform.</p>
+
+    <div class="carnival-grid">
+      <div class="carnival-item">
+        <div class="ci-icon">&#127914;</div>
+        <div class="ci-name">Live Music</div>
+        <div class="ci-note">Main stage performances</div>
+      </div>
+      <div class="carnival-item">
+        <div class="ci-icon">&#127917;</div>
+        <div class="ci-name">Stilt Walker</div>
+        <div class="ci-note">Roaming entertainer</div>
+      </div>
+      <div class="carnival-item">
+        <div class="ci-icon">&#127853;</div>
+        <div class="ci-name">Cotton Candy</div>
+        <div class="ci-note">Carnival food station</div>
+      </div>
+      <div class="carnival-item">
+        <div class="ci-icon">&#127912;</div>
+        <div class="ci-name">Face Paint</div>
+        <div class="ci-note">Content-ready activations</div>
+      </div>
+      <div class="carnival-item">
+        <div class="ci-icon">&#127880;</div>
+        <div class="ci-name">Balloon Animals</div>
+        <div class="ci-note">Roaming artist</div>
+      </div>
+      <div class="carnival-item">
+        <div class="ci-icon">&#127774;</div>
+        <div class="ci-name">Caricature Artists</div>
+        <div class="ci-note">Branded keepsakes</div>
+      </div>
+      <div class="carnival-item">
+        <div class="ci-icon">&#127919;</div>
+        <div class="ci-name">Ring Toss</div>
+        <div class="ci-note">Prize activation</div>
+      </div>
+      <div class="carnival-item">
+        <div class="ci-icon">&#127744;</div>
+        <div class="ci-name">Spinny Wheel</div>
+        <div class="ci-note">Brand prize integration</div>
+      </div>
+      <div class="carnival-item">
+        <div class="ci-icon">&#128302;</div>
+        <div class="ci-name">Fortune Teller</div>
+        <div class="ci-note">Immersive experience</div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- MARKETING & REACH -->
+  <section>
+    <span class="label">Marketing &amp; Reach</span>
+    <h2>We&rsquo;re not starting<br>from zero.</h2>
+    <p>Cult Content and Unskrypted bring combined infrastructure, audience, and media relationships that most event organizers spend years building. Your sponsorship plugs directly into an existing engine.</p>
+
+    <div class="grid-4">
+      <div class="card">
+        <div class="card-tag">Database</div>
+        <h4>70,000+ Affiliates</h4>
+        <ul>
+          <li>Mid-Atlantic social commerce creators</li>
+          <li>Direct outreach via email to curated segments</li>
+          <li>500% invite volume vs. target</li>
+          <li>Segmented by niche &amp; geography</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Community</div>
+        <h4>500+ Active Creators</h4>
+        <ul>
+          <li>500+ creators in active Discord server</li>
+          <li>Unskrypted media &amp; creator connections</li>
+          <li>Dream Big DC alumni network</li>
+          <li>DC-area influencer relationships</li>
+        </ul>
+      </div>
+      <div class="card" style="border-color: rgba(245,166,35,.3);">
+        <div class="card-tag" style="color: var(--gold);">Radio &amp; PR</div>
+        <h4>Media Partnerships</h4>
+        <ul>
+          <li>WPGC 95.5 &mdash; confirmed radio partner</li>
+          <li>WKYS 93.9 &mdash; confirmed radio partner</li>
+          <li>Combined reach of 1M+ DMV listeners</li>
+          <li>On-air mentions, live reads &amp; event coverage</li>
+          <li>Press &amp; editorial outreach by Unskrypted</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Broadcast</div>
+        <h4>Live Stream</h4>
+        <ul>
+          <li>Full event live-streamed &amp; broadcast</li>
+          <li>20 ambassador creators promoting pre &amp; post</li>
+          <li>Application-only entry drives scarcity &amp; buzz</li>
+          <li>Sponsor brands featured across all content</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- TEAM -->
+  <section>
+    <span class="label">The Team</span>
+    <h2>Built by people<br>who&rsquo;ve done this.</h2>
+
+    <div class="team-grid">
+      <div class="team-card">
+        <div class="tc-name">Tommy Lynch</div>
+        <div class="tc-role">Cult Content &mdash; Lead Organizer</div>
+        <div class="tc-bio">Social commerce agency founder. 70,000+ Mid-Atlantic affiliate relationships. Produced Dream Big DC &mdash; the first social commerce creator event in Washington, D.C. Leads brand partnerships, sponsorships, creator strategy, and event sales.</div>
+      </div>
+      <div class="team-card">
+        <div class="tc-name">Folasade Ogunmokun</div>
+        <div class="tc-role">Unskrypted &mdash; Event Director</div>
+        <div class="tc-bio">Founder of Unskrypted, a shoppable streaming network for Black-owned businesses. DC-area media and production veteran. Leads logistics, production crew, brand activation design, local partnerships, and media outreach.</div>
+      </div>
+      <div class="team-card">
+        <div class="tc-name">Sabine</div>
+        <div class="tc-role">National Harbor &mdash; Event Coordinator</div>
+        <div class="tc-bio">National Harbor&rsquo;s on-site event coordinator. Provides venue coordination, approved vendor logistics, space assignments, and day-of support across all four event spaces.</div>
+      </div>
+      <div class="team-card">
+        <div class="tc-name">Derek</div>
+        <div class="tc-role">Capitol Wheel &mdash; Activation Partner</div>
+        <div class="tc-bio">Oversees the Capitol Wheel at National Harbor. Confirmed partnership for creator content activations, branded gondola wraps, and on-site event integration.</div>
+      </div>
+      <div class="team-card">
+        <div class="tc-name">Production Crew</div>
+        <div class="tc-role">6-Person On-Site Team</div>
+        <div class="tc-bio">Check-in staff, stage manager, event host, audience activators, PA runners, and AV/graphics team. Assembled and led by Folasade&rsquo;s production network.</div>
+      </div>
+      <div class="team-card">
+        <div class="tc-name">MGM National Harbor</div>
+        <div class="tc-role">Hospitality Partner</div>
+        <div class="tc-bio">Official after-party venue. Ambassador and VIP hotel partner. Rain-day contingency space. Contact: Erika Robinson, MGM National Harbor.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- VENUE -->
+  <section>
+    <span class="label">Venue</span>
+    <h2>National Harbor, MD &mdash;<br>Freedom Way &amp; Beyond.</h2>
+    <p>Four premium outdoor spaces at the DMV&rsquo;s premier waterfront destination. The Capitol Wheel, MGM National Harbor, and direct Potomac River access are all within steps. No other venue in the DC Metro delivers this backdrop.</p>
+
+    <div class="venue-spaces">
+      <div class="venue-space">
+        <div class="vs-name">American Way</div>
+        <div class="vs-desc">Main event corridor &mdash; stage, flow &amp; foot traffic</div>
+      </div>
+      <div class="venue-space">
+        <div class="vs-name">Capital Canopy</div>
+        <div class="vs-desc">Covered tent &mdash; Culture Sponsor booths, weather-protected</div>
+      </div>
+      <div class="venue-space">
+        <div class="vs-name">Plaza &amp; Plaza Stage</div>
+        <div class="vs-desc">Main stage &amp; performance area, waterfront views</div>
+      </div>
+      <div class="venue-space">
+        <div class="vs-name">The Belvedere</div>
+        <div class="vs-desc">VIP lounge &amp; Carnival Sponsor exclusive space</div>
+      </div>
+    </div>
+
+    <div class="grid-2" style="margin-top:20px;">
+      <div class="card">
+        <div class="card-tag">Also On-Site</div>
+        <h4>Capitol Wheel &amp; Hospitality</h4>
+        <ul>
+          <li>Capitol Wheel &mdash; 180 capacity, content &amp; activation space</li>
+          <li>MGM National Harbor &mdash; after-party &amp; rain contingency</li>
+          <li>Westin &amp; Hyatt Place &mdash; VIP &amp; ambassador lodging</li>
+          <li>2 food trucks at end of Freedom Way</li>
+          <li>10 free food tickets per truck for GA attendees</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-tag">Day-Of Schedule</div>
+        <h4>Event Flow</h4>
+        <ul>
+          <li>10:00 AM &mdash; Creator early access (sample collection)</li>
+          <li>11:00 AM &mdash; General Admission opens</li>
+          <li>All day &mdash; Carnival activations, booths, live music</li>
+          <li>Main stage &mdash; presentations, demos, performances</li>
+          <li>Evening &mdash; VIP after-party at MGM National Harbor</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- PRICING SECTION BREAK -->
+<div class="pricing-break">
+  <div class="pb-label">Culture Commerce Carnival</div>
+  <h2>Sponsorship Packages</h2>
+  <p>Spots are limited. Availability is first-come, first-served. All packages are fully managed &mdash; we handle setup, signage, staffing, and activation.</p>
+</div>
+
+<main class="wrap">
+
+  <!-- MARKETPLACE SPONSOR -->
+  <section>
+    <span class="label label-gold">Headline Opportunity</span>
+    <h2>Exclusive Marketplace Partner<span class="avail-badge">1 Available</span></h2>
+    <p>One company owns the commerce layer of the entire event. Exclusive naming rights, no competing platforms, no competing affiliate programs &mdash; just your brand powering the marketplace floor for 1,000 invited creators and 100 product vendors.</p>
+
+    <div class="marketplace-card">
+      <div class="inner">
+        <div class="gold-badge">Exclusive &mdash; 1 Available</div>
+        <h3>Marketplace Sponsor</h3>
+        <p>Your platform is THE marketplace of the Culture Commerce Carnival. Every creator, every vendor, every content moment is powered by you.</p>
+        <div class="price">$25,000</div>
+        <div class="price-note">One sponsorship. Exclusive rights. Full event ownership.</div>
+        <div class="mp-benefits">
+          <div class="mp-benefit">Exclusive naming rights &mdash; &ldquo;Powered by [Your Brand]&rdquo; across all event spaces</div>
+          <div class="mp-benefit">Primary logo on all banners, signage, and Freedom Way vendor strip</div>
+          <div class="mp-benefit">Featured stage presentation to 1,000+ creators</div>
+          <div class="mp-benefit">Dedicated activation space on the Belvedere</div>
+          <div class="mp-benefit">Co-branding in all event marketing, email, and social</div>
+          <div class="mp-benefit">Affiliate program integration across all 100 vendors</div>
+          <div class="mp-benefit">Live stream brand placement during full event broadcast</div>
+          <div class="mp-benefit">Exclusive platform &mdash; no competitor mentions anywhere on-site</div>
+          <div class="mp-benefit">Post-event creator data &mdash; curated list of all creator attendees</div>
+          <div class="mp-benefit">Named in all press and media coverage</div>
+        </div>
+        <div class="exclusivity-note">
+          Exclusivity guaranteed &mdash; no competing marketplace platforms, affiliate networks, or commerce tools will be featured, mentioned, or present anywhere at the event.
+        </div>
+        <div style="margin-top:32px;">
+          <a href="https://buy.stripe.com/5kQ28qadn6CA2Mu7CydZ601" class="btn btn-gold" style="display:inline-block;padding:16px 40px;font-size:16px;border-radius:10px;text-decoration:none;font-weight:800;">Reserve Marketplace Sponsor &rarr;</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SPONSORSHIP TIERS -->
+  <section>
+    <span class="label">Vendor &amp; Booth Tiers</span>
+    <h2>Four ways to get<br>on the floor.</h2>
+    <p>Every vendor brings 200 product samples. Every tier includes on-site presence, creator foot traffic, and post-event creator contact data. The difference is space, visibility, and experience level.</p>
+
+    <div class="handled-box">
+      <div class="handled-icon">&#9989;</div>
+      <div class="handled-text">
+        <strong>We handle everything.</strong>
+        Booth setup, signage, sample logistics, creator matchmaking, and on-site staffing are all managed by the CCC production team. Show up with your product and your team. We do the rest.
+      </div>
+    </div>
+
+    <div class="tiers">
+
+      <div class="tier tier-carnival">
+        <div class="tier-crown">Top Tier</div>
+        <div class="tier-name">Carnival Sponsor</div>
+        <div class="tier-price">$10,000 <sub>x1</sub></div>
+        <div class="tier-location">The Belvedere</div>
+        <div class="tier-count"><span class="avail-badge">1 Available</span></div>
+        <div class="tier-desc">Premium lounge space on the Belvedere. Bar access, lounge seating, and the most coveted spot at the event. Highest creator dwell time of any space.</div>
+        <ul>
+          <li>Exclusive Belvedere lounge space</li>
+          <li>Bar &amp; lounge chair setup</li>
+          <li>Primary signage at the Belvedere</li>
+          <li>Featured on main stage screen</li>
+          <li>Ambassador pairing</li>
+          <li>VIP gift bag inclusion</li>
+          <li>200 product samples distributed</li>
+        </ul>
+        <div class="tier-deliverable">Post-event: <strong>curated creator contact list</strong></div>
+        <a href="https://buy.stripe.com/aFacN485f8KI1Iq2iedZ602" class="tier-cta tier-cta-red">Reserve Carnival Sponsor &rarr;</a>
+      </div>
+
+      <div class="tier">
+        <div class="tier-name">Culture Sponsor</div>
+        <div class="tier-price">$400 <sub>x30</sub></div>
+        <div class="tier-location">Capitol Canopy</div>
+        <div class="tier-count"><span class="avail-badge">30 Available</span></div>
+        <div class="tier-desc">Premium covered space under the Capitol Canopy. Weather-protected, high foot traffic, prime placement.</div>
+        <ul>
+          <li>10x10 covered booth space</li>
+          <li>Table &amp; display area included</li>
+          <li>Listed on event program</li>
+          <li>200 product samples distributed</li>
+          <li>Creator matchmaking access</li>
+        </ul>
+        <div class="tier-deliverable">Post-event: <strong>creator contact list</strong></div>
+        <a href="https://buy.stripe.com/8x26oGadn1igcn4cWSdZ60b" class="tier-cta tier-cta-cyan">Reserve Booth &rarr;</a>
+      </div>
+
+      <div class="tier">
+        <div class="tier-name">Commerce Sponsor</div>
+        <div class="tier-price">$300 <sub>x40</sub></div>
+        <div class="tier-location">Freedom Way</div>
+        <div class="tier-count"><span class="avail-badge">40 Available</span></div>
+        <div class="tier-desc">10x10 booth on Freedom Way &mdash; the main vendor strip along the waterfront. Maximum foot traffic exposure.</div>
+        <ul>
+          <li>10x10 booth on Freedom Way</li>
+          <li>Table &amp; display area included</li>
+          <li>Listed on event program</li>
+          <li>200 product samples distributed</li>
+          <li>Creator matchmaking access</li>
+        </ul>
+        <div class="tier-deliverable">Post-event: <strong>creator contact list</strong></div>
+        <a href="https://buy.stripe.com/4gMdR8dpz0ec1Iq6yudZ60c" class="tier-cta tier-cta-cyan">Reserve Booth &rarr;</a>
+      </div>
+
+      <div class="tier tier-free">
+        <div class="tier-name">Community</div>
+        <div class="tier-price">Free <sub>x30</sub></div>
+        <div class="tier-location">Freedom Way Median</div>
+        <div class="tier-count"><span class="avail-badge">30 Available</span></div>
+        <div class="tier-desc">Shared table in the median of Freedom Way. Bring your products, meet creators, get in the room.</div>
+        <ul>
+          <li>Shared table space</li>
+          <li>200 product samples required</li>
+          <li>Listed on event program</li>
+          <li>Creator matchmaking access</li>
+        </ul>
+        <a href="https://cultcontent-server-production.up.railway.app/ccc-checkout-form?tier=community-free" class="tier-cta tier-cta-ghost">Apply for Free Space &rarr;</a>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ADD-ONS -->
+  <section>
+    <span class="label">Add-On Sponsorships</span>
+    <h2>More ways to own<br>the moment.</h2>
+    <p>Branding sponsorships put your name on the experiences every attendee touches &mdash; the drinks they hold, the photos they take, the content they post. Available to any sponsor, no booth required.</p>
+
+    <table class="addon-table">
+      <thead>
+        <tr>
+          <th>Sponsorship</th>
+          <th>What You Get</th>
+          <th>Price</th>
+          <th>Availability</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><div class="addon-name">Executive Experience</div><div class="addon-desc">Phelt Lounge exclusive access &amp; branded premium activation</div></td>
+          <td>Private lounge, priority creator &amp; VIP access, dedicated staffing, full branded setup</td>
+          <td class="addon-price">$5,000</td>
+          <td class="addon-avail"><span class="avail-badge">1 Available</span></td>
+          <td><a href="https://buy.stripe.com/eVq3cu5X76CA3QyaOKdZ603" class="addon-cta">Reserve</a></td>
+        </tr>
+        <tr>
+          <td><div class="addon-name">Alcohol Sponsor</div><div class="addon-desc">Branded bar at Phelt Lounge or Belvedere</div></td>
+          <td>Branded bar presence, logo on drink menus &amp; signage, 2 available locations</td>
+          <td class="addon-price">$3,000</td>
+          <td class="addon-avail"><span class="avail-badge">2 Available</span></td>
+          <td><a href="https://buy.stripe.com/eVqaEW2KV8KI3Qy6yudZ604" class="addon-cta">Reserve</a></td>
+        </tr>
+        <tr>
+          <td><div class="addon-name">Creator Photo Booth</div><div class="addon-desc">Branded backdrop &mdash; every creator takes a content photo here</div></td>
+          <td>Custom branded backdrop, high-traffic placement, in every selfie &amp; content clip from the event</td>
+          <td class="addon-price">$2,500</td>
+          <td class="addon-avail"><span class="avail-badge">1 Available</span></td>
+          <td><a href="https://buy.stripe.com/6oUaEW1GRd0Ycn41eadZ606" class="addon-cta">Reserve</a></td>
+        </tr>
+        <tr>
+          <td><div class="addon-name">Stage Backdrop Sponsor</div><div class="addon-desc">Brand on the main stage &mdash; in every video clip, every photo</div></td>
+          <td>Logo cycles on the main stage backdrop throughout the event. Every piece of content filmed on stage carries your name.</td>
+          <td class="addon-price">$3,000</td>
+          <td class="addon-avail"><span class="avail-badge">5 Available</span></td>
+          <td><a href="https://buy.stripe.com/eVq5kCadn4us0EmaOKdZ605" class="addon-cta">Reserve</a></td>
+        </tr>
+        <tr>
+          <td><div class="addon-name">Event Lanyard Sponsor</div><div class="addon-desc">Every attendee wears your brand all day</div></td>
+          <td>Logo on 3,000+ lanyards. Non-stop visibility on every creator, vendor, and attendee from entry to exit.</td>
+          <td class="addon-price">$2,000</td>
+          <td class="addon-avail"><span class="avail-badge">1 Available</span></td>
+          <td><a href="https://buy.stripe.com/8x27sK1GRbWU86Oe0WdZ607" class="addon-cta">Reserve</a></td>
+        </tr>
+        <tr>
+          <td><div class="addon-name">Hydration Sponsor</div><div class="addon-desc">Branded water stations throughout the event</div></td>
+          <td>Logo on all water distribution points and hydration signage. Every attendee interacts with your brand.</td>
+          <td class="addon-price">$1,500</td>
+          <td class="addon-avail"><span class="avail-badge">1 Available</span></td>
+          <td><a href="https://buy.stripe.com/4gM28q0CN0ec9aS6yudZ608" class="addon-cta">Reserve</a></td>
+        </tr>
+        <tr>
+          <td><div class="addon-name">Wi-Fi Sponsor</div><div class="addon-desc">Presented by Verizon &mdash; branded hotspot powering the event</div></td>
+          <td>Brand name on all Wi-Fi signage and event connectivity. Presented-by placement across all stream overlays.</td>
+          <td class="addon-price">$1,500</td>
+          <td class="addon-avail"><span class="avail-badge">1 Available</span></td>
+          <td><a href="https://buy.stripe.com/eVqdR899j4usdr87CydZ609" class="addon-cta">Reserve</a></td>
+        </tr>
+        <tr>
+          <td><div class="addon-name">Live Stream Commercial</div><div class="addon-desc">Your 30-second commercial plays during the live stream broadcast</div></td>
+          <td>Pre-produced commercial (you provide) runs as a pre-roll or mid-roll during the full event live stream. On-screen during the broadcast and archived in the replay.</td>
+          <td class="addon-price">$1,500</td>
+          <td class="addon-avail"><span class="avail-badge">5 Available</span></td>
+          <td><a href="https://buy.stripe.com/7sYcN4bhr0ec4UCaOKdZ60a" class="addon-cta">Reserve</a></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- CTA -->
+  <section style="border-bottom:none;">
+    <div class="cta-box">
+      <span class="label label-gold" style="margin-bottom:20px;">Secure Your Spot</span>
+      <h2>Ready to be in the room?</h2>
+      <p>The Marketplace Sponsor slot is exclusive and spaces across all tiers are limited. Click your tier below to reserve instantly via Stripe &mdash; or reach out directly.</p>
+      <div class="cta-btns">
+        <a href="https://buy.stripe.com/5kQ28qadn6CA2Mu7CydZ601" class="btn btn-gold">Reserve Marketplace Sponsor &rarr;</a>
+        <a href="mailto:Tommy@cultcontent.cc?subject=CCC - Sponsorship Inquiry" class="btn btn-ghost">Contact Us Directly</a>
+      </div>
+      <div class="cta-contacts">
+        <div class="cta-contact">
+          <div class="cta-contact-name">Tommy Lynch</div>
+          <div class="cta-contact-role">Cult Content &mdash; Lead Organizer</div>
+          <a href="mailto:Tommy@cultcontent.cc" class="cta-contact-email">Tommy@cultcontent.cc</a>
+        </div>
+        <div class="cta-contact">
+          <div class="cta-contact-name">Folasade Ogunmokun</div>
+          <div class="cta-contact-role">Unskrypted &mdash; Event Director</div>
+          <a href="mailto:sade@unskrypted.tv" class="cta-contact-email">sade@unskrypted.tv</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <p>
+    <strong>Culture Commerce Carnival</strong> &mdash; Presented by Cult Content &times; Unskrypted<br>
+    National Harbor, MD &middot; Aug / Sep 2026
+  </p>
+  <p style="margin-top:10px;">Confidential &mdash; Sponsorship Proposal Only</p>
+</footer>
+
+</body>
+</html>

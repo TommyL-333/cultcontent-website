@@ -1,0 +1,71 @@
+{
+  "clients": [
+    {
+      "id": "mo78a8oxlg7z",
+      "createdAt": "2026-04-20T13:26:04.161Z",
+      "name": "DIAMANDIA",
+      "industry": "Anti-inflammatory wellness and body sculpting tools — premium self-care and holistic body care",
+      "products": "DIAMANDIA sells a curated range of body and face wellness tools, bundles, digital products, and coaching experiences. Core products include body gua sha tools (Bian Stone, Siren, LALA, Muse — $75–$99), body brushes, castor oil, and bundled kits ($105–$275). Higher-ticket offerings include an 8-week Anti-Inflammatory Group Coaching Experience ($500) and an in-person Anti-Inflammatory Reset Retreat ($4,000). Digital products include seasonal recipe guides ($20). Price range spans $10–$4,000.",
+      "audience": "Women aged approximately 25–45 interested in holistic wellness, anti-inflammatory lifestyles, body sculpting, and non-toxic self-care. Likely health-conscious, wellness-educated consumers who are interested in reducing bloating, cellulite, inflammation, and puffiness through at-home rituals. Also appeals to brides-to-be (Bridal Glow collection) and those seeking alternatives to clinical or invasive beauty treatments. Buyers are willing to invest in premium self-care and may already follow clean beauty, functional wellness, or anti-inflammatory diet content.",
+      "voice": "DIAMANDIA writes with confident, empowering, and slightly aspirational energy — copy feels self-assured without being preachy ('Wear it unapologetically,' 'real body results'). The tone is results-forward and direct, leading with outcomes and transformation rather than ingredients or process. There is an underlying sensuality and goddess-coded femininity woven throughout naming conventions (Siren, LALA, Muse, Goddess Platinum) and product language.",
+      "contentPillars": "At-home gua sha tutorials and technique demos, Anti-inflammatory lifestyle tips and body care routines, Before/after body sculpting and depuffing results, Bundle and product education (what each tool does and why), Clean self-care and non-toxic product storytelling",
+      "proofPoints": "Products described as larger than standard gua sha tools (a specific functional differentiator). Bian stone material called out by name as a premium material. 'Made in USA' on apparel line. Castor oil is non-toxic, phthalate-free, cruelty-free, and vegan. Siren Gua Sha recommended to be kept in freezer for maximum depuffing — a specific use-case tip implying tested, practiced methodology. Retreat limited to 5 people, signaling exclusivity.",
+      "cta": "Click on the orange shopping cart below, tap to learn more",
+      "tiktokHandle": "diamandia",
+      "avoidTopics": "Medical or clinical weight-loss claims, aggressive or fear-based body language (the brand leans empowerment, not insecurity-based marketing), cheap or drugstore beauty comparisons, fast-fashion or disposable wellness aesthetics, anything that undercuts the premium and ritual-driven positioning",
+      "extraContext": "DIAMANDIA appears to be founder-led based on the personal coaching and retreat offerings — TikTok content likely performs best when it feels personal, embodied, and expert-led rather than corporate. The brand bridges physical products with a lifestyle philosophy centered on anti-inflammation, which is a strong TikTok content hook with existing search demand. Gua sha is a visually demonstrable tool — tutorial and GRWM-style content is a natural fit. The Bridal Glow collection signals a gifting and occasion angle worth activating. Bundle naming (Goddess Platinum, Siren, Muse) creates a mythology-coded brand world that can be leaned into for aspirational content. The $4,000 retreat and $500 coaching program suggest the founder has authority positioning worth building on TikTok as a credibility pillar — even if those products are not the primary conversion driver."
+    },
+    {
+      "id": "mp35p9c9srga",
+      "createdAt": "2026-05-12T21:42:23.625Z",
+      "name": "Alpha Flow",
+      "industry": "TikTok Shop — relaunching affiliate program via Cult Content",
+      "products": "Alpha Flow is relaunching on TikTok Shop. Products TBD — to be populated after onboarding call. Pricing: contract at $1,500/month retainer + 10% GMV share.",
+      "audience": "TBD — to be completed during onboarding",
+      "voice": "TBD — to be completed during onboarding",
+      "contentPillars": "TBD",
+      "proofPoints": "600+ affiliate community. Amazon presence with reviews provides social proof for TikTok conversion.",
+      "cta": "TBD",
+      "tiktokHandle": "TBD",
+      "contractValue": 1500,
+      "gmvShare": 10,
+      "contacts": "Mike (mike@gora.group), Angel (angel@gora.group)",
+      "pipelineStage": "Proposal Sent",
+      "startDate": "2026-05-12"
+    },
+    {
+      "id": "mp3662rd4b6l",
+      "createdAt": "2026-05-12T21:55:28.249Z",
+      "name": "Trusted Rituals",
+      "industry": "Wellness supplements and spiritual wellness products",
+      "products": "TBD — to be populated during onboarding call",
+      "audience": "TBD — to be completed during onboarding",
+      "voice": "TBD — to be completed during onboarding",
+      "contentPillars": "TBD",
+      "proofPoints": "TBD",
+      "cta": "TBD",
+      "tiktokHandle": "TBD",
+      "contacts": "Yash Chitnis (vishvaura@gmail.com)",
+      "pipelineStage": "Contract Signed",
+      "startDate": "2026-05-12"
+    },
+    {
+      "id": "mp3662rlaczd",
+      "createdAt": "2026-05-12T21:55:28.257Z",
+      "name": "Approved Science",
+      "industry": "Supplements — 10-year-old brand, Amazon-first, expanding to TikTok Shop",
+      "products": "Supplements including collagen, Shilajit, appetite suppressants, lift/firming cream. Lead SKU TBD — appetite suppressant has compliance considerations, Shilajit crowded. 100+ samples/month budget. Healthy margins.",
+      "audience": "Health-conscious consumers, primarily Amazon buyers. Budget: $5k–$10k/mo for creator retainers. Decision makers: Dan and Lenea at Marketily.",
+      "voice": "Science-backed, credibility-forward. Lab coat energy. 10 years of Amazon proof points.",
+      "contentPillars": "TBD — strategy call to define lead SKU and content angles",
+      "proofPoints": "10 years in market, strong Amazon presence and reviews, proven product-market fit",
+      "cta": "TBD",
+      "tiktokHandle": "TBD",
+      "contractValue": 1500,
+      "gmvShare": 10,
+      "contacts": "Lenea (lenea@marketily.com), Dan (dan@marketily.com)",
+      "pipelineStage": "Contract Signed",
+      "startDate": "2026-05-07"
+    }
+  ]
+}

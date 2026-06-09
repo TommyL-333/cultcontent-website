@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>You&rsquo;re In &mdash; Culture Commerce Carnival</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    #ccc-root {
+      width: 100%;
+      min-height: 80vh;
+      background: #080808;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 24px;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      color: #f0f0f0;
+    }
+
+    .wrap {
+      width: 100%;
+      max-width: 580px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .check-ring {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      border: 2px solid #00F2EA;
+      background: rgba(0,242,234,.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 28px;
+      font-size: 26px;
+      color: #00F2EA;
+    }
+
+    .pill {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: #00F2EA;
+      background: rgba(0,242,234,.08);
+      border: 1px solid rgba(0,242,234,.2);
+      border-radius: 20px;
+      padding: 4px 14px;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-size: clamp(36px, 5vw, 52px);
+      font-weight: 900;
+      line-height: 1.05;
+      letter-spacing: -.02em;
+      color: #fff;
+      margin-bottom: 16px;
+    }
+    h1 .cyan { color: #00F2EA; }
+
+    .sub {
+      font-size: 15px;
+      color: #666;
+      max-width: 420px;
+      margin: 0 auto 48px;
+      line-height: 1.75;
+    }
+
+    .steps-card {
+      background: #111;
+      border: 1px solid #1e1e1e;
+      border-radius: 14px;
+      padding: 28px 24px;
+      text-align: left;
+      margin-bottom: 20px;
+    }
+
+    .steps-heading {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: #3a3a3a;
+      margin-bottom: 24px;
+    }
+
+    .step {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .step:last-child { margin-bottom: 0; }
+
+    .step-n {
+      flex-shrink: 0;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: rgba(0,242,234,.08);
+      border: 1px solid rgba(0,242,234,.2);
+      color: #00F2EA;
+      font-size: 10px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 2px;
+    }
+
+    .step-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #eee;
+      margin-bottom: 3px;
+    }
+
+    .step-desc {
+      font-size: 13px;
+      color: #555;
+      line-height: 1.6;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid #161616;
+      margin: 0 0 20px;
+    }
+
+    .contacts {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 36px;
+    }
+    @media (max-width: 460px) { .contacts { grid-template-columns: 1fr; } }
+
+    .contact {
+      background: #111;
+      border: 1px solid #1e1e1e;
+      border-radius: 10px;
+      padding: 16px 18px;
+      text-align: left;
+    }
+
+    .contact-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: #eee;
+      margin-bottom: 2px;
+    }
+
+    .contact-role {
+      font-size: 10px;
+      color: #3a3a3a;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      margin-bottom: 10px;
+    }
+
+    .contact a {
+      font-size: 12px;
+      color: #00F2EA;
+      text-decoration: none;
+    }
+
+    .back {
+      font-size: 12px;
+      color: #2a2a2a;
+      text-decoration: none;
+    }
+    .back:hover { color: #555; }
+  </style>
+</head>
+<body>
+<div id="ccc-root">
+  <div class="wrap">
+
+    <div class="check-ring">&#10003;</div>
+    <div class="pill">Reservation Confirmed</div>
+    <h1>You&rsquo;re in the<br><span class="cyan">room.</span></h1>
+    <p class="sub">Your sponsorship for the Culture Commerce Carnival has been received. A receipt has been sent to your email. Here&rsquo;s what happens next.</p>
+
+    <div class="steps-card">
+      <div class="steps-heading">What happens next</div>
+
+      <div class="step">
+        <div class="step-n">1</div>
+        <div>
+          <div class="step-title">Welcome packet incoming</div>
+          <div class="step-desc">Check your inbox. A welcome email with your full sponsorship breakdown, deliverables, and next steps is on its way from Tommy now.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">2</div>
+        <div>
+          <div class="step-title">Onboarding call</div>
+          <div class="step-desc">We&rsquo;ll get on a quick call to collect your brand assets, confirm logistics, and make sure you&rsquo;re set up for maximum creator exposure on event day.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">3</div>
+        <div>
+          <div class="step-title">Creator introductions</div>
+          <div class="step-desc">We&rsquo;ll connect you with relevant creators from our network ahead of the event so they arrive already familiar with your brand.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-n">4</div>
+        <div>
+          <div class="step-title">Event day details to follow</div>
+          <div class="step-desc">Venue, dates, schedule, and final logistics will be confirmed and sent to you as they&rsquo;re locked in with National Harbor.</div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider" />
+
+    <div class="contacts">
+      <div class="contact">
+        <div class="contact-name">Tommy Lynch</div>
+        <div class="contact-role">Cult Content &mdash; Lead Organizer</div>
+        <a href="mailto:Tommy@cultcontent.cc">Tommy@cultcontent.cc</a>
+      </div>
+      <div class="contact">
+        <div class="contact-name">Folasade Ogunmokun</div>
+        <div class="contact-role">Unskrypted &mdash; Event Director</div>
+        <a href="mailto:sade@unskrypted.tv">sade@unskrypted.tv</a>
+      </div>
+    </div>
+
+    <a href="/ccc-sponsor" class="back">&larr; Back to sponsorship page</a>
+
+  </div>
+</div>
+</body>
+</html>
