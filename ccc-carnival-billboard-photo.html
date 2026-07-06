@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Carnival Billboard — Photo &mdash; Culture Commerce Carnival</title>
+  <meta name="description" content="Feature your brand photo on the Carnival backdrop screen at the event." />
+  <meta property="og:title" content="Carnival Billboard — Photo — Culture Commerce Carnival" />
+  <meta property="og:description" content="Feature your brand photo on the Carnival backdrop screen at the event." />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; background: #111111; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; color: #f0f0f0; }
+    #page-bg { min-height: 100vh; width: 100%; background: #111111; display: flex; align-items: center; justify-content: center; padding: 64px 20px; }
+    .wrap { width: 100%; max-width: 520px; }
+    .brand { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 40px; text-decoration: none; }
+    .brand img { height: 28px; }
+    .brand-name { font-size: .74rem; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; color: rgba(255,255,255,.4); }
+    .pill { display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: #00c2cb; background: rgba(0,194,203,0.08); border: 1px solid rgba(0,194,203,0.22); border-radius: 20px; padding: 4px 14px; margin-bottom: 18px; }
+    h1 { font-size: clamp(30px, 5.6vw, 44px); font-weight: 800; line-height: 1.08; letter-spacing: -.02em; margin-bottom: 18px; }
+    .hook { font-size: 15px; line-height: 1.7; color: #b8b8b8; margin-bottom: 26px; }
+    .avail { display:inline-flex; align-items:center; gap:8px; font-size: 12px; font-weight: 700; letter-spacing:.04em; color: #00c2cb; background:rgba(0,194,203,0.06); border:1px solid rgba(0,194,203,0.18); border-radius:8px; padding:8px 13px; margin-bottom: 24px; }
+    .avail i { font-size: 8px; }
+    .card { background: #0d0d0d; border: 1px solid #222; border-radius: 12px; padding: 22px 24px; margin-bottom: 22px; }
+    .card-title { font-size: 10px; font-weight:800; letter-spacing:.16em; text-transform:uppercase; color:#666; margin-bottom: 14px; }
+    ul.benefits { list-style: none; }
+    ul.benefits li { position: relative; padding-left: 26px; font-size: 14px; line-height: 1.55; color: #d8d8d8; margin-bottom: 12px; }
+    ul.benefits li:last-child { margin-bottom: 0; }
+    ul.benefits li::before { content:"\2713"; position:absolute; left:0; top:0; color:#00c2cb; font-weight:800; font-size:13px; }
+    .price { font-size: 30px; font-weight: 800; letter-spacing:-.02em; margin-bottom: 4px; }
+    .price-note { font-size: 12px; color: #777; line-height:1.6; margin-bottom: 22px; }
+    .btn-cta { display: flex; align-items:center; justify-content:center; gap:10px; width:100%; background:#00c2cb; color:#000; font-size:15px; font-weight:800; letter-spacing:.03em; border:none; border-radius:11px; padding:16px 20px; cursor:pointer; text-decoration:none; text-align:center; transition:transform .12s, box-shadow .12s; }
+    .btn-cta:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,194,203,0.3); }
+    .questions { display:block; text-align:center; margin-top:18px; font-size:13px; color:#666; text-decoration:none; }
+    .questions:hover { color:#00c2cb; }
+    .form .field { margin-bottom: 14px; text-align:left; }
+    .form label { display:block; font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:#666; margin-bottom:7px; }
+    .form input { width:100%; background:#0d0d0d; border:1px solid #222; border-radius:9px; color:#f0f0f0; font-size:15px; font-family:inherit; padding:13px 14px; outline:none; transition:border-color .15s; }
+    .form input:focus { border-color:#00c2cb; }
+    .form input::placeholder { color:#333; }
+    .handle-wrap { position:relative; } .handle-at { position:absolute; left:14px; top:38px; color:#333; font-size:15px; pointer-events:none; } .handle-wrap input { padding-left:28px; }
+    .field-hint { font-size:11px; color:#555; margin-top:10px; line-height:1.5; }
+    .error-msg { display:none; background:rgba(255,0,80,.07); border:1px solid rgba(255,0,80,.2); color:#ff6688; font-size:13px; border-radius:8px; padding:11px 14px; margin-bottom:16px; } .error-msg.show{display:block;}
+    .punch { background:#0d0d0d; border:1px dashed rgba(0,194,203,0.4); border-radius:12px; padding:22px 24px; margin-bottom:8px; }
+    .punch-title { font-size:10px; font-weight:800; letter-spacing:.16em; text-transform:uppercase; color:#00c2cb; margin-bottom:16px; }
+    .punch-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .punch-stop { display:flex; align-items:center; gap:9px; font-size:13px; color:#d8d8d8; } .punch-stop i { color:#00c2cb; font-size:14px; }
+    .compare { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:22px 0; }
+    .compare-col { background:#0d0d0d; border:1px solid #222; border-radius:12px; padding:18px; } .compare-col.vip { border-color:rgba(0,194,203,0.4); }
+    .compare-h { font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:#666; margin-bottom:12px; }
+    .compare-col ul { list-style:none; } .compare-col li { font-size:13px; color:#c8c8c8; padding-left:18px; position:relative; margin-bottom:9px; } .compare-col li::before{content:"\2022";position:absolute;left:0;color:#00c2cb;}
+    .foot { text-align:center; margin-top:32px; font-size:11px; color:#444; letter-spacing:.05em; }
+    .foot a { color:#555; text-decoration:none; }
+  </style>
+</head>
+<body>
+  <div id="page-bg">
+    <div class="wrap">
+      <a class="brand" href="https://cultcontent.cc"><img src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/68529ceff63e1913ceb4e2e0.png" alt="Cult Content" /><span class="brand-name">Culture Commerce Carnival</span></a>
+      <div style="text-align:left">
+      <span class="pill"></span>
+      <h1></h1>
+      <p class="hook">Feature your brand photo on the Carnival backdrop screen at the event.</p>
+      <div class="avail"><i class="fa-solid fa-circle"></i>20 available</div>
+      <div class="card"><div class="card-title">What's included</div><ul class="benefits">
+        <li>Your photo on the Carnival backdrop screen</li>
+        <li>Rotating high-visibility placement</li>
+        <li>Listed on event program</li>
+        <li>Creator matchmaking access</li>
+        </ul></div>
+      
+      <div class="price">$1,500</div><div style="height:10px"></div>
+      
+      <a class="btn-cta" href="https://buy.stripe.com/dRm3cuclvbWU2Mu7CydZ60g">Reserve a Photo Billboard →</a>
+      <a class="questions" href="mailto:hello@cultcontent.cc?subject=Carnival%20Billboard%20%E2%80%94%20Photo%20%E2%80%94%20Question">Questions? Talk to our team →</a>
+      </div>
+      <div class="foot">September 12, 2026 · National Harbor, MD &nbsp;·&nbsp; <a href="https://cultcontent.cc/culture-commerce-carnival.html">Full event details</a></div>
+    </div>
+  </div>
+</body>
+</html>
