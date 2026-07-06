@@ -2262,6 +2262,38 @@ app.post('/api/creator-onboard', express.json(), async (req, res) => {
   res.json({ ok: true, discordInvite, results });
 });
 
+// Public marketing pages — all registered before the auth wall
+// These map the former GHL funnel URLs to static HTML files in the repo root.
+const _pub = (file) => (req, res) => res.sendFile(path.join(__dirname, file));
+app.get('/',                                   _pub('home.html'));
+app.get('/home',                               _pub('home.html'));
+app.get('/services',                           _pub('services.html'));
+app.get('/strategy',                           _pub('strategy.html'));
+app.get('/consulting',                         _pub('consulting.html'));
+app.get('/book',                               _pub('book.html'));
+app.get('/book-with-tommy',                    _pub('book-with-tommy.html'));
+app.get('/book-now',                           _pub('book-now.html'));
+app.get('/book-consulting',                    _pub('book-consulting.html'));
+app.get('/partners',                           _pub('partners.html'));
+app.get('/growth-partner',                     _pub('growth-partner.html'));
+app.get('/founders-story',                     _pub('founders-story.html'));
+app.get('/alchemists-club',                    _pub('alchemists-club.html'));
+app.get('/thoughts-from-tommy',                _pub('thoughts-from-tommy.html'));
+app.get('/foundation',                         _pub('foundation.html'));
+app.get('/profitability-calculator',           _pub('profitability-calculator.html'));
+app.get('/consultant-template',                _pub('consultant-template.html'));
+app.get('/consultant-onboarding',              _pub('consultant-onboarding.html'));
+app.get('/client-onboarding',                  _pub('client-onboarding.html'));
+app.get('/ccc-sponsor',                        _pub('ccc-sponsor.html'));
+app.get('/culture-commerce-carnival',          _pub('culture-commerce-carnival.html'));
+app.get('/culture-commerce-carnival-proposal', _pub('culture-commerce-carnival-proposal.html'));
+app.get('/ccc-creator-apply',                  _pub('ccc-creator-apply.html'));
+app.get('/ccc-sponsor-confirmed',              _pub('ccc-sponsor-confirmed.html'));
+app.get('/creator-onboarding',                 _pub('creator-onboarding.html'));
+app.get('/financials',                         _pub('financials.html'));
+app.get('/tiktok-city-tour--dream-big--dc',    _pub('tiktok-city-tour.html'));
+app.get('/sponsorship-packages--dream-big-dc', _pub('sponsorship-packages.html'));
+
 app.use(requireAuth); // all other routes require auth in production
 
 // POST /api/client/admin/set-password — CF Access protected; sets/resets a client's login password
