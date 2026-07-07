@@ -814,6 +814,69 @@
     .cta-contact-role { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px; }
     .cta-contact-email { font-size: 13px; color: var(--cyan); }
 
+
+    /* ── Carnival flagship block ── */
+    .carnival-card {
+      border: 1px solid rgba(255,0,80,.45);
+      background: linear-gradient(160deg, #1a0009, #0d0d0d);
+      border-radius: 18px;
+      padding: 44px 40px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 0 60px rgba(255,0,80,.12);
+    }
+    .carnival-card::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse at top right, rgba(255,0,80,.14), transparent 55%);
+      pointer-events: none;
+    }
+    .carnival-card .inner { position: relative; z-index: 1; }
+    .carnival-card .red-badge {
+      display: inline-block; background: var(--red); color: #fff;
+      font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase;
+      padding: 7px 16px; border-radius: 100px; margin-bottom: 22px;
+    }
+    .carnival-card h3 { font-size: clamp(26px, 4vw, 38px); font-weight: 800; margin-bottom: 8px; }
+    .carnival-card .price { font-size: clamp(34px, 5vw, 52px); font-weight: 900; color: var(--red); margin-bottom: 6px; }
+    .carnival-card .price-note { font-size: 14px; color: #888; margin-bottom: 24px; }
+    .carnival-card p { color: #b9bec9; max-width: 640px; margin-bottom: 28px; line-height: 1.7; }
+
+    /* ── Light contrast bands ── */
+    .light-band, .booth-band {
+      background: #f4f1ea;
+      color: #14151c;
+      padding: 90px 0;
+      margin: 90px 0;
+    }
+    .light-band h2, .booth-band h2, .h2-dark { color: #14151c !important; }
+    .light-band p, .booth-band .booth-intro { color: #4a4d58; }
+    .light-band .card, .light-band .grid-2 > div {
+      background: #fff; border-color: rgba(0,0,0,.08); color: #14151c;
+    }
+    .light-band h4 { color: #14151c; }
+    .light-band ul li, .light-band .card p { color: #4a4d58; }
+    .label-dark { color: var(--red) !important; }
+    .booth-intro { max-width: 620px; margin: 18px 0 40px; line-height: 1.7; }
+
+    /* ── Booth cards ── */
+    .booth-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+    @media (max-width: 900px) { .booth-grid { grid-template-columns: 1fr; } }
+    .booth-card {
+      background: #fff; border: 1px solid rgba(0,0,0,.1); border-radius: 16px;
+      padding: 30px 26px; display: flex; flex-direction: column;
+      box-shadow: 0 6px 24px rgba(0,0,0,.06);
+    }
+    .booth-tag { font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--red); margin-bottom: 10px; }
+    .booth-name { font-size: 20px; font-weight: 800; color: #14151c; margin-bottom: 6px; }
+    .booth-price { font-size: 34px; font-weight: 900; color: #14151c; }
+    .booth-count { font-size: 13px; color: #8a8d97; margin: 4px 0 16px; }
+    .booth-card ul { list-style: none; margin: 0 0 22px; padding: 0; flex: 1; }
+    .booth-card ul li { font-size: 14px; color: #4a4d58; padding: 5px 0 5px 20px; position: relative; }
+    .booth-card ul li::before { content: '✓'; position: absolute; left: 0; color: var(--red); font-weight: 700; }
+    .tier-cta-dark { background: #14151c; color: #fff; }
+    .tier-cta-dark:hover { box-shadow: 0 0 22px rgba(0,0,0,.3); }
+    .tier-cta-darkghost { background: transparent; color: #14151c; border: 1.5px solid #14151c; }
+
     /* ── FOOTER ── */
     footer {
       background: var(--bg2);
@@ -1063,8 +1126,10 @@
   </section>
 
   <!-- TEAM -->
-  <section>
-    <span class="label">The Team</span>
+  </main>
+  <div class="light-band">
+    <div class="wrap">
+    <span class="label label-dark">The Team</span>
     <h2>Built by people<br>who&rsquo;ve done this.</h2>
 
     <div class="team-grid">
@@ -1099,7 +1164,9 @@
         <div class="tc-bio">Official after-party venue. Ambassador and VIP hotel partner. Rain-day contingency space. Contact: Erika Robinson, MGM National Harbor.</div>
       </div>
     </div>
-  </section>
+    </div>
+  </div>
+  <main class="wrap">
 
   <!-- VENUE -->
   <section>
@@ -1168,10 +1235,25 @@
       <div class="inner">
         <div class="gold-badge">Title Sponsor &mdash; 1 Available</div>
         <h3>Marketplace Sponsor</h3>
-        <div class="price">$25,000</div>
+        <div class="price">$50,000</div>
         <div class="price-note">The entire marketplace carries your name.</div>
         <p>Naming rights to the full creator marketplace &mdash; your brand across all 70 booths, main-stage mentions, premier logo placement on every banner, all event content, the live stream, and first position in every press &amp; media asset. This is the biggest brand moment at the event.</p>
-        <a class="tier-cta tier-cta-gold" href="https://buy.stripe.com/5kQ28qadn6CA2Mu7CydZ601">Claim Title Sponsorship &rarr;</a>
+        <a class="tier-cta tier-cta-gold" href="https://buy.stripe.com/00w5kCdpz9OM0Em8GCdZ60i">Claim Title Sponsorship &rarr;</a>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- CARNIVAL SPONSOR — attached to flagship -->
+  <section style="margin-top:-30px;">
+    <div class="carnival-card">
+      <div class="inner">
+        <div class="red-badge">&#127914; Carnival Sponsor &mdash; 1 Available</div>
+        <h3>Carnival Sponsor</h3>
+        <div class="price">$15,000</div>
+        <div class="price-note">The carnival grounds carry your name &mdash; plus The Belvedere.</div>
+        <p>Naming rights to the full carnival experience &mdash; branding across every ride and game, main-stage shoutouts all day, and an exclusive branded lounge space at <strong>The Belvedere</strong>, the elevated overlook above the grounds where VIP guests, creators, and media gather.</p>
+        <a class="tier-cta tier-cta-red" href="https://buy.stripe.com/aFa00idpz0ec2MubSOdZ60f">Become Carnival Sponsor &rarr;</a>
       </div>
     </div>
   </section>
@@ -1181,21 +1263,6 @@
     <span class="label">All Tiers</span>
     <h2>Sponsorship menu.</h2>
     <div class="tiers">
-
-      <div class="tier tier-carnival">
-        <div class="tier-crown">&#127914;</div>
-        <div class="tier-name">Carnival Sponsor</div>
-        <div class="tier-price">$15,000</div>
-        <div class="tier-location">Carnival Grounds &mdash; naming rights</div>
-        <div class="tier-count">1 available</div>
-        <ul>
-          <li>Naming rights to the full carnival experience</li>
-          <li>Branding across all rides &amp; games</li>
-          <li>Exclusive lounge space on-site</li>
-          <li>Main-stage shoutouts all day</li>
-        </ul>
-        <a class="tier-cta tier-cta-red" href="https://buy.stripe.com/aFa00idpz0ec2MubSOdZ60f">Become Carnival Sponsor &rarr;</a>
-      </div>
 
       <div class="tier">
         <div class="tier-name">Executive Experience</div>
@@ -1207,7 +1274,7 @@
           <li>Direct access to top creators &amp; brands</li>
           <li>Concierge on-site experience</li>
         </ul>
-        <a class="tier-cta tier-cta-gold" href="https://buy.stripe.com/eVq3cu5X76CA3QyaOKdZ603">Reserve Executive Experience &rarr;</a>
+        <a class="tier-cta tier-cta-cyan" href="https://buy.stripe.com/eVq3cu5X76CA3QyaOKdZ603">Reserve Executive Experience &rarr;</a>
       </div>
 
       <div class="tier">
@@ -1320,44 +1387,64 @@
         <a class="tier-cta tier-cta-cyan" href="https://buy.stripe.com/eVqdR899j4usdr87CydZ609">Sponsor the Wi-Fi &rarr;</a>
       </div>
 
-      <div class="tier">
-        <div class="tier-name">Culture Sponsor &mdash; Capitol Canopy Booth</div>
-        <div class="tier-price">$400</div>
-        <div class="tier-location">Capitol Canopy &mdash; culture & lifestyle row</div>
-        <div class="tier-count">30 available</div>
-        <ul>
-          <li>Booth space under the Capitol Canopy</li>
-          <li>Face-to-face with creators &amp; attendees</li>
-        </ul>
-        <a class="tier-cta tier-cta-cyan" href="https://buy.stripe.com/8x26oGadn1igcn4cWSdZ60b">Reserve Canopy Booth &rarr;</a>
-      </div>
-
-      <div class="tier">
-        <div class="tier-name">Commerce Sponsor &mdash; Freedom Way Booth</div>
-        <div class="tier-price">$300</div>
-        <div class="tier-location">Freedom Way &mdash; the commerce corridor</div>
-        <div class="tier-count">40 available</div>
-        <ul>
-          <li>Booth space on Freedom Way</li>
-          <li>Creators sample &amp; film with your product on-site</li>
-        </ul>
-        <a class="tier-cta tier-cta-cyan" href="https://buy.stripe.com/4gMdR8dpz0ec1Iq6yudZ60c">Reserve Freedom Way Booth &rarr;</a>
-      </div>
-
-      <div class="tier tier-free">
-        <div class="tier-name">Community Vendor</div>
-        <div class="tier-price">Free <sub>/ application</sub></div>
-        <div class="tier-location">Community row &mdash; local &amp; emerging</div>
-        <div class="tier-count">Application only</div>
-        <ul>
-          <li>For local &amp; emerging community brands</li>
-          <li>Apply &mdash; no payment required</li>
-        </ul>
-        <a class="tier-cta tier-cta-ghost" href="/ccc-community-vendor">Apply as Community Vendor &rarr;</a>
-      </div>
 
     </div>
   </section>
+
+
+  </main>
+
+  <!-- ── GET A BOOTH — light section ── -->
+  <div class="booth-band">
+    <div class="wrap">
+      <span class="label label-dark">Vendors &amp; Small Brands</span>
+      <h2 class="h2-dark">Get a booth.</h2>
+      <p class="booth-intro">Not every brand needs a title sponsorship. If you want to be on the ground &mdash; sampling, selling, and filming with creators face-to-face &mdash; this is your lane.</p>
+      <div class="booth-grid">
+
+        <div class="booth-card">
+          <div class="booth-tag">Culture &amp; Lifestyle</div>
+          <div class="booth-name">Capitol Canopy Booth</div>
+          <div class="booth-price">$400</div>
+          <div class="booth-count">30 available</div>
+          <ul>
+            <li>Booth space under the Capitol Canopy</li>
+            <li>Culture &amp; lifestyle row placement</li>
+            <li>Face-to-face with creators &amp; attendees</li>
+          </ul>
+          <a class="tier-cta tier-cta-dark" href="https://buy.stripe.com/8x26oGadn1igcn4cWSdZ60b">Reserve Canopy Booth &rarr;</a>
+        </div>
+
+        <div class="booth-card">
+          <div class="booth-tag">Commerce</div>
+          <div class="booth-name">Freedom Way Booth</div>
+          <div class="booth-price">$300</div>
+          <div class="booth-count">40 available</div>
+          <ul>
+            <li>Booth space on Freedom Way &mdash; the commerce corridor</li>
+            <li>Creators sample &amp; film with your product on-site</li>
+            <li>Highest foot-traffic strip at the event</li>
+          </ul>
+          <a class="tier-cta tier-cta-dark" href="https://buy.stripe.com/4gMdR8dpz0ec1Iq6yudZ60c">Reserve Freedom Way Booth &rarr;</a>
+        </div>
+
+        <div class="booth-card">
+          <div class="booth-tag">Community</div>
+          <div class="booth-name">Community Vendor</div>
+          <div class="booth-price">Free</div>
+          <div class="booth-count">Application required</div>
+          <ul>
+            <li>For local makers, nonprofits &amp; community orgs</li>
+            <li>Juried application &mdash; limited spots</li>
+          </ul>
+          <a class="tier-cta tier-cta-darkghost" href="/ccc-community-vendor">Apply as Community Vendor &rarr;</a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <main class="wrap">
 
   <!-- VIP / TICKETS -->
   <section>
@@ -1391,7 +1478,7 @@
     <span class="label">September 12, 2026 &mdash; National Harbor, MD</span>
     <h2 style="margin-bottom:16px;">Lock your slot before it&rsquo;s gone.</h2>
     <p style="max-width:560px; margin:0 auto 28px;">Inventory is real and capped. When a tier sells out, it doesn&rsquo;t reopen. Questions, custom packages, or multi-tier deals &mdash; email <a href="mailto:tommy@cultcontent.cc">tommy@cultcontent.cc</a>.</p>
-    <a class="tier-cta tier-cta-red" href="https://buy.stripe.com/5kQ28qadn6CA2Mu7CydZ601" style="display:inline-block;">Claim Title Sponsorship &rarr;</a>
+    <a class="tier-cta tier-cta-red" href="https://buy.stripe.com/00w5kCdpz9OM0Em8GCdZ60i" style="display:inline-block;">Claim Title Sponsorship &rarr;</a>
   </section>
 
   </main>
