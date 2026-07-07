@@ -399,6 +399,43 @@ body::before {
 .top-backlink:hover { opacity: 1; transform: translateX(-2px); }
 
   </style>
+
+  <!-- ============ TIER MOTIF: CHECKERBOARD CARNIVAL + BELVEDERE (additive, scoped to this page) ============ -->
+  <style id="tier-motif">
+/* FULL CHECKERBOARD CARNIVAL + BELVEDERE. Red #FF0050 leads (carnival brand color);
+   a racing/carnival checkerboard flag texture sits BEHIND glass sections, and the price
+   pill + CTA get a cool cyan-silver "Belvedere" bottle-glass sheen for the headline-bar nod.
+   Additive skin only: no display:none on content, no CTA/href changes. */
+/* Checkerboard flag texture behind the whole page (fixed, non-interactive) */
+#page-bg::before {
+  content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0.06;
+  background-image:
+    linear-gradient(45deg, #FF0050 25%, transparent 25%, transparent 75%, #FF0050 75%),
+    linear-gradient(45deg, #FF0050 25%, transparent 25%, transparent 75%, #FF0050 75%);
+  background-size: 56px 56px;
+  background-position: 0 0, 28px 28px;
+}
+#page-bg > .wrap { position: relative; z-index: 1; }
+/* Red-led carnival accents */
+.pill, .avail { color: #FF0050; border-color: rgba(255,0,80,0.35); background: rgba(255,0,80,0.08); }
+ul.benefits li::before { color: #FF0050; }
+/* Belvedere bottle-glass sheen — cool cyan-silver — on the price pill */
+.price {
+  background: linear-gradient(120deg, #d7f6f4 0%, #00F2EA 40%, #8fd3cf 70%, #ffffff 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+  text-shadow: 0 0 18px rgba(0,242,234,0.35);
+  animation: belvedere-sheen 6s ease-in-out infinite;
+}
+@keyframes belvedere-sheen { 0%,100% { background-position: 0% 0; } 50% { background-position: 100% 0; } }
+/* CTA (locked href) gets a chilled bottle-glass rim on hover — carnival red core stays */
+.btn-cta:hover {
+  box-shadow: 0 0 36px rgba(0,242,234,0.42), 0 0 70px rgba(255,0,80,0.25), inset 0 1px 0 rgba(255,255,255,0.35);
+}
+@media (prefers-reduced-motion: reduce) { .price { animation: none !important; } }
+@media (max-width: 640px) { #page-bg::before { background-size: 40px 40px; background-position: 0 0, 20px 20px; opacity: 0.05; } }
+  </style>
 </head>
 <body>
   <!-- ============ TOP BACKLINK (visual finalization — return to sponsorship index) ============ -->
@@ -410,16 +447,17 @@ body::before {
     <div class="wrap">
       <a class="brand" href="https://cultcontent.cc"><img src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/68529ceff63e1913ceb4e2e0.png" alt="Cult Content" /><span class="brand-name">Culture Commerce Carnival</span></a>
       <div style="text-align:left">
-      <span class="pill">Sept 12, 2026 &middot; National Harbor, MD</span>
+      <span class="pill">Sept 12, 2026 &middot; National Harbor, MD &middot; Carnival Title Sponsor</span>
       <h1>Carnival Sponsor</h1>
-      <p class="hook">Title sponsor of the Carnival zone at the Culture Commerce Carnival on September 12, 2026.</p>
+      <p class="hook">Own the beating heart of the event. Title sponsor of the Carnival zone &mdash; the midway, the lights, the energy everyone posts from &mdash; with premium bar and hospitality placement front and center.</p>
       <div class="avail"><i class="fa-solid fa-circle"></i>1 available</div>
       <div class="card"><div class="card-title">What's included</div><ul class="benefits">
-        <li>Title sponsor of the Carnival zone</li>
-        <li>Prominent logo placement on stage + signage</li>
-        <li>Premium booth placement</li>
-        <li>Creator matchmaking access</li>
-        <li>Included in event marketing</li>
+        <li>Title sponsor of the Carnival zone &mdash; your name on the midway</li>
+        <li>Prominent logo on stage + all Carnival-zone signage</li>
+        <li>Premium booth placement in the highest-traffic area</li>
+        <li>Featured bar / hospitality placement (Belvedere-style headline bar)</li>
+        <li>Creator-matchmaking access</li>
+        <li>Included across all event marketing</li>
         <li>Post-event creator contact list</li>
         </ul></div>
       

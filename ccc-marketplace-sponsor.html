@@ -399,6 +399,47 @@ body::before {
 .top-backlink:hover { opacity: 1; transform: translateX(-2px); }
 
   </style>
+
+  <!-- ============ TIER MOTIF: GOLD-EVERYTHING (marketplace flagship — additive, scoped to this page) ============ -->
+  <style id="tier-motif">
+/* GOLD-EVERYTHING — the anchor tier. Gold #F5A623 is promoted from accent to signature.
+   Additive skin only: no display:none on content, no CTA/href changes, no layout restructure.
+   Cyan->red gradient stays reserved for the H1. */
+:root { --gold-sig: #F5A623; --gold-sig-glow: rgba(245,166,35,0.55); }
+
+/* Gold-tinted glass on every card + gold hairline borders */
+.card, .why-tier, .compare-col, .punch {
+  border-color: rgba(245,166,35,0.34);
+  box-shadow: inset 0 0 0 1px rgba(245,166,35,0.10), 0 10px 40px rgba(0,0,0,0.45);
+}
+/* Gold foil-shimmer sweep across the eyebrow pill */
+.pill {
+  background: linear-gradient(100deg, rgba(245,166,35,0.10), rgba(245,166,35,0.22), rgba(245,166,35,0.10));
+  background-size: 200% 100%;
+  border-color: rgba(245,166,35,0.45);
+  color: #F5A623;
+  animation: gold-foil 6s ease-in-out infinite;
+}
+@keyframes gold-foil { 0%,100% { background-position: 0% 0; } 50% { background-position: 100% 0; } }
+/* Gold foil sweep + strong glow on the price */
+.price {
+  background: linear-gradient(100deg, #F5A623 0%, #ffe08a 45%, #F5A623 90%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+  text-shadow: 0 0 24px var(--gold-sig-glow);
+  animation: gold-foil 5s ease-in-out infinite;
+}
+/* Availability + benefit ticks all lean gold */
+.avail { color: #F5A623; border-color: rgba(245,166,35,0.4); background: rgba(245,166,35,0.09); }
+ul.benefits li::before { color: #F5A623; }
+/* Gold marquee bulbs at fuller glow on the hero */
+.hero::before, .marquee-frame::after { filter: drop-shadow(0 0 8px var(--gold-sig-glow)); }
+/* CTA keeps its locked href; only its glow warms fully to gold */
+.btn-cta { box-shadow: 0 8px 30px rgba(245,166,35,0.22); }
+.btn-cta:hover { box-shadow: 0 0 40px rgba(245,166,35,0.5), 0 0 80px rgba(245,166,35,0.28); }
+@media (prefers-reduced-motion: reduce) { .pill, .price { animation: none !important; } }
+  </style>
 </head>
 <body>
   <!-- ============ TOP BACKLINK (visual finalization — return to sponsorship index) ============ -->
@@ -410,17 +451,17 @@ body::before {
     <div class="wrap">
       <a class="brand" href="https://cultcontent.cc"><img src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/68529ceff63e1913ceb4e2e0.png" alt="Cult Content" /><span class="brand-name">Culture Commerce Carnival</span></a>
       <div style="text-align:left">
-      <span class="pill">Sept 12, 2026 &middot; National Harbor, MD</span>
+      <span class="pill">Sept 12, 2026 &middot; National Harbor, MD &middot; Presenting Sponsor</span>
       <h1>Marketplace Sponsor</h1>
-      <p class="hook">Presenting sponsor of the Culture Commerce Carnival — the highest level of brand placement across the entire event.</p>
+      <p class="hook">The single highest placement at the Culture Commerce Carnival. Your brand <em>is</em> the marketplace — presenting-level billing across the entire event, from the main stage to every creator’s camera roll.</p>
       <div class="avail"><i class="fa-solid fa-circle"></i>1 available</div>
       <div class="card"><div class="card-title">What's included</div><ul class="benefits">
-        <li>Presenting-level brand placement across the entire event</li>
-        <li>Logo on main stage + all event signage</li>
-        <li>Premier booth in the Marketplace</li>
-        <li>Dedicated creator matchmaking suite</li>
-        <li>Featured in all pre/post event marketing</li>
-        <li>Full attendee + creator contact list post-event</li>
+        <li>Presenting-level billing across the entire Carnival &mdash; &ldquo;Marketplace, presented by [You]&rdquo;</li>
+        <li>Logo on the main stage + every piece of event signage</li>
+        <li>Premier anchor booth at the center of the Marketplace floor</li>
+        <li>Dedicated creator-matchmaking suite &mdash; first pick of the roster</li>
+        <li>Featured in every pre- and post-event marketing push</li>
+        <li>Full attendee + creator contact list delivered post-event</li>
         </ul></div>
       
       <div class="price">$25,000</div><div style="height:10px"></div>

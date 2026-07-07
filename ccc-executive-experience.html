@@ -399,6 +399,32 @@ body::before {
 .top-backlink:hover { opacity: 1; transform: translateX(-2px); }
 
   </style>
+
+  <!-- ============ TIER MOTIF: BLACK-TIE GOLD (understated luxury — additive, scoped to this page) ============ -->
+  <style id="tier-motif">
+/* BLACK-TIE GOLD. Restraint = power. Deepen to near-pure black, thin single gold hairlines only,
+   a quiet gold glow on the price, and calm the playful carnival confetti/bunting into a still,
+   tuxedo-black glass. The most understated of the three. Additive skin only. */
+/* Deepen the carnival backdrop to formal near-black; keep the faint gold center wash */
+body::before {
+  background-color: #050505 !important;
+  background-image: radial-gradient(circle at 50% 32%, rgba(245,166,35,0.07), transparent 68%) !important;
+}
+/* Quiet the playful motifs for black-tie stillness (calmed, not content-hidden) */
+.hero::after { opacity: 0.12; }                 /* bunting -> faint */
+.hero::before, .marquee-frame::after { opacity: 0.25; filter: none; animation: none; } /* marquee bulbs -> still, dim */
+.confetti-field::before { opacity: 0.12; animation: none; }
+/* Single thin gold hairlines only — no glass glow */
+.card, .why-tier { border-color: rgba(245,166,35,0.22); box-shadow: 0 14px 50px rgba(0,0,0,0.55); }
+.pill { color: #F5A623; border-color: rgba(245,166,35,0.30); background: rgba(245,166,35,0.05); }
+.avail { color: #cbb06a; border-color: rgba(245,166,35,0.22); background: rgba(245,166,35,0.05); }
+ul.benefits li::before { color: #F5A623; }
+/* Quiet gold glow on the price — serif-weight calm, no shimmer */
+.price { color: #F5A623; text-shadow: 0 0 12px rgba(245,166,35,0.35); letter-spacing: -0.02em; }
+/* CTA (locked href): understated gold — restrained hover, no color party */
+.btn-cta:hover { box-shadow: 0 0 26px rgba(245,166,35,0.32); }
+@media (prefers-reduced-motion: reduce) { .hero::before, .marquee-frame::after, .confetti-field::before { animation: none !important; } }
+  </style>
 </head>
 <body>
   <!-- ============ TOP BACKLINK (visual finalization — return to sponsorship index) ============ -->
@@ -410,16 +436,16 @@ body::before {
     <div class="wrap">
       <a class="brand" href="https://cultcontent.cc"><img src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/68529ceff63e1913ceb4e2e0.png" alt="Cult Content" /><span class="brand-name">Culture Commerce Carnival</span></a>
       <div style="text-align:left">
-      <span class="pill">Sept 12, 2026 &middot; National Harbor, MD</span>
+      <span class="pill">Sept 12, 2026 &middot; National Harbor, MD &middot; Founder Access</span>
       <h1>Executive Experience</h1>
-      <p class="hook">Executive lounge access and premium founder networking at the Culture Commerce Carnival.</p>
+      <p class="hook">A room within the room. Executive-lounge access and curated founder-to-founder networking away from the show floor &mdash; where the deals that outlast the event actually get made.</p>
       <div class="avail"><i class="fa-solid fa-circle"></i>30 available</div>
       <div class="card"><div class="card-title">What's included</div><ul class="benefits">
-        <li>Executive lounge access</li>
-        <li>Premium networking with brand founders</li>
-        <li>Reserved seating at main stage</li>
-        <li>Listed on event program</li>
-        <li>Creator matchmaking access</li>
+        <li>Private executive-lounge access all day</li>
+        <li>Curated founder-to-founder networking sessions</li>
+        <li>Reserved seating at the main stage</li>
+        <li>Name listed on the official event program</li>
+        <li>Creator-matchmaking access</li>
         </ul></div>
       
       <div class="price">$5,000</div><div style="height:10px"></div>
