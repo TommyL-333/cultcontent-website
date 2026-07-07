@@ -52,8 +52,360 @@
     .foot { text-align:center; margin-top:32px; font-size:11px; color:#444; letter-spacing:.05em; }
     .foot a { color:#555; text-decoration:none; }
   </style>
+
+  <!-- ============ CARNIVAL TREATMENT (additive visual finalization skin) ============ -->
+  <style id="carnival-treatment">
+/* =============================================================================
+   CARNIVAL TREATMENT — additive skin only. Do not remove/hide .cta or payment links.
+   =============================================================================
+   Culture & Commerce Carnival (CCC) sponsor pages — v2 visual finalization pass.
+   Source of truth: step10-visual-brief.md (Step 1) + _template.html selector map.
+
+   RULES OF THIS FILE (enforced):
+     • ADDITIVE ONLY. Appended AFTER the template's own <style>. It enhances
+       existing selectors and introduces NEW opt-in classes. It never changes
+       layout structure, copy, or CTA/payment-link behavior.
+     • NO rule here uses display:none / visibility:hidden / opacity:0 on content.
+     • NO rule targets or alters .cta-btn / .nav-cta href behavior or any
+       anchor's link target. Payment links (Stripe / Posh / form-post) are LOCKED.
+     • --bg (#161823) is NOT overridden. The #080808 carnival base is layered
+       additively behind content via body::before (z-index:-1, pointer-events:none).
+     • Sacred cyan→red gradient (#00F2EA → #FF0050) stays reserved for headlines
+       (.gradient-text is left untouched). Gold #F5A623 is the carnival ACCENT.
+
+   BRAND HEX (all three present, literal):
+     red  #FF0050   cyan #00F2EA   gold #F5A623
+   ============================================================================= */
+
+/* Carnival accent tokens — new variables only, existing --bg / --gradient-primary untouched */
+:root {
+  --carn-red:  #FF0050;
+  --carn-cyan: #00F2EA;
+  --carn-gold: #F5A623;
+  --carn-base: #080808;
+  --carn-gold-glow: rgba(245, 166, 35, 0.5);
+  --carn-gold-soft: rgba(245, 166, 35, 0.14);
+  --carn-hairline: rgba(245, 166, 35, 0.28);
+}
+
+/* =============================================================================
+   MOTIF 3 — BIG-TOP RADIAL GLOW BACKDROP (additive layer over #080808)
+   A fixed, non-interactive layer sitting BEHIND all content. Does not change
+   the existing --bg variable; it simply washes the deep-black carnival base
+   and midway glow behind the translucent glass sections.
+   ============================================================================= */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-color: var(--carn-base); /* #080808 carnival deep-black base */
+  background-image:
+    radial-gradient(circle at 50% 30%,
+      rgba(245, 166, 35, 0.10),  /* gold #F5A623 midway light */
+      rgba(255, 0, 80, 0.06),    /* red  #FF0050 tent-glow */
+      transparent 70%),
+    radial-gradient(circle at 12% 88%,
+      rgba(0, 242, 234, 0.05),   /* cyan #00F2EA cool spill */
+      transparent 55%);
+}
+
+/* =============================================================================
+   MOTIF 6 — CONFETTI / SPARK PARTICLE FIELD (opt-in .confetti-field)
+   Very low-opacity scattered cyan/red/gold specks as a fixed texture behind
+   glass sections. Applied by adding class="confetti-field" to a section.
+   Purely decorative ::before layer — content is unaffected.
+   ============================================================================= */
+.confetti-field { position: relative; }
+.confetti-field::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image:
+    radial-gradient(2px 2px at 12% 22%, var(--carn-cyan)  40%, transparent 42%),
+    radial-gradient(2px 2px at 78% 14%, var(--carn-red)   40%, transparent 42%),
+    radial-gradient(2px 2px at 34% 68%, var(--carn-gold)  40%, transparent 42%),
+    radial-gradient(1.5px 1.5px at 62% 82%, var(--carn-cyan) 40%, transparent 42%),
+    radial-gradient(1.5px 1.5px at 88% 58%, var(--carn-gold) 40%, transparent 42%),
+    radial-gradient(1.5px 1.5px at 22% 46%, var(--carn-red)  40%, transparent 42%);
+  background-repeat: repeat;
+  background-size: 340px 340px;
+  animation: confetti-drift 26s linear infinite;
+}
+/* keep confetti behind the section's real content */
+.confetti-field > * { position: relative; z-index: 1; }
+
+/* =============================================================================
+   MOTIF 1 — MARQUEE LIGHT-BULB FRAMING (.marquee-frame + .hero::before)
+   Evenly-spaced glowing gold bulbs rimming the hero and any section divider.
+   Additive decoration only — sits above the section bg, below the content.
+   ============================================================================= */
+.hero { position: relative; }
+.hero::before {
+  content: "";
+  position: absolute;
+  top: 10px; left: 10px; right: 10px;
+  height: 6px;
+  z-index: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle,
+    var(--carn-gold) 0 2px, transparent 3px);
+  background-size: 26px 6px;
+  background-repeat: repeat-x;
+  filter: drop-shadow(0 0 6px var(--carn-gold-glow));
+  animation: marquee-pulse 2.4s ease-in-out infinite;
+}
+/* Reusable opt-in marquee strip for section dividers */
+.marquee-frame {
+  position: relative;
+}
+.marquee-frame::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 6px;
+  pointer-events: none;
+  background-image: radial-gradient(circle,
+    var(--carn-gold) 0 2px, transparent 3px);
+  background-size: 26px 6px;
+  background-repeat: repeat-x;
+  filter: drop-shadow(0 0 6px var(--carn-gold-glow));
+  animation: marquee-pulse 2.4s ease-in-out infinite;
+}
+
+/* =============================================================================
+   MOTIF 2 — FESTOON / BUNTING TOP-BORDER (.hero::after)
+   Thin repeating tricolor pennant strip (cyan → red → gold) along the top of
+   the hero. Low opacity so it reads premium, not cartoon. Decoration only.
+   ============================================================================= */
+.hero::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 14px;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.4;
+  background-image: repeating-linear-gradient(
+    135deg,
+    var(--carn-cyan) 0, var(--carn-cyan) 10px,       /* cyan #00F2EA */
+    var(--carn-red)  10px, var(--carn-red)  20px,     /* red  #FF0050 */
+    var(--carn-gold) 20px, var(--carn-gold) 30px      /* gold #F5A623 */
+  );
+  -webkit-mask-image: repeating-linear-gradient(90deg,
+    #000 0 8px, transparent 8px 16px);
+          mask-image: repeating-linear-gradient(90deg,
+    #000 0 8px, transparent 8px 16px);
+}
+/* keep hero content above the bunting + marquee decoration */
+.hero > .wrap { position: relative; z-index: 1; }
+
+/* =============================================================================
+   MOTIF 7 — FERRIS-WHEEL / RADIATING CENTER-POINT FLOURISH (.ferris-flourish)
+   One faint concentric-rings + spokes flourish for a hero background accent.
+   Opt-in decorative layer; unifies carnival + Cult Content mandala motif.
+   ============================================================================= */
+.ferris-flourish { position: relative; }
+.ferris-flourish::before {
+  content: "";
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 520px; height: 520px;
+  transform: translate(-50%, -50%);
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.12;
+  background-image:
+    repeating-radial-gradient(circle at center,
+      transparent 0 38px,
+      var(--carn-gold) 38px 39px),                 /* concentric rings, gold */
+    conic-gradient(from 0deg at center,
+      var(--carn-cyan) 0 1deg, transparent 1deg 30deg,
+      var(--carn-red)  30deg 31deg, transparent 31deg 60deg,
+      var(--carn-gold) 60deg 61deg, transparent 61deg 90deg,
+      var(--carn-cyan) 90deg 91deg, transparent 91deg 120deg,
+      var(--carn-red)  120deg 121deg, transparent 121deg 150deg,
+      var(--carn-gold) 150deg 151deg, transparent 151deg 180deg,
+      var(--carn-cyan) 180deg 181deg, transparent 181deg 210deg,
+      var(--carn-red)  210deg 211deg, transparent 211deg 240deg,
+      var(--carn-gold) 240deg 241deg, transparent 241deg 270deg,
+      var(--carn-cyan) 270deg 271deg, transparent 271deg 300deg,
+      var(--carn-red)  300deg 301deg, transparent 301deg 330deg,
+      var(--carn-gold) 330deg 331deg, transparent 331deg 360deg); /* spokes */
+  -webkit-mask-image: radial-gradient(circle, #000 0 60%, transparent 72%);
+          mask-image: radial-gradient(circle, #000 0 60%, transparent 72%);
+}
+.ferris-flourish > * { position: relative; z-index: 1; }
+
+/* =============================================================================
+   PRICE PILL — glass lift + gold hairline (enhance existing .price-pill)
+   ============================================================================= */
+.price-pill {
+  border-color: var(--carn-hairline);
+  box-shadow: inset 0 0 0 1px rgba(245, 166, 35, 0.08),
+              0 6px 24px rgba(0, 0, 0, 0.35);
+}
+
+/* =============================================================================
+   MOTIF 5 — NEON-GLOW GOLD ACCENTS ON NUMBERS (lit-scoreboard)
+   Warm gold glow on the price display + scarcity counter number. Introduces a
+   reusable .carnival-gold utility for any lit number.
+   NOTE: .gradient-text already applies the sacred cyan→red fill to these; the
+   glow below layers behind that fill as a halo without recoloring the text.
+   ============================================================================= */
+.price-pill .price {
+  text-shadow: 0 0 14px var(--carn-gold-glow);
+}
+.scarcity .counter .num {
+  text-shadow: 0 0 14px var(--carn-gold-glow),
+               0 0 28px rgba(245, 166, 35, 0.28);
+}
+/* Reusable lit-number utility (opt-in) */
+.carnival-gold {
+  color: var(--carn-gold) !important;               /* gold #F5A623 */
+  -webkit-text-fill-color: var(--carn-gold);        /* override gradient clip if used */
+  text-shadow: 0 0 14px var(--carn-gold-glow);
+}
+
+/* =============================================================================
+   MOTIF 4 — TICKET-STUB TIER CARDS (.ticket-stub, opt-in on .get-card)
+   Perforated admission-ticket notches on left/right mid-edges + dashed inner
+   rule. Applied by adding class="ticket-stub" to a .get-card. Additive skin —
+   radius/notch via mask, dashed rule via ::before. No layout box change.
+   ============================================================================= */
+.get-card.ticket-stub {
+  border-color: var(--carn-hairline);
+  -webkit-mask-image:
+    radial-gradient(circle 10px at 0 50%, transparent 10px, #000 11px),
+    radial-gradient(circle 10px at 100% 50%, transparent 10px, #000 11px);
+  -webkit-mask-composite: source-in;
+          mask-image:
+    radial-gradient(circle 10px at 0 50%, transparent 10px, #000 11px),
+    radial-gradient(circle 10px at 100% 50%, transparent 10px, #000 11px);
+          mask-composite: intersect;
+}
+.get-card.ticket-stub::before {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  border: 1px dashed rgba(245, 166, 35, 0.35);   /* gold #F5A623 perforation rule */
+  border-radius: calc(var(--radius) - 8px);
+  pointer-events: none;
+}
+
+/* get-card icon — warm gold rim so the card badges catch carnival light */
+.get-card .icon {
+  box-shadow: 0 0 0 1px rgba(245, 166, 35, 0.35),
+              0 0 18px rgba(245, 166, 35, 0.25);
+}
+
+/* =============================================================================
+   EVENT STRIP + WHY-TIER — faint gold hairline + stronger glass
+   ============================================================================= */
+.event-strip {
+  border-top-color: var(--carn-hairline);
+  box-shadow: inset 0 1px 0 rgba(245, 166, 35, 0.12);
+}
+.why-tier {
+  border-color: var(--carn-hairline);
+  box-shadow: inset 0 0 0 1px rgba(245, 166, 35, 0.06),
+              0 20px 60px rgba(0, 0, 0, 0.45);
+}
+
+/* =============================================================================
+   NAV + FOOTER BACKLINK — subtle gold underglow
+   (Enhancement only. Anchor href targets and the /ccc-sponsor backlink target
+    are NEVER touched here.)
+   ============================================================================= */
+.nav {
+  box-shadow: 0 1px 0 rgba(245, 166, 35, 0.12),
+              0 8px 30px rgba(0, 0, 0, 0.35);
+}
+.footer .backlink {
+  text-shadow: 0 0 12px rgba(245, 166, 35, 0.35);
+}
+
+/* =============================================================================
+   CTA BUTTON — hover glow (box-shadow ONLY)
+   Layers a warm gold halo onto the existing cyan hover glow. Does NOT change
+   the button's background gradient, its text, or its link/href.
+   ============================================================================= */
+.cta-btn:hover {
+  box-shadow: 0 0 40px rgba(0, 242, 234, 0.4),    /* existing cyan #00F2EA glow */
+              0 0 60px rgba(245, 166, 35, 0.28),   /* added gold #F5A623 halo */
+              0 0 90px rgba(255, 0, 80, 0.18);     /* red #FF0050 outer wash */
+}
+.final-cta {
+  position: relative;
+}
+
+/* =============================================================================
+   MOTION — subtle keyframes (guarded by prefers-reduced-motion)
+   ============================================================================= */
+@keyframes marquee-pulse {
+  0%, 100% { opacity: 0.6; }
+  50%      { opacity: 1; }
+}
+@keyframes confetti-drift {
+  from { background-position: 0 0; }
+  to   { background-position: 340px 680px; }
+}
+
+/* Respect reduced-motion: freeze all carnival motion */
+@media (prefers-reduced-motion: reduce) {
+  .hero::before,
+  .marquee-frame::after,
+  .confetti-field::before {
+    animation: none !important;
+  }
+}
+
+/* =============================================================================
+   MOBILE GRACEFUL DEGRADATION (<=640px)
+   Dial motifs down so they read premium on small screens. Decoration is
+   softened/relaxed — never hidden in a way that removes content, and CTA /
+   payment links are entirely unaffected.
+   ============================================================================= */
+@media (max-width: 640px) {
+  .ferris-flourish::before {
+    width: 320px; height: 320px; opacity: 0.08;
+  }
+  .hero::before,
+  .marquee-frame::after {
+    background-size: 20px 5px;
+    height: 5px;
+  }
+  .confetti-field::before {
+    background-size: 240px 240px;
+    opacity: 0.35;
+  }
+  .scarcity .counter .num {
+    text-shadow: 0 0 10px var(--carn-gold-glow);
+  }
+}
+
+/* ============ TOP BACKLINK BAR (Step 4 — return-to-index affordance) ============ */
+.top-backlink-bar { padding: 14px 0 0; }
+.top-backlink {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 14px;
+  letter-spacing: -0.01em; opacity: 0.9; transition: opacity 0.3s ease, transform 0.3s ease;
+  text-shadow: 0 0 12px rgba(245, 166, 35, 0.30);
+}
+.top-backlink:hover { opacity: 1; transform: translateX(-2px); }
+
+  </style>
 </head>
 <body>
+  <!-- ============ TOP BACKLINK (visual finalization — return to sponsorship index) ============ -->
+  <div class="top-backlink-bar" style="padding:14px 20px 0;max-width:1080px;margin:0 auto;">
+    <a href="/ccc-sponsor" class="top-backlink" style="display:inline-flex;align-items:center;gap:6px;font-weight:800;font-size:14px;letter-spacing:-0.01em;color:#F5A623;text-decoration:none;text-shadow:0 0 12px rgba(245,166,35,0.30);">&larr; back to all sponsorships</a>
+  </div>
+
   <div id="page-bg">
     <div class="wrap">
       <a class="brand" href="https://cultcontent.cc"><img src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/68529ceff63e1913ceb4e2e0.png" alt="Cult Content" /><span class="brand-name">Culture Commerce Carnival</span></a>
