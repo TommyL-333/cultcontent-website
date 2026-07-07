@@ -2295,6 +2295,7 @@ app.get('/ccc-commerce-sponsor',             _pub('ccc-commerce-sponsor.html'));
 app.get('/ccc-culture-sponsor',              _pub('ccc-culture-sponsor.html'));
 app.get('/ccc-hydration-sponsor',            _pub('ccc-hydration-sponsor.html'));
 app.get('/ccc-alcohol-sponsor',              _pub('ccc-alcohol-sponsor.html'));
+app.get('/ccc-stage-backdrop-sponsor',       _pub('ccc-stage-backdrop-sponsor.html'));
 app.get('/ccc-lanyard-sponsor',              _pub('ccc-lanyard-sponsor.html'));
 app.get('/ccc-carnival-billboard-photo',     _pub('ccc-carnival-billboard-photo.html'));
 app.get('/ccc-carnival-billboard-video',     _pub('ccc-carnival-billboard-video.html'));
