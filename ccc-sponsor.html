@@ -112,6 +112,28 @@
     section { padding: 72px 0; border-bottom: 1px solid var(--border); }
     section:last-of-type { border-bottom: none; }
 
+    /* ── CHECKERBOARD TREATMENTS ── */
+    .checker-dark {
+      position: relative;
+      overflow: hidden;
+    }
+    .checker-dark::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(45deg, rgba(255,255,255,.028) 25%, transparent 25%, transparent 75%, rgba(255,255,255,.028) 75%),
+        linear-gradient(45deg, rgba(255,255,255,.028) 25%, transparent 25%, transparent 75%, rgba(255,255,255,.028) 75%);
+      background-size: 56px 56px;
+      background-position: 0 0, 28px 28px;
+      -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,.9), rgba(0,0,0,.25) 55%, transparent 92%);
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,.9), rgba(0,0,0,.25) 55%, transparent 92%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .checker-dark > * { position: relative; z-index: 1; }
+
+
     .label {
       display: inline-block;
       background: rgba(0,242,234,.07);
@@ -973,7 +995,7 @@
   </section>
 
   <!-- TRACK RECORD -->
-  <section>
+  <section class="checker-dark">
     <span class="label">Track Record</span>
     <h2>We&rsquo;ve done this before.<br>Here&rsquo;s the proof.</h2>
     <p>Dream Big DC was the first social commerce creator matchmaking event in Washington D.C. Minimal budget. Zero paid ads. It sold itself &mdash; and sold out. CCC is that same model at ten times the scale.</p>
@@ -1029,7 +1051,7 @@
   </section>
 
   <!-- CARNIVAL EXPERIENCE -->
-  <section>
+  <section class="checker-dark">
     <span class="label">The Experience</span>
     <h2>Not a conference.<br>A carnival.</h2>
     <p>Every element of CCC is designed to generate content, drive engagement, and make people want to be there. The carnival theme is the vehicle &mdash; energy, color, and shareable moments at every turn. Creators don&rsquo;t attend. They perform.</p>
