@@ -122,12 +122,12 @@
       position: absolute;
       inset: 0;
       background-image:
-        linear-gradient(45deg, rgba(255,255,255,.075) 25%, transparent 25%, transparent 75%, rgba(255,255,255,.075) 75%),
-        linear-gradient(45deg, rgba(255,255,255,.075) 25%, transparent 25%, transparent 75%, rgba(255,255,255,.075) 75%);
+        linear-gradient(45deg, rgba(255,255,255,.15) 25%, transparent 25%, transparent 75%, rgba(255,255,255,.15) 75%),
+        linear-gradient(45deg, rgba(255,255,255,.15) 25%, transparent 25%, transparent 75%, rgba(255,255,255,.15) 75%);
       background-size: 56px 56px;
       background-position: 0 0, 28px 28px;
-      -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1), rgba(0,0,0,.45) 60%, transparent 96%);
-      mask-image: linear-gradient(to bottom, rgba(0,0,0,1), rgba(0,0,0,.45) 60%, transparent 96%);
+      -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1), rgba(0,0,0,.45) 60%, transparent 95%);
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,1), rgba(0,0,0,.45) 60%, transparent 95%);
       pointer-events: none;
       z-index: 0;
     }
@@ -351,8 +351,7 @@
       overflow: visible;
       background-image: linear-gradient(160deg, #141414, #0d0d0d);
     }
-    /* ticket-notch dots removed */
-    .tier .tier-perf {
+        .tier .tier-perf {
       border-top: 2px dashed #2a2a2a;
       margin: 14px -4px 12px;
     }
@@ -362,7 +361,7 @@
       border-color: rgba(0,242,234,.45);
       box-shadow: 0 12px 44px rgba(0,242,234,.14);
     }
-        .tier.tier-carnival:hover {
+    .tier.tier-carnival:hover {
       border-color: rgba(255,0,80,.65);
       box-shadow: 0 12px 52px rgba(255,0,80,.22);
     }
@@ -488,9 +487,10 @@
       background: linear-gradient(135deg, #0d0020, #00080f);
       border: 1px solid rgba(245,166,35,.35);
       border-radius: 18px;
-      padding: 32px 34px;
+      padding: 34px 32px;
       text-align: center;
-      margin-top: 20px;
+      max-width: 760px;
+      margin: 28px auto 0;
       position: relative;
       overflow: hidden;
     }
@@ -613,37 +613,14 @@
     }
     /* ── MORE SPONSORSHIP OPPORTUNITIES (gold) ── */
     .more-opps {
+      background: var(--gold) url('https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/6a4d57b92d9cf80515233ee3.png') center top / cover no-repeat;
       position: relative;
-      background: var(--gold);
-      margin-left: calc(50% - 50vw);
-      margin-right: calc(50% - 50vw);
-      padding-left: calc(50vw - 50%);
-      padding-right: calc(50vw - 50%);
-      overflow: hidden;
     }
-    .more-opps::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: url(https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/6a4d57b92d9cf80515233ee3.png) center / cover no-repeat;
-      pointer-events: none;
-    }
-    .more-opps::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(to bottom, rgba(245,166,35,.30), rgba(245,166,35,.14));
-      pointer-events: none;
-    }
+    .more-opps::before { content:''; position:absolute; inset:0; background: rgba(245,166,35,.18); pointer-events:none; }
     .more-opps > * { position: relative; z-index: 1; }
-    .more-opps .label { color: rgba(0,0,0,.55); }
-    .more-opps h2 { color: #14151c; }
-    .more-opps-img {
-      width: 100%; max-width: 900px; display: block;
-      margin: 30px auto 6px; border-radius: 18px;
-      box-shadow: 0 22px 60px rgba(0,0,0,.38);
-    }
-    .tier-name { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+    .more-opps .label { background: rgba(0,0,0,.8); border-color: rgba(0,0,0,.8); color: #fff; }
+    .more-opps h2 { color: #14151c; font-size: clamp(36px, 5vw, 58px); }
+        .tier-name { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
     .tier-price { font-size: 28px; font-weight: 800; color: #fff; line-height: 1; margin-bottom: 4px; }
     .tier-price sub { font-size: 14px; font-weight: 400; color: var(--muted); }
     .tier-location { font-size: 12px; color: var(--cyan); margin-bottom: 4px; }
@@ -666,10 +643,11 @@
     /* ── CARNIVAL EXPERIENCE ── */
     .carnival-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      grid-template-columns: repeat(5, 1fr);
       gap: 12px;
       margin-top: 36px;
     }
+    @media (max-width: 900px) { .carnival-grid { grid-template-columns: repeat(2, 1fr); } }
     .carnival-item {
       background: var(--bg2);
       border: 1px solid var(--border);
@@ -866,8 +844,10 @@
       border: 1px solid rgba(255,0,80,.45);
       background: linear-gradient(160deg, #1a0009, #0d0d0d);
       border-radius: 18px;
-      padding: 32px 34px;
+      padding: 34px 32px;
       text-align: center;
+      max-width: 760px;
+      margin: 0 auto;
       position: relative;
       overflow: hidden;
       box-shadow: 0 0 60px rgba(255,0,80,.12);
@@ -1127,6 +1107,11 @@
         <div class="ci-name">Fortune Teller</div>
         <div class="ci-note">Immersive experience</div>
       </div>
+      <div class="carnival-item">
+        <div class="ci-icon">&#128248;</div>
+        <div class="ci-name">Photo Ops</div>
+        <div class="ci-note">Branded backdrop moments</div>
+      </div>
     </div>
 
   </section>
@@ -1216,15 +1201,15 @@
   <main class="wrap">
 
   <!-- VENUE -->
-  <section>
+  <section class="checker-dark">
     <span class="label">Venue</span>
-    <h2>National Harbor, MD &mdash;<br>Freedom Way &amp; Beyond.</h2>
+    <h2>National Harbor, Maryland</h2>
     <p>Four premium outdoor spaces at the DMV&rsquo;s premier waterfront destination. The Capitol Wheel, MGM National Harbor, and direct Potomac River access are all within steps. No other venue in the DC Metro delivers this backdrop.</p>
 
     <div class="venue-spaces">
       <div class="venue-space">
         <div class="vs-name">American Way</div>
-        <div class="vs-desc">Main event corridor &mdash; stage, flow &amp; foot traffic</div>
+        <div class="vs-desc">Main event corridor &mdash; shared by booths and community vendors leading up to the waterfront</div>
       </div>
       <div class="venue-space">
         <div class="vs-name">Capital Canopy</div>
@@ -1249,7 +1234,6 @@
           <li>MGM National Harbor &mdash; after-party &amp; rain contingency</li>
           <li>Westin &amp; Hyatt Place &mdash; VIP &amp; ambassador lodging</li>
           <li>2 food trucks at end of Freedom Way</li>
-          <li>10 free food tickets per truck for GA attendees</li>
         </ul>
       </div>
       <div class="card">
@@ -1272,7 +1256,7 @@
   <main class="wrap">
 
   <!-- MARKETPLACE FLAGSHIP -->
-  <section style="border-bottom:none; padding:44px 0 8px;">
+  <section style="border-bottom:none; padding-bottom:24px; text-align:center;">
     <div class="marketplace-card">
       <div class="inner">
         <div class="gold-badge">Title Sponsor &mdash; 1 Available</div>
@@ -1280,14 +1264,14 @@
         <div class="price">$50,000</div>
         <div class="price-note">The entire marketplace carries your name.</div>
         <p>Naming rights to the full creator marketplace &mdash; your brand across all 70 booths, main-stage mentions, premier logo placement on every banner, all event content, the live stream, and first position in every press &amp; media asset. This is the biggest brand moment at the event.</p>
-        <a class="tier-cta tier-cta-gold" href="https://buy.stripe.com/00w5kCdpz9OM0Em8GCdZ60i">Claim Marketplace Sponsorship &rarr;</a>
+        <a class="tier-cta tier-cta-gold" href="/ccc-marketplace-sponsor">Claim Marketplace Sponsorship &rarr;</a>
       </div>
     </div>
   </section>
 
 
   <!-- CARNIVAL SPONSOR — attached to flagship -->
-  <section style="margin-top:0; padding:8px 0 48px;">
+  <section style="margin-top:0; padding-top:0; text-align:center;">
     <div class="carnival-card">
       <div class="inner">
         <div class="red-badge">&#127914; Carnival Sponsor &mdash; 1 Available</div>
@@ -1295,7 +1279,7 @@
         <div class="price">$15,000</div>
         <div class="price-note">The carnival grounds carry your name &mdash; plus The Belvedere.</div>
         <p>Naming rights to the full carnival experience &mdash; branding across every ride and game, main-stage shoutouts all day, and an exclusive branded lounge space at <strong>The Belvedere</strong>, the elevated overlook above the grounds where VIP guests, creators, and media gather.</p>
-        <a class="tier-cta tier-cta-red" href="https://buy.stripe.com/aFa00idpz0ec2MubSOdZ60f">Become Carnival Sponsor &rarr;</a>
+        <a class="tier-cta tier-cta-red" href="/ccc-carnival-sponsor">Become Carnival Sponsor &rarr;</a>
       </div>
     </div>
   </section>
@@ -1304,7 +1288,6 @@
   <section class="more-opps">
     <span class="label">All Tiers</span>
     <h2>More Sponsorship Opportunities</h2>
-    
     <div class="tiers">
 
       <div class="tier">
@@ -1484,7 +1467,7 @@
     <span class="label">September 12, 2026 &mdash; National Harbor, MD</span>
     <h2 style="margin-bottom:16px;">Lock your slot before it&rsquo;s gone.</h2>
     <p style="max-width:560px; margin:0 auto 28px;">Inventory is real and capped. When a tier sells out, it doesn&rsquo;t reopen. Questions, custom packages, or multi-tier deals &mdash; email <a href="mailto:tommy@cultcontent.cc">tommy@cultcontent.cc</a>.</p>
-    <a class="tier-cta tier-cta-red" href="https://buy.stripe.com/00w5kCdpz9OM0Em8GCdZ60i" style="display:inline-block;">Claim Marketplace Sponsorship &rarr;</a>
+    <a class="tier-cta tier-cta-red" href="/ccc-marketplace-sponsor" style="display:inline-block;">Claim Marketplace Sponsorship &rarr;</a>
   </section>
 
   </main>
