@@ -402,6 +402,19 @@ body::before {
 
   <!-- ============ TIER MOTIF: GOLD-EVERYTHING (marketplace flagship — additive, scoped to this page) ============ -->
   <style id="tier-motif">
+/* Golden checkerboard carnival texture behind the whole page (fixed, non-interactive) */
+#page-bg::before {
+  content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0.15;
+  background-image:
+    linear-gradient(45deg, #F5A623 25%, transparent 25%, transparent 75%, #F5A623 75%),
+    linear-gradient(45deg, #F5A623 25%, transparent 25%, transparent 75%, #F5A623 75%);
+  background-size: 56px 56px;
+  background-position: 0 0, 28px 28px;
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1), rgba(0,0,0,.45) 60%, transparent 95%);
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,1), rgba(0,0,0,.45) 60%, transparent 95%);
+}
+#page-bg > .wrap { position: relative; z-index: 1; }
+
 /* GOLD-EVERYTHING — the anchor tier. Gold #F5A623 is promoted from accent to signature.
    Additive skin only: no display:none on content, no CTA/href changes, no layout restructure.
    Cyan->red gradient stays reserved for the H1. */
