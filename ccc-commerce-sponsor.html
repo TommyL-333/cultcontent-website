@@ -423,12 +423,74 @@ body::before {
         <li>Post-event creator contact list</li>
         </ul></div>
       
-      <div class="price">$300</div><div style="height:10px"></div>
-      
-      <a class="btn-cta" href="https://buy.stripe.com/4gMdR8dpz0ec1Iq6yudZ60c">Reserve a Freedom Way Booth →</a>
+      <div class="price">$300</div>
+      <div id="avail-line" style="font-size:13px;color:#888;margin:6px 0 18px;min-height:18px;"></div>
+
+      <div id="signup-form">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+          <div><label style="display:block;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#666;margin-bottom:6px;">First Name</label>
+            <input id="f-first" type="text" placeholder="Jane" style="width:100%;background:#0d0d0d;border:1px solid #222;border-radius:9px;color:#f0f0f0;font-size:15px;font-family:inherit;padding:13px 14px;outline:none;box-sizing:border-box;"></div>
+          <div><label style="display:block;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#666;margin-bottom:6px;">Last Name</label>
+            <input id="f-last" type="text" placeholder="Smith" style="width:100%;background:#0d0d0d;border:1px solid #222;border-radius:9px;color:#f0f0f0;font-size:15px;font-family:inherit;padding:13px 14px;outline:none;box-sizing:border-box;"></div>
+        </div>
+        <div style="margin-bottom:10px;"><label style="display:block;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#666;margin-bottom:6px;">Email</label>
+          <input id="f-email" type="email" placeholder="you@yourbrand.com" style="width:100%;background:#0d0d0d;border:1px solid #222;border-radius:9px;color:#f0f0f0;font-size:15px;font-family:inherit;padding:13px 14px;outline:none;box-sizing:border-box;"></div>
+        <div style="margin-bottom:10px;"><label style="display:block;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#666;margin-bottom:6px;">Brand / Company Name</label>
+          <input id="f-brand" type="text" placeholder="Your Brand" style="width:100%;background:#0d0d0d;border:1px solid #222;border-radius:9px;color:#f0f0f0;font-size:15px;font-family:inherit;padding:13px 14px;outline:none;box-sizing:border-box;"></div>
+        <div style="margin-bottom:18px;"><label style="display:block;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#666;margin-bottom:6px;">Product Category</label>
+          <input id="f-cat" type="text" placeholder="e.g. Skincare, Apparel, Wellness" style="width:100%;background:#0d0d0d;border:1px solid #222;border-radius:9px;color:#f0f0f0;font-size:15px;font-family:inherit;padding:13px 14px;outline:none;box-sizing:border-box;"></div>
+        <button id="signup-btn" class="btn-cta" style="width:100%;border:none;cursor:pointer;">Reserve My Freedom Way Booth →</button>
+        <p id="signup-err" style="display:none;color:#ff6688;font-size:13px;margin:10px 0 0;text-align:center;"></p>
+      </div>
+
+      <div id="signup-success" style="display:none;background:#0d2b1e;border:1px solid #1a5c38;border-radius:12px;padding:24px;text-align:center;">
+        <p style="margin:0 0 8px;font-size:20px;">✅</p>
+        <p style="margin:0 0 8px;font-size:16px;font-weight:700;color:#fff;">You're in line.</p>
+        <p style="margin:0;font-size:14px;color:#888;line-height:1.6">Check your email for the payment link. Your spot is held for <strong style="color:#fff;">24 hours</strong> — complete payment to confirm.</p>
+      </div>
+
       <a class="questions" href="mailto:hello@cultcontent.cc?subject=Commerce%20Sponsor%20%E2%80%94%20Freedom%20Way%20Booth%20%E2%80%94%20Question">Questions? Talk to our team →</a>
       </div>
       <div class="foot">September 12, 2026 · National Harbor, MD &nbsp;·&nbsp; <a href="https://cultcontent.cc/culture-commerce-carnival.html">Full event details</a></div>
+
+<script>
+(async () => {
+  try {
+    const d = await fetch('https://cultcontent-server-production.up.railway.app/ccc-booth-availability').then(r=>r.json());
+    const a = d['freedom-way'];
+    const el = document.getElementById('avail-line');
+    if (a) el.textContent = a.available > 0 ? `${a.available} of ${a.total} spots remaining` : 'Sold out — join the waitlist';
+    if (a?.available === 0) {
+      document.getElementById('signup-btn').disabled = true;
+      document.getElementById('signup-btn').textContent = 'Sold Out';
+    }
+  } catch(_) {}
+})();
+
+document.getElementById('signup-btn').addEventListener('click', async () => {
+  const first = document.getElementById('f-first').value.trim();
+  const last  = document.getElementById('f-last').value.trim();
+  const email = document.getElementById('f-email').value.trim();
+  const brand = document.getElementById('f-brand').value.trim();
+  const cat   = document.getElementById('f-cat').value.trim();
+  const err   = document.getElementById('signup-err');
+  err.style.display = 'none';
+  if (!email || !brand) { err.textContent = 'Email and brand name are required.'; err.style.display='block'; return; }
+  const btn = document.getElementById('signup-btn');
+  btn.textContent = 'Sending…'; btn.disabled = true;
+  try {
+    const r = await fetch('https://cultcontent-server-production.up.railway.app/ccc-booth-signup', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ booth_type: 'freedom-way', first_name: first, last_name: last, email, brand_name: brand, product_category: cat }),
+    });
+    const j = await r.json();
+    if (j.ok) {
+      document.getElementById('signup-form').style.display = 'none';
+      document.getElementById('signup-success').style.display = 'block';
+    } else { throw new Error(j.error || 'Server error'); }
+  } catch(e) { err.textContent = e.message || 'Something went wrong. Try again.'; err.style.display='block'; btn.textContent='Reserve My Freedom Way Booth →'; btn.disabled=false; }
+});
+</script>
     </div>
   </div>
 </body>

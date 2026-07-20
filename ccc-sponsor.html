@@ -1439,7 +1439,7 @@
           <div class="booth-tag">Culture &amp; Lifestyle</div>
           <div class="booth-name">Capitol Canopy Booth</div>
           <div class="booth-price">$400</div>
-          <div class="booth-count">30 available</div>
+          <div class="booth-count" id="count-capitol">30 available</div>
           <ul>
             <li>Booth space under the Capitol Canopy</li>
             <li>Culture &amp; lifestyle row placement</li>
@@ -1452,7 +1452,7 @@
           <div class="booth-tag">Commerce</div>
           <div class="booth-name">Freedom Way Booth</div>
           <div class="booth-price">$300</div>
-          <div class="booth-count">40 available</div>
+          <div class="booth-count" id="count-freedom">40 available</div>
           <ul>
             <li>Booth space on Freedom Way &mdash; the commerce corridor</li>
             <li>Creators sample &amp; film with your product on-site</li>
@@ -1498,5 +1498,16 @@
     <div style="font-size:12px; color:#444; margin-top:4px;">&copy; 2026 Cult Content. All rights reserved.</div>
   </footer>
 
+<script>
+(async () => {
+  try {
+    const d = await fetch('https://cultcontent-server-production.up.railway.app/ccc-booth-availability').then(r => r.json());
+    const cc = d['capitol-canopy'];
+    const fw = d['freedom-way'];
+    if (cc) document.getElementById('count-capitol').textContent = cc.available > 0 ? `${cc.available} of ${cc.total} available` : 'Sold out';
+    if (fw) document.getElementById('count-freedom').textContent = fw.available > 0 ? `${fw.available} of ${fw.total} available` : 'Sold out';
+  } catch(_) {}
+})();
+</script>
 </body>
 </html>
