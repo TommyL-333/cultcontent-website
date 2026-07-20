@@ -487,6 +487,8 @@ document.getElementById('signup-btn').addEventListener('click', async () => {
     if (j.ok) {
       document.getElementById('signup-form').style.display = 'none';
       document.getElementById('signup-success').style.display = 'block';
+    } else if (j.error === 'sold_out') {
+      err.textContent = 'No spots remaining — this booth is sold out.'; err.style.display='block'; btn.textContent='Sold Out'; btn.disabled=true;
     } else { throw new Error(j.error || 'Server error'); }
   } catch(e) { err.textContent = e.message || 'Something went wrong. Try again.'; err.style.display='block'; btn.textContent='Reserve My Freedom Way Booth →'; btn.disabled=false; }
 });
