@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Get Your Creator Pass &mdash; Culture Commerce Carnival</title>
+  <title>Apply to be a Carnival Creator &mdash; Culture Commerce Carnival</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -66,7 +66,7 @@
     }
 
     h1 {
-      font-size: clamp(32px, 6vw, 46px);
+      font-size: clamp(28px, 6vw, 42px);
       font-weight: 900;
       line-height: 1.07;
       letter-spacing: -.025em;
@@ -77,11 +77,59 @@
 
     .sub {
       font-size: 14px;
-      color: #555;
+      color: #999;
       line-height: 1.8;
-      margin-bottom: 36px;
+      margin-bottom: 10px;
     }
-    .sub strong { color: #999; }
+    .sub strong { color: #ccc; }
+
+    .requirement {
+      font-size: 13px;
+      color: #777;
+      line-height: 1.7;
+      background: rgba(0,242,234,.04);
+      border: 1px solid rgba(0,242,234,.1);
+      border-radius: 10px;
+      padding: 13px 16px;
+      margin-bottom: 28px;
+    }
+    .requirement strong { color: #00F2EA; }
+
+    /* Content tips */
+    .tips-box {
+      background: #161616;
+      border: 1px solid #222;
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 28px;
+    }
+    .tips-label {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: #555;
+      margin-bottom: 10px;
+    }
+    .tips-list {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .tip {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      font-size: 12px;
+      color: #888;
+      line-height: 1.5;
+    }
+    .tip i {
+      color: #00F2EA;
+      font-size: 10px;
+      margin-top: 3px;
+      flex-shrink: 0;
+    }
 
     /* Card */
     .card {
@@ -97,7 +145,7 @@
       font-weight: 800;
       letter-spacing: .14em;
       text-transform: uppercase;
-      color: #2e2e2e;
+      color: #555;
       margin-bottom: 24px;
     }
 
@@ -105,17 +153,27 @@
     .field { margin-bottom: 18px; }
     .field:last-of-type { margin-bottom: 0; }
 
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .field-row .field { margin-bottom: 0; }
+
     label {
       display: block;
       font-size: 11px;
       font-weight: 700;
       letter-spacing: .06em;
       text-transform: uppercase;
-      color: #555;
+      color: #777;
       margin-bottom: 8px;
     }
 
-    input {
+    input[type="text"],
+    input[type="email"],
+    input[type="url"] {
       width: 100%;
       background: #0d0d0d;
       border: 1px solid #222;
@@ -127,8 +185,10 @@
       outline: none;
       transition: border-color .15s;
     }
-    input:focus { border-color: #00F2EA; }
-    input::placeholder { color: #2e2e2e; }
+    input[type="text"]:focus,
+    input[type="email"]:focus,
+    input[type="url"]:focus { border-color: #00F2EA; }
+    input::placeholder { color: #333; }
 
     .handle-wrap {
       position: relative;
@@ -138,7 +198,7 @@
       left: 14px;
       top: 50%;
       transform: translateY(-50%);
-      color: #333;
+      color: #444;
       font-size: 15px;
       pointer-events: none;
     }
@@ -146,10 +206,35 @@
 
     .field-hint {
       font-size: 11px;
-      color: #2a2a2a;
+      color: #555;
       margin-top: 7px;
       line-height: 1.5;
     }
+
+    /* Checkbox */
+    .checkbox-field {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px 0;
+      cursor: pointer;
+    }
+    .checkbox-field input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      min-width: 18px;
+      accent-color: #00F2EA;
+      margin-top: 1px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .checkbox-label {
+      font-size: 13px;
+      color: #bbb;
+      line-height: 1.5;
+      cursor: pointer;
+    }
+    .checkbox-label span { color: #777; display: block; font-size: 11px; margin-top: 2px; }
 
     /* Error */
     .error-msg {
@@ -205,7 +290,7 @@
       align-items: flex-start;
       gap: 12px;
       font-size: 13px;
-      color: #666;
+      color: #888;
       line-height: 1.5;
     }
     .perk i {
@@ -220,7 +305,7 @@
     /* Fine print */
     .fine {
       font-size: 11px;
-      color: #222;
+      color: #444;
       text-align: center;
       line-height: 1.65;
       margin-top: 14px;
@@ -287,12 +372,21 @@
       font-size: 13px;
       font-weight: 700;
       color: #ddd;
-      margin-bottom: 2px;
+      margin-bottom: 3px;
     }
     .sstep-desc {
       font-size: 12px;
-      color: #444;
+      color: #777;
       line-height: 1.6;
+    }
+    .sstep-desc a {
+      color: #00F2EA;
+      text-decoration: none;
+    }
+    .sstep-desc a:hover { text-decoration: underline; }
+
+    @media (max-width: 420px) {
+      .field-row { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -309,17 +403,37 @@
     </a>
 
     <div class="pill">Creator Access</div>
-    <h1>Get your free<br><span class="cyan">creator pass.</span></h1>
-    <p class="sub">The Culture Commerce Carnival is free for creators. Apply below &mdash; any creator with <strong>1,000+ followers</strong> gets approved. We&rsquo;ll send your code before the event.</p>
+    <h1>Apply to be a<br><span class="cyan">Carnival Creator.</span></h1>
+    <p class="sub">Get access to <strong>free samples</strong> &amp; the Carnival Marketplace.</p>
+
+    <div class="requirement">
+      <strong>One post required to apply.</strong> To qualify for a creator pass, post about the Culture Commerce Carnival on TikTok or Instagram — then paste the link below. We review every post and send approvals within 48 hours.
+    </div>
+
+    <div class="tips-box">
+      <div class="tips-label">Need content ideas?</div>
+      <div class="tips-list">
+        <div class="tip"><i class="fa-solid fa-circle-check"></i><span>Film your reaction to the event announcement and tag <strong style="color:#bbb;">#CultureCommerceCarnival</strong></span></div>
+        <div class="tip"><i class="fa-solid fa-circle-check"></i><span>Share which brands you&rsquo;re most excited to discover</span></div>
+        <div class="tip"><i class="fa-solid fa-circle-check"></i><span>Post the event flyer or details to your story (then save it as a post)</span></div>
+        <div class="tip"><i class="fa-solid fa-circle-check"></i><span>Tell your audience why they should come out to National Harbor on Sept 12</span></div>
+      </div>
+    </div>
 
     <div class="card">
       <div class="card-label">Your info</div>
 
       <div id="form-error" class="error-msg"></div>
 
-      <div class="field">
-        <label for="inp-name">Full name</label>
-        <input id="inp-name" type="text" placeholder="Your name" autocomplete="name" />
+      <div class="field-row">
+        <div class="field">
+          <label for="inp-first">First name</label>
+          <input id="inp-first" type="text" placeholder="First" autocomplete="given-name" />
+        </div>
+        <div class="field">
+          <label for="inp-last">Last name</label>
+          <input id="inp-last" type="text" placeholder="Last" autocomplete="family-name" />
+        </div>
       </div>
 
       <div class="field">
@@ -328,30 +442,51 @@
       </div>
 
       <div class="field">
-        <label for="inp-handle">TikTok handle</label>
+        <label for="inp-tiktok">TikTok handle</label>
         <div class="handle-wrap">
           <span class="handle-at">@</span>
-          <input id="inp-handle" type="text" placeholder="yourhandle" autocomplete="off" autocorrect="off" autocapitalize="off" />
+          <input id="inp-tiktok" type="text" placeholder="yourhandle" autocomplete="off" autocorrect="off" autocapitalize="off" />
         </div>
-        <div class="field-hint">Your primary TikTok account. Must have 1,000+ followers.</div>
       </div>
 
+      <div class="field">
+        <label for="inp-instagram">Instagram handle <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#444;">(optional)</span></label>
+        <div class="handle-wrap">
+          <span class="handle-at">@</span>
+          <input id="inp-instagram" type="text" placeholder="yourhandle" autocomplete="off" autocorrect="off" autocapitalize="off" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="inp-post">Your post link</label>
+        <input id="inp-post" type="url" placeholder="tiktok.com/@you/video/... or instagram.com/p/..." autocomplete="off" />
+        <div class="field-hint">Paste the link to your TikTok or Instagram post about the Carnival.</div>
+      </div>
+
+      <label class="checkbox-field" for="inp-affiliate">
+        <input id="inp-affiliate" type="checkbox" />
+        <div class="checkbox-label">
+          I&rsquo;m in the TikTok Affiliate program
+          <span>Check if you&rsquo;re an active TikTok Shop affiliate creator</span>
+        </div>
+      </label>
+
       <button class="btn-submit" id="submit-btn" onclick="submitApply()">
-        Apply for My Pass <i class="fa-solid fa-arrow-right"></i>
+        Submit Application <i class="fa-solid fa-arrow-right"></i>
       </button>
     </div>
 
     <div class="card">
       <div class="perks">
         <div class="perk"><i class="fa-solid fa-check"></i><span>Free entry to the main event at National Harbor</span></div>
-        <div class="perk"><i class="fa-solid fa-check"></i><span>Access to brand booths &mdash; collect product samples from sponsors</span></div>
-        <div class="perk"><i class="fa-solid fa-check"></i><span>Creator networking + main stage performances</span></div>
+        <div class="perk"><i class="fa-solid fa-check"></i><span>Creator wristband — access brand booths &amp; collect product samples</span></div>
+        <div class="perk"><i class="fa-solid fa-check"></i><span>Creator networking + main stage panels &amp; performances</span></div>
         <div class="perk"><i class="fa-solid fa-check"></i><span>Priority treatment from brand sponsors on the floor</span></div>
-        <div class="perk"><i class="fa-solid fa-check"></i><span>Carnival attractions all day at National Harbor</span></div>
+        <div class="perk"><i class="fa-solid fa-check"></i><span>Chance to earn a free VIP ticket by posting with <strong>#CultureCommerceCarnival</strong></span></div>
       </div>
     </div>
 
-    <p class="fine">Applications are reviewed before codes are sent. By applying you agree to the event terms.</p>
+    <p class="fine">All applications are reviewed manually. By applying you agree to the event terms.</p>
 
   </div>
 
@@ -366,9 +501,9 @@
     <div class="success-card">
       <div class="check-ring">&#10003;</div>
       <div class="pill">Application Received</div>
-      <h1>You&rsquo;re on<br><span class="cyan">the list.</span></h1>
-      <p style="font-size:14px;color:#555;line-height:1.8;margin-top:12px;">
-        We got your application. Check your inbox &mdash; your promo code is on its way.
+      <h1>Thanks for<br><span class="cyan">applying.</span></h1>
+      <p style="font-size:14px;color:#888;line-height:1.8;margin-top:12px;">
+        We got your application &mdash; be on the lookout for an approval email within the next 48 hours.
       </p>
     </div>
 
@@ -377,27 +512,27 @@
       <div class="sstep">
         <div class="sstep-n">1</div>
         <div>
-          <div class="sstep-title">Code incoming</div>
-          <div class="sstep-desc">Check your email for your promo code. Use it at checkout on Posh to claim your free creator ticket.</div>
+          <div class="sstep-title">Approval incoming</div>
+          <div class="sstep-desc">Check your email for approval and next steps. Once approved, you&rsquo;ll claim your free creator ticket on Posh.</div>
         </div>
       </div>
       <div class="sstep">
         <div class="sstep-n">2</div>
         <div>
-          <div class="sstep-title">Grab your ticket</div>
-          <div class="sstep-desc">Head to the event page on Posh and apply the code at checkout. Your spot is held once you claim it.</div>
+          <div class="sstep-title">Upgrade to VIP</div>
+          <div class="sstep-desc">Post more about the event using <strong style="color:#bbb;">#CultureCommerceCarnival</strong> to earn a free VIP ticket, or <a href="https://posh.vip/e/culture-commerce-carnival" target="_blank">purchase one here</a>.</div>
         </div>
       </div>
       <div class="sstep">
         <div class="sstep-n">3</div>
         <div>
           <div class="sstep-title">Show up &amp; create</div>
-          <div class="sstep-desc">Come ready to meet brands, collect samples, and make content. National Harbor &mdash; date TBA.</div>
+          <div class="sstep-desc">Come ready to meet brands, collect samples, and make content. National Harbor &mdash; September 12th.</div>
         </div>
       </div>
     </div>
 
-    <p class="fine" style="margin-top:16px;">Questions? <a href="mailto:Tommy@cultcontent.cc" style="color:#333;">Tommy@cultcontent.cc</a></p>
+    <p class="fine" style="margin-top:16px;">Questions? <a href="mailto:Tommy@cultcontent.cc" style="color:#555;">Tommy@cultcontent.cc</a></p>
 
   </div>
 
@@ -420,13 +555,19 @@
   async function submitApply() {
     clearError();
 
-    const name   = document.getElementById('inp-name').value.trim();
-    const email  = document.getElementById('inp-email').value.trim();
-    const handle = document.getElementById('inp-handle').value.trim().replace(/^@/, '');
+    const firstName  = document.getElementById('inp-first').value.trim();
+    const lastName   = document.getElementById('inp-last').value.trim();
+    const email      = document.getElementById('inp-email').value.trim();
+    const tiktok     = document.getElementById('inp-tiktok').value.trim().replace(/^@/, '');
+    const instagram  = document.getElementById('inp-instagram').value.trim().replace(/^@/, '');
+    const postLink   = document.getElementById('inp-post').value.trim();
+    const affiliate  = document.getElementById('inp-affiliate').checked;
 
-    if (!name)               return showError('Please enter your name.');
-    if (!email || !email.includes('@')) return showError('Please enter a valid email address.');
-    if (!handle)             return showError('Please enter your TikTok handle.');
+    if (!firstName)                       return showError('Please enter your first name.');
+    if (!lastName)                        return showError('Please enter your last name.');
+    if (!email || !email.includes('@'))   return showError('Please enter a valid email address.');
+    if (!tiktok)                          return showError('Please enter your TikTok handle.');
+    if (!postLink)                        return showError('Please paste the link to your post about the Carnival.');
 
     const btn = document.getElementById('submit-btn');
     btn.disabled = true;
@@ -436,10 +577,18 @@
       await fetch(`${RAILWAY}/ccc-creator-apply/submit`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ name, email, tiktok_handle: handle }),
+        body:    JSON.stringify({
+          first_name:      firstName,
+          last_name:       lastName,
+          email,
+          tiktok_handle:   tiktok,
+          instagram_handle: instagram,
+          social_post_link: postLink,
+          tiktok_affiliate: affiliate,
+        }),
       });
     } catch (_) {
-      // Still show success — don't block the user on a network hiccup
+      // Still show success — don't block on network hiccup
     }
 
     document.getElementById('view-form').classList.remove('active');
