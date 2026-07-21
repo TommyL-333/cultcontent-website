@@ -413,7 +413,7 @@ body::before {
       <span class="pill">Sept 12, 2026 &middot; National Harbor, MD</span>
       <h1>Culture Sponsor <em>Capitol Canopy Booth</em></h1>
       <p class="hook">A weather-protected 10x10 Capitol Canopy booth in prime placement at the Carnival.</p>
-      <div class="avail"><i class="fa-solid fa-circle"></i>30 available</div>
+      <div class="avail"><i class="fa-solid fa-circle"></i><span id="avail-badge">30 available</span></div>
       <div class="card"><div class="card-title">What's included</div><ul class="benefits">
         <li>10x10 covered booth, weather-protected prime placement</li>
         <li>Table &amp; display area included</li>
@@ -456,16 +456,19 @@ body::before {
       <div class="foot">September 12, 2026 · National Harbor, MD &nbsp;·&nbsp; <a href="https://cultcontent.cc/culture-commerce-carnival.html">Full event details</a></div>
 
 <script>
+function updateCapitolCanopyCount(a) {
+  if (!a) return;
+  document.getElementById('avail-badge').textContent = a.available > 0 ? `${a.available} available` : 'Sold out';
+  document.getElementById('avail-line').textContent = a.available > 0 ? `${a.available} of ${a.total} spots remaining` : 'Sold out — join the waitlist';
+  if (a.available === 0) {
+    document.getElementById('signup-btn').disabled = true;
+    document.getElementById('signup-btn').textContent = 'Sold Out';
+  }
+}
 (async () => {
   try {
     const d = await fetch('https://cultcontent-server-production.up.railway.app/ccc-booth-availability').then(r=>r.json());
-    const a = d['capitol-canopy'];
-    const el = document.getElementById('avail-line');
-    if (a) el.textContent = a.available > 0 ? `${a.available} of ${a.total} spots remaining` : 'Sold out — join the waitlist';
-    if (a?.available === 0) {
-      document.getElementById('signup-btn').disabled = true;
-      document.getElementById('signup-btn').textContent = 'Sold Out';
-    }
+    updateCapitolCanopyCount(d['capitol-canopy']);
   } catch(_) {}
 })();
 
@@ -491,10 +494,7 @@ document.getElementById('signup-btn').addEventListener('click', async () => {
       document.getElementById('signup-form').style.display = 'none';
       document.getElementById('signup-success').style.display = 'block';
       // Refresh live count
-      fetch('https://cultcontent-server-production.up.railway.app/ccc-booth-availability').then(r=>r.json()).then(d=>{
-        const a = d['capitol-canopy'];
-        if (a) document.getElementById('avail-line').textContent = a.available > 0 ? `${a.available} of ${a.total} spots remaining` : 'Sold out';
-      }).catch(()=>{});
+      fetch('https://cultcontent-server-production.up.railway.app/ccc-booth-availability').then(r=>r.json()).then(d=>updateCapitolCanopyCount(d['capitol-canopy'])).catch(()=>{});
     } else if (j.error === 'sold_out') {
       err.textContent = 'No spots remaining — this booth is sold out.'; err.style.display='block'; btn.textContent='Sold Out'; btn.disabled=true;
     } else { throw new Error(j.error || 'Server error'); }

@@ -413,7 +413,7 @@ body::before {
       <span class="pill">Sept 12, 2026 &middot; National Harbor, MD</span>
       <h1>Commerce Sponsor <em>Freedom Way Booth</em></h1>
       <p class="hook">A 10x10 booth on Freedom Way — maximum foot traffic at the Culture Commerce Carnival.</p>
-      <div class="avail"><i class="fa-solid fa-circle"></i>40 available</div>
+      <div class="avail"><i class="fa-solid fa-circle"></i><span id="avail-badge">40 available</span></div>
       <div class="card"><div class="card-title">What's included</div><ul class="benefits">
         <li>10x10 booth on Freedom Way — maximum foot traffic</li>
         <li>Table &amp; display area included</li>
@@ -456,16 +456,19 @@ body::before {
       <div class="foot">September 12, 2026 · National Harbor, MD &nbsp;·&nbsp; <a href="https://cultcontent.cc/culture-commerce-carnival.html">Full event details</a></div>
 
 <script>
+function updateFreedomWayCount(a) {
+  if (!a) return;
+  document.getElementById('avail-badge').textContent = a.available > 0 ? `${a.available} available` : 'Sold out';
+  document.getElementById('avail-line').textContent = a.available > 0 ? `${a.available} of ${a.total} spots remaining` : 'Sold out — join the waitlist';
+  if (a.available === 0) {
+    document.getElementById('signup-btn').disabled = true;
+    document.getElementById('signup-btn').textContent = 'Sold Out';
+  }
+}
 (async () => {
   try {
     const d = await fetch('https://cultcontent-server-production.up.railway.app/ccc-booth-availability').then(r=>r.json());
-    const a = d['freedom-way'];
-    const el = document.getElementById('avail-line');
-    if (a) el.textContent = a.available > 0 ? `${a.available} of ${a.total} spots remaining` : 'Sold out — join the waitlist';
-    if (a?.available === 0) {
-      document.getElementById('signup-btn').disabled = true;
-      document.getElementById('signup-btn').textContent = 'Sold Out';
-    }
+    updateFreedomWayCount(d['freedom-way']);
   } catch(_) {}
 })();
 
@@ -491,10 +494,7 @@ document.getElementById('signup-btn').addEventListener('click', async () => {
       document.getElementById('signup-form').style.display = 'none';
       document.getElementById('signup-success').style.display = 'block';
       // Refresh live count
-      fetch('https://cultcontent-server-production.up.railway.app/ccc-booth-availability').then(r=>r.json()).then(d=>{
-        const a = d['freedom-way'];
-        if (a) document.getElementById('avail-line').textContent = a.available > 0 ? `${a.available} of ${a.total} spots remaining` : 'Sold out';
-      }).catch(()=>{});
+      fetch('https://cultcontent-server-production.up.railway.app/ccc-booth-availability').then(r=>r.json()).then(d=>updateFreedomWayCount(d['freedom-way'])).catch(()=>{});
     } else if (j.error === 'sold_out') {
       err.textContent = 'No spots remaining — this booth is sold out.'; err.style.display='block'; btn.textContent='Sold Out'; btn.disabled=true;
     } else { throw new Error(j.error || 'Server error'); }
