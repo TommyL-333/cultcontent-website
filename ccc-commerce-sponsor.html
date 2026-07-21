@@ -443,10 +443,12 @@ body::before {
         <p id="signup-err" style="display:none;color:#ff6688;font-size:13px;margin:10px 0 0;text-align:center;"></p>
       </div>
 
-      <div id="signup-success" style="display:none;background:#0d2b1e;border:1px solid #1a5c38;border-radius:12px;padding:24px;text-align:center;">
-        <p style="margin:0 0 8px;font-size:20px;">✅</p>
-        <p style="margin:0 0 8px;font-size:16px;font-weight:700;color:#fff;">You're in line.</p>
-        <p style="margin:0;font-size:14px;color:#888;line-height:1.6">Check your email for the payment link. Your spot is held for <strong style="color:#fff;">24 hours</strong> — complete payment to confirm.</p>
+      <div id="signup-success" style="display:none;background:#0d2b1e;border:1px solid #1a5c38;border-radius:12px;padding:28px 24px;text-align:center;">
+        <p style="margin:0 0 6px;font-size:22px;">🎪</p>
+        <p style="margin:0 0 6px;font-size:17px;font-weight:800;color:#fff;">Your spot is reserved.</p>
+        <p style="margin:0 0 20px;font-size:14px;color:#888;line-height:1.6">Complete payment to lock it in — your spot is held for <strong style="color:#fff;">24 hours</strong>. A payment link was also sent to your email.</p>
+        <a id="pay-now-btn" href="#" target="_blank" style="display:block;background:#00c2cb;color:#000;font-size:15px;font-weight:800;text-decoration:none;border-radius:10px;padding:15px 24px;margin-bottom:12px;">Complete Payment →</a>
+        <p style="margin:0;font-size:12px;color:#555;">Spot released if unpaid after 24 hours.</p>
       </div>
 
       <a class="questions" href="mailto:hello@cultcontent.cc?subject=Commerce%20Sponsor%20%E2%80%94%20Freedom%20Way%20Booth%20%E2%80%94%20Question">Questions? Talk to our team →</a>
@@ -485,6 +487,7 @@ document.getElementById('signup-btn').addEventListener('click', async () => {
     });
     const j = await r.json();
     if (j.ok) {
+      if (j.paymentUrl) document.getElementById('pay-now-btn').href = j.paymentUrl;
       document.getElementById('signup-form').style.display = 'none';
       document.getElementById('signup-success').style.display = 'block';
     } else if (j.error === 'sold_out') {
