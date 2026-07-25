@@ -264,16 +264,64 @@
     .final-cta-btn:hover { border-color:var(--purple); background:rgba(123,47,255,.1); transform:translateY(-3px); }
 
     /* FOOTER */
-    footer { background:var(--dark0); border-top:1px solid var(--border); padding:40px 2rem; }
-    .ft-inner { max-width:1100px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:20px; }
-    .ft-logo { display:flex; align-items:center; gap:10px; }
+    footer { background:var(--dark0); border-top:1px solid var(--border); padding:48px 2rem 32px; }
+    .ft-inner { max-width:1100px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:24px; flex-wrap:wrap; }
+    .ft-logo { display:flex; align-items:center; gap:10px; text-decoration:none; }
     .ft-logo img { height:28px; }
     .ft-logo span { font-family:'Montserrat',sans-serif; font-weight:900; font-size:.75rem; letter-spacing:.12em; text-transform:uppercase; color:rgba(255,255,255,.4); }
-    .ft-links { display:flex; gap:24px; list-style:none; }
+    .ft-links { display:flex; gap:24px; list-style:none; flex-wrap:wrap; }
     .ft-links a { color:rgba(255,255,255,.35); font-size:.8rem; transition:color .2s; }
     .ft-links a:hover { color:#fff; }
-    .ft-copy { font-size:.75rem; color:rgba(255,255,255,.2); }
-    @media(max-width:600px){ .ft-inner{flex-direction:column;text-align:center;} .ft-links{flex-wrap:wrap;justify-content:center;} }
+    .ft-social { display:flex; gap:18px; align-items:center; }
+    .ft-social a { color:rgba(255,255,255,.35); font-size:1.05rem; transition:color .2s; }
+    .ft-social a:hover { color:var(--teal); }
+    .ft-divider { max-width:1100px; margin:28px auto 20px; height:1px; background:var(--border); }
+    .ft-copy { max-width:1100px; margin:0 auto; font-size:.75rem; color:rgba(255,255,255,.2); text-align:center; }
+    @media(max-width:700px){ .ft-inner{flex-direction:column;text-align:center;} .ft-links{justify-content:center;} }
+
+    /* CCC BUTTON */
+    .ccc-btn {
+      display:inline-flex; align-items:center; gap:12px;
+      padding:20px 48px; border-radius:100px;
+      font-family:'Montserrat',sans-serif; font-weight:900;
+      font-size:.88rem; letter-spacing:.12em; text-transform:uppercase;
+      color:#1a0e00; text-decoration:none;
+      position:relative; overflow:hidden; margin-top:18px;
+      background-image:url('https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/6a4d57b92d9cf80515233ee3.png');
+      background-size:cover; background-position:center;
+      border:2px solid rgba(255,215,80,.6);
+      box-shadow:
+        0 0 24px rgba(255,185,0,.55),
+        0 0 60px rgba(255,185,0,.3),
+        0 0 120px rgba(255,140,0,.18),
+        inset 0 1px 0 rgba(255,255,200,.35);
+      transition:transform .25s, box-shadow .25s;
+      cursor:pointer;
+    }
+    .ccc-btn::before {
+      content:'';
+      position:absolute; inset:0;
+      background:linear-gradient(105deg, transparent 30%, rgba(255,255,220,.55) 50%, transparent 70%);
+      background-size:200% 100%;
+      background-position:200% 0;
+      animation:cccShine 2.8s ease-in-out infinite;
+      pointer-events:none;
+    }
+    @keyframes cccShine {
+      0%   { background-position:200% 0; }
+      50%  { background-position:-50% 0; }
+      100% { background-position:-200% 0; }
+    }
+    .ccc-btn:hover {
+      transform:translateY(-4px) scale(1.03);
+      box-shadow:
+        0 0 40px rgba(255,185,0,.75),
+        0 0 90px rgba(255,185,0,.45),
+        0 0 160px rgba(255,140,0,.28),
+        inset 0 1px 0 rgba(255,255,200,.45);
+    }
+    .ccc-btn span { position:relative; z-index:1; }
+    .ccc-btn i { position:relative; z-index:1; font-size:.8rem; }
   </style>
 </head>
 <body>
@@ -334,6 +382,11 @@
       <button class="hero-cta" onclick="document.getElementById('manifesto').scrollIntoView({behavior:'smooth'})">
         Make Your Dreams Come True <i class="fa-solid fa-arrow-down"></i>
       </button>
+      <br>
+      <a href="https://ccc.cultcontent.cc/culture-commerce-carnival" class="ccc-btn">
+        <span>Culture Commerce Carnival</span>
+        <i class="fa-solid fa-star"></i>
+      </a>
     </div>
   </section>
 
@@ -495,19 +548,27 @@
   <!-- FOOTER -->
   <footer>
     <div class="ft-inner">
-      <div class="ft-logo">
+      <a href="/" class="ft-logo">
         <img src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/68529ceff63e1913ceb4e2e0.png" alt="Cult Content" />
         <span>Cult Content</span>
-      </div>
+      </a>
       <ul class="ft-links">
         <li><a href="/">Home</a></li>
         <li><a href="/founders-story">My Story</a></li>
         <li><a href="/consulting">Consulting</a></li>
         <li><a href="/partners">Software</a></li>
         <li><a href="/creators">Community</a></li>
+        <li><a href="https://portal.cultcontent.cc/apply">Careers</a></li>
       </ul>
-      <p class="ft-copy">&copy; 2026 Cult Content. All rights reserved.</p>
+      <div class="ft-social">
+        <a href="https://www.tiktok.com/@cultcontent.cc" title="TikTok" target="_blank" rel="noopener"><i class="fa-brands fa-tiktok"></i></a>
+        <a href="https://www.instagram.com/cultcontent.cc/" title="Instagram" target="_blank" rel="noopener"><i class="fa-brands fa-instagram"></i></a>
+        <a href="https://www.youtube.com/@Cult-Content-CC" title="YouTube" target="_blank" rel="noopener"><i class="fa-brands fa-youtube"></i></a>
+        <a href="https://www.linkedin.com/company/cultcontent" title="LinkedIn" target="_blank" rel="noopener"><i class="fa-brands fa-linkedin-in"></i></a>
+      </div>
     </div>
+    <div class="ft-divider"></div>
+    <p class="ft-copy">&copy; 2026 Cult Content. All rights reserved.</p>
   </footer>
 
   <script>
