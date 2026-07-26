@@ -444,7 +444,7 @@ body::before {
       const data=Object.fromEntries(new FormData(f).entries());
       err.classList.remove('show');
       try{
-        const r=await fetch('https://consultants.cultcontent.cc/ccc-community-apply',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+        const r=await fetch('https://cultcontent-server-production.up.railway.app/ccc-community-apply',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
         if(!r.ok) throw new Error('submit failed');
         f.innerHTML='<div style="text-align:center;padding:20px 0"><i class="fa-solid fa-circle-check" style="font-size:40px;color:#00c2cb"></i><h2 style="margin-top:16px;font-size:22px">Application received.</h2><p style="color:#666;margin-top:8px;font-size:14px">Our team will confirm your vendor spot by email.</p></div>';
       }catch(ex){ err.textContent='Something went wrong. Please email hello@cultcontent.cc.'; err.classList.add('show'); }
