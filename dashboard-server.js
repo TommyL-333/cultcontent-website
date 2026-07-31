@@ -2311,6 +2311,50 @@ app.get('/financials',                         _pub('financials.html'));
 app.get('/tiktok-city-tour--dream-big--dc',    _pub('tiktok-city-tour.html'));
 app.get('/sponsorship-packages--dream-big-dc', _pub('sponsorship-packages.html'));
 
+// ── POST /ccc-community-apply ─────────────────────────────────────────────────
+// Same-origin handler so submissions land even if Railway is briefly unreachable.
+// Lark write is synchronous (primary storage). Railway fires in background for
+// GHL tagging and Tommy's notification.
+app.post('/ccc-community-apply', express.json(), async (req, res) => {
+  const { name, email, city, brand, product, handle } = req.body || {};
+  if (!email || !brand) {
+    return res.status(400).json({ ok: false, error: 'email and brand are required' });
+  }
+
+  const [firstName, ...rest] = (name || '').trim().split(' ');
+  const lastName = rest.join(' ');
+  const ts = new Date().toLocaleString('en-US', { timeZone: 'America/New_York' });
+
+  // Write to Lark synchronously — this is the primary record
+  const CCC_BASE  = 'R6vxbuk23aN0MHsSS8KuPv3UtQd';
+  const VENDOR_TABLE = 'tblzlhu9pL4YmEEm';
+  try {
+    await larkApi('post', `/bitable/v1/apps/${CCC_BASE}/tables/${VENDOR_TABLE}/records`, {
+      fields: {
+        'Submission Time': ts,
+        'First Name':      firstName || name || '',
+        'Last Name':       lastName || '',
+        'Email':           email,
+        'Brand':           brand,
+        'Product Type':    product || '',
+        'Social Handle':   handle ? `@${handle.replace(/^@/, '')}` : '',
+        'City':            city || '',
+        'Status':          'Pending Review',
+      },
+    });
+    console.log(`[CCC-VENDOR] Lark record created — ${brand} / ${email}`);
+  } catch (larkErr) {
+    console.error('[CCC-VENDOR] Lark write failed:', larkErr.message);
+    // Still respond 200 — Railway will attempt a secondary write below
+  }
+
+  res.json({ ok: true });
+
+  // Fire Railway in background for GHL contact + Tommy's notification
+  axios.post(`${CFG.railwayUrl}/ccc-community-apply`, { name, email, city, brand, product, handle })
+    .catch(e => console.warn('[CCC-VENDOR] Railway secondary write failed:', e.message));
+});
+
 app.use(requireAuth); // all other routes require auth in production
 
 // POST /api/client/admin/set-password — CF Access protected; sets/resets a client's login password
