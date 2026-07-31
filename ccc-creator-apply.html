@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Apply to be a Carnival Creator &mdash; Culture Commerce Carnival</title>
+  <title>Apply to be a Carnival Creator &mdash; Creator Carnival</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -407,13 +407,13 @@
     <p class="sub">Get access to <strong>free samples</strong> &amp; the Carnival Marketplace.</p>
 
     <div class="requirement">
-      <strong>One post required to apply.</strong> To qualify for a creator pass, post about the Culture Commerce Carnival on TikTok or Instagram — then paste the link below. We review every post and send approvals within 48 hours.
+      <strong>One post required to apply.</strong> To qualify for a creator pass, post about the Creator Carnival on TikTok or Instagram — then paste the link below. We review every post and send approvals within 48 hours.
     </div>
 
     <div class="tips-box">
       <div class="tips-label">Need content ideas?</div>
       <div class="tips-list">
-        <div class="tip"><i class="fa-solid fa-circle-check"></i><span>Film your reaction to the event announcement and tag <strong style="color:#bbb;">#CultureCommerceCarnival</strong></span></div>
+        <div class="tip"><i class="fa-solid fa-circle-check"></i><span>Film your reaction to the event announcement and tag <strong style="color:#bbb;">#CreatorCarnival</strong></span></div>
         <div class="tip"><i class="fa-solid fa-circle-check"></i><span>Share which brands you&rsquo;re most excited to discover</span></div>
         <div class="tip"><i class="fa-solid fa-circle-check"></i><span>Post the event flyer or details to your story (then save it as a post)</span></div>
         <div class="tip"><i class="fa-solid fa-circle-check"></i><span>Tell your audience why they should come out to National Harbor on Sept 12</span></div>
@@ -471,6 +471,11 @@
         </div>
       </label>
 
+      <div class="field">
+        <label for="inp-invited">Who invited you? <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#444;">(optional)</span></label>
+        <input id="inp-invited" type="text" placeholder="Name or @handle" autocomplete="off" />
+      </div>
+
       <button class="btn-submit" id="submit-btn" onclick="submitApply()">
         Submit Application <i class="fa-solid fa-arrow-right"></i>
       </button>
@@ -482,7 +487,7 @@
         <div class="perk"><i class="fa-solid fa-check"></i><span>Creator wristband — access brand booths &amp; collect product samples</span></div>
         <div class="perk"><i class="fa-solid fa-check"></i><span>Creator networking + main stage panels &amp; performances</span></div>
         <div class="perk"><i class="fa-solid fa-check"></i><span>Priority treatment from brand sponsors on the floor</span></div>
-        <div class="perk"><i class="fa-solid fa-check"></i><span>Chance to earn a free VIP ticket by posting with <strong>#CultureCommerceCarnival</strong></span></div>
+        <div class="perk"><i class="fa-solid fa-check"></i><span>Chance to earn a free VIP ticket by posting with <strong>#CreatorCarnival</strong></span></div>
       </div>
     </div>
 
@@ -520,7 +525,7 @@
         <div class="sstep-n">2</div>
         <div>
           <div class="sstep-title">Upgrade to VIP</div>
-          <div class="sstep-desc">Post more about the event using <strong style="color:#bbb;">#CultureCommerceCarnival</strong> to earn a free VIP ticket, or <a href="https://posh.vip/e/culture-commerce-carnival" target="_blank">purchase one here</a>.</div>
+          <div class="sstep-desc">Post more about the event using <strong style="color:#bbb;">#CreatorCarnival</strong> to earn a free VIP ticket, or <a href="https://posh.vip/e/culture-commerce-carnival" target="_blank">purchase one here</a>.</div>
         </div>
       </div>
       <div class="sstep">
@@ -585,6 +590,7 @@
           instagram_handle: instagram,
           social_post_link: postLink,
           tiktok_affiliate: affiliate,
+          invited_by: document.getElementById('inp-invited').value.trim(),
         }),
       });
     } catch (_) {

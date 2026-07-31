@@ -2316,7 +2316,7 @@ app.get('/sponsorship-packages--dream-big-dc', _pub('sponsorship-packages.html')
 // Lark write is synchronous (primary storage). Railway fires in background for
 // GHL tagging and Tommy's notification.
 app.post('/ccc-community-apply', express.json(), async (req, res) => {
-  const { name, email, city, brand, product, handle } = req.body || {};
+  const { name, email, city, brand, product, handle, invited_by } = req.body || {};
   if (!email || !brand) {
     return res.status(400).json({ ok: false, error: 'email and brand are required' });
   }
@@ -2339,6 +2339,7 @@ app.post('/ccc-community-apply', express.json(), async (req, res) => {
         'Product Type':    product || '',
         'Social Handle':   handle ? `@${handle.replace(/^@/, '')}` : '',
         'City':            city || '',
+        'Invited By':      invited_by || '',
         'Status':          'Pending Review',
       },
     });
@@ -2351,7 +2352,7 @@ app.post('/ccc-community-apply', express.json(), async (req, res) => {
   res.json({ ok: true });
 
   // Fire Railway in background for GHL contact + Tommy's notification
-  axios.post(`${CFG.railwayUrl}/ccc-community-apply`, { name, email, city, brand, product, handle })
+  axios.post(`${CFG.railwayUrl}/ccc-community-apply`, { name, email, city, brand, product, handle, invited_by })
     .catch(e => console.warn('[CCC-VENDOR] Railway secondary write failed:', e.message));
 });
 

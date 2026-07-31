@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Commerce Sponsor — American Way Booth &mdash; Culture Commerce Carnival</title>
-  <meta name="description" content="A 10x10 booth on American Way — maximum foot traffic at the Culture Commerce Carnival." />
-  <meta property="og:title" content="Commerce Sponsor — American Way Booth — Culture Commerce Carnival" />
-  <meta property="og:description" content="A 10x10 booth on American Way — maximum foot traffic at the Culture Commerce Carnival." />
+  <title>Commerce Sponsor — American Way Booth &mdash; Creator Carnival</title>
+  <meta name="description" content="A 10x10 booth on American Way — maximum foot traffic at the Creator Carnival." />
+  <meta property="og:title" content="Commerce Sponsor — American Way Booth — Creator Carnival" />
+  <meta property="og:description" content="A 10x10 booth on American Way — maximum foot traffic at the Creator Carnival." />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -408,11 +408,11 @@ body::before {
 
   <div id="page-bg">
     <div class="wrap">
-      <a class="brand" href="https://cultcontent.cc"><img src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/68529ceff63e1913ceb4e2e0.png" alt="Cult Content" /><span class="brand-name">Culture Commerce Carnival</span></a>
+      <a class="brand" href="https://cultcontent.cc"><img src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/68529ceff63e1913ceb4e2e0.png" alt="Cult Content" /><span class="brand-name">Creator Carnival</span></a>
       <div style="text-align:left">
       <span class="pill">Sept 12, 2026 &middot; National Harbor, MD</span>
       <h1>Commerce Sponsor <em>American Way Booth</em></h1>
-      <p class="hook">A 10x10 booth on American Way — maximum foot traffic at the Culture Commerce Carnival.</p>
+      <p class="hook">A 10x10 booth on American Way — maximum foot traffic at the Creator Carnival.</p>
       <div class="avail"><i class="fa-solid fa-circle"></i><span id="avail-badge">40 available</span></div>
       <div class="card"><div class="card-title">What's included</div><ul class="benefits">
         <li>10x10 booth on American Way — maximum foot traffic</li>
@@ -439,6 +439,8 @@ body::before {
           <input id="f-brand" type="text" placeholder="Your Brand" style="width:100%;background:#0d0d0d;border:1px solid #222;border-radius:9px;color:#f0f0f0;font-size:15px;font-family:inherit;padding:13px 14px;outline:none;box-sizing:border-box;"></div>
         <div style="margin-bottom:18px;"><label style="display:block;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#666;margin-bottom:6px;">Product Category</label>
           <input id="f-cat" type="text" placeholder="e.g. Skincare, Apparel, Wellness" style="width:100%;background:#0d0d0d;border:1px solid #222;border-radius:9px;color:#f0f0f0;font-size:15px;font-family:inherit;padding:13px 14px;outline:none;box-sizing:border-box;"></div>
+        <div style="margin-bottom:18px;"><label style="display:block;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#666;margin-bottom:6px;">Who invited you? <span style="font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></label>
+          <input id="f-invited" type="text" placeholder="Name or @handle" style="width:100%;background:#0d0d0d;border:1px solid #222;border-radius:9px;color:#f0f0f0;font-size:15px;font-family:inherit;padding:13px 14px;outline:none;box-sizing:border-box;"></div>
         <button id="signup-btn" class="btn-cta" style="width:100%;border:none;cursor:pointer;">Reserve My American Way Booth →</button>
         <p id="signup-err" style="display:none;color:#ff6688;font-size:13px;margin:10px 0 0;text-align:center;"></p>
       </div>
@@ -486,7 +488,7 @@ document.getElementById('signup-btn').addEventListener('click', async () => {
   try {
     const r = await fetch('https://cultcontent-server-production.up.railway.app/ccc-booth-signup', {
       method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ booth_type: 'freedom-way', first_name: first, last_name: last, email, brand_name: brand, product_category: cat }),
+      body: JSON.stringify({ booth_type: 'freedom-way', first_name: first, last_name: last, email, brand_name: brand, product_category: cat, invited_by: document.getElementById('f-invited').value.trim() }),
     });
     const j = await r.json();
     if (j.ok) {
