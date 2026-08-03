@@ -2286,6 +2286,8 @@ app.get('/consultant-onboarding',              _pub('consultant-onboarding.html'
 app.get('/client-onboarding',                  _pub('client-onboarding.html'));
 app.get('/ccc-sponsor',                        _pub('ccc-sponsor.html'));
 app.get('/culture-commerce-carnival',          _pub('culture-commerce-carnival.html'));
+app.get('/creatorcarnival',                    _pub('culture-commerce-carnival.html'));
+app.get('/creator-carnival',                   _pub('culture-commerce-carnival.html'));
 app.get('/culture-commerce-carnival-proposal', _pub('culture-commerce-carnival-proposal.html'));
 app.get('/ccc-creator-apply',                  _pub('ccc-creator-apply.html'));
 app.get('/ccc-sponsor-confirmed',              _pub('ccc-sponsor-confirmed.html'));
