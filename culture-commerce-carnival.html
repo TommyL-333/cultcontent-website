@@ -19,99 +19,11 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
 
-    /* ── NAV ── */
-    nav {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      z-index: 200;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 40px;
-      height: 64px;
-      background: rgba(8,8,8,.88);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border-bottom: 1px solid rgba(255,255,255,.06);
-    }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      text-decoration: none;
-    }
-    .logo-img  { height: 32px; }
-    .logo-name {
-      font-size: .78rem;
-      font-weight: 800;
-      letter-spacing: .13em;
-      text-transform: uppercase;
-      color: #fff;
-    }
-
-    .nav-links {
-      display: flex;
-      list-style: none;
-      gap: 28px;
-    }
-    .nav-links a {
-      font-size: .82rem;
-      font-weight: 600;
-      color: rgba(255,255,255,.55);
-      text-decoration: none;
-      letter-spacing: .04em;
-      transition: color .15s;
-    }
-    .nav-links a:hover { color: #fff; }
-
-    .nav-right {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-    }
-
-    .nav-social {
-      display: flex;
-      gap: 14px;
-    }
-    .nav-social a {
-      font-size: 13px;
-      color: rgba(255,255,255,.35);
-      text-decoration: none;
-      transition: color .15s;
-    }
-    .nav-social a:hover { color: #fff; }
-
-    .nav-cta {
-      font-size: .78rem;
-      font-weight: 800;
-      letter-spacing: .06em;
-      text-transform: uppercase;
-      color: #000;
-      background: var(--cyan);
-      padding: 8px 18px;
-      border-radius: 8px;
-      text-decoration: none;
-      transition: opacity .15s;
-    }
-    .nav-cta:hover { opacity: .85; }
-
-    .nav-mobile-btn {
-      display: none;
-      background: none;
-      border: none;
-      color: #fff;
-      font-size: 20px;
-      cursor: pointer;
-      padding: 4px;
-    }
-
     /* Mobile drawer */
     .mobile-drawer {
       display: none;
       position: fixed;
-      top: 64px; left: 0; right: 0;
+      top: 0; left: 0; right: 0;
       background: #0a0a0a;
       border-bottom: 1px solid #1a1a1a;
       flex-direction: column;
@@ -192,6 +104,8 @@
     .btn:hover { opacity: .85; transform: translateY(-1px); }
     .btn-cyan  { background: var(--cyan); color: #000; }
     .btn-red   { background: var(--red);  color: #fff; }
+    .btn-gold  { background: var(--gold); color: #000; }
+    .btn-white { background: #fff; color: #000; }
     .btn-ghost { background: transparent; border: 1px solid #2a2a2a; color: #888; }
 
     /* ── HERO ── */
@@ -207,7 +121,7 @@
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 164px 24px 100px;
+      padding: 80px 24px 100px;
     }
 
     .hero-inner { max-width: 800px; }
@@ -562,7 +476,9 @@
     }
     .ticket-cta:hover { opacity: .85; }
     .cta-cyan  { background: var(--cyan); color: #000; }
+    .cta-red   { background: var(--red);  color: #fff; }
     .cta-gold  { background: var(--gold); color: #000; }
+    .cta-white { background: #fff; color: #000; }
     .cta-ghost { background: transparent; border: 1px solid #2a2a2a; color: #666; }
 
     /* ── VENUE ── */
@@ -655,38 +571,6 @@
 </head>
 <body>
 
-  <nav>
-    <a href="/" class="logo">
-      <img src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/68529ceff63e1913ceb4e2e0.png" alt="Cult Content" class="logo-img">
-      <span class="logo-name">Cult Content</span>
-    </a>
-    <ul class="nav-links">
-      <li><a href="/">Home</a></li>
-      <li><a href="/founders-story">My Story</a></li>
-      <li><a href="/consulting">Consulting</a></li>
-      <li><a href="/partners">Partners</a></li>
-      <li><a href="/creators">Community</a></li>
-    </ul>
-    <div class="nav-right">
-      <div class="nav-social">
-        <a href="https://www.tiktok.com/@cultcontent.cc" title="TikTok" target="_blank" rel="noopener"><i class="fa-brands fa-tiktok"></i></a>
-        <a href="https://www.instagram.com/cultcontent.cc/" title="Instagram" target="_blank" rel="noopener"><i class="fa-brands fa-instagram"></i></a>
-        <a href="https://www.youtube.com/@Cult-Content-CC" title="YouTube" target="_blank" rel="noopener"><i class="fa-brands fa-youtube"></i></a>
-        <a href="https://www.linkedin.com/company/cultcontent" title="LinkedIn" target="_blank" rel="noopener"><i class="fa-brands fa-linkedin-in"></i></a>
-      </div>
-      <a href="/book-with-tommy" class="nav-cta">Book a Call</a>
-    </div>
-    <button class="nav-mobile-btn" id="mobileMenuBtn" aria-label="Open menu">&#9776;</button>
-  </nav>
-  <div class="mobile-drawer" id="mobileDrawer">
-    <a href="/">Home</a>
-    <a href="/founders-story">My Story</a>
-    <a href="/consulting">Consulting</a>
-    <a href="/partners">Partners</a>
-    <a href="/creators">Community</a>
-    <a href="/book-with-tommy" class="mobile-cta">Book a Call</a>
-  </div>
-
   <!-- ── HERO ── -->
   <div class="hero">
     <div class="hero-inner">
@@ -699,7 +583,8 @@
       <div class="hero-btns">
         <a href="/ccc-creator-apply" class="btn btn-cyan">Apply for Free Creator Ticket &rarr;</a>
         <a href="https://posh.vip/e/culture-commerce-carnival" class="btn btn-red">Get VIP Ticket &mdash; $129</a>
-        <a href="https://posh.vip/e/culture-commerce-carnival" class="btn btn-ghost">General Admission &mdash; Free</a>
+        <a href="https://posh.vip/e/culture-commerce-carnival" class="btn btn-white">General Admission &mdash; Free</a>
+        <a href="/ccc-sponsor" class="btn btn-gold">Become a Sponsor &rarr;</a>
       </div>
     </div>
   </div>
@@ -894,7 +779,7 @@
             <li>Free caricature portrait &amp; carnival attractions</li>
             <li>VIP wristband &amp; priority entry</li>
           </ul>
-          <a href="https://posh.vip/e/culture-commerce-carnival" class="ticket-cta cta-gold">Get VIP Ticket &rarr;</a>
+          <a href="https://posh.vip/e/culture-commerce-carnival" class="ticket-cta cta-red">Get VIP Ticket &rarr;</a>
         </div>
 
         <!-- General Admission -->
@@ -911,7 +796,8 @@
             <li>Shop directly from brands on the floor</li>
             <li>Carnival atmosphere &amp; outdoor venue</li>
           </ul>
-          <a href="https://posh.vip/e/culture-commerce-carnival" class="ticket-cta cta-ghost">Get GA Ticket &rarr;</a>
+          <a href="https://posh.vip/e/culture-commerce-carnival" class="ticket-cta cta-white">Get GA Ticket &rarr;</a>
+          <a href="/ccc-sponsor" class="ticket-cta cta-gold" style="margin-top:10px;">Become a Sponsor &rarr;</a>
         </div>
 
       </div>
@@ -967,10 +853,5 @@
     </div>
   </div>
 
-  <script>
-    document.getElementById('mobileMenuBtn').addEventListener('click', function() {
-      document.getElementById('mobileDrawer').classList.toggle('open');
-    });
-  </script>
 </body>
 </html>
