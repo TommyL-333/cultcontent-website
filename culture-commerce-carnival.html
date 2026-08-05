@@ -373,11 +373,12 @@
     /* ── TICKETS ── */
     .tickets-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 20px;
       align-items: start;
     }
-    @media (max-width: 800px) { .tickets-grid { grid-template-columns: 1fr; max-width: 440px; } }
+    @media (max-width: 1100px) { .tickets-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 600px)  { .tickets-grid { grid-template-columns: 1fr; max-width: 440px; } }
 
     .ticket-card {
       background: var(--bg2);
@@ -389,8 +390,8 @@
     }
 
     .ticket-card.featured {
-      border-color: var(--gold);
-      background: linear-gradient(160deg, rgba(245,166,35,.06) 0%, rgba(8,8,8,0) 60%), var(--bg2);
+      border-color: var(--red);
+      background: linear-gradient(160deg, rgba(255,0,80,.06) 0%, rgba(8,8,8,0) 60%), var(--bg2);
     }
 
     .ticket-badge {
@@ -404,7 +405,7 @@
       margin-bottom: 16px;
     }
     .badge-free { color: var(--cyan); background: rgba(0,242,234,.1); border: 1px solid rgba(0,242,234,.2); }
-    .badge-vip  { color: var(--gold); background: rgba(245,166,35,.1); border: 1px solid rgba(245,166,35,.25); }
+    .badge-vip  { color: var(--red);  background: rgba(255,0,80,.1);  border: 1px solid rgba(255,0,80,.25); }
     .badge-ga   { color: #aaa;        background: rgba(255,255,255,.05); border: 1px solid #222; }
 
     .ticket-name {
@@ -421,7 +422,7 @@
       margin-bottom: 4px;
     }
     .ticket-card:nth-child(1) .ticket-price { color: var(--cyan); }
-    .ticket-card.featured .ticket-price      { color: var(--gold); }
+    .ticket-card.featured .ticket-price      { color: var(--red); }
     .ticket-card:nth-child(3) .ticket-price  { color: #aaa; }
 
     .ticket-price-note {
@@ -460,7 +461,7 @@
       flex-shrink: 0;
       margin-top: 1px;
     }
-    .ticket-card.featured .ticket-perks li::before { color: var(--gold); }
+    .ticket-card.featured .ticket-perks li::before { color: var(--red); }
     .ticket-card:nth-child(3) .ticket-perks li::before { color: #555; }
 
     .ticket-cta {
@@ -576,6 +577,7 @@
   <div class="hero">
     <div class="hero-inner">
       <div class="hero-eyebrow">National Harbor, MD &mdash; 2026</div>
+      <h1 style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;">Creator Carnival — National Harbor, MD — September 12, 2026</h1>
       <img src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/6a727a20fcee90cf63c7d7b4.png" alt="Creator Carnival" style="display:block;margin:0 auto 28px;width:100%;max-width:600px;height:auto;">
       <p class="hero-sub">An outdoor carnival where creators meet brands, make connections, go live, and get paid. Free to attend if you&rsquo;re a creator &mdash; spots are limited.</p>
       <div style="margin:36px auto 40px;max-width:720px;border-radius:14px;overflow:hidden;aspect-ratio:16/9;background:#000;">
@@ -798,7 +800,23 @@
             <li>Carnival atmosphere &amp; outdoor venue</li>
           </ul>
           <a href="https://posh.vip/e/culture-commerce-carnival" class="ticket-cta cta-white">Get GA Ticket &rarr;</a>
-          <a href="/ccc-sponsor" class="ticket-cta cta-gold" style="margin-top:10px;">Become a Sponsor &rarr;</a>
+        </div>
+
+        <!-- Sponsor -->
+        <div class="ticket-card" style="border-color:rgba(245,166,35,.4);background:linear-gradient(160deg,rgba(245,166,35,.05) 0%,rgba(8,8,8,0) 60%),var(--bg2);">
+          <span class="ticket-badge" style="color:var(--gold);background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.25);">Brand Sponsorship</span>
+          <div class="ticket-name">Become a Sponsor</div>
+          <div class="ticket-price" style="color:var(--gold);font-size:28px;line-height:1.2;">Get a Booth</div>
+          <div class="ticket-price-note">Limited booths available &mdash; secure yours early</div>
+          <hr class="ticket-divider" />
+          <ul class="ticket-perks" style="">
+            <li style="color:#bbb;">Branded booth on the marketplace floor</li>
+            <li style="color:#bbb;">Product sampling to 1,000+ creators</li>
+            <li style="color:#bbb;">Live TikTok content filmed at your booth</li>
+            <li style="color:#bbb;">Logo on stage backdrop &amp; event collateral</li>
+            <li style="color:#bbb;">VIP tickets for your team</li>
+          </ul>
+          <a href="/ccc-sponsor" class="ticket-cta cta-gold">View Sponsorship Options &rarr;</a>
         </div>
 
       </div>
