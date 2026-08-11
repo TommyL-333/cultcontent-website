@@ -625,11 +625,11 @@
     }
     /* ── MORE SPONSORSHIP OPPORTUNITIES (gold) ── */
     /* ── Galaxy band (Marketplace + Carnival flagship) ── */
-    .galaxy-band { margin-left: -48px; margin-right: -48px; padding: 24px 48px 0;
-      background: #000 url('https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/6a4d873d9093e0282128cc22.png') center / cover fixed;
+    .galaxy-band { margin-left: -48px; margin-right: -48px; padding: 0 48px 0;
+      background: #000 url('https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/6a4d873d9093e0282128cc22.png') center / cover no-repeat;
       position: relative; overflow: hidden; }
     .galaxy-band::before { content:''; position:absolute; inset:0; background: rgba(5,5,9,.72); pointer-events:none; }
-    .galaxy-band > * { position: relative; z-index: 2; }
+    .galaxy-band > *:not(.shooting-star) { position: relative; z-index: 2; }
     .galaxy-band section { border-bottom: none; }
     .shooting-star { position:absolute; width:140px; height:2px; border-radius:999px; z-index:1; opacity:0; pointer-events:none;
       background: linear-gradient(90deg, rgba(255,255,255,.95), rgba(255,255,255,0));
