@@ -1504,9 +1504,9 @@
   try {
     const d = await fetch('https://cultcontent-server-production.up.railway.app/ccc-booth-availability').then(r => r.json());
     const cc = d['capitol-canopy'];
-    const fw = d['freedom-way'];
+    const aw = d['american-way'];
     if (cc) document.getElementById('count-capitol').textContent = cc.available > 0 ? `${cc.available} of ${cc.total} available` : 'Sold out';
-    if (fw) document.getElementById('count-freedom').textContent = fw.available > 0 ? `${fw.available} of ${fw.total} available` : 'Sold out';
+    if (aw) document.getElementById('count-freedom').textContent = aw.available > 0 ? `${aw.available} of ${aw.total} available` : 'Sold out';
   } catch(_) {}
 })();
 </script>
