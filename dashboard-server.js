@@ -21,7 +21,7 @@ ffmpeg.setFfmpegPath(ffmpegPath);
 const cccBooths     = require('./lib/ccc-booths');
 const cccNet        = require('./lib/ccc-network');
 const cccNetMail    = require('./lib/ccc-network-mail');
-const cccNetViews   = require('./lib/ccc-network-views');
+const CCC_NETWORK_APP_DIST = path.join(__dirname, 'ccc-network-app', 'dist');
 
 // ─── Data directory — use Railway Volume in prod, __dirname locally ───────────
 const DATA_DIR = process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : __dirname;
@@ -2312,8 +2312,6 @@ app.get('/ccc-photo-booth',                  _pub('ccc-photo-booth.html'));
 app.get('/ccc-executive-experience',         _pub('ccc-executive-experience.html'));
 app.get('/ccc-community-vendor',             _pub('ccc-community-vendor.html'));
 app.get('/ccc-vip',                          _pub('ccc-vip.html'));
-app.get('/ccc-network',                      _pub('ccc-network.html'));
-app.get('/ccc-network/login',                _pub('ccc-network-login.html'));
 app.get('/creator-onboarding',                 _pub('creator-onboarding.html'));
 app.get('/financials',                         _pub('financials.html'));
 app.get('/tiktok-city-tour--dream-big--dc',    _pub('tiktok-city-tour.html'));
@@ -2457,18 +2455,15 @@ app.get('/ccc-network/logout', (req, res) => {
   res.redirect('/ccc-network/login');
 });
 
-app.get('/ccc-network/profile', requireNetworkSession, (req, res) => {
-  res.send(cccNetViews.renderProfilePage(req.networkPerson));
+app.get('/api/ccc-network/me', requireNetworkSession, (req, res) => {
+  res.json({ ok: true, person: req.networkPerson });
 });
+
 app.post('/ccc-network/profile', requireNetworkSession, express.json(), (req, res) => {
   const updated = cccNet.updateProfile(req.networkPerson.id, req.body || {});
   res.json({ ok: true, person: updated });
 });
 
-app.get('/ccc-network/directory', requireNetworkSession, (req, res) => {
-  const { gated, opensAt } = cccNet.listDirectory(req.networkPerson);
-  res.send(cccNetViews.renderDirectoryPage(req.networkPerson, gated, opensAt));
-});
 app.get('/api/ccc-network/directory.json', requireNetworkSession, (req, res) => {
   res.json(cccNet.listDirectory(req.networkPerson));
 });
@@ -2488,6 +2483,22 @@ app.get('/ccc-network/contacts.csv', requireNetworkSession, (req, res) => {
   const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
   const csv = [cols.join(','), ...rows.map(r => cols.map(c => esc(r[c])).join(','))].join('\n');
   res.set('Content-Type', 'text/csv').set('Content-Disposition', 'attachment; filename="creator-carnival-contacts.csv"').send(csv);
+});
+
+// ── Networking Hub UI — React + HeroUI mini-app (ccc-network-app/) ─────────────
+// Everything above this point (signup, login, auth token, logout, profile save,
+// directory.json, connect, contacts.csv, admin) is the real API surface the SPA
+// calls into — unchanged by moving the UI to React. This just serves the built
+// app's static assets, then a catch-all for its client-side routes (/, /login,
+// /profile, /directory). Registered last in this block so it never shadows the
+// real GET routes above it (/ccc-network/auth/:token, /ccc-network/logout).
+app.use('/ccc-network', express.static(CCC_NETWORK_APP_DIST));
+app.get(['/ccc-network', '/ccc-network/*'], (req, res) => {
+  const indexFile = path.join(CCC_NETWORK_APP_DIST, 'index.html');
+  if (!fs.existsSync(indexFile)) {
+    return res.status(503).send('Networking Hub UI not built yet — run `npm run build` (or `npm run build --prefix ccc-network-app`).');
+  }
+  res.sendFile(indexFile);
 });
 
 app.use(requireAuth); // all other routes require auth in production
