@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Networking Roster &mdash; Creator Carnival</title>
+  <meta name="description" content="Join the Creator Carnival networking roster — creators and brands, connect before, during, and after the event." />
+  <meta property="og:title" content="Networking Roster — Creator Carnival" />
+  <meta property="og:description" content="Join the Creator Carnival networking roster — creators and brands, connect before, during, and after the event." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'] },
+          colors: {
+            background: '#0a0a0b', foreground: '#f4f4f5',
+            card: '#141416', 'card-foreground': '#f4f4f5',
+            border: '#26262b', input: '#26262b', ring: '#00c2cb',
+            primary: '#00c2cb', 'primary-foreground': '#04121a',
+            secondary: '#1c1c1f', 'secondary-foreground': '#f4f4f5',
+            muted: '#1c1c1f', 'muted-foreground': '#9a9aa2',
+            accent: '#1c1c1f', 'accent-foreground': '#f4f4f5',
+            destructive: '#f0506e', 'destructive-foreground': '#fff1f3',
+            gold: '#d4af37',
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    body { font-feature-settings: "cv11", "ss01"; }
+    ::selection { background: rgba(0,194,203,.25); }
+  </style>
+</head>
+<body class="bg-background text-foreground font-sans antialiased min-h-screen">
+<div class="min-h-screen flex items-center justify-center px-5 py-16">
+  <div class="w-full max-w-xl">
+
+    <a href="https://cultcontent.cc" class="flex items-center justify-center gap-2.5 mb-10">
+      <img src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/68529ceff63e1913ceb4e2e0.png" alt="Cult Content" class="h-6" />
+      <span class="text-[11px] font-bold uppercase tracking-[.14em] text-muted-foreground">Creator Carnival</span>
+    </a>
+
+    <div class="text-center mb-8">
+      <span class="inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-primary mb-5">Networking Roster</span>
+      <h1 class="text-4xl sm:text-[2.75rem] font-extrabold tracking-tight leading-[1.08] mb-4">Meet your collab era.</h1>
+      <p class="text-sm text-muted-foreground leading-relaxed max-w-md mx-auto">1,000+ creators and 100+ brands, all in one roster. Sign up, get approved, and start connecting before you even set foot on the floor.</p>
+    </div>
+
+    <div id="form-view">
+      <div class="inline-flex w-full items-center rounded-lg bg-secondary p-1 mb-5">
+        <button type="button" id="tab-creator" onclick="setRole('creator')" class="flex-1 rounded-md py-2 text-xs font-bold uppercase tracking-wide transition-colors bg-background text-foreground shadow-sm">I&rsquo;m a Creator</button>
+        <button type="button" id="tab-brand" onclick="setRole('brand')" class="flex-1 rounded-md py-2 text-xs font-bold uppercase tracking-wide transition-colors text-muted-foreground hover:text-foreground">I&rsquo;m a Brand</button>
+      </div>
+
+      <div class="rounded-xl border border-border bg-card shadow-sm p-6 sm:p-7">
+        <div id="err" class="hidden rounded-md border border-destructive/30 bg-destructive/10 px-3.5 py-2.5 text-[13px] text-destructive mb-4"></div>
+
+        <form id="networkForm" class="space-y-4">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-muted-foreground mb-1.5 uppercase tracking-wide">First name</label>
+              <input id="f-first" type="text" placeholder="Jane" required class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-muted-foreground mb-1.5 uppercase tracking-wide">Last name</label>
+              <input id="f-last" type="text" placeholder="Smith" class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-muted-foreground mb-1.5 uppercase tracking-wide">Email</label>
+            <input id="f-email" type="email" placeholder="you@example.com" required class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-muted-foreground mb-1.5 uppercase tracking-wide">Phone (optional)</label>
+            <input id="f-phone" type="tel" placeholder="(555) 555-5555" class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+          </div>
+
+          <div id="field-handle">
+            <label class="block text-xs font-medium text-muted-foreground mb-1.5 uppercase tracking-wide">TikTok / IG handle</label>
+            <input id="f-handle" type="text" placeholder="@yourhandle" class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+          </div>
+          <div id="field-brandname" class="hidden">
+            <label class="block text-xs font-medium text-muted-foreground mb-1.5 uppercase tracking-wide">Brand name</label>
+            <input id="f-brandname" type="text" placeholder="Your Brand" class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+          </div>
+
+          <div>
+            <label id="label-category" class="block text-xs font-medium text-muted-foreground mb-1.5 uppercase tracking-wide">Content niche</label>
+            <input id="f-category" type="text" placeholder="e.g. Beauty, Fitness, Tech" class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+          </div>
+
+          <div id="field-tier" class="hidden">
+            <label class="block text-xs font-medium text-muted-foreground mb-1.5 uppercase tracking-wide">Which sponsorship did you book?</label>
+            <select id="f-tier" class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              <option value="general">Booth / Community Vendor / Other</option>
+              <option value="priority">Marketplace or Carnival Sponsor (priority access)</option>
+              <option value="executive">Executive Experience</option>
+            </select>
+            <p class="text-[11px] text-muted-foreground mt-1.5 leading-relaxed">This is self-reported — Tommy's team confirms it at approval.</p>
+          </div>
+
+          <div>
+            <label id="label-bio" class="block text-xs font-medium text-muted-foreground mb-1.5 uppercase tracking-wide">Short bio</label>
+            <textarea id="f-bio" placeholder="A couple sentences about you / your brand" class="flex w-full min-h-[74px] rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-y"></textarea>
+          </div>
+
+          <div>
+            <label id="label-looking" class="block text-xs font-medium text-muted-foreground mb-1.5 uppercase tracking-wide">What are you looking for?</label>
+            <textarea id="f-looking" placeholder="e.g. Brands to collab with in the wellness space" required class="flex w-full min-h-[74px] rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-y"></textarea>
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-muted-foreground mb-1.5 uppercase tracking-wide">Links (one per line — portfolio, website, socials)</label>
+            <textarea id="f-links" placeholder="https://..." class="flex w-full min-h-[62px] rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-y"></textarea>
+          </div>
+
+          <button id="submit-btn" type="submit" class="w-full inline-flex items-center justify-center gap-2 rounded-md h-11 px-5 text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">Join the Roster &rarr;</button>
+        </form>
+
+        <a href="/ccc-network/login" class="block text-center mt-5 text-[13px] text-muted-foreground hover:text-primary transition-colors">Already approved? Log in &rarr;</a>
+      </div>
+    </div>
+
+    <div id="success" class="hidden rounded-xl border border-border bg-card shadow-sm p-8 text-center">
+      <i class="fa-solid fa-circle-check text-4xl text-primary mb-4"></i>
+      <h2 class="text-xl font-bold mb-2">You&rsquo;re on the list.</h2>
+      <p class="text-sm text-muted-foreground leading-relaxed">Tommy&rsquo;s team reviews every roster application. Once you&rsquo;re approved, we&rsquo;ll email you a login link to browse the directory and start connecting.</p>
+    </div>
+
+    <div class="text-center mt-8 text-[11px] text-muted-foreground/70 tracking-wide">September 12, 2026 · National Harbor, MD &nbsp;&middot;&nbsp; <a href="/culture-commerce-carnival" class="hover:text-primary transition-colors">Full event details</a></div>
+  </div>
+</div>
+
+<script>
+let role = 'creator';
+function setRole(r) {
+  role = r;
+  const activeCls = ['bg-background', 'text-foreground', 'shadow-sm'];
+  const inactiveCls = ['text-muted-foreground'];
+  const creatorTab = document.getElementById('tab-creator');
+  const brandTab = document.getElementById('tab-brand');
+  creatorTab.classList.toggle('bg-background', r === 'creator');
+  creatorTab.classList.toggle('text-foreground', r === 'creator');
+  creatorTab.classList.toggle('shadow-sm', r === 'creator');
+  creatorTab.classList.toggle('text-muted-foreground', r !== 'creator');
+  brandTab.classList.toggle('bg-background', r === 'brand');
+  brandTab.classList.toggle('text-foreground', r === 'brand');
+  brandTab.classList.toggle('shadow-sm', r === 'brand');
+  brandTab.classList.toggle('text-muted-foreground', r !== 'brand');
+
+  document.getElementById('field-brandname').classList.toggle('hidden', r !== 'brand');
+  document.getElementById('field-tier').classList.toggle('hidden', r !== 'brand');
+  document.getElementById('field-handle').classList.toggle('hidden', r === 'brand');
+  document.getElementById('label-category').textContent = r === 'creator' ? 'Content niche' : 'Product category';
+  document.getElementById('label-bio').textContent = r === 'creator' ? 'Short bio' : 'About the brand';
+  document.getElementById('label-looking').textContent = r === 'creator' ? 'What brands are you looking to work with?' : 'What kind of creators are you looking for?';
+}
+
+document.getElementById('networkForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const err = document.getElementById('err');
+  err.classList.add('hidden');
+
+  const payload = {
+    role,
+    first_name: document.getElementById('f-first').value.trim(),
+    last_name:  document.getElementById('f-last').value.trim(),
+    email:      document.getElementById('f-email').value.trim(),
+    phone:      document.getElementById('f-phone').value.trim(),
+    handle:     document.getElementById('f-handle').value.trim(),
+    brand_name: document.getElementById('f-brandname').value.trim(),
+    category:   document.getElementById('f-category').value.trim(),
+    bio:        document.getElementById('f-bio').value.trim(),
+    looking_for: document.getElementById('f-looking').value.trim(),
+    tier:       document.getElementById('f-tier').value,
+    links: document.getElementById('f-links').value.split('\n').map(s => s.trim()).filter(Boolean).map(url => ({ label: 'Link', url })),
+  };
+
+  if (!payload.first_name || !payload.email || !payload.looking_for) {
+    err.textContent = 'First name, email, and what you\'re looking for are required.';
+    err.classList.remove('hidden');
+    return;
+  }
+  if (role === 'brand' && !payload.brand_name) {
+    err.textContent = 'Brand name is required.';
+    err.classList.remove('hidden');
+    return;
+  }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true; btn.textContent = 'Submitting…';
+  try {
+    const r = await fetch('/ccc-network/signup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    const j = await r.json();
+    if (j.ok) {
+      document.getElementById('form-view').classList.add('hidden');
+      document.getElementById('success').classList.remove('hidden');
+    } else if (j.error === 'already_registered') {
+      err.textContent = `That email is already on the roster (status: ${j.status}). Try logging in instead.`;
+      err.classList.remove('hidden');
+      btn.disabled = false; btn.textContent = 'Join the Roster →';
+    } else {
+      throw new Error(j.error || 'Something went wrong');
+    }
+  } catch (e2) {
+    err.textContent = e2.message || 'Something went wrong. Try again.';
+    err.classList.remove('hidden');
+    btn.disabled = false; btn.textContent = 'Join the Roster →';
+  }
+});
+</script>
+</body>
+</html>

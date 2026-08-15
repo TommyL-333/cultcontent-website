@@ -7,3 +7,6 @@ uploads/
 snapshots.json
 upload-queue.json
 loop-history.json
+*.db
+*.db-wal
+*.db-shm

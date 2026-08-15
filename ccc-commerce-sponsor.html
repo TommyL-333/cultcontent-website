@@ -469,7 +469,7 @@ function updateFreedomWayCount(a) {
 }
 (async () => {
   try {
-    const d = await fetch('https://cultcontent-server-production.up.railway.app/ccc-booth-availability').then(r=>r.json());
+    const d = await fetch('/ccc-booth-availability').then(r=>r.json());
     updateFreedomWayCount(d['freedom-way']);
   } catch(_) {}
 })();
@@ -486,7 +486,7 @@ document.getElementById('signup-btn').addEventListener('click', async () => {
   const btn = document.getElementById('signup-btn');
   btn.textContent = 'Sending…'; btn.disabled = true;
   try {
-    const r = await fetch('https://cultcontent-server-production.up.railway.app/ccc-booth-signup', {
+    const r = await fetch('/ccc-booth-signup', {
       method: 'POST', headers: {'Content-Type':'application/json'},
       body: JSON.stringify({ booth_type: 'freedom-way', first_name: first, last_name: last, email, brand_name: brand, product_category: cat, invited_by: document.getElementById('f-invited').value.trim() }),
     });
@@ -496,7 +496,7 @@ document.getElementById('signup-btn').addEventListener('click', async () => {
       document.getElementById('signup-form').style.display = 'none';
       document.getElementById('signup-success').style.display = 'block';
       // Refresh live count
-      fetch('https://cultcontent-server-production.up.railway.app/ccc-booth-availability').then(r=>r.json()).then(d=>updateFreedomWayCount(d['freedom-way'])).catch(()=>{});
+      fetch('/ccc-booth-availability').then(r=>r.json()).then(d=>updateFreedomWayCount(d['freedom-way'])).catch(()=>{});
     } else if (j.error === 'sold_out') {
       err.textContent = 'No spots remaining — this booth is sold out.'; err.style.display='block'; btn.textContent='Sold Out'; btn.disabled=true;
     } else { throw new Error(j.error || 'Server error'); }

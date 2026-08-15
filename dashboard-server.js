@@ -18,6 +18,10 @@ const rateLimit    = require('express-rate-limit');
 const ffmpeg       = require('fluent-ffmpeg');
 const ffmpegPath   = require('@ffmpeg-installer/ffmpeg').path;
 ffmpeg.setFfmpegPath(ffmpegPath);
+const cccBooths     = require('./lib/ccc-booths');
+const cccNet        = require('./lib/ccc-network');
+const cccNetMail    = require('./lib/ccc-network-mail');
+const cccNetViews   = require('./lib/ccc-network-views');
 
 // ─── Data directory — use Railway Volume in prod, __dirname locally ───────────
 const DATA_DIR = process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : __dirname;
@@ -2308,6 +2312,8 @@ app.get('/ccc-photo-booth',                  _pub('ccc-photo-booth.html'));
 app.get('/ccc-executive-experience',         _pub('ccc-executive-experience.html'));
 app.get('/ccc-community-vendor',             _pub('ccc-community-vendor.html'));
 app.get('/ccc-vip',                          _pub('ccc-vip.html'));
+app.get('/ccc-network',                      _pub('ccc-network.html'));
+app.get('/ccc-network/login',                _pub('ccc-network-login.html'));
 app.get('/creator-onboarding',                 _pub('creator-onboarding.html'));
 app.get('/financials',                         _pub('financials.html'));
 app.get('/tiktok-city-tour--dream-big--dc',    _pub('tiktok-city-tour.html'));
@@ -2358,7 +2364,179 @@ app.post('/ccc-community-apply', express.json(), async (req, res) => {
     .catch(e => console.warn('[CCC-VENDOR] Railway secondary write failed:', e.message));
 });
 
+// ── GET /ccc-booth-availability, POST /ccc-booth-signup ────────────────────────
+// SQLite (lib/ccc-booths.js) is the system of record — same-origin, no Railway
+// dependency. Best-effort Lark mirror below keeps Tommy's existing grid view
+// populated without ever blocking or failing the response.
+app.get('/ccc-booth-availability', (req, res) => {
+  res.json(cccBooths.getAvailability());
+});
+
+app.post('/ccc-booth-signup', express.json(), (req, res) => {
+  const { booth_type, first_name, last_name, email, brand_name, product_category, invited_by } = req.body || {};
+  const result = cccBooths.createSignup({ booth_type, first_name, last_name, email, brand_name, product_category, invited_by });
+  if (!result.ok) {
+    return res.status(result.error === 'sold_out' ? 409 : 400).json(result);
+  }
+  res.json({ ok: true, paymentUrl: result.paymentUrl });
+
+  // Best-effort mirror to the existing Lark table — fire-and-forget, never blocks the
+  // response above. Skipped entirely (no wasted request) until CCC_BOOTH_LARK_TABLE_ID
+  // is set — set it to the "Booth Signups" table id (Lark URL: .../table/<this>) to enable.
+  const BOOTH_TABLE = process.env.CCC_BOOTH_LARK_TABLE_ID;
+  if (BOOTH_TABLE) {
+    const CCC_BASE = 'R6vxbuk23aN0MHsSS8KuPv3UtQd';
+    larkApi('post', `/bitable/v1/apps/${CCC_BASE}/tables/${BOOTH_TABLE}/records`, {
+      fields: {
+        'Submission Time':  result.submissionTime,
+        'Booth Type':       cccBooths.CCC_BOOTHS[booth_type]?.label || booth_type,
+        'First Name':       first_name || '',
+        'Last Name':        last_name || '',
+        'Email':            email,
+        'Brand Name':       brand_name,
+        'Product Category': product_category || '',
+        'Status':           'Pending',
+        'Reservation ID':   result.reservationId,
+        'Payment URL':      result.paymentUrl,
+        'Invited By':       invited_by || '',
+      },
+    }).catch(e => console.warn('[CCC-BOOTH] Lark mirror write failed:', e.message));
+  }
+});
+
+// ── Creator Carnival Networking Hub ─────────────────────────────────────────────
+// Roster of approved creators + brands. Session-gated pages below use their own
+// requireNetworkSession middleware (not the CF-Access requireAuth wall further
+// down) — same pattern as /client/dashboard's requireClientSession.
+function requireNetworkSession(req, res, next) {
+  const person = req.session?.networkPersonId ? cccNet.getPerson(req.session.networkPersonId) : null;
+  if (!person || person.status !== 'approved') {
+    if (req.path.startsWith('/api/')) return res.status(401).json({ ok: false, error: 'Not authenticated' });
+    return res.redirect('/ccc-network/login');
+  }
+  req.networkPerson = person;
+  next();
+}
+
+app.post('/ccc-network/signup', express.json(), (req, res) => {
+  const result = cccNet.signup(req.body || {});
+  res.status(result.ok ? 200 : 400).json(result);
+  if (!result.ok) return;
+
+  // Notify Tommy — fire-and-forget, same shape as /ccc-community-apply
+  const CCC_BASE  = 'R6vxbuk23aN0MHsSS8KuPv3UtQd';
+  const VENDOR_TABLE = 'tblzlhu9pL4YmEEm';
+  const p = req.body || {};
+  larkApi('post', `/bitable/v1/apps/${CCC_BASE}/tables/${VENDOR_TABLE}/records`, {
+    fields: {
+      'Submission Time': new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }),
+      'First Name': p.first_name || '', 'Last Name': p.last_name || '', 'Email': p.email || '',
+      'Brand': p.role === 'brand' ? p.brand_name : (p.handle || ''),
+      'Product Type': `[Networking Roster — ${p.role}] ${p.category || ''}`,
+      'Status': 'Pending Review',
+    },
+  }).catch(e => console.warn('[CCC-NETWORK] Lark notify failed:', e.message));
+});
+
+app.post('/ccc-network/login', express.json(), async (req, res) => {
+  const link = cccNet.createMagicLink(req.body?.email || '');
+  res.json({ ok: true }); // always generic — don't leak whether the email exists
+  if (link) cccNetMail.sendMagicLinkEmail(link.person, link.token).catch(e => console.error('[ccc-network] magic link send error:', e.message));
+});
+
+app.get('/ccc-network/auth/:token', (req, res) => {
+  const result = cccNet.consumeMagicLink(req.params.token);
+  if (!result.ok) return res.status(400).send(`<p style="font-family:sans-serif;text-align:center;padding:80px 20px;">Link ${result.error === 'expired' ? 'expired' : 'invalid'} — <a href="/ccc-network/login">request a new one</a>.</p>`);
+  req.session.networkPersonId = result.person.id;
+  const incomplete = !result.person.bio && !result.person.looking_for;
+  res.redirect(incomplete ? '/ccc-network/profile' : '/ccc-network/directory');
+});
+
+app.get('/ccc-network/logout', (req, res) => {
+  delete req.session.networkPersonId;
+  res.redirect('/ccc-network/login');
+});
+
+app.get('/ccc-network/profile', requireNetworkSession, (req, res) => {
+  res.send(cccNetViews.renderProfilePage(req.networkPerson));
+});
+app.post('/ccc-network/profile', requireNetworkSession, express.json(), (req, res) => {
+  const updated = cccNet.updateProfile(req.networkPerson.id, req.body || {});
+  res.json({ ok: true, person: updated });
+});
+
+app.get('/ccc-network/directory', requireNetworkSession, (req, res) => {
+  const { gated, opensAt } = cccNet.listDirectory(req.networkPerson);
+  res.send(cccNetViews.renderDirectoryPage(req.networkPerson, gated, opensAt));
+});
+app.get('/api/ccc-network/directory.json', requireNetworkSession, (req, res) => {
+  res.json(cccNet.listDirectory(req.networkPerson));
+});
+
+app.post('/ccc-network/connect/:uuid', requireNetworkSession, (req, res) => {
+  const result = cccNet.connect(req.networkPerson.id, req.params.uuid);
+  res.status(result.ok ? 200 : 400).json(result);
+  if (result.ok) cccNetMail.sendConnectionNotification(result.otherPerson, req.networkPerson).catch(e => console.error('[ccc-network] connect notify error:', e.message));
+});
+
+app.get('/ccc-network/contacts.csv', requireNetworkSession, (req, res) => {
+  if (req.networkPerson.role !== 'brand' || !cccNet.PRIORITY_TIERS.includes(req.networkPerson.tier)) {
+    return res.status(403).send('Contact list export is available to Marketplace and Carnival sponsors.');
+  }
+  const rows = cccNet.listApprovedCreatorsForExport();
+  const cols = ['first_name','last_name','email','phone','handle','category','bio'];
+  const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const csv = [cols.join(','), ...rows.map(r => cols.map(c => esc(r[c])).join(','))].join('\n');
+  res.set('Content-Type', 'text/csv').set('Content-Disposition', 'attachment; filename="creator-carnival-contacts.csv"').send(csv);
+});
+
 app.use(requireAuth); // all other routes require auth in production
+
+// ── Creator Carnival Networking Hub — admin ─────────────────────────────────────
+app.get('/api/admin/ccc-network/people', (req, res) => {
+  const { role, status, tier } = req.query;
+  res.json({ ok: true, rows: cccNet.listAll({ role, status, tier }) });
+});
+
+app.get('/api/admin/ccc-network/people.csv', (req, res) => {
+  const { role, status, tier } = req.query;
+  const rows = cccNet.listAll({ role, status, tier });
+  const cols = ['id','uuid','role','tier','status','first_name','last_name','email','phone','brand_name','handle','category','looking_for','created_at','approved_at'];
+  const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const csv = [cols.join(','), ...rows.map(r => cols.map(c => esc(r[c])).join(','))].join('\n');
+  res.set('Content-Type', 'text/csv').set('Content-Disposition', 'attachment; filename="ccc-network-people.csv"').send(csv);
+});
+
+app.post('/api/admin/ccc-network/people/:uuid/status', express.json(), async (req, res) => {
+  const result = cccNet.setStatus(req.params.uuid, req.body || {});
+  res.status(result.ok ? 200 : (result.error === 'not_found' ? 404 : 400)).json(result);
+  if (result.ok && result.person.status === 'approved') {
+    const link = cccNet.createMagicLink(result.person.email);
+    if (link) cccNetMail.sendApprovalEmail(link.person, link.token).catch(e => console.error('[ccc-network] approval email error:', e.message));
+  }
+});
+
+// ── CCC booth signups — admin ───────────────────────────────────────────────────
+// Replaces browsing the Lark grid. Manual status endpoint is the Paid/Expired/
+// Cancelled fallback until a real Stripe webhook is wired up (no keys yet).
+app.get('/api/admin/ccc-booth-signups', (req, res) => {
+  const { booth_type, status } = req.query;
+  res.json({ ok: true, rows: cccBooths.listAll({ booth_type, status }) });
+});
+
+app.get('/api/admin/ccc-booth-signups.csv', (req, res) => {
+  const { booth_type, status } = req.query;
+  const rows = cccBooths.listAll({ booth_type, status });
+  const cols = ['id','reservation_id','booth_type','submission_time','first_name','last_name','email','brand_name','product_category','status','payment_url','invited_by','created_at'];
+  const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const csv = [cols.join(','), ...rows.map(r => cols.map(c => esc(r[c])).join(','))].join('\n');
+  res.set('Content-Type', 'text/csv').set('Content-Disposition', 'attachment; filename="ccc-booth-signups.csv"').send(csv);
+});
+
+app.post('/api/admin/ccc-booth-signups/:reservationId/status', express.json(), (req, res) => {
+  const result = cccBooths.setStatus(req.params.reservationId, req.body?.status);
+  res.status(result.ok ? 200 : (result.error === 'not_found' ? 404 : 400)).json(result);
+});
 
 // POST /api/client/admin/set-password — CF Access protected; sets/resets a client's login password
 app.post('/api/client/admin/set-password', express.json(), async (req, res) => {

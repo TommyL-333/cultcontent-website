@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Log In &mdash; Creator Carnival Networking</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'] },
+          colors: {
+            background: '#0a0a0b', foreground: '#f4f4f5',
+            card: '#141416', 'card-foreground': '#f4f4f5',
+            border: '#26262b', input: '#26262b', ring: '#00c2cb',
+            primary: '#00c2cb', 'primary-foreground': '#04121a',
+            secondary: '#1c1c1f', 'secondary-foreground': '#f4f4f5',
+            muted: '#1c1c1f', 'muted-foreground': '#9a9aa2',
+            accent: '#1c1c1f', 'accent-foreground': '#f4f4f5',
+            destructive: '#f0506e', 'destructive-foreground': '#fff1f3',
+            gold: '#d4af37',
+          },
+        },
+      },
+    };
+  </script>
+</head>
+<body class="bg-background text-foreground font-sans antialiased min-h-screen">
+<div class="min-h-screen flex items-center justify-center px-5 py-16">
+  <div class="w-full max-w-sm text-center">
+    <a href="https://cultcontent.cc" class="flex items-center justify-center gap-2.5 mb-10">
+      <img src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/68529ceff63e1913ceb4e2e0.png" alt="Cult Content" class="h-6" />
+      <span class="text-[11px] font-bold uppercase tracking-[.14em] text-muted-foreground">Creator Carnival</span>
+    </a>
+
+    <div id="form-view">
+      <h1 class="text-2xl font-extrabold tracking-tight mb-2.5">Welcome back.</h1>
+      <p class="text-sm text-muted-foreground leading-relaxed mb-6">Enter the email you registered with — we'll send you a one-click login link.</p>
+      <div class="rounded-xl border border-border bg-card shadow-sm p-6 text-left">
+        <label class="block text-xs font-medium text-muted-foreground mb-1.5 uppercase tracking-wide">Email</label>
+        <input id="email" type="email" placeholder="you@example.com" class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+        <button id="btn" onclick="sendLink()" class="w-full mt-4 inline-flex items-center justify-center gap-2 rounded-md h-11 px-5 text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:pointer-events-none disabled:opacity-50">Send Login Link &rarr;</button>
+      </div>
+      <a href="/ccc-network" class="block text-center mt-6 text-[13px] text-muted-foreground hover:text-primary transition-colors">Not on the roster yet? Sign up &rarr;</a>
+    </div>
+
+    <div id="sent" class="hidden rounded-xl border border-border bg-card shadow-sm p-8">
+      <i class="fa-solid fa-envelope-circle-check text-4xl text-primary mb-4"></i>
+      <h1 class="text-lg font-bold mb-2">Check your inbox</h1>
+      <p class="text-sm text-muted-foreground leading-relaxed">If that email is on the roster, a login link is on its way — it expires in 30 minutes.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+async function sendLink() {
+  const email = document.getElementById('email').value.trim();
+  if (!email) return;
+  const btn = document.getElementById('btn');
+  btn.disabled = true; btn.textContent = 'Sending…';
+  try {
+    await fetch('/ccc-network/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
+  } catch (_) {}
+  document.getElementById('form-view').classList.add('hidden');
+  document.getElementById('sent').classList.remove('hidden');
+}
+</script>
+</body>
+</html>
