@@ -1,21 +1,28 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button, Card, Chip, Input } from '@heroui/react';
 import Topbar from '../components/Topbar';
 import { connect, getDirectory } from '../api';
 
+// Connect is now a request, not an instant reveal — the button reflects
+// pending/accepted state (best-effort from this click; a fresh page load
+// still shows "Connect →" for an existing request until clicked again,
+// since the directory listing doesn't carry relationship state — clicking
+// again is harmless, the backend just returns the current status).
 function PersonCard({ person }) {
-  const [connecting, setConnecting] = useState(false);
-  const [contact, setContact] = useState(null);
+  const navigate = useNavigate();
+  const [status, setStatus] = useState(null); // null | 'pending' | 'accepted'
+  const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const org = person.role === 'brand' ? person.brand_name : (person.handle ? `@${person.handle.replace(/^@/, '')}` : '');
 
   async function handleConnect() {
-    setConnecting(true);
+    setBusy(true);
     setErr('');
     const j = await connect(person.uuid);
-    setConnecting(false);
+    setBusy(false);
     if (!j.ok) { setErr(j.error || 'Could not connect.'); return; }
-    setContact(j.otherPerson);
+    setStatus(j.status);
   }
 
   return (
@@ -29,19 +36,16 @@ function PersonCard({ person }) {
           <b className="text-zinc-300 font-semibold">Looking for:</b> {person.looking_for}
         </div>
       )}
-      {contact ? (
-        <div className="rounded-md border border-cyan-500/25 bg-cyan-500/5 px-3.5 py-2.5 text-[13px]">
-          Email: {contact.email}
-          {contact.phone ? <><br />Phone: {contact.phone}</> : null}
-        </div>
+      {status === 'accepted' ? (
+        <Button size="sm" variant="outline" onPress={() => navigate(`/people/${person.uuid}`)}>Connected — view profile &rarr;</Button>
+      ) : status === 'pending' ? (
+        <Button size="sm" variant="outline" isDisabled>Request sent</Button>
       ) : (
-        <>
-          <Button size="sm" variant="primary" isDisabled={connecting} onPress={handleConnect}>
-            {connecting ? 'Connecting…' : 'Connect →'}
-          </Button>
-          {err && <p className="text-xs text-red-400 mt-2">{err}</p>}
-        </>
+        <Button size="sm" variant="primary" isDisabled={busy} onPress={handleConnect}>
+          {busy ? 'Sending…' : 'Connect →'}
+        </Button>
       )}
+      {err && <p className="text-xs text-red-400 mt-2">{err}</p>}
     </Card>
   );
 }
@@ -93,7 +97,7 @@ export default function DirectoryScreen({ person }) {
       <div className="max-w-3xl mx-auto px-5 pb-20">
         <h1 className="text-3xl font-extrabold tracking-tight mb-2">The roster</h1>
         <p className="text-sm text-zinc-400 mb-6">
-          {person.role === 'creator' ? 'Brands and fellow creators' : 'Creators looking to collab'} — search, filter, and connect. Connecting shares contact info both ways.
+          {person.role === 'creator' ? 'Brands and fellow creators' : 'Creators looking to collab'} — search, filter, and connect. Connecting sends a request; contact info unlocks once they accept.
         </p>
         <Input
           value={q}

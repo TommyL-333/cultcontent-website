@@ -21,6 +21,7 @@ ffmpeg.setFfmpegPath(ffmpegPath);
 const cccBooths     = require('./lib/ccc-booths');
 const cccNet        = require('./lib/ccc-network');
 const cccNetMail    = require('./lib/ccc-network-mail');
+const cccNetMsg     = require('./lib/ccc-network-messages');
 const CCC_NETWORK_APP_DIST = path.join(__dirname, 'ccc-network-app', 'dist');
 
 // ─── Data directory — use Railway Volume in prod, __dirname locally ───────────
@@ -2447,7 +2448,7 @@ app.get('/ccc-network/auth/:token', (req, res) => {
   if (!result.ok) return res.status(400).send(`<p style="font-family:sans-serif;text-align:center;padding:80px 20px;">Link ${result.error === 'expired' ? 'expired' : 'invalid'} — <a href="/ccc-network/login">request a new one</a>.</p>`);
   req.session.networkPersonId = result.person.id;
   const incomplete = !result.person.bio && !result.person.looking_for;
-  res.redirect(incomplete ? '/ccc-network/profile' : '/ccc-network/directory');
+  res.redirect(incomplete ? '/ccc-network/settings' : '/ccc-network/home');
 });
 
 app.get('/ccc-network/logout', (req, res) => {
@@ -2468,10 +2469,83 @@ app.get('/api/ccc-network/directory.json', requireNetworkSession, (req, res) => 
   res.json(cccNet.listDirectory(req.networkPerson));
 });
 
+// POST /ccc-network/connect/:uuid — sends (or re-sends after a decline) a
+// connection request. No contact info in the response anymore — that only
+// unlocks once the recipient accepts (see /connections/:uuid/accept below).
 app.post('/ccc-network/connect/:uuid', requireNetworkSession, (req, res) => {
   const result = cccNet.connect(req.networkPerson.id, req.params.uuid);
   res.status(result.ok ? 200 : 400).json(result);
-  if (result.ok) cccNetMail.sendConnectionNotification(result.otherPerson, req.networkPerson).catch(e => console.error('[ccc-network] connect notify error:', e.message));
+  if (result.ok && result.status === 'pending' && result.otherPerson) {
+    cccNetMail.sendConnectionRequestEmail(result.otherPerson, req.networkPerson).catch(e => console.error('[ccc-network] connect-request email error:', e.message));
+  }
+});
+
+app.post('/ccc-network/connections/:uuid/accept', requireNetworkSession, (req, res) => {
+  const result = cccNet.respondToConnection(req.networkPerson.id, req.params.uuid, true);
+  res.status(result.ok ? 200 : 400).json(result);
+  if (result.ok) cccNetMail.sendConnectionAcceptedEmail(result.otherPerson, req.networkPerson).catch(e => console.error('[ccc-network] connect-accepted email error:', e.message));
+});
+
+app.post('/ccc-network/connections/:uuid/decline', requireNetworkSession, (req, res) => {
+  const result = cccNet.respondToConnection(req.networkPerson.id, req.params.uuid, false);
+  res.status(result.ok ? 200 : 400).json(result);
+});
+
+app.get('/api/ccc-network/connections', requireNetworkSession, (req, res) => {
+  res.json({ ok: true, ...cccNet.listConnections(req.networkPerson.id) });
+});
+
+app.get('/api/ccc-network/people/:uuid', requireNetworkSession, (req, res) => {
+  const profile = cccNet.getPersonProfile(req.networkPerson.id, req.params.uuid);
+  if (!profile) return res.status(404).json({ ok: false, error: 'not_found' });
+  res.json({ ok: true, person: profile });
+});
+
+// ── Inbox / messaging — only between accepted connections ──────────────────────
+app.get('/api/ccc-network/inbox', requireNetworkSession, (req, res) => {
+  res.json({ ok: true, conversations: cccNetMsg.listInbox(req.networkPerson.id), unread: cccNetMsg.unreadCount(req.networkPerson.id) });
+});
+
+app.get('/api/ccc-network/messages/:uuid', requireNetworkSession, (req, res) => {
+  const result = cccNetMsg.listThread(req.networkPerson.id, req.params.uuid);
+  res.status(result.ok ? 200 : 400).json(result);
+});
+
+app.post('/ccc-network/messages/:uuid', requireNetworkSession, express.json(), (req, res) => {
+  const result = cccNetMsg.sendMessage(req.networkPerson.id, req.params.uuid, req.body?.body);
+  res.status(result.ok ? 200 : 400).json(result);
+  if (result.ok) cccNetMail.sendNewMessageEmail(result.otherPerson, req.networkPerson).catch(e => console.error('[ccc-network] new-message email error:', e.message));
+});
+
+// ── Settings ─────────────────────────────────────────────────────────────────────
+app.post('/ccc-network/settings/notifications', requireNetworkSession, express.json(), (req, res) => {
+  const person = cccNet.setNotificationPrefs(req.networkPerson.id, req.body || {});
+  res.json({ ok: true, person });
+});
+
+app.post('/ccc-network/settings/tier', requireNetworkSession, express.json(), (req, res) => {
+  if (req.networkPerson.role !== 'brand') return res.status(400).json({ ok: false, error: 'creators do not have a tier' });
+  const result = cccNet.setTierRequest(req.networkPerson.id, req.body?.tier);
+  res.status(result.ok ? 200 : 400).json(result);
+});
+
+app.post('/ccc-network/settings/deactivate', requireNetworkSession, (req, res) => {
+  cccNet.deactivate(req.networkPerson.id);
+  delete req.session.networkPersonId;
+  res.json({ ok: true });
+});
+
+app.post('/ccc-network/settings/email', requireNetworkSession, express.json(), (req, res) => {
+  const result = cccNet.requestEmailChange(req.networkPerson.id, req.body?.email);
+  if (!result.ok) return res.status(400).json(result);
+  res.json({ ok: true });
+  cccNetMail.sendEmailChangeVerification(req.networkPerson, result.newEmail, result.token).catch(e => console.error('[ccc-network] email-change verification error:', e.message));
+});
+
+app.get('/ccc-network/settings/email/confirm/:token', (req, res) => {
+  const result = cccNet.confirmEmailChange(req.params.token);
+  if (!result.ok) return res.status(400).send(`<p style="font-family:sans-serif;text-align:center;padding:80px 20px;">Link ${result.error === 'expired' ? 'expired' : 'invalid'}.</p>`);
+  res.redirect('/ccc-network/settings');
 });
 
 app.get('/ccc-network/contacts.csv', requireNetworkSession, (req, res) => {
