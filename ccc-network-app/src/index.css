@@ -2,11 +2,34 @@
 @import "tailwindcss";
 @import "@heroui/styles";
 
+/*
+ * HeroUI's own theme (@heroui/styles) only defines background/foreground/
+ * surface/overlay/accent/default/muted/border — not the shadcn-style
+ * primary/card/secondary/muted-foreground/input/ring names this app's
+ * components were written against. Those classes were compiling to nothing
+ * (Tailwind v4 silently drops an unmatched utility, no build error) —
+ * this is what made the avatar dropdown menu unreadable: its popover
+ * background genuinely had no color declared. Aliasing our names onto
+ * HeroUI's real tokens fixes every screen that used them, not just the one
+ * that got reported.
+ */
+@theme inline {
+  --color-card: var(--surface);
+  --color-card-foreground: var(--surface-foreground);
+  --color-primary: var(--accent);
+  --color-primary-foreground: var(--accent-foreground);
+  --color-secondary: var(--default);
+  --color-secondary-foreground: var(--default-foreground);
+  --color-muted-foreground: var(--muted);
+  --color-input: var(--field-border, var(--border));
+  --color-ring: var(--focus);
+}
+
 :root {
   font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
 }
 
 body {
-  background: #0a0a0b;
-  color: #f4f4f5;
+  background: var(--background);
+  color: var(--foreground);
 }
