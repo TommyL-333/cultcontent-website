@@ -1,11 +1,23 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
+import { formatDistanceToNowStrict } from 'date-fns';
+import { toast } from 'sonner';
 import { Avatar, Button, Card } from '@heroui/react';
 import Topbar from '../components/Topbar';
 import { getInbox, getThread, sendMessageTo } from '../api';
 import { initialsOf, colorOf, displayName } from '../lib/avatar';
 
 const POLL_MS = 4000;
+
+// SQLite's datetime('now') returns UTC as "YYYY-MM-DD HH:MM:SS" — no 'T', no
+// zone marker. Parsed as-is, most JS engines treat that as *local* time,
+// which would skew every relative timestamp by the viewer's UTC offset.
+function fromSqliteUtc(str) {
+  return new Date(str.replace(' ', 'T') + 'Z');
+}
+function timeAgo(str) {
+  return formatDistanceToNowStrict(fromSqliteUtc(str), { addSuffix: true });
+}
 
 function ConversationRow({ c, active, onClick }) {
   return (
@@ -21,6 +33,7 @@ function ConversationRow({ c, active, onClick }) {
         </div>
         <div className="text-xs text-zinc-500 truncate">{c.lastMessage ? `${c.lastMessage.fromMe ? 'You: ' : ''}${c.lastMessage.body}` : 'Say hi — no messages yet'}</div>
       </div>
+      {c.lastMessage && <div className="text-[10px] text-zinc-600 whitespace-nowrap self-start pt-0.5">{timeAgo(c.lastMessage.created_at)}</div>}
     </div>
   );
 }
@@ -66,6 +79,9 @@ export default function InboxScreen({ person }) {
     if (j.ok) {
       getThread(uuid).then((t) => t.ok && setThread(t));
       getInbox().then((c) => c.ok && setConversations(c.conversations));
+    } else {
+      toast.error(j.error || 'Could not send message.');
+      setDraft(body); // give it back so nothing's lost
     }
   }
 
@@ -106,8 +122,11 @@ export default function InboxScreen({ person }) {
                   {thread.messages.map((m) => {
                     const fromMe = m.from_person_id === person?.id;
                     return (
-                      <div key={m.id} className={`max-w-[75%] px-3.5 py-2 rounded-lg text-sm ${fromMe ? 'self-end bg-primary text-primary-foreground' : 'self-start bg-secondary text-foreground'}`}>
-                        {m.body}
+                      <div key={m.id} className={`flex flex-col max-w-[75%] ${fromMe ? 'self-end items-end' : 'self-start items-start'}`}>
+                        <div className={`px-3.5 py-2 rounded-lg text-sm ${fromMe ? 'bg-primary text-primary-foreground' : 'bg-secondary text-foreground'}`}>
+                          {m.body}
+                        </div>
+                        <div className="text-[10px] text-zinc-600 mt-1 px-0.5">{timeAgo(m.created_at)}</div>
                       </div>
                     );
                   })}

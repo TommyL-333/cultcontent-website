@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { Toaster } from 'sonner';
 import { me } from './api';
 import SignupScreen from './screens/SignupScreen';
 import LoginScreen from './screens/LoginScreen';
@@ -30,6 +31,7 @@ export default function App() {
 
   return (
     <BrowserRouter basename="/ccc-network">
+      <Toaster theme="dark" richColors position="top-center" />
       <Routes>
         <Route path="/" element={person ? <Navigate to="/home" replace /> : <SignupScreen />} />
         <Route path="/login" element={person ? <Navigate to="/home" replace /> : <LoginScreen />} />

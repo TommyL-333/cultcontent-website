@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { Avatar, Button, Card, Tabs } from '@heroui/react';
 import Topbar from '../components/Topbar';
 import { acceptConnection, declineConnection, getConnections } from '../api';
@@ -29,18 +30,24 @@ export default function ConnectionsScreen({ person }) {
   }
   useEffect(load, []);
 
-  async function handleAccept(e, uuid) {
-    e.stopPropagation();
+  // Accept/Decline buttons sit inside a wrapping div whose native onClick
+  // already stops propagation before it reaches the row's onClick (below) —
+  // React Aria's onPress event isn't a native DOM event, so that's done at
+  // the real DOM level rather than relying on e.stopPropagation() here.
+  async function handleAccept(uuid, name) {
     setBusyUuid(uuid);
-    await acceptConnection(uuid);
+    const j = await acceptConnection(uuid);
     setBusyUuid(null);
+    if (j.ok) toast.success(`Connected with ${name} — you can now message them.`);
+    else toast.error(j.error || 'Could not accept.');
     load();
   }
-  async function handleDecline(e, uuid) {
-    e.stopPropagation();
+  async function handleDecline(uuid, name) {
     setBusyUuid(uuid);
-    await declineConnection(uuid);
+    const j = await declineConnection(uuid);
     setBusyUuid(null);
+    if (j.ok) toast(`Declined ${name}'s request.`);
+    else toast.error(j.error || 'Could not decline.');
     load();
   }
 
@@ -86,8 +93,8 @@ export default function ConnectionsScreen({ person }) {
                 onClick={() => navigate(`/people/${p.uuid}`)}
                 right={tab === 'incoming' ? (
                   <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-                    <Button size="sm" variant="primary" isDisabled={busyUuid === p.uuid} onPress={(e) => handleAccept(e, p.uuid)}>Accept</Button>
-                    <Button size="sm" variant="outline" isDisabled={busyUuid === p.uuid} onPress={(e) => handleDecline(e, p.uuid)}>Decline</Button>
+                    <Button size="sm" variant="primary" isDisabled={busyUuid === p.uuid} onPress={() => handleAccept(p.uuid, displayName(p))}>Accept</Button>
+                    <Button size="sm" variant="outline" isDisabled={busyUuid === p.uuid} onPress={() => handleDecline(p.uuid, displayName(p))}>Decline</Button>
                   </div>
                 ) : tab === 'outgoing' ? (
                   <span className="text-xs text-zinc-500">Pending</span>

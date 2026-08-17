@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { Button, Card, Chip, Input } from '@heroui/react';
 import Topbar from '../components/Topbar';
 import { connect, getDirectory } from '../api';
@@ -13,16 +14,16 @@ function PersonCard({ person }) {
   const navigate = useNavigate();
   const [status, setStatus] = useState(null); // null | 'pending' | 'accepted'
   const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState('');
   const org = person.role === 'brand' ? person.brand_name : (person.handle ? `@${person.handle.replace(/^@/, '')}` : '');
+  const name = `${person.first_name} ${person.last_name || ''}`.trim();
 
   async function handleConnect() {
     setBusy(true);
-    setErr('');
     const j = await connect(person.uuid);
     setBusy(false);
-    if (!j.ok) { setErr(j.error || 'Could not connect.'); return; }
+    if (!j.ok) { toast.error(j.error || 'Could not connect.'); return; }
     setStatus(j.status);
+    toast.success(j.status === 'accepted' ? `You're already connected with ${name}` : `Request sent to ${name}`);
   }
 
   return (
@@ -45,7 +46,6 @@ function PersonCard({ person }) {
           {busy ? 'Sending…' : 'Connect →'}
         </Button>
       )}
-      {err && <p className="text-xs text-red-400 mt-2">{err}</p>}
     </Card>
   );
 }

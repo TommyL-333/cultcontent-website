@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
+import { motion, AnimatePresence } from 'motion/react';
+import { toast } from 'sonner';
 import { Alert, Button, Card, Input, Label, ListBox, ListBoxItem, Select, Tabs, TextArea } from '@heroui/react';
 import { signup } from '../api';
 
@@ -49,25 +51,31 @@ export default function SignupScreen() {
     };
     const j = await signup(payload);
     setSubmitting(false);
-    if (j.ok) { setDone(true); return; }
+    if (j.ok) { toast.success("You're on the list — Tommy's team will review it."); setDone(true); return; }
     if (j.error === 'already_registered') {
       setError(`That email is already on the roster (status: ${j.status}). Try logging in instead.`);
     } else {
       setError(j.error || 'Something went wrong.');
+      toast.error(j.error || 'Something went wrong.');
     }
   }
 
   if (done) {
     return (
       <div className="min-h-screen flex items-center justify-center px-5 py-16">
-        <div className="w-full max-w-xl text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 14, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.4, ease: 'easeOut' }}
+          className="w-full max-w-xl text-center"
+        >
           <Card variant="default" className="p-8">
             <h2 className="text-xl font-bold mb-2">You&rsquo;re on the list.</h2>
             <p className="text-sm text-zinc-400 leading-relaxed">
               Tommy&rsquo;s team reviews every roster application. Once you&rsquo;re approved, we&rsquo;ll email you a login link to browse the directory and start connecting.
             </p>
           </Card>
-        </div>
+        </motion.div>
       </div>
     );
   }
@@ -75,17 +83,23 @@ export default function SignupScreen() {
   return (
     <div className="min-h-screen flex items-center justify-center px-5 py-16">
       <div className="w-full max-w-xl">
-        <a href="https://cultcontent.cc" className="flex items-center justify-center gap-2.5 mb-10">
+        <motion.a
+          href="https://cultcontent.cc"
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35 }}
+          className="flex items-center justify-center gap-2.5 mb-10"
+        >
           <img src={BRAND_LOGO} alt="Cult Content" className="h-6" />
           <span className="text-[11px] font-bold uppercase tracking-[.14em] text-zinc-400">Creator Carnival</span>
-        </a>
+        </motion.a>
 
-        <div className="text-center mb-8">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.05 }} className="text-center mb-8">
           <h1 className="text-4xl sm:text-[2.75rem] font-extrabold tracking-tight leading-[1.08] mb-4">Meet your collab era.</h1>
           <p className="text-sm text-zinc-400 leading-relaxed max-w-md mx-auto">
             1,000+ creators and 100+ brands, all in one roster. Sign up, get approved, and start connecting before you even set foot on the floor.
           </p>
-        </div>
+        </motion.div>
 
         <Tabs selectedKey={role} onSelectionChange={setRole} className="mb-5">
           <Tabs.List>
@@ -98,6 +112,7 @@ export default function SignupScreen() {
           <Tabs.Panel id="brand" />
         </Tabs>
 
+        <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }}>
         <Card variant="default" className="p-6 sm:p-7">
           {error && (
             <Alert status="danger" className="mb-4">
@@ -114,11 +129,15 @@ export default function SignupScreen() {
             <div><Label>Email</Label><Input type="email" value={form.email} onChange={set('email')} placeholder="you@example.com" fullWidth /></div>
             <div><Label>Phone (optional)</Label><Input value={form.phone} onChange={set('phone')} placeholder="(555) 555-5555" fullWidth /></div>
 
-            {role === 'creator' ? (
-              <div><Label>TikTok / IG handle</Label><Input value={form.handle} onChange={set('handle')} placeholder="@yourhandle" fullWidth /></div>
-            ) : (
-              <div><Label>Brand name</Label><Input value={form.brand_name} onChange={set('brand_name')} placeholder="Your Brand" fullWidth /></div>
-            )}
+            <AnimatePresence mode="wait">
+              <motion.div key={role} initial={{ opacity: 0, x: role === 'creator' ? -8 : 8 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.2 }}>
+                {role === 'creator' ? (
+                  <div><Label>TikTok / IG handle</Label><Input value={form.handle} onChange={set('handle')} placeholder="@yourhandle" fullWidth /></div>
+                ) : (
+                  <div><Label>Brand name</Label><Input value={form.brand_name} onChange={set('brand_name')} placeholder="Your Brand" fullWidth /></div>
+                )}
+              </motion.div>
+            </AnimatePresence>
 
             <div>
               <Label>{role === 'creator' ? 'Content niche' : 'Product category'}</Label>
@@ -161,6 +180,7 @@ export default function SignupScreen() {
             <RouterLink to="/login" className="text-[13px] text-zinc-400 hover:text-cyan-400 transition-colors">Already approved? Log in &rarr;</RouterLink>
           </div>
         </Card>
+        </motion.div>
 
         <div className="text-center mt-8 text-[11px] text-zinc-500 tracking-wide">
           September 12, 2026 · National Harbor, MD &nbsp;&middot;&nbsp;

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { Alert, Button, Card, Input, Label, ListBox, ListBoxItem, Select, Switch, TextArea } from '@heroui/react';
 import Topbar from '../components/Topbar';
 import { deactivateAccount, requestEmailChange, saveProfile, updateNotifications, updateTier } from '../api';
@@ -53,8 +54,9 @@ export default function SettingsScreen({ person, onSaved }) {
       links: form.links.split('\n').map((s) => s.trim()).filter(Boolean).map((url) => ({ label: 'Link', url })),
     };
     const j = await saveProfile(payload);
-    if (!j.ok) { setProfileErr(j.error || 'Save failed.'); return; }
+    if (!j.ok) { setProfileErr(j.error || 'Save failed.'); toast.error(j.error || 'Save failed.'); return; }
     setSaved(true);
+    toast.success('Profile saved.');
     setTimeout(() => setSaved(false), 2500);
     onSaved?.();
   }
@@ -64,6 +66,7 @@ export default function SettingsScreen({ person, onSaved }) {
     setNotify(next);
     await updateNotifications(next);
     setNotifySaved(true);
+    toast.success('Notification preferences saved.');
     setTimeout(() => setNotifySaved(false), 2000);
   }
 
@@ -72,8 +75,11 @@ export default function SettingsScreen({ person, onSaved }) {
     const j = await updateTier(value);
     if (j.ok) {
       setTierSaved(true);
+      toast.success('Sponsorship tier updated.');
       setTimeout(() => setTierSaved(false), 2000);
       onSaved?.();
+    } else {
+      toast.error(j.error || 'Could not update tier.');
     }
   }
 
@@ -81,12 +87,14 @@ export default function SettingsScreen({ person, onSaved }) {
     e.preventDefault();
     setEmailErr('');
     const j = await requestEmailChange(newEmail);
-    if (!j.ok) { setEmailErr(j.error || 'Could not start email change.'); return; }
+    if (!j.ok) { setEmailErr(j.error || 'Could not start email change.'); toast.error(j.error || 'Could not start email change.'); return; }
     setEmailSent(true);
+    toast.success(`Verification link sent to ${newEmail}.`);
   }
 
   async function handleDeactivate() {
     await deactivateAccount();
+    toast('Account deactivated.');
     window.location.href = '/ccc-network/login';
   }
 

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { toast } from 'sonner';
 import { Button } from '@heroui/react';
 import Topbar from '../components/Topbar';
 import PersonDetailCard from '../components/PersonDetailCard';
@@ -21,23 +22,25 @@ export default function PersonProfileScreen({ person }) {
     if (target?.relationship === 'self') navigate('/profile', { replace: true });
   }, [target, navigate]);
 
+  const name = target ? `${target.first_name} ${target.last_name || ''}`.trim() : '';
+
   async function handleConnect() {
     setBusy(true);
     const j = await connect(uuid);
     setBusy(false);
-    if (j.ok) load(); else setErr(j.error || 'Could not connect.');
+    if (j.ok) { toast.success(`Request sent to ${name}`); load(); } else toast.error(j.error || 'Could not connect.');
   }
   async function handleAccept() {
     setBusy(true);
     const j = await acceptConnection(uuid);
     setBusy(false);
-    if (j.ok) load(); else setErr(j.error || 'Could not accept.');
+    if (j.ok) { toast.success(`Connected with ${name} — you can now message them.`); load(); } else toast.error(j.error || 'Could not accept.');
   }
   async function handleDecline() {
     setBusy(true);
     const j = await declineConnection(uuid);
     setBusy(false);
-    if (j.ok) load(); else setErr(j.error || 'Could not decline.');
+    if (j.ok) { toast(`Declined ${name}'s request.`); load(); } else toast.error(j.error || 'Could not decline.');
   }
 
   if (err && !target) {
