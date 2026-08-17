@@ -7,7 +7,10 @@
     "start": "node dashboard-server.js",
     "dev": "node --watch dashboard-server.js",
     "build": "npm install --prefix ccc-network-app && npm run build --prefix ccc-network-app",
-    "dev:network": "npm run dev --prefix ccc-network-app"
+    "dev:network": "npm run dev --prefix ccc-network-app",
+    "test": "node --test",
+    "test:unit": "node --test test/lib/*.test.js",
+    "test:integration": "node --test test/integration/*.test.js"
   },
   "engines": {
     "node": ">=20"
