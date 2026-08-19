@@ -47,7 +47,7 @@ export default function PersonProfileScreen({ person }) {
     return (
       <div>
         <Topbar person={person} />
-        <div className="max-w-2xl mx-auto px-5 pb-20 text-center text-sm text-zinc-500 py-20">{err}</div>
+        <div className="max-w-2xl mx-auto px-5 pb-20 text-center text-sm text-muted-foreground py-20">{err}</div>
       </div>
     );
   }
@@ -55,7 +55,7 @@ export default function PersonProfileScreen({ person }) {
     return (
       <div>
         <Topbar person={person} />
-        <div className="text-center text-sm text-zinc-500 py-20">Loading…</div>
+        <div className="text-center text-sm text-muted-foreground py-20">Loading…</div>
       </div>
     );
   }
@@ -83,7 +83,7 @@ export default function PersonProfileScreen({ person }) {
         <PersonDetailCard
           person={target}
           actions={actions}
-          extra={err && <p className="text-xs text-red-400 mb-3">{err}</p>}
+          extra={err && <p className="text-xs text-primary mb-3">{err}</p>}
         />
       </div>
     </div>

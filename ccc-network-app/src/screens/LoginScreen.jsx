@@ -33,21 +33,21 @@ export default function LoginScreen() {
           className="flex items-center justify-center gap-2.5 mb-10"
         >
           <img src={BRAND_LOGO} alt="Cult Content" className="h-6" />
-          <span className="text-[11px] font-bold uppercase tracking-[.14em] text-zinc-400">Creator Carnival</span>
+          <span className="text-[11px] font-bold uppercase tracking-[.14em] text-muted-foreground">Creator Carnival</span>
         </motion.a>
 
         <AnimatePresence mode="wait">
           {sent ? (
             <motion.div key="sent" initial={{ opacity: 0, y: 14, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.4, ease: 'easeOut' }}>
               <Card variant="default" className="p-8">
-                <h1 className="text-lg font-bold mb-2">Check your inbox</h1>
-                <p className="text-sm text-zinc-400 leading-relaxed">If that email is on the roster, a login link is on its way — it expires in 30 minutes.</p>
+                <h1 className="font-display text-lg font-bold mb-2">Check your inbox</h1>
+                <p className="text-sm text-muted-foreground leading-relaxed">If that email is on the roster, a login link is on its way — it expires in 30 minutes.</p>
               </Card>
             </motion.div>
           ) : (
             <motion.div key="form" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
-              <h1 className="text-2xl font-extrabold tracking-tight mb-2.5">Welcome back.</h1>
-              <p className="text-sm text-zinc-400 leading-relaxed mb-6">Enter the email you registered with — we&rsquo;ll send you a one-click login link.</p>
+              <h1 className="font-display text-2xl font-bold mb-2.5">Welcome back.</h1>
+              <p className="text-sm text-muted-foreground leading-relaxed mb-6">Enter the email you registered with — we&rsquo;ll send you a one-click login link.</p>
               <Card variant="default" className="p-6 text-left">
                 <form onSubmit={handleSubmit}>
                   <Label>Email</Label>
@@ -58,7 +58,7 @@ export default function LoginScreen() {
                 </form>
               </Card>
               <div className="mt-6">
-                <RouterLink to="/" className="text-[13px] text-zinc-400 hover:text-cyan-400 transition-colors">Not on the roster yet? Sign up &rarr;</RouterLink>
+                <RouterLink to="/" className="text-[13px] text-muted-foreground hover:text-accent-2 transition-colors">Not on the roster yet? Sign up &rarr;</RouterLink>
               </div>
             </motion.div>
           )}

@@ -4,7 +4,7 @@ import { Avatar, Dropdown } from '@heroui/react';
 import { getInbox } from '../api';
 import { initialsOf, colorOf } from '../lib/avatar';
 
-const navLinkCls = ({ isActive }) => `text-[13px] font-medium transition-colors ${isActive ? 'text-foreground' : 'text-zinc-400 hover:text-zinc-100'}`;
+const navLinkCls = ({ isActive }) => `text-[13px] font-medium transition-colors ${isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`;
 
 export default function Topbar({ person }) {
   const navigate = useNavigate();

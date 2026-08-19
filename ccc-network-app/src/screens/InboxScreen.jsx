@@ -31,9 +31,9 @@ function ConversationRow({ c, active, onClick }) {
           {displayName(c)}
           {c.unread > 0 && <span className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full bg-primary text-primary-foreground text-[9px] font-bold">{c.unread}</span>}
         </div>
-        <div className="text-xs text-zinc-500 truncate">{c.lastMessage ? `${c.lastMessage.fromMe ? 'You: ' : ''}${c.lastMessage.body}` : 'Say hi — no messages yet'}</div>
+        <div className="text-xs text-muted-foreground truncate">{c.lastMessage ? `${c.lastMessage.fromMe ? 'You: ' : ''}${c.lastMessage.body}` : 'Say hi — no messages yet'}</div>
       </div>
-      {c.lastMessage && <div className="text-[10px] text-zinc-600 whitespace-nowrap self-start pt-0.5">{timeAgo(c.lastMessage.created_at)}</div>}
+      {c.lastMessage && <div className="text-[10px] text-muted-foreground/70 whitespace-nowrap self-start pt-0.5">{timeAgo(c.lastMessage.created_at)}</div>}
     </div>
   );
 }
@@ -89,13 +89,13 @@ export default function InboxScreen({ person }) {
     <div>
       <Topbar person={person} />
       <div className="max-w-4xl mx-auto px-5 pb-20">
-        <h1 className="text-3xl font-extrabold tracking-tight mb-5">Inbox</h1>
+        <h1 className="font-display text-3xl font-bold mb-5">Inbox</h1>
         <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-5">
           <div className={`${uuid ? 'hidden md:block' : ''}`}>
             {conversations === null ? (
-              <div className="text-sm text-zinc-500 py-6 text-center">Loading…</div>
+              <div className="text-sm text-muted-foreground py-6 text-center">Loading…</div>
             ) : conversations.length === 0 ? (
-              <div className="text-sm text-zinc-500 py-6 text-center">No conversations yet — connect with someone first.</div>
+              <div className="text-sm text-muted-foreground py-6 text-center">No conversations yet — connect with someone first.</div>
             ) : (
               <div className="flex flex-col gap-1">
                 {conversations.map((c) => (
@@ -107,18 +107,18 @@ export default function InboxScreen({ person }) {
 
           <div className={uuid ? '' : 'hidden md:flex md:items-center md:justify-center'}>
             {!uuid ? (
-              <div className="text-sm text-zinc-500">Pick a conversation to start messaging.</div>
+              <div className="text-sm text-muted-foreground">Pick a conversation to start messaging.</div>
             ) : !thread ? (
-              <div className="text-sm text-zinc-500 py-6 text-center">Loading…</div>
+              <div className="text-sm text-muted-foreground py-6 text-center">Loading…</div>
             ) : (
               <Card variant="default" className="flex flex-col h-[70vh]">
                 <div className="flex items-center gap-3 p-4 border-b border-border">
-                  <RouterLink to="/inbox" className="md:hidden text-zinc-400 hover:text-foreground">&larr;</RouterLink>
+                  <RouterLink to="/inbox" className="md:hidden text-muted-foreground hover:text-foreground">&larr;</RouterLink>
                   <Avatar color={colorOf(thread.otherPerson)} size="sm"><Avatar.Fallback>{initialsOf(thread.otherPerson)}</Avatar.Fallback></Avatar>
                   <RouterLink to={`/people/${uuid}`} className="text-sm font-bold hover:text-primary transition-colors">{displayName(thread.otherPerson)}</RouterLink>
                 </div>
                 <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-2.5">
-                  {thread.messages.length === 0 && <div className="text-sm text-zinc-500 text-center py-6">No messages yet — say hi.</div>}
+                  {thread.messages.length === 0 && <div className="text-sm text-muted-foreground text-center py-6">No messages yet — say hi.</div>}
                   {thread.messages.map((m) => {
                     const fromMe = m.from_person_id === person?.id;
                     return (
@@ -126,7 +126,7 @@ export default function InboxScreen({ person }) {
                         <div className={`px-3.5 py-2 rounded-lg text-sm ${fromMe ? 'bg-primary text-primary-foreground' : 'bg-secondary text-foreground'}`}>
                           {m.body}
                         </div>
-                        <div className="text-[10px] text-zinc-600 mt-1 px-0.5">{timeAgo(m.created_at)}</div>
+                        <div className="text-[10px] text-muted-foreground/70 mt-1 px-0.5">{timeAgo(m.created_at)}</div>
                       </div>
                     );
                   })}

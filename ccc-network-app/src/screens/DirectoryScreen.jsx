@@ -30,11 +30,11 @@ function PersonCard({ person }) {
     <Card variant="default" className="p-5">
       <Chip color={person.role === 'brand' ? 'warning' : 'accent'} size="sm">{person.role === 'brand' ? 'Brand' : 'Creator'}</Chip>
       <div className="text-base font-bold mt-2.5">{person.first_name} {person.last_name} {org ? `· ${org}` : ''}</div>
-      <div className="text-xs text-zinc-500 mt-0.5 mb-3">{person.category}</div>
-      {person.bio && <div className="text-[13px] text-zinc-300 leading-relaxed mb-2.5">{person.bio}</div>}
+      <div className="text-xs text-muted-foreground mt-0.5 mb-3">{person.category}</div>
+      {person.bio && <div className="text-[13px] text-foreground/80 leading-relaxed mb-2.5">{person.bio}</div>}
       {person.looking_for && (
-        <div className="text-xs text-zinc-400 mb-3.5">
-          <b className="text-zinc-300 font-semibold">Looking for:</b> {person.looking_for}
+        <div className="text-xs text-muted-foreground mb-3.5">
+          <b className="text-foreground/80 font-semibold">Looking for:</b> {person.looking_for}
         </div>
       )}
       {status === 'accepted' ? (
@@ -69,7 +69,7 @@ export default function DirectoryScreen({ person }) {
     return (
       <div>
         <Topbar person={person} />
-        <div className="text-center text-sm text-zinc-500 py-20">Loading…</div>
+        <div className="text-center text-sm text-muted-foreground py-20">Loading…</div>
       </div>
     );
   }
@@ -80,8 +80,8 @@ export default function DirectoryScreen({ person }) {
         <Topbar person={person} />
         <div className="max-w-2xl mx-auto px-5 pb-20">
           <Card variant="default" className="p-10 text-center">
-            <h1 className="text-2xl font-extrabold tracking-tight mb-3">Priority sponsors get first pick.</h1>
-            <p className="text-sm text-zinc-400 leading-relaxed max-w-sm mx-auto">
+            <h1 className="font-display text-2xl font-bold mb-3">Priority sponsors get first pick.</h1>
+            <p className="text-sm text-muted-foreground leading-relaxed max-w-sm mx-auto">
               Marketplace and Carnival sponsors have early access to the roster. General access opens{' '}
               {data.opensAt ? new Date(data.opensAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'soon'} — check back then.
             </p>
@@ -95,8 +95,8 @@ export default function DirectoryScreen({ person }) {
     <div>
       <Topbar person={person} />
       <div className="max-w-3xl mx-auto px-5 pb-20">
-        <h1 className="text-3xl font-extrabold tracking-tight mb-2">The roster</h1>
-        <p className="text-sm text-zinc-400 mb-6">
+        <h1 className="font-display text-3xl font-bold mb-2">The roster</h1>
+        <p className="text-sm text-muted-foreground mb-6">
           {person.role === 'creator' ? 'Brands and fellow creators' : 'Creators looking to collab'} — search, filter, and connect. Connecting sends a request; contact info unlocks once they accept.
         </p>
         <Input
@@ -108,7 +108,7 @@ export default function DirectoryScreen({ person }) {
         />
         <div className="grid gap-3.5">
           {filtered.length === 0
-            ? <div className="text-center text-sm text-zinc-500 py-14">No matches yet.</div>
+            ? <div className="text-center text-sm text-muted-foreground py-14">No matches yet.</div>
             : filtered.map((p) => <PersonCard key={p.uuid} person={p} />)}
         </div>
       </div>

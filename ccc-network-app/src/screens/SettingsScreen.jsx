@@ -11,7 +11,7 @@ function NotifyRow({ label, hint, checked, onChange }) {
         <Switch.Control><Switch.Thumb /></Switch.Control>
         <span>
           <span className="block text-sm font-medium">{label}</span>
-          <span className="block text-xs text-zinc-500">{hint}</span>
+          <span className="block text-xs text-muted-foreground">{hint}</span>
         </span>
       </Switch.Content>
     </Switch>
@@ -102,11 +102,11 @@ export default function SettingsScreen({ person, onSaved }) {
     <div>
       <Topbar person={person} />
       <div className="max-w-2xl mx-auto px-5 pb-20">
-        <h1 className="text-3xl font-extrabold tracking-tight mb-7">Settings</h1>
+        <h1 className="font-display text-3xl font-bold mb-7">Settings</h1>
 
         {/* Profile fields */}
         <Card variant="default" className="p-6 sm:p-7 mb-5">
-          <div className="text-xs font-bold uppercase tracking-wide text-zinc-500 mb-4">Edit profile</div>
+          <div className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-4">Edit profile</div>
           {profileErr && <Alert status="danger" className="mb-4"><Alert.Description>{profileErr}</Alert.Description></Alert>}
           <form onSubmit={handleProfileSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
@@ -125,17 +125,17 @@ export default function SettingsScreen({ person, onSaved }) {
             <div><Label>Links (one per line)</Label><TextArea value={form.links} onChange={set('links')} fullWidth /></div>
             <div className="flex items-center gap-4 pt-1">
               <Button type="submit" variant="primary">Save Profile</Button>
-              {saved && <span className="text-sm font-medium text-cyan-400">Saved ✓</span>}
+              {saved && <span className="text-sm font-medium text-accent-2">Saved ✓</span>}
             </div>
           </form>
         </Card>
 
         {/* Email */}
         <Card variant="default" className="p-6 sm:p-7 mb-5">
-          <div className="text-xs font-bold uppercase tracking-wide text-zinc-500 mb-4">Email</div>
-          <p className="text-sm text-zinc-400 mb-3">Current: <span className="text-zinc-200 font-medium">{person.email}</span></p>
+          <div className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-4">Email</div>
+          <p className="text-sm text-muted-foreground mb-3">Current: <span className="text-foreground font-medium">{person.email}</span></p>
           {emailSent ? (
-            <p className="text-sm text-cyan-400">Check <strong>{newEmail}</strong> for a confirmation link — it expires in 30 minutes.</p>
+            <p className="text-sm text-accent-2">Check <strong>{newEmail}</strong> for a confirmation link — it expires in 30 minutes.</p>
           ) : (
             <form onSubmit={handleEmailSubmit} className="flex items-end gap-3">
               <div className="flex-1">
@@ -145,13 +145,13 @@ export default function SettingsScreen({ person, onSaved }) {
               <Button type="submit" variant="outline" isDisabled={!newEmail}>Send verification link</Button>
             </form>
           )}
-          {emailErr && <p className="text-xs text-red-400 mt-2">{emailErr}</p>}
+          {emailErr && <p className="text-xs text-primary mt-2">{emailErr}</p>}
         </Card>
 
         {/* Notifications */}
         <Card variant="default" className="p-6 sm:p-7 mb-5">
-          <div className="text-xs font-bold uppercase tracking-wide text-zinc-500 mb-4 flex items-center gap-2">
-            Notifications {notifySaved && <span className="text-cyan-400 normal-case font-normal">Saved ✓</span>}
+          <div className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-4 flex items-center gap-2">
+            Notifications {notifySaved && <span className="text-accent-2 normal-case font-normal">Saved ✓</span>}
           </div>
           <NotifyRow label="Connection requests" hint="Email me when someone wants to connect" checked={notify.notify_request} onChange={(v) => handleNotifyChange('notify_request', v)} />
           <NotifyRow label="Approvals" hint="Email me when someone accepts my request" checked={notify.notify_approval} onChange={(v) => handleNotifyChange('notify_approval', v)} />
@@ -161,8 +161,8 @@ export default function SettingsScreen({ person, onSaved }) {
         {/* Tier (brands only) */}
         {person.role === 'brand' && (
           <Card variant="default" className="p-6 sm:p-7 mb-5">
-            <div className="text-xs font-bold uppercase tracking-wide text-zinc-500 mb-4 flex items-center gap-2">
-              Sponsorship tier {tierSaved && <span className="text-cyan-400 normal-case font-normal">Saved ✓</span>}
+            <div className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-4 flex items-center gap-2">
+              Sponsorship tier {tierSaved && <span className="text-accent-2 normal-case font-normal">Saved ✓</span>}
             </div>
             <Select.Root selectedKey={tier} onSelectionChange={handleTierChange} aria-label="Sponsorship tier" fullWidth>
               <Select.Trigger><Select.Value /><Select.Indicator /></Select.Trigger>
@@ -174,14 +174,14 @@ export default function SettingsScreen({ person, onSaved }) {
                 </ListBox>
               </Select.Popover>
             </Select.Root>
-            <p className="text-[11px] text-zinc-500 mt-1.5">Self-reported — Tommy's team can still correct this at review.</p>
+            <p className="text-[11px] text-muted-foreground mt-1.5">Self-reported — Tommy's team can still correct this at review.</p>
           </Card>
         )}
 
         {/* Danger zone */}
-        <Card variant="default" className="p-6 sm:p-7 border-red-900">
-          <div className="text-xs font-bold uppercase tracking-wide text-red-400 mb-3">Deactivate account</div>
-          <p className="text-sm text-zinc-400 mb-4">Removes you from the roster and directory. This can be undone by Tommy's team if you change your mind.</p>
+        <Card variant="default" className="p-6 sm:p-7 border-primary/40">
+          <div className="text-xs font-bold uppercase tracking-wide text-primary mb-3">Deactivate account</div>
+          <p className="text-sm text-muted-foreground mb-4">Removes you from the roster and directory. This can be undone by Tommy's team if you change your mind.</p>
           {!confirmDeactivate ? (
             <Button variant="danger" onPress={() => setConfirmDeactivate(true)}>Deactivate my account</Button>
           ) : (

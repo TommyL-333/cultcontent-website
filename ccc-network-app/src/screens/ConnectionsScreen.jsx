@@ -8,11 +8,11 @@ import { initialsOf, colorOf, displayName, orgOf } from '../lib/avatar';
 
 function PersonRow({ p, onClick, right }) {
   return (
-    <Card variant="default" className="p-4 flex items-center gap-3.5 cursor-pointer hover:border-zinc-600 transition-colors" onClick={onClick}>
+    <Card variant="default" className="p-4 flex items-center gap-3.5 cursor-pointer hover:border-accent-2/40 transition-colors" onClick={onClick}>
       <Avatar color={colorOf(p)} size="sm"><Avatar.Fallback>{initialsOf(p)}</Avatar.Fallback></Avatar>
       <div className="flex-1 min-w-0">
         <div className="text-sm font-bold truncate">{displayName(p)}</div>
-        <div className="text-xs text-zinc-500 truncate">{orgOf(p)}{p.category ? ` · ${p.category}` : ''}</div>
+        <div className="text-xs text-muted-foreground truncate">{orgOf(p)}{p.category ? ` · ${p.category}` : ''}</div>
       </div>
       {right}
     </Card>
@@ -62,8 +62,8 @@ export default function ConnectionsScreen({ person }) {
     <div>
       <Topbar person={person} />
       <div className="max-w-2xl mx-auto px-5 pb-20">
-        <h1 className="text-3xl font-extrabold tracking-tight mb-2">Connections</h1>
-        <p className="text-sm text-zinc-400 mb-6">Manage who you&rsquo;re connected with. Click anyone to view their full profile.</p>
+        <h1 className="font-display text-3xl font-bold mb-2">Connections</h1>
+        <p className="text-sm text-muted-foreground mb-6">Manage who you&rsquo;re connected with. Click anyone to view their full profile.</p>
 
         <Tabs selectedKey={tab} onSelectionChange={setTab} className="mb-5">
           <Tabs.List>
@@ -77,9 +77,9 @@ export default function ConnectionsScreen({ person }) {
         </Tabs>
 
         {!data ? (
-          <div className="text-center text-sm text-zinc-500 py-14">Loading…</div>
+          <div className="text-center text-sm text-muted-foreground py-14">Loading…</div>
         ) : active.length === 0 ? (
-          <div className="text-center text-sm text-zinc-500 py-14">
+          <div className="text-center text-sm text-muted-foreground py-14">
             {tab === 'current' && "No connections yet — head to the Directory to start some."}
             {tab === 'incoming' && 'No requests waiting on you right now.'}
             {tab === 'outgoing' && "You haven't sent any requests yet."}
@@ -97,7 +97,7 @@ export default function ConnectionsScreen({ person }) {
                     <Button size="sm" variant="outline" isDisabled={busyUuid === p.uuid} onPress={() => handleDecline(p.uuid, displayName(p))}>Decline</Button>
                   </div>
                 ) : tab === 'outgoing' ? (
-                  <span className="text-xs text-zinc-500">Pending</span>
+                  <span className="text-xs text-muted-foreground">Pending</span>
                 ) : null}
               />
             ))}
