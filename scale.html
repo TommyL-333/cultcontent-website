@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scale — Cult Content</title>
+  <script>
+    (function(){
+      var t='Scale — Cult Content';
+      function fix(){ if(document.title!==t) document.title=t; }
+      fix();
+      new MutationObserver(fix).observe(document.documentElement,{childList:true,subtree:true});
+      var count=0, iv=setInterval(function(){ fix(); if(++count>=20) clearInterval(iv); },500);
+      window.addEventListener('load',function(){ fix(); setTimeout(fix,500); setTimeout(fix,2000); });
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+
+  <style>
+    /* GHL FULL-WIDTH CONTAINER OVERRIDE */
+    .c-section > .inner { max-width: 100% !important; width: 100% !important; padding: 0 !important; }
+    .c-row { max-width: 100% !important; }
+    .c-column { max-width: 100% !important; }
+
+    :root {
+      --teal:  #00f2ea;
+      --pink:  #ff0050;
+      --gold:  #c9a84c;
+      --gold2: #f0d080;
+      --dark0: #080d1a;
+      --dark1: #0c1220;
+      --dark2: #0f1a2e;
+      --r:     14px;
+      --ease:  0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Lato', sans-serif;
+      background: var(--dark0);
+      color: #fff;
+      overflow-x: hidden;
+    }
+    h1,h2,h3,h4 { font-family: 'Montserrat', sans-serif; font-weight: 900; line-height: 1.1; }
+    p { line-height: 1.7; }
+
+    .gt {
+      background: linear-gradient(90deg, var(--teal), var(--pink));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .gt-gold {
+      background: linear-gradient(90deg, var(--gold), var(--gold2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* NAV */
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; flex-shrink: 0; }
+    .logo-img { height: 34px; width: auto; display: block; }
+    .logo-name {
+      font-family: 'Montserrat', sans-serif; font-weight: 900;
+      font-size: 0.8rem; letter-spacing: 0.13em; text-transform: uppercase; color: #fff;
+    }
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 40px; height: 64px;
+      background: rgba(8,13,26,0.88);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .nav-links { display: flex; align-items: center; gap: 26px; list-style: none; margin: 0; padding: 0; }
+    .nav-links a {
+      color: rgba(255,255,255,0.55); text-decoration: none;
+      font-size: 0.875rem; font-weight: 700; letter-spacing: 0.04em;
+      transition: color var(--ease);
+    }
+    .nav-links a:hover { color: #fff; }
+    .nav-links a.active { color: var(--teal); }
+    .nav-right { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+    .nav-social { display: flex; align-items: center; gap: 5px; }
+    .nav-social a {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: rgba(255,255,255,0.07);
+      display: flex; align-items: center; justify-content: center;
+      text-decoration: none; color: rgba(255,255,255,0.5); font-size: 0.85rem;
+      transition: all var(--ease);
+    }
+    .nav-social a:hover { background: rgba(255,255,255,0.14); color: #fff; }
+    .nav-cta {
+      display: inline-flex; align-items: center;
+      background: linear-gradient(90deg, var(--teal), var(--pink));
+      color: #000; font-family: 'Montserrat', sans-serif;
+      font-weight: 900; font-size: 0.75rem; letter-spacing: 0.07em;
+      text-transform: uppercase; padding: 9px 20px;
+      border-radius: 100px; text-decoration: none; white-space: nowrap;
+      transition: opacity var(--ease), transform var(--ease);
+    }
+    .nav-cta:hover { opacity: 0.85; transform: translateY(-1px); }
+    .nav-mobile-btn {
+      display: none; background: none; border: none; cursor: pointer;
+      color: #fff; font-size: 1.3rem; padding: 4px; line-height: 1;
+    }
+    .mobile-drawer {
+      display: none; position: fixed; top: 64px; left: 0; right: 0;
+      background: rgba(8,13,26,0.97); backdrop-filter: blur(16px);
+      z-index: 99; flex-direction: column;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .mobile-drawer.open { display: flex; }
+    .mobile-drawer a {
+      color: rgba(255,255,255,0.8); text-decoration: none;
+      font-family: 'Montserrat', sans-serif; font-weight: 700;
+      font-size: 0.9rem; letter-spacing: 0.05em; text-transform: uppercase;
+      padding: 16px 24px; border-bottom: 1px solid rgba(255,255,255,0.06);
+      display: flex; align-items: center; justify-content: space-between;
+      transition: background var(--ease);
+    }
+    .mobile-drawer a:hover { background: rgba(255,255,255,0.04); }
+    .mobile-drawer .mobile-cta {
+      background: linear-gradient(90deg, var(--teal), var(--pink));
+      color: #000; margin: 16px 24px 20px; border-radius: 100px;
+      text-align: center; justify-content: center; border-bottom: none;
+    }
+    @media (max-width: 860px) {
+      nav { padding: 0 20px; }
+      .nav-links, .nav-social { display: none; }
+      .nav-mobile-btn { display: flex; }
+    }
+
+    /* HERO */
+    .scale-hero {
+      min-height: 100vh;
+      padding: 120px 32px 80px;
+      display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden;
+      background:
+        radial-gradient(ellipse 70% 50% at 50% 0%, rgba(201,168,76,0.09) 0%, transparent 65%),
+        radial-gradient(ellipse 50% 40% at 85% 80%, rgba(255,0,80,0.06) 0%, transparent 70%),
+        var(--dark0);
+    }
+    .hero-orb {
+      position: absolute; pointer-events: none; border-radius: 50%; filter: blur(80px);
+    }
+    .orb-1 {
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(201,168,76,0.07) 0%, transparent 70%);
+      top: -120px; right: -120px;
+      animation: orbFloat 22s ease-in-out infinite;
+    }
+    .orb-2 {
+      width: 450px; height: 450px;
+      background: radial-gradient(circle, rgba(255,0,80,0.05) 0%, transparent 70%);
+      bottom: -60px; left: -80px;
+      animation: orbFloat 28s ease-in-out infinite reverse;
+    }
+    @keyframes orbFloat {
+      0%, 100% { transform: translate(0,0); }
+      33%  { transform: translate(20px,-25px); }
+      66%  { transform: translate(-15px,18px); }
+    }
+    .hero-inner {
+      max-width: 860px; width: 100%;
+      text-align: center;
+      position: relative; z-index: 1;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(201,168,76,0.1);
+      border: 1px solid rgba(201,168,76,0.25);
+      border-radius: 24px;
+      padding: 6px 16px;
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.18em;
+      text-transform: uppercase; color: var(--gold);
+      margin-bottom: 28px;
+    }
+    .badge-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--gold); box-shadow: 0 0 8px var(--gold);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    .hero-inner h1 {
+      font-size: clamp(2.8rem, 6vw, 5rem);
+      margin-bottom: 24px;
+      letter-spacing: -0.02em;
+    }
+    .hero-inner .lead {
+      font-size: 1.15rem;
+      color: rgba(255,255,255,0.65);
+      max-width: 640px;
+      margin: 0 auto 44px;
+      line-height: 1.75;
+    }
+    .hero-cta-row {
+      display: flex; align-items: center; justify-content: center; gap: 16px;
+      flex-wrap: wrap;
+    }
+    .btn-primary {
+      background: linear-gradient(90deg, var(--teal), #00c4be);
+      color: #000;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900; font-size: 0.85rem; letter-spacing: 0.08em;
+      padding: 16px 36px; border-radius: 8px; text-decoration: none;
+      text-transform: uppercase;
+      transition: box-shadow var(--ease), transform var(--ease);
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-primary:hover {
+      box-shadow: 0 0 30px rgba(0,242,234,0.5);
+      transform: translateY(-2px);
+    }
+    .btn-gold {
+      background: linear-gradient(90deg, var(--gold), var(--gold2));
+      color: #000;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900; font-size: 0.85rem; letter-spacing: 0.08em;
+      padding: 16px 36px; border-radius: 8px; text-decoration: none;
+      text-transform: uppercase;
+      transition: box-shadow var(--ease), transform var(--ease);
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-gold:hover {
+      box-shadow: 0 0 30px rgba(201,168,76,0.5);
+      transform: translateY(-2px);
+    }
+    .btn-ghost {
+      color: rgba(255,255,255,0.7);
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700; font-size: 0.85rem; letter-spacing: 0.06em;
+      padding: 16px 28px; border-radius: 8px; text-decoration: none;
+      border: 1px solid rgba(255,255,255,0.12);
+      text-transform: uppercase;
+      transition: border-color var(--ease), color var(--ease);
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-ghost:hover {
+      border-color: rgba(255,255,255,0.35);
+      color: #fff;
+    }
+    .hero-stats {
+      display: flex; align-items: center; justify-content: center; gap: 48px;
+      margin-top: 64px;
+      flex-wrap: wrap;
+    }
+    .hero-stat .num {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900; font-size: 2.4rem; line-height: 1; margin-bottom: 4px;
+    }
+    .hero-stat .label {
+      font-size: 0.75rem; color: rgba(255,255,255,0.4);
+      letter-spacing: 0.1em; text-transform: uppercase;
+    }
+    .stat-divider { width: 1px; height: 48px; background: rgba(255,255,255,0.1); }
+
+    /* QUAL BAR */
+    .qual-bar {
+      background: linear-gradient(90deg, rgba(201,168,76,0.07) 0%, rgba(255,0,80,0.06) 100%);
+      border-top: 1px solid rgba(201,168,76,0.2);
+      border-bottom: 1px solid rgba(201,168,76,0.12);
+      padding: 22px 32px;
+    }
+    .qual-inner {
+      max-width: 1000px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: center; gap: 16px;
+      flex-wrap: wrap; text-align: center;
+    }
+    .qual-label {
+      font-family: 'Montserrat', sans-serif; font-weight: 900;
+      font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase;
+      color: rgba(255,255,255,0.4);
+    }
+    .qual-items { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; justify-content: center; }
+    .qual-item {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.85rem; color: rgba(255,255,255,0.75); font-weight: 700;
+    }
+    .qual-item i { color: var(--gold); font-size: 0.75rem; }
+
+    /* SECTION COMMONS */
+    .section-label {
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.2em;
+      text-transform: uppercase; color: var(--teal);
+      margin-bottom: 14px; text-align: center;
+    }
+    .section-label.gold { color: var(--gold); }
+    .section-h2 {
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      text-align: center; margin-bottom: 16px;
+    }
+    .section-sub {
+      text-align: center; color: rgba(255,255,255,0.5);
+      font-size: 1rem; max-width: 560px; margin: 0 auto;
+    }
+
+    /* PACKAGE SECTION */
+    .package-section {
+      padding: 100px 32px;
+      background: var(--dark1);
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    .package-inner { max-width: 1100px; margin: 0 auto; }
+    .package-header { margin-bottom: 64px; }
+
+    /* Budget cards grid */
+    .budget-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+    .budget-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 16px;
+      padding: 36px 28px;
+      position: relative; overflow: hidden;
+      transition: border-color var(--ease), transform var(--ease);
+    }
+    .budget-card:hover {
+      border-color: rgba(201,168,76,0.3);
+      transform: translateY(-4px);
+    }
+    .budget-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--gold), var(--gold2));
+    }
+    .budget-icon {
+      width: 52px; height: 52px;
+      background: rgba(201,168,76,0.08);
+      border: 1px solid rgba(201,168,76,0.15);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.25rem; color: var(--gold);
+      margin-bottom: 20px;
+    }
+    .budget-card h3 { font-size: 1rem; margin-bottom: 8px; }
+    .budget-amount {
+      font-family: 'Montserrat', sans-serif; font-weight: 900;
+      font-size: 1.8rem; color: var(--gold); line-height: 1; margin-bottom: 6px;
+    }
+    .budget-amount span { font-size: 0.9rem; font-weight: 400; color: rgba(255,255,255,0.35); }
+    .budget-note { font-size: 0.8rem; color: rgba(255,255,255,0.4); line-height: 1.6; margin-top: 12px; }
+    .budget-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px; }
+    .budget-tag {
+      background: rgba(201,168,76,0.07);
+      border: 1px solid rgba(201,168,76,0.15);
+      border-radius: 4px; padding: 3px 10px;
+      font-size: 0.7rem; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      color: rgba(201,168,76,0.8);
+    }
+
+    /* Tribe callout */
+    .tribe-callout {
+      display: flex; align-items: flex-start; gap: 16px;
+      background: rgba(201,168,76,0.05);
+      border: 1px solid rgba(201,168,76,0.18);
+      border-radius: 12px; padding: 24px 28px;
+      margin-top: 0;
+    }
+    .tribe-icon { font-size: 1.4rem; flex-shrink: 0; margin-top: 2px; }
+    .tribe-text h4 { font-size: 0.9rem; margin-bottom: 6px; color: var(--gold); }
+    .tribe-text p { font-size: 0.85rem; color: rgba(255,255,255,0.5); line-height: 1.7; }
+    .tribe-text a { color: var(--gold); text-decoration: none; font-weight: 700; }
+    .tribe-text a:hover { text-decoration: underline; }
+
+    /* TEAM SECTION */
+    .team-section {
+      padding: 100px 32px;
+      background: var(--dark0);
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    .team-inner { max-width: 900px; margin: 0 auto; }
+    .team-header { margin-bottom: 64px; }
+    .team-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 32px;
+    }
+    .team-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 16px; padding: 40px 32px;
+      position: relative; overflow: hidden;
+      transition: border-color var(--ease);
+    }
+    .team-card:hover { border-color: rgba(0,242,234,0.2); }
+    .team-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--teal), var(--pink));
+    }
+    .team-role {
+      font-size: 0.65rem; font-weight: 700; letter-spacing: 0.16em;
+      text-transform: uppercase; color: var(--teal); margin-bottom: 12px;
+    }
+    .team-card h3 { font-size: 1.5rem; margin-bottom: 8px; }
+    .team-card .team-title {
+      font-size: 0.82rem; color: rgba(255,255,255,0.4);
+      margin-bottom: 20px;
+    }
+    .team-stats { display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 20px; }
+    .team-stat { }
+    .team-stat .ts-num {
+      font-family: 'Montserrat', sans-serif; font-weight: 900;
+      font-size: 1.5rem; line-height: 1; margin-bottom: 3px;
+    }
+    .team-stat .ts-label {
+      font-size: 0.65rem; color: rgba(255,255,255,0.35);
+      letter-spacing: 0.08em; text-transform: uppercase;
+    }
+    .team-card p { font-size: 0.85rem; color: rgba(255,255,255,0.5); line-height: 1.75; }
+    .team-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+    .team-badge {
+      background: rgba(0,242,234,0.07);
+      border: 1px solid rgba(0,242,234,0.14);
+      border-radius: 4px; padding: 4px 10px;
+      font-size: 0.68rem; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      color: rgba(0,242,234,0.7);
+    }
+
+    /* PRICING SECTION */
+    .pricing-section {
+      padding: 100px 32px;
+      background: var(--dark1);
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    .pricing-inner { max-width: 800px; margin: 0 auto; }
+    .pricing-header { margin-bottom: 64px; }
+
+    .slider-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px; padding: 48px 44px;
+      position: relative; overflow: hidden;
+    }
+    .slider-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--gold), var(--gold2));
+    }
+    .slider-endpoints {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      margin-bottom: 36px;
+    }
+    .slider-ep { text-align: left; }
+    .slider-ep.right { text-align: right; }
+    .ep-retainer {
+      font-family: 'Montserrat', sans-serif; font-weight: 900;
+      font-size: 2rem; color: #fff; line-height: 1; margin-bottom: 4px;
+    }
+    .ep-retainer span { font-size: 1rem; color: rgba(255,255,255,0.5); }
+    .ep-gmv { font-size: 0.9rem; color: var(--gold); font-weight: 700; margin-bottom: 6px; }
+    .ep-label { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.3); }
+
+    .slider-track-wrap { margin-bottom: 32px; padding: 10px 0; }
+    .pricing-slider {
+      -webkit-appearance: none; appearance: none;
+      display: block; width: 100%; height: 6px;
+      border-radius: 3px; outline: none; cursor: pointer;
+      background: rgba(255,255,255,0.12);
+    }
+    .pricing-slider::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      width: 28px; height: 28px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold), var(--gold2));
+      margin-top: -11px;
+      box-shadow: 0 0 0 5px rgba(201,168,76,0.22), 0 4px 14px rgba(0,0,0,0.5);
+      cursor: pointer;
+    }
+    .pricing-slider::-moz-range-track {
+      height: 6px; border-radius: 3px; background: rgba(255,255,255,0.12);
+    }
+    .pricing-slider::-moz-range-thumb {
+      width: 28px; height: 28px; border-radius: 50%; border: none;
+      background: linear-gradient(135deg, var(--gold), var(--gold2));
+      box-shadow: 0 0 0 5px rgba(201,168,76,0.22); cursor: pointer;
+    }
+
+    .slider-output {
+      text-align: center; margin-bottom: 36px;
+      padding: 24px 20px; border-radius: 12px;
+      background: rgba(201,168,76,0.05);
+      border: 1px solid rgba(201,168,76,0.14);
+    }
+    .output-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.3); margin-bottom: 10px; }
+    .output-main { font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 1.6rem; color: #fff; line-height: 1.3; }
+    .output-retainer { color: var(--gold); }
+    .output-gmv { color: var(--pink); }
+    .output-sep { font-size: 1rem; color: rgba(255,255,255,0.4); font-weight: 400; }
+
+    /* Investment breakdown table */
+    .invest-breakdown {
+      border-top: 1px solid rgba(255,255,255,0.07); padding-top: 32px;
+      margin-top: 0;
+    }
+    .invest-label {
+      font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; color: rgba(255,255,255,0.35);
+      margin-bottom: 18px;
+    }
+    .invest-rows { display: flex; flex-direction: column; gap: 0; }
+    .invest-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .invest-row:last-child { border-bottom: none; }
+    .invest-row-name {
+      font-size: 0.85rem; color: rgba(255,255,255,0.6); font-weight: 600;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .invest-row-name i { color: var(--gold); font-size: 0.7rem; }
+    .invest-row-name .invest-note {
+      font-size: 0.72rem; color: rgba(255,255,255,0.3);
+      font-weight: 400; margin-left: 4px;
+    }
+    .invest-row-val {
+      font-family: 'Montserrat', sans-serif; font-weight: 900;
+      font-size: 0.95rem; color: #fff;
+    }
+    .invest-row-val.dynamic { color: var(--gold); }
+    .invest-total-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 20px 0 0; margin-top: 8px;
+      border-top: 1px solid rgba(255,255,255,0.12);
+    }
+    .invest-total-name {
+      font-family: 'Montserrat', sans-serif; font-weight: 900;
+      font-size: 1rem; color: rgba(255,255,255,0.7);
+    }
+    .invest-total-val {
+      font-family: 'Montserrat', sans-serif; font-weight: 900;
+      font-size: 1.6rem;
+      background: linear-gradient(90deg, var(--gold), var(--gold2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .invest-note-text {
+      font-size: 0.75rem; color: rgba(255,255,255,0.22); margin-top: 16px; line-height: 1.6;
+    }
+
+    /* Included card */
+    .pricing-card {
+      background: rgba(255,255,255,0.025);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 20px; padding: 44px;
+      position: relative; overflow: hidden;
+    }
+    .pricing-tag {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(0,242,234,0.07);
+      border: 1px solid rgba(0,242,234,0.14);
+      border-radius: 100px; padding: 5px 14px;
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--teal);
+      margin-bottom: 28px;
+    }
+    .pricing-includes {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px 32px;
+      margin-bottom: 0;
+    }
+    .inc-row {
+      display: flex; align-items: flex-start; gap: 10px;
+      font-size: 0.875rem; color: rgba(255,255,255,0.65); line-height: 1.5;
+    }
+    .inc-row i { color: var(--teal); flex-shrink: 0; margin-top: 3px; font-size: 0.75rem; }
+    .pricing-cta-row {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 20px;
+    }
+    .pricing-social-proof {
+      font-size: 0.82rem; color: rgba(255,255,255,0.35); line-height: 1.6;
+    }
+    .pricing-social-proof strong { color: rgba(255,255,255,0.6); }
+
+    /* ICP section */
+    .icp-section {
+      padding: 100px 32px;
+      background: var(--dark0);
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    .icp-inner { max-width: 1000px; margin: 0 auto; }
+    .icp-header { margin-bottom: 56px; }
+    .icp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .icp-col {
+      background: rgba(255,255,255,0.025);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 16px; padding: 36px 32px;
+    }
+    .icp-col.yes { border-color: rgba(0,242,234,0.12); }
+    .icp-col.no { border-color: rgba(255,0,80,0.1); }
+    .icp-col h3 { font-size: 1rem; margin-bottom: 24px; }
+    .icp-col.yes h3 { color: var(--teal); }
+    .icp-col.no h3 { color: var(--pink); }
+    .icp-list { display: flex; flex-direction: column; gap: 14px; }
+    .icp-row { display: flex; align-items: flex-start; gap: 12px; font-size: 0.875rem; color: rgba(255,255,255,0.6); }
+    .icp-row i { flex-shrink: 0; margin-top: 3px; font-size: 0.8rem; }
+    .icp-col.yes .icp-row i { color: var(--teal); }
+    .icp-col.no .icp-row i { color: var(--pink); }
+
+    /* FINAL CTA */
+    .final-cta {
+      padding: 120px 32px;
+      text-align: center;
+      background:
+        radial-gradient(ellipse 60% 60% at 50% 50%, rgba(201,168,76,0.08) 0%, transparent 70%),
+        var(--dark2);
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    .final-cta-inner { max-width: 600px; margin: 0 auto; }
+    .final-cta h2 { font-size: clamp(2rem, 5vw, 3.2rem); margin-bottom: 20px; }
+    .final-cta p {
+      font-size: 1.05rem; color: rgba(255,255,255,0.5); margin-bottom: 44px; line-height: 1.75;
+    }
+
+    /* FOOTER */
+    footer {
+      background: var(--dark0);
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding: 48px 40px 32px;
+    }
+    .ft-inner {
+      max-width: 1100px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 32px; flex-wrap: wrap; margin-bottom: 32px;
+    }
+    .ft-logo img { height: 28px; width: auto; }
+    .ft-links {
+      display: flex; list-style: none; gap: 28px;
+    }
+    .ft-links a {
+      color: rgba(255,255,255,0.35); text-decoration: none;
+      font-size: 0.8rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+      transition: color var(--ease);
+    }
+    .ft-links a:hover { color: #fff; }
+    .ft-social { display: flex; gap: 10px; }
+    .ft-social a {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: rgba(255,255,255,0.06);
+      display: flex; align-items: center; justify-content: center;
+      color: rgba(255,255,255,0.4); font-size: 0.85rem; text-decoration: none;
+      transition: all var(--ease);
+    }
+    .ft-social a:hover { background: rgba(255,255,255,0.12); color: #fff; }
+    .ft-bottom {
+      max-width: 1100px; margin: 0 auto;
+      display: flex; justify-content: space-between; align-items: center;
+      padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    .ft-bottom p { font-size: 0.78rem; color: rgba(255,255,255,0.2); }
+
+    /* RESPONSIVE */
+    @media (max-width: 900px) {
+      .budget-grid { grid-template-columns: 1fr; }
+      .team-grid { grid-template-columns: 1fr; }
+      .icp-grid { grid-template-columns: 1fr; }
+      .pricing-includes { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+      .hero-stats { gap: 28px; }
+      .stat-divider { display: none; }
+      .slider-card { padding: 32px 24px; }
+      .pricing-card { padding: 32px 24px; }
+      .ep-retainer { font-size: 1.4rem; }
+      .output-main { font-size: 1.2rem; }
+      .invest-total-val { font-size: 1.3rem; }
+      .ft-inner { flex-direction: column; text-align: center; }
+      .ft-bottom { flex-direction: column; gap: 8px; text-align: center; }
+    }
+    @media (max-width: 480px) {
+      .hero-cta-row { flex-direction: column; align-items: stretch; }
+      .btn-gold, .btn-ghost { justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a href="/" class="logo">
+      <img src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/68529ceff63e1913ceb4e2e0.png" alt="Cult Content" class="logo-img">
+      <span class="logo-name">Cult Content</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/">Home</a></li>
+      <li><a href="/founders-story">My Story</a></li>
+      <li><a href="/consulting">Consulting</a></li>
+      <li><a href="/partners">Software</a></li>
+      <li><a href="/creators">Community</a></li>
+    </ul>
+    <div class="nav-right">
+      <div class="nav-social">
+        <a href="https://www.tiktok.com/@cultcontent.cc" title="TikTok" target="_blank" rel="noopener"><i class="fa-brands fa-tiktok"></i></a>
+        <a href="https://www.instagram.com/cultcontent.cc/" title="Instagram" target="_blank" rel="noopener"><i class="fa-brands fa-instagram"></i></a>
+        <a href="https://www.youtube.com/@Cult-Content-CC" title="YouTube" target="_blank" rel="noopener"><i class="fa-brands fa-youtube"></i></a>
+        <a href="https://www.linkedin.com/company/cultcontent" title="LinkedIn" target="_blank" rel="noopener"><i class="fa-brands fa-linkedin-in"></i></a>
+      </div>
+      <a href="/book" class="nav-cta">Book a Call</a>
+    </div>
+    <button class="nav-mobile-btn" id="mobileMenuBtn" aria-label="Open menu">&#9776;</button>
+  </nav>
+  <div class="mobile-drawer" id="mobileDrawer">
+    <a href="/">Home</a>
+    <a href="/founders-story">My Story</a>
+    <a href="/consulting">Consulting</a>
+    <a href="/partners">Software</a>
+    <a href="/creators">Community</a>
+    <a href="/book" class="mobile-cta">Book a Call</a>
+  </div>
+
+  <!-- HERO -->
+  <section class="scale-hero">
+    <div class="hero-orb orb-1"></div>
+    <div class="hero-orb orb-2"></div>
+    <div class="hero-inner">
+
+      <div class="hero-badge">
+        <span class="badge-dot"></span>
+        Full-Scale Package &mdash; TikTok + Meta
+      </div>
+
+      <h1>We Build<br>the <span class="gt-gold">Complete Machine.</span><br>You Dominate.</h1>
+
+      <p class="lead">
+        Creator retainers. A live strategy team. Paid ads on Meta and TikTok.
+        This isn&rsquo;t just TikTok Shop management &mdash; it&rsquo;s a full omni-channel growth operation built for brands ready to scale past their current ceiling.
+      </p>
+
+      <div class="hero-cta-row">
+        <a href="/book" class="btn-gold">
+          <i class="fa-solid fa-arrow-right"></i>
+          Apply for Scale
+        </a>
+        <a href="#package" class="btn-ghost">
+          <i class="fa-solid fa-chevron-down"></i>
+          See What&rsquo;s Included
+        </a>
+      </div>
+
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <div class="num gt">100+</div>
+          <div class="label">Brands Worked With</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="hero-stat">
+          <div class="num gt">300M+</div>
+          <div class="label">Views by Jina Alone</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="hero-stat">
+          <div class="num gt">100M+</div>
+          <div class="label">Views Generated Total</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="hero-stat">
+          <div class="num gt">4+</div>
+          <div class="label">Years in TikTok Shop</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- QUAL BAR -->
+  <div class="qual-bar">
+    <div class="qual-inner">
+      <div class="qual-label">Built For &mdash;</div>
+      <div class="qual-items">
+        <div class="qual-item"><i class="fa-solid fa-check"></i> Brands with real marketing budgets</div>
+        <div class="qual-item"><i class="fa-solid fa-check"></i> Products that convert at scale</div>
+        <div class="qual-item"><i class="fa-solid fa-check"></i> Founders who want TikTok + Meta</div>
+        <div class="qual-item"><i class="fa-solid fa-check"></i> Teams ready to commit and move fast</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- THE PACKAGE -->
+  <section class="package-section" id="package">
+    <div class="package-inner">
+      <div class="package-header">
+        <div class="section-label gold">What&rsquo;s Included</div>
+        <h2 class="section-h2">Three Budget Lines.<br>One <span class="gt-gold">Complete Operation.</span></h2>
+        <p class="section-sub" style="margin-top:16px;">
+          The Scale package combines what Cult Content manages directly with the creator and media budgets that make it work. Every line has a minimum &mdash; because this only works if we fund it properly.
+        </p>
+      </div>
+
+      <div class="budget-grid">
+
+        <!-- Creator Retainers -->
+        <div class="budget-card">
+          <div class="budget-icon"><i class="fa-solid fa-users"></i></div>
+          <h3>Creator Retainers</h3>
+          <div class="budget-amount">$5,000<span>/mo min</span></div>
+          <p class="budget-note">
+            Paid directly to creators via Tribe. Retainers lock in your top performers &mdash; consistent output, consistent reach. Scales up as the roster grows.
+          </p>
+          <div class="budget-tags">
+            <span class="budget-tag">Via Tribe</span>
+            <span class="budget-tag">TikTok + Meta</span>
+            <span class="budget-tag">Long-Form Partnerships</span>
+          </div>
+        </div>
+
+        <!-- Live Strategy -->
+        <div class="budget-card">
+          <div class="budget-icon"><i class="fa-solid fa-video"></i></div>
+          <h3>Live Strategy</h3>
+          <div class="budget-amount">$5,000<span>/mo</span></div>
+          <p class="budget-note">
+            Dedicated live session planning and execution. TikTok LIVE is one of the highest-converting surfaces on the platform. We build and run the program.
+          </p>
+          <div class="budget-tags">
+            <span class="budget-tag">TikTok LIVE</span>
+            <span class="budget-tag">Session Planning</span>
+            <span class="budget-tag">Product Showcasing</span>
+          </div>
+        </div>
+
+        <!-- Ad Spend -->
+        <div class="budget-card">
+          <div class="budget-icon"><i class="fa-solid fa-chart-line"></i></div>
+          <h3>Ad Spend</h3>
+          <div class="budget-amount">$10,000<span>/mo min</span></div>
+          <p class="budget-note">
+            Meta and TikTok paid media managed through Tribe. We run campaigns that amplify what&rsquo;s already working &mdash; creator-led content pushed with performance spend.
+          </p>
+          <div class="budget-tags">
+            <span class="budget-tag">Meta Ads</span>
+            <span class="budget-tag">TikTok Ads</span>
+            <span class="budget-tag">GMV Max</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Tribe callout -->
+      <div class="tribe-callout">
+        <div class="tribe-icon">⚡</div>
+        <div class="tribe-text">
+          <h4>Powered by Tribe</h4>
+          <p>
+            We use <a href="https://jointrybe.com/" target="_blank" rel="noopener">Tribe</a> to enable creators to post their videos simultaneously to Meta <em>and</em> TikTok &mdash; one piece of content, two platforms, double the reach.
+            Creator retainers and paid media flow through Tribe so everything is tracked, managed, and optimized in one place.
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- THE TEAM -->
+  <section class="team-section" id="team">
+    <div class="team-inner">
+      <div class="team-header">
+        <div class="section-label">Who You Work With</div>
+        <h2 class="section-h2">The Team Behind<br><span class="gt">Your Growth.</span></h2>
+        <p class="section-sub" style="margin-top:16px;">
+          Two people who have done this at scale. One who built the system, one who broke the internet with it.
+        </p>
+      </div>
+
+      <div class="team-grid">
+
+        <!-- Tommy -->
+        <div class="team-card">
+          <div class="team-role">Founder &amp; CEO</div>
+          <h3>Tommy Lynch</h3>
+          <div class="team-title">TikTok Shop Partner &mdash; Certified (TSP)</div>
+          <div class="team-stats">
+            <div class="team-stat">
+              <div class="ts-num gt">4+</div>
+              <div class="ts-label">Years in Shop</div>
+            </div>
+            <div class="team-stat">
+              <div class="ts-num gt">100+</div>
+              <div class="ts-label">Brands Worked</div>
+            </div>
+          </div>
+          <p>
+            Tommy built Cult Content from inside the TikTok Shop ecosystem &mdash; before most brands knew it existed. TSP certified, he has run affiliate programs, live strategies, and paid media for brands across categories, and he gives every client the same thing: the unfiltered truth about what it takes to win.
+          </p>
+          <div class="team-badges">
+            <span class="team-badge">TSP Certified</span>
+            <span class="team-badge">TikTok Shop</span>
+            <span class="team-badge">Paid Media</span>
+            <span class="team-badge">Live Strategy</span>
+          </div>
+        </div>
+
+        <!-- Jina -->
+        <div class="team-card">
+          <div class="team-role">Social Media &amp; Creator Lead</div>
+          <h3>Jina</h3>
+          <div class="team-title">Social Media Manager Turned Creator</div>
+          <div class="team-stats">
+            <div class="team-stat">
+              <div class="ts-num gt">300M+</div>
+              <div class="ts-label">Views Generated</div>
+            </div>
+          </div>
+          <p>
+            Jina came up as a social media manager who understood the platform from the inside. Then she became a creator and proved it from the outside. Over 300 million views &mdash; not as a one-hit wonder, but as someone who understands what makes content move. She brings that operator brain to every brand she touches.
+          </p>
+          <div class="team-badges">
+            <span class="team-badge">Creator</span>
+            <span class="team-badge">Short Video</span>
+            <span class="team-badge">Content Strategy</span>
+            <span class="team-badge">Meta + TikTok</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- IS THIS FOR YOU -->
+  <section class="icp-section" id="who">
+    <div class="icp-inner">
+      <div class="icp-header">
+        <div class="section-label">Fit Check</div>
+        <h2 class="section-h2">This Is for <span class="gt">Brands That Are Ready.</span></h2>
+        <p class="section-sub" style="margin-top:16px;">
+          The Scale package requires real commitment on both sides. If you&rsquo;re still validating your product, our <a href="/growth-partner" style="color:var(--teal);font-weight:700;">Growth Partner</a> program is a better start.
+        </p>
+      </div>
+
+      <div class="icp-grid">
+        <div class="icp-col yes">
+          <h3><i class="fa-solid fa-circle-check" style="margin-right:8px;"></i>Scale is for you</h3>
+          <div class="icp-list">
+            <div class="icp-row">
+              <i class="fa-solid fa-check"></i>
+              <span>You have a product with proven demand and strong unit economics</span>
+            </div>
+            <div class="icp-row">
+              <i class="fa-solid fa-check"></i>
+              <span>You can commit a minimum $23K/mo budget and want to see what happens when it&rsquo;s deployed right</span>
+            </div>
+            <div class="icp-row">
+              <i class="fa-solid fa-check"></i>
+              <span>You want to be on both TikTok and Meta, not just one platform</span>
+            </div>
+            <div class="icp-row">
+              <i class="fa-solid fa-check"></i>
+              <span>You move fast, trust the process, and want a team that tells you the truth</span>
+            </div>
+            <div class="icp-row">
+              <i class="fa-solid fa-check"></i>
+              <span>You&rsquo;re ready to invest in creator relationships, not just one-off content deals</span>
+            </div>
+          </div>
+        </div>
+        <div class="icp-col no">
+          <h3><i class="fa-solid fa-circle-xmark" style="margin-right:8px;"></i>This isn&rsquo;t the right fit</h3>
+          <div class="icp-list">
+            <div class="icp-row">
+              <i class="fa-solid fa-xmark"></i>
+              <span>You&rsquo;re still testing your product or working with a tiny margin</span>
+            </div>
+            <div class="icp-row">
+              <i class="fa-solid fa-xmark"></i>
+              <span>You want TikTok-only for now &mdash; start with <a href="/growth-partner" style="color:var(--pink);font-weight:700;">Growth Partner</a> instead</span>
+            </div>
+            <div class="icp-row">
+              <i class="fa-solid fa-xmark"></i>
+              <span>You need approval on every small decision and expect to control the playbook</span>
+            </div>
+            <div class="icp-row">
+              <i class="fa-solid fa-xmark"></i>
+              <span>You&rsquo;re not ready to commit to a 90-day ramp window</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section class="pricing-section" id="pricing">
+    <div class="pricing-inner">
+      <div class="pricing-header">
+        <div class="section-label gold">The Investment</div>
+        <h2 class="section-h2">Cult Content Fee.<br><span class="gt-gold">You Choose the Mix.</span></h2>
+        <p class="section-sub" style="margin-top:16px;">
+          The slider controls the Cult Content management fee only. Creator retainers, live strategy, and ad spend are separate required budgets &mdash; shown below.
+        </p>
+      </div>
+
+      <!-- SLIDER CARD -->
+      <div class="slider-card">
+
+        <div class="slider-endpoints">
+          <div class="slider-ep">
+            <div class="ep-retainer">$3,000<span>/mo</span></div>
+            <div class="ep-gmv">+ 7% GMV</div>
+            <div class="ep-label">Lower Retainer</div>
+          </div>
+          <div class="slider-ep right">
+            <div class="ep-retainer">$8,000<span>/mo</span></div>
+            <div class="ep-gmv">+ 3% GMV</div>
+            <div class="ep-label">Higher Retainer</div>
+          </div>
+        </div>
+
+        <div class="slider-track-wrap">
+          <input type="range" min="0" max="100" value="0" class="pricing-slider" id="scaleSlider" oninput="scaleSlider(this)" />
+        </div>
+
+        <div class="slider-output">
+          <div class="output-label">Cult Content management fee</div>
+          <div class="output-main">
+            <span class="output-retainer" id="scaleRetainer">$3,000</span>
+            <span class="output-sep">/mo &nbsp;+&nbsp;</span>
+            <span class="output-gmv" id="scaleGmv">7%</span>
+            <span class="output-sep">&nbsp;of GMV</span>
+          </div>
+        </div>
+
+        <div class="invest-breakdown">
+          <div class="invest-label">Full minimum monthly investment breakdown</div>
+          <div class="invest-rows">
+            <div class="invest-row">
+              <div class="invest-row-name">
+                <i class="fa-solid fa-diamond"></i>
+                Cult Content Fee
+                <span class="invest-note">(management + strategy)</span>
+              </div>
+              <div class="invest-row-val dynamic" id="breakdownCC">$3,000</div>
+            </div>
+            <div class="invest-row">
+              <div class="invest-row-name">
+                <i class="fa-solid fa-diamond"></i>
+                Creator Retainers
+                <span class="invest-note">(via Tribe, paid to creators)</span>
+              </div>
+              <div class="invest-row-val">$5,000+</div>
+            </div>
+            <div class="invest-row">
+              <div class="invest-row-name">
+                <i class="fa-solid fa-diamond"></i>
+                Live Strategy
+                <span class="invest-note">(TikTok LIVE production)</span>
+              </div>
+              <div class="invest-row-val">$5,000</div>
+            </div>
+            <div class="invest-row">
+              <div class="invest-row-name">
+                <i class="fa-solid fa-diamond"></i>
+                Ad Spend
+                <span class="invest-note">(Meta + TikTok, via Tribe)</span>
+              </div>
+              <div class="invest-row-val">$10,000+</div>
+            </div>
+          </div>
+          <div class="invest-total-row">
+            <div class="invest-total-name">Minimum Total</div>
+            <div class="invest-total-val" id="breakdownTotal">$23,000/mo</div>
+          </div>
+          <div class="invest-note-text">
+            Total shown is the minimum. Creator retainers and ad spend scale with program size.
+            GMV fee is calculated on your TikTok Shop gross merchandise value &mdash; discussed on the strategy call.
+          </div>
+        </div>
+
+      </div>
+
+      <!-- WHATS INCLUDED -->
+      <div class="pricing-card" style="margin-top:32px;">
+        <div class="pricing-tag">
+          <i class="fa-solid fa-star" style="font-size:0.65rem;"></i>
+          Everything in Growth Partner, Plus
+        </div>
+        <div class="pricing-includes">
+          <div class="inc-row"><i class="fa-solid fa-check"></i> Dedicated creator retainer program via Tribe</div>
+          <div class="inc-row"><i class="fa-solid fa-check"></i> Omni-channel posting &mdash; TikTok &amp; Meta</div>
+          <div class="inc-row"><i class="fa-solid fa-check"></i> Full TikTok LIVE strategy &amp; execution</div>
+          <div class="inc-row"><i class="fa-solid fa-check"></i> Meta paid media management</div>
+          <div class="inc-row"><i class="fa-solid fa-check"></i> TikTok GMV Max + performance ads</div>
+          <div class="inc-row"><i class="fa-solid fa-check"></i> Jina on content strategy &amp; production</div>
+          <div class="inc-row"><i class="fa-solid fa-check"></i> Weekly performance calls with Tommy</div>
+          <div class="inc-row"><i class="fa-solid fa-check"></i> Affiliate management &amp; outreach</div>
+          <div class="inc-row"><i class="fa-solid fa-check"></i> Shop operations &amp; promotions</div>
+          <div class="inc-row"><i class="fa-solid fa-check"></i> Unit economics &amp; profitability framework</div>
+        </div>
+        <div class="pricing-cta-row" style="margin-top:36px;">
+          <a href="/book" class="btn-gold">
+            <i class="fa-solid fa-arrow-right"></i>
+            Apply for Scale &mdash; Book a Call
+          </a>
+          <div class="pricing-social-proof">
+            <strong>Highly selective.</strong> We only take on brands where we&rsquo;re confident we can win.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FINAL CTA -->
+  <section class="final-cta">
+    <div class="final-cta-inner">
+      <div class="section-label gold">Ready?</div>
+      <h2>Let&rsquo;s See If<br>You&rsquo;re a <span class="gt-gold">Fit.</span></h2>
+      <p>
+        30 minutes with Tommy. No pitch deck, no fluff &mdash; just an honest conversation about your brand, your goals, and whether the Scale package is the right move.
+      </p>
+      <a href="/book" class="btn-gold" style="font-size:0.95rem;padding:18px 44px;">
+        <i class="fa-solid fa-calendar-check"></i>
+        Book Your Strategy Call
+      </a>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="ft-inner">
+      <div class="ft-logo">
+        <a href="/home">
+          <img src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/68529ceff63e1913ceb4e2e0.png" alt="Cult Content" />
+        </a>
+      </div>
+      <ul class="ft-links">
+        <li><a href="/home">Home</a></li>
+        <li><a href="/home#culture">About</a></li>
+        <li><a href="/home#timeline">Services</a></li>
+        <li><a href="/affiliate">Affiliates</a></li>
+      </ul>
+      <div class="ft-social">
+        <a href="https://www.tiktok.com/@cultcontent.cc" target="_blank" rel="noopener" aria-label="TikTok"><i class="fa-brands fa-tiktok"></i></a>
+        <a href="https://www.instagram.com/cultcontent.cc/" target="_blank" rel="noopener" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+        <a href="https://www.youtube.com/@Cult-Content-CC" target="_blank" rel="noopener" aria-label="YouTube"><i class="fa-brands fa-youtube"></i></a>
+        <a href="https://www.linkedin.com/company/cultcontent/" target="_blank" rel="noopener" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+      </div>
+    </div>
+    <div class="ft-bottom">
+      <p>&copy; 2025 Cult Content. All rights reserved.</p>
+      <p>Built for operators.</p>
+    </div>
+  </footer>
+
+  <script>
+    (function(){
+      const links = document.querySelectorAll('.nav-links a');
+      const path = window.location.pathname.replace(/\/$/, '') || '/';
+      links.forEach(a => { if ((a.getAttribute('href').replace(/\/$/, '') || '/') === path) a.classList.add('active'); });
+      const btn = document.getElementById('mobileMenuBtn');
+      const drawer = document.getElementById('mobileDrawer');
+      if (btn && drawer) {
+        btn.addEventListener('click', e => { e.stopPropagation(); drawer.classList.toggle('open'); });
+        document.addEventListener('click', e => { if (!drawer.contains(e.target) && e.target !== btn) drawer.classList.remove('open'); });
+      }
+      // Init slider track fill
+      var sl = document.getElementById('scaleSlider');
+      if (sl) sl.style.background = 'linear-gradient(to right,#c9a84c 0%,rgba(255,255,255,0.12) 0%)';
+    })();
+
+    function scaleSlider(slider) {
+      var pct      = +slider.value;
+      var pos      = pct / 100;
+      var retainer = Math.round(3000 + pos * 5000);
+      var gmvPct   = +(7 - pos * 4).toFixed(1);
+
+      slider.style.background =
+        'linear-gradient(to right,#c9a84c ' + pct + '%,rgba(255,255,255,0.12) ' + pct + '%)';
+
+      var outRet = document.getElementById('scaleRetainer');
+      var outGmv = document.getElementById('scaleGmv');
+      if (outRet) outRet.textContent = '$' + retainer.toLocaleString();
+      if (outGmv) outGmv.textContent = gmvPct + '%';
+
+      var ccLine = document.getElementById('breakdownCC');
+      if (ccLine) ccLine.textContent = '$' + retainer.toLocaleString();
+
+      var total = retainer + 5000 + 5000 + 10000;
+      var totalEl = document.getElementById('breakdownTotal');
+      if (totalEl) totalEl.textContent = '$' + total.toLocaleString() + '+/mo';
+    }
+  </script>
+
+</body>
+</html>
