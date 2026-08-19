@@ -2276,6 +2276,7 @@ app.get('/book-now',                           _pub('book-now.html'));
 app.get('/book-consulting',                    _pub('book-consulting.html'));
 app.get('/partners',                           _pub('partners.html'));
 app.get('/growth-partner',                     _pub('growth-partner.html'));
+app.get('/scale',                              _pub('scale.html'));
 app.get('/founders-story',                     _pub('founders-story.html'));
 app.get('/alchemists-club',                    _pub('alchemists-club.html'));
 app.get('/thoughts-from-tommy',                _pub('thoughts-from-tommy.html'));
