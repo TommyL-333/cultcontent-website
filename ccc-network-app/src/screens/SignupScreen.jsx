@@ -51,7 +51,7 @@ export default function SignupScreen() {
     };
     const j = await signup(payload);
     setSubmitting(false);
-    if (j.ok) { toast.success("You're on the list — Tommy's team will review it."); setDone(true); return; }
+    if (j.ok) { toast.success('Check your email to confirm and activate your account.'); setDone(true); return; }
     if (j.error === 'already_registered') {
       setError(`That email is already on the roster (status: ${j.status}). Try logging in instead.`);
     } else {
@@ -70,9 +70,9 @@ export default function SignupScreen() {
           className="w-full max-w-xl text-center"
         >
           <Card variant="default" className="p-8">
-            <h2 className="text-xl font-bold mb-2">You&rsquo;re on the list.</h2>
-            <p className="text-sm text-zinc-400 leading-relaxed">
-              Tommy&rsquo;s team reviews every roster application. Once you&rsquo;re approved, we&rsquo;ll email you a login link to browse the directory and start connecting.
+            <h2 className="font-display text-xl font-bold mb-2">Almost there.</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              We&rsquo;ve sent a confirmation link to <span className="text-foreground font-semibold">{form.email}</span> — click it to activate your account and start connecting. No approval wait. Didn&rsquo;t get it? Check spam, or it expires in 30 minutes and you can sign up again.
             </p>
           </Card>
         </motion.div>
@@ -91,13 +91,13 @@ export default function SignupScreen() {
           className="flex items-center justify-center gap-2.5 mb-10"
         >
           <img src={BRAND_LOGO} alt="Cult Content" className="h-6" />
-          <span className="text-[11px] font-bold uppercase tracking-[.14em] text-zinc-400">Creator Carnival</span>
+          <span className="text-[11px] font-bold uppercase tracking-[.14em] text-muted-foreground">Creator Carnival</span>
         </motion.a>
 
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.05 }} className="text-center mb-8">
-          <h1 className="text-4xl sm:text-[2.75rem] font-extrabold tracking-tight leading-[1.08] mb-4">Meet your collab era.</h1>
-          <p className="text-sm text-zinc-400 leading-relaxed max-w-md mx-auto">
-            1,000+ creators and 100+ brands, all in one roster. Sign up, get approved, and start connecting before you even set foot on the floor.
+          <h1 className="font-display text-4xl sm:text-[2.75rem] font-bold leading-[1.08] mb-4">Meet your collab era.</h1>
+          <p className="text-sm text-muted-foreground leading-relaxed max-w-md mx-auto">
+            1,000+ creators and 100+ brands, all in one roster. Sign up, confirm your email, and start connecting before you even set foot on the floor.
           </p>
         </motion.div>
 
@@ -160,7 +160,7 @@ export default function SignupScreen() {
                     </ListBox>
                   </Select.Popover>
                 </Select.Root>
-                <p className="text-[11px] text-zinc-500 mt-1.5 leading-relaxed">This is self-reported — Tommy's team confirms it at approval.</p>
+                <p className="text-[11px] text-muted-foreground mt-1.5 leading-relaxed">This is self-reported — Tommy's team can adjust it later if needed.</p>
               </div>
             )}
 
@@ -177,14 +177,14 @@ export default function SignupScreen() {
           </form>
 
           <div className="text-center mt-5">
-            <RouterLink to="/login" className="text-[13px] text-zinc-400 hover:text-cyan-400 transition-colors">Already approved? Log in &rarr;</RouterLink>
+            <RouterLink to="/login" className="text-[13px] text-muted-foreground hover:text-accent-2 transition-colors">Already have an account? Log in &rarr;</RouterLink>
           </div>
         </Card>
         </motion.div>
 
-        <div className="text-center mt-8 text-[11px] text-zinc-500 tracking-wide">
+        <div className="text-center mt-8 text-[11px] text-muted-foreground tracking-wide">
           September 12, 2026 · National Harbor, MD &nbsp;&middot;&nbsp;
-          <a href="/culture-commerce-carnival" className="hover:text-cyan-400 transition-colors"> Full event details</a>
+          <a href="/culture-commerce-carnival" className="hover:text-accent-2 transition-colors"> Full event details</a>
         </div>
       </div>
     </div>

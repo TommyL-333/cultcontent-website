@@ -49,12 +49,26 @@ describe('signup', () => {
     const r = makeCreator('creator-tier@example.com', { tier: 'priority' });
     assert.equal(net.getPerson(r.uuid).tier, 'general');
   });
-  test('rejects a duplicate email, reporting existing status', () => {
-    makeCreator('dup@example.com');
-    const r2 = makeCreator('dup@example.com');
+  test('duplicate email while still pending resends + refreshes instead of rejecting', () => {
+    // Self-serve signup has no admin approval step to fall back on, so a
+    // pending row can only mean "never confirmed the first email" — treat
+    // resubmission as a resend, not a conflict, or a lost/expired
+    // confirmation link would permanently strand that person.
+    const r1 = makeCreator('dup-pending@example.com', { bio: 'first draft' });
+    const r2 = makeCreator('dup-pending@example.com', { bio: 'fixed typo' });
+    assert.equal(r2.ok, true);
+    assert.equal(r2.resent, true);
+    assert.equal(r2.uuid, r1.uuid); // same person, not a new row
+    assert.equal(net.getPerson(r2.uuid).bio, 'fixed typo'); // profile refreshed
+    assert.equal(net.getPerson(r2.uuid).status, 'pending'); // still not approved
+  });
+  test('rejects a duplicate email once already approved/rejected/deactivated', () => {
+    const r1 = makeCreator('dup-approved@example.com');
+    approve(r1.uuid);
+    const r2 = makeCreator('dup-approved@example.com');
     assert.equal(r2.ok, false);
     assert.equal(r2.error, 'already_registered');
-    assert.equal(r2.status, 'pending');
+    assert.equal(r2.status, 'approved');
   });
   test('email is normalized (case + whitespace)', () => {
     makeCreator(' Case@Example.com ');

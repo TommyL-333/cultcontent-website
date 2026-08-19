@@ -2422,7 +2422,15 @@ app.post('/ccc-network/signup', express.json(), (req, res) => {
   res.status(result.ok ? 200 : 400).json(result);
   if (!result.ok) return;
 
-  // Notify Tommy — fire-and-forget, same shape as /ccc-community-apply
+  // Self-serve account: send a confirm-your-email link right away — no
+  // admin approval required. Clicking it (GET /ccc-network/auth/:token,
+  // shared with the login flow below) both proves the email is real and
+  // activates the account in one step.
+  const verifyLink = cccNet.createVerifyLink(result.uuid);
+  if (verifyLink) cccNetMail.sendVerifyEmail(verifyLink.person, verifyLink.token).catch(e => console.error('[ccc-network] verify email error:', e.message));
+
+  // Notify Tommy — FYI only now, not a review gate. Fire-and-forget, same
+  // shape as /ccc-community-apply.
   const CCC_BASE  = 'R6vxbuk23aN0MHsSS8KuPv3UtQd';
   const VENDOR_TABLE = 'tblzlhu9pL4YmEEm';
   const p = req.body || {};
@@ -2432,7 +2440,7 @@ app.post('/ccc-network/signup', express.json(), (req, res) => {
       'First Name': p.first_name || '', 'Last Name': p.last_name || '', 'Email': p.email || '',
       'Brand': p.role === 'brand' ? p.brand_name : (p.handle || ''),
       'Product Type': `[Networking Roster — ${p.role}] ${p.category || ''}`,
-      'Status': 'Pending Review',
+      'Status': 'New signup (self-serve, pending email confirmation)',
     },
   }).catch(e => console.warn('[CCC-NETWORK] Lark notify failed:', e.message));
 });
@@ -2446,8 +2454,19 @@ app.post('/ccc-network/login', express.json(), async (req, res) => {
 app.get('/ccc-network/auth/:token', (req, res) => {
   const result = cccNet.consumeMagicLink(req.params.token);
   if (!result.ok) return res.status(400).send(`<p style="font-family:sans-serif;text-align:center;padding:80px 20px;">Link ${result.error === 'expired' ? 'expired' : 'invalid'} — <a href="/ccc-network/login">request a new one</a>.</p>`);
-  req.session.networkPersonId = result.person.id;
-  const incomplete = !result.person.bio && !result.person.looking_for;
+
+  // A link consumed while still 'pending' is the self-serve signup
+  // confirmation (see createVerifyLink) — clicking it both verifies the
+  // email and activates the account, with no admin step in between.
+  // Doesn't touch 'rejected'/'deactivated' — requireNetworkSession still
+  // bounces those regardless of what session cookie gets set below.
+  let person = result.person;
+  if (person.status === 'pending') {
+    person = cccNet.setStatus(person.uuid, { status: 'approved' }).person;
+  }
+
+  req.session.networkPersonId = person.id;
+  const incomplete = !person.bio && !person.looking_for;
   res.redirect(incomplete ? '/ccc-network/settings' : '/ccc-network/home');
 });
 
@@ -2578,6 +2597,12 @@ app.get(['/ccc-network', '/ccc-network/*'], (req, res) => {
 app.use(requireAuth); // all other routes require auth in production
 
 // ── Creator Carnival Networking Hub — admin ─────────────────────────────────────
+// Standalone page (not part of the ccc-network-app SPA, which is public) —
+// lives behind the requireAuth wall above like the rest of /dashboard.
+app.get('/ccc-network-admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dashboard', 'ccc-network-admin.html'));
+});
+
 app.get('/api/admin/ccc-network/people', (req, res) => {
   const { role, status, tier } = req.query;
   res.json({ ok: true, rows: cccNet.listAll({ role, status, tier }) });

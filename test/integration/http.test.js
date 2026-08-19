@@ -140,6 +140,41 @@ test('networking signup: creator and brand', async () => {
   brandUuid = b.uuid;
 });
 
+test('self-serve: confirming the signup email activates the account with no admin step', async () => {
+  const selfServe = await (await fetch(`${BASE}/ccc-network/signup`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ role: 'creator', first_name: 'SelfServe', last_name: 'Test', email: 'selfserve-http@example.com', handle: '@selfservehttp', category: 'Testing', looking_for: 'test brands' }),
+  })).json();
+  assert.equal(selfServe.ok, true);
+
+  await new Promise((r) => setTimeout(r, 300)); // let the async verify-email log flush
+  const token = latestTokenFor('selfserve-http@example.com');
+  const session = makeSession();
+  const authRes = await session.get(`/ccc-network/auth/${token}`);
+  assert.equal(authRes.status, 302); // logged straight in, no admin approval in between
+
+  const me = await session.getJson('/api/ccc-network/me');
+  assert.equal(me.ok, true);
+  assert.equal(me.person.status, 'approved');
+  assert.equal(me.person.uuid, selfServe.uuid);
+});
+
+test('self-serve: resubmitting while still pending resends instead of rejecting', async () => {
+  const first = await (await fetch(`${BASE}/ccc-network/signup`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ role: 'creator', first_name: 'Resend', last_name: 'Test', email: 'resend-http@example.com', handle: '@resendhttp', category: 'Testing', looking_for: 'first draft' }),
+  })).json();
+  assert.equal(first.ok, true);
+
+  const second = await (await fetch(`${BASE}/ccc-network/signup`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ role: 'creator', first_name: 'Resend', last_name: 'Test', email: 'resend-http@example.com', handle: '@resendhttp', category: 'Testing', looking_for: 'fixed draft' }),
+  })).json();
+  assert.equal(second.ok, true);
+  assert.equal(second.resent, true);
+  assert.equal(second.uuid, first.uuid);
+});
+
 test('admin approves both, which fires an approval magic-link email', async () => {
   const cRes = await fetch(`${BASE}/api/admin/ccc-network/people/${creatorUuid}/status`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'approved' }),
