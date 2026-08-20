@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Networking Hub — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400..700&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --background: #0c0a09;
+    --foreground: #f5f1ea;
+    --surface: #161311;
+    --surface-2: #1e1a17;
+    --border: #2b2622;
+    --muted: #9c9188;
+    --accent: #ff0050;
+    --accent-2: #00f2ea;
+    --gold: #f5a623;
+    --font-sans: 'Public Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Source Serif 4', ui-serif, Georgia, serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 32px 24px 80px; }
+  h1 {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0 0 4px;
+  }
+  .sub { color: var(--muted); font-size: 13px; margin: 0 0 28px; }
+  .toolbar {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    margin-bottom: 18px;
+  }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tab {
+    font-family: var(--font-sans);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 7px 13px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    cursor: pointer;
+  }
+  .tab.active { color: var(--foreground); border-color: var(--accent-2); background: var(--surface-2); }
+  .tab .count { color: var(--gold); margin-left: 5px; }
+  .spacer { flex: 1; }
+  input[type="search"] {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--foreground);
+    border-radius: 6px;
+    padding: 8px 11px;
+    font-size: 13px;
+    font-family: var(--font-sans);
+    min-width: 220px;
+  }
+  input[type="search"]::placeholder { color: var(--muted); }
+  a.csv, button.refresh {
+    font-family: var(--font-sans);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--foreground);
+    padding: 8px 13px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    text-align: left;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--muted);
+    padding: 0 10px 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+  td { padding: 12px 10px; vertical-align: top; }
+  .name { font-weight: 700; }
+  .email { color: var(--muted); font-size: 12px; }
+  .role-badge {
+    display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .05em; padding: 2px 7px; border-radius: 999px; border: 1px solid var(--border);
+  }
+  .role-creator { color: var(--accent-2); border-color: color-mix(in oklab, var(--accent-2) 40%, var(--border)); }
+  .role-brand { color: var(--gold); border-color: color-mix(in oklab, var(--gold) 40%, var(--border)); }
+  .status-pill {
+    display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .05em; padding: 2px 8px; border-radius: 999px;
+  }
+  .status-pending { background: rgba(245,166,35,0.15); color: var(--gold); }
+  .status-approved { background: rgba(0,242,234,0.12); color: var(--accent-2); }
+  .status-rejected { background: rgba(255,0,80,0.12); color: var(--accent); }
+  .status-deactivated { background: rgba(156,145,136,0.15); color: var(--muted); }
+  .meta { color: var(--muted); font-size: 12px; }
+  .actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  button.approve, button.reject, button.save, button.detail-toggle {
+    font-family: var(--font-sans);
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    padding: 6px 11px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    background: var(--surface-2);
+    color: var(--foreground);
+  }
+  button.approve { background: var(--accent-2); color: #0c0a09; border-color: var(--accent-2); }
+  button.reject { background: transparent; color: var(--accent); border-color: color-mix(in oklab, var(--accent) 50%, var(--border)); }
+  button:disabled { opacity: 0.45; cursor: not-allowed; }
+  select {
+    font-family: var(--font-sans);
+    background: var(--surface-2);
+    color: var(--foreground);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 7px;
+    font-size: 11px;
+  }
+  .detail-row td { padding-top: 0; }
+  .detail-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 16px;
+    font-size: 13px;
+    color: var(--foreground);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 24px;
+  }
+  .detail-box .field-label { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 2px; }
+  .detail-box .full { grid-column: 1 / -1; }
+  .empty { color: var(--muted); padding: 40px 10px; text-align: center; font-size: 13px; }
+  .toast {
+    position: fixed; bottom: 20px; right: 20px; background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: 8px; padding: 10px 16px;
+    font-size: 13px; opacity: 0; transform: translateY(8px); transition: all .25s ease;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.error { border-color: var(--accent); color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Networking Hub — Admin</h1>
+  <p class="sub">Accounts now activate automatically when someone confirms their email — no approval needed. "Pending" here means they haven't confirmed yet. Use this to moderate (reject/deactivate), fix stuck signups, or adjust a brand's tier.</p>
+
+  <div class="toolbar">
+    <div class="tabs" id="tabs"></div>
+    <div class="spacer"></div>
+    <input type="search" id="search" placeholder="Search name, email, brand, handle…" />
+    <button class="refresh" id="refresh">Refresh</button>
+    <a class="csv" id="csvLink" href="/api/admin/ccc-network/people.csv">Export CSV</a>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Role</th>
+        <th>Brand / Handle</th>
+        <th>Tier</th>
+        <th>Applied</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="rows"></tbody>
+  </table>
+  <div class="empty" id="empty" style="display:none;">Nothing here.</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const TABS = [
+  { key: 'pending', label: 'Pending' },
+  { key: 'approved', label: 'Approved' },
+  { key: 'rejected', label: 'Rejected' },
+  { key: 'deactivated', label: 'Deactivated' },
+  { key: '', label: 'All' },
+];
+
+let people = [];
+let activeTab = 'pending';
+let openDetail = null;
+
+const $tabs = document.getElementById('tabs');
+const $rows = document.getElementById('rows');
+const $empty = document.getElementById('empty');
+const $search = document.getElementById('search');
+const $toast = document.getElementById('toast');
+const $csvLink = document.getElementById('csvLink');
+
+function toast(msg, isError) {
+  $toast.textContent = msg;
+  $toast.className = 'toast show' + (isError ? ' error' : '');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => { $toast.className = 'toast'; }, 2600);
+}
+
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function fmtDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso.endsWith('Z') || iso.includes('+') ? iso : iso + 'Z');
+  if (isNaN(d)) return iso;
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ' · ' +
+    d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+}
+
+async function loadAll() {
+  const res = await fetch('/api/admin/ccc-network/people');
+  const json = await res.json();
+  people = json.rows || [];
+  render();
+}
+
+function countFor(key) {
+  if (!key) return people.length;
+  return people.filter(p => p.status === key).length;
+}
+
+function renderTabs() {
+  $tabs.innerHTML = TABS.map(t => `
+    <button class="tab ${t.key === activeTab ? 'active' : ''}" data-tab="${t.key}">
+      ${t.label}<span class="count">${countFor(t.key)}</span>
+    </button>
+  `).join('');
+  $tabs.querySelectorAll('.tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeTab = btn.dataset.tab;
+      openDetail = null;
+      render();
+    });
+  });
+}
+
+function filtered() {
+  const q = $search.value.trim().toLowerCase();
+  return people.filter(p => {
+    if (activeTab && p.status !== activeTab) return false;
+    if (!q) return true;
+    const hay = [p.first_name, p.last_name, p.email, p.brand_name, p.handle, p.category]
+      .filter(Boolean).join(' ').toLowerCase();
+    return hay.includes(q);
+  });
+}
+
+async function setStatus(uuid, patch, btn) {
+  const buttons = btn ? btn.closest('.actions')?.querySelectorAll('button') : [];
+  buttons && buttons.forEach(b => b.disabled = true);
+  try {
+    const res = await fetch(`/api/admin/ccc-network/people/${uuid}/status`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(patch),
+    });
+    const json = await res.json();
+    if (!json.ok) { toast(json.error || 'Failed to update', true); return; }
+    const idx = people.findIndex(p => p.uuid === uuid);
+    if (idx !== -1) people[idx] = json.person;
+    toast(patch.status === 'approved'
+      ? `Approved — login-link email queued for ${json.person.email}`
+      : `Status set to ${json.person.status}`);
+    render();
+  } catch (e) {
+    toast('Network error', true);
+  } finally {
+    buttons && buttons.forEach(b => b.disabled = false);
+  }
+}
+
+function detailRow(p) {
+  const links = (p.links || []).filter(Boolean);
+  return `
+    <tr class="detail-row">
+      <td colspan="7">
+        <div class="detail-box">
+          <div><div class="field-label">Email</div>${esc(p.email) || '—'}</div>
+          <div><div class="field-label">Phone</div>${esc(p.phone) || '—'}</div>
+          <div><div class="field-label">Category</div>${esc(p.category) || '—'}</div>
+          <div><div class="field-label">Looking for</div>${esc(p.looking_for) || '—'}</div>
+          <div class="full"><div class="field-label">Bio</div>${esc(p.bio) || '—'}</div>
+          <div class="full"><div class="field-label">Links</div>${links.length ? links.map(l => esc(l)).join(', ') : '—'}</div>
+        </div>
+      </td>
+    </tr>
+  `;
+}
+
+function render() {
+  renderTabs();
+  const rows = filtered();
+  $empty.style.display = rows.length ? 'none' : 'block';
+
+  $rows.innerHTML = rows.map(p => {
+    const displayName = [p.first_name, p.last_name].filter(Boolean).join(' ') || '(no name)';
+    const brandOrHandle = p.role === 'brand' ? (p.brand_name || '—') : (p.handle ? '@' + p.handle : '—');
+    const isBrand = p.role === 'brand';
+    const tierSelect = isBrand ? `
+      <select data-tier-for="${p.uuid}">
+        ${['general','priority','executive'].map(t => `<option value="${t}" ${p.tier===t?'selected':''}>${t}</option>`).join('')}
+      </select>` : `<span class="meta">—</span>`;
+
+    let actions = '';
+    if (p.status === 'pending') {
+      actions = `
+        <button class="approve" data-action="approve" data-uuid="${p.uuid}">Approve</button>
+        <button class="reject" data-action="reject" data-uuid="${p.uuid}">Reject</button>`;
+    } else {
+      actions = `
+        <select data-status-for="${p.uuid}">
+          ${['pending','approved','rejected','deactivated'].map(s => `<option value="${s}" ${p.status===s?'selected':''}>${s}</option>`).join('')}
+        </select>
+        <button class="save" data-action="save" data-uuid="${p.uuid}">Save</button>`;
+    }
+
+    return `
+      <tr data-row="${p.uuid}">
+        <td>
+          <div class="name">${esc(displayName)}</div>
+          <div class="email">${esc(p.email)}</div>
+        </td>
+        <td><span class="role-badge role-${p.role}">${p.role}</span></td>
+        <td>${esc(brandOrHandle)}</td>
+        <td>${tierSelect}</td>
+        <td class="meta">${fmtDate(p.created_at)}</td>
+        <td><span class="status-pill status-${p.status}">${p.status}</span></td>
+        <td>
+          <div class="actions">
+            ${actions}
+            <button class="detail-toggle" data-action="toggle" data-uuid="${p.uuid}">${openDetail === p.uuid ? 'Hide' : 'View'}</button>
+          </div>
+        </td>
+      </tr>
+      ${openDetail === p.uuid ? detailRow(p) : ''}
+    `;
+  }).join('');
+
+  $rows.querySelectorAll('[data-action="approve"]').forEach(btn => {
+    btn.addEventListener('click', () => setStatus(btn.dataset.uuid, { status: 'approved' }, btn));
+  });
+  $rows.querySelectorAll('[data-action="reject"]').forEach(btn => {
+    btn.addEventListener('click', () => setStatus(btn.dataset.uuid, { status: 'rejected' }, btn));
+  });
+  $rows.querySelectorAll('[data-action="save"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const uuid = btn.dataset.uuid;
+      const statusSel = $rows.querySelector(`[data-status-for="${uuid}"]`);
+      const tierSel = $rows.querySelector(`[data-tier-for="${uuid}"]`);
+      const patch = { status: statusSel.value };
+      if (tierSel) patch.tier = tierSel.value;
+      setStatus(uuid, patch, btn);
+    });
+  });
+  $rows.querySelectorAll('[data-action="toggle"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      openDetail = openDetail === btn.dataset.uuid ? null : btn.dataset.uuid;
+      render();
+    });
+  });
+}
+
+document.getElementById('refresh').addEventListener('click', loadAll);
+$search.addEventListener('input', render);
+
+loadAll();
+</script>
+</body>
+</html>
