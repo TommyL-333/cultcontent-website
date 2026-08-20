@@ -20,43 +20,29 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 
   <style>
-    /* GHL FULL-WIDTH CONTAINER OVERRIDE */
-    .c-section > .inner { max-width: 100% !important; width: 100% !important; padding: 0 !important; }
-    .c-row { max-width: 100% !important; }
-    .c-column { max-width: 100% !important; }
+    .c-section > .inner { max-width:100%!important; width:100%!important; padding:0!important; }
+    .c-row { max-width:100%!important; }
+    .c-column { max-width:100%!important; }
 
     :root {
-      --teal:  #00f2ea;
-      --pink:  #ff0050;
-      --gold:  #c9a84c;
-      --gold2: #f0d080;
-      --dark0: #080d1a;
-      --dark1: #0c1220;
-      --dark2: #0f1a2e;
-      --ease:  0.3s cubic-bezier(0.4,0,0.2,1);
+      --teal: #00f2ea; --pink: #ff0050;
+      --gold: #c9a84c; --gold2: #f0d080;
+      --dark0: #080d1a; --dark1: #0c1220; --dark2: #0f1a2e;
+      --ease: 0.3s cubic-bezier(0.4,0,0.2,1);
     }
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
-    body { font-family: 'Lato', sans-serif; background: var(--dark0); color: #fff; overflow-x: hidden; }
-    h1,h2,h3,h4 { font-family: 'Montserrat', sans-serif; font-weight: 900; line-height: 1.1; }
-    p { line-height: 1.7; }
-
-    .gt  { background: linear-gradient(90deg,var(--teal),var(--pink)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
-    .gg  { background: linear-gradient(90deg,var(--gold),var(--gold2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+    html { scroll-behavior:smooth; }
+    body { font-family:'Lato',sans-serif; background:var(--dark0); color:#fff; overflow-x:hidden; }
+    h1,h2,h3,h4 { font-family:'Montserrat',sans-serif; font-weight:900; line-height:1.1; }
+    p { line-height:1.7; }
+    .gt { background:linear-gradient(90deg,var(--teal),var(--pink)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .gg { background:linear-gradient(90deg,var(--gold),var(--gold2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
 
     /* NAV */
     .logo { display:flex; align-items:center; gap:10px; text-decoration:none; flex-shrink:0; }
     .logo-img { height:34px; width:auto; display:block; }
     .logo-name { font-family:'Montserrat',sans-serif; font-weight:900; font-size:0.8rem; letter-spacing:0.13em; text-transform:uppercase; color:#fff; }
-    nav {
-      position:fixed; top:0; left:0; right:0; z-index:100;
-      display:flex; align-items:center; justify-content:space-between;
-      padding:0 40px; height:64px;
-      background:rgba(8,13,26,0.88);
-      backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
-      border-bottom:1px solid rgba(255,255,255,0.06);
-    }
+    nav { position:fixed; top:0; left:0; right:0; z-index:100; display:flex; align-items:center; justify-content:space-between; padding:0 40px; height:64px; background:rgba(8,13,26,0.88); backdrop-filter:blur(16px); border-bottom:1px solid rgba(255,255,255,0.06); }
     .nav-links { display:flex; align-items:center; gap:26px; list-style:none; margin:0; padding:0; }
     .nav-links a { color:rgba(255,255,255,0.55); text-decoration:none; font-size:0.875rem; font-weight:700; letter-spacing:0.04em; transition:color var(--ease); }
     .nav-links a:hover { color:#fff; }
@@ -77,7 +63,7 @@
 
     /* BUTTONS */
     .btn-gold { background:linear-gradient(90deg,var(--gold),var(--gold2)); color:#000; font-family:'Montserrat',sans-serif; font-weight:900; font-size:0.85rem; letter-spacing:0.08em; padding:16px 36px; border-radius:8px; text-decoration:none; text-transform:uppercase; transition:box-shadow var(--ease),transform var(--ease); display:inline-flex; align-items:center; gap:8px; }
-    .btn-gold:hover { box-shadow:0 0 30px rgba(201,168,76,0.5); transform:translateY(-2px); }
+    .btn-gold:hover { box-shadow:0 0 32px rgba(201,168,76,0.55); transform:translateY(-2px); }
     .btn-ghost { color:rgba(255,255,255,0.7); font-family:'Montserrat',sans-serif; font-weight:700; font-size:0.85rem; letter-spacing:0.06em; padding:16px 28px; border-radius:8px; text-decoration:none; border:1px solid rgba(255,255,255,0.12); text-transform:uppercase; transition:border-color var(--ease),color var(--ease); display:inline-flex; align-items:center; gap:8px; }
     .btn-ghost:hover { border-color:rgba(255,255,255,0.35); color:#fff; }
 
@@ -85,7 +71,7 @@
     .section-label { font-size:0.7rem; font-weight:700; letter-spacing:0.2em; text-transform:uppercase; color:var(--teal); margin-bottom:14px; text-align:center; }
     .section-label.gold { color:var(--gold); }
     .section-h2 { font-size:clamp(1.8rem,4vw,2.8rem); text-align:center; margin-bottom:16px; }
-    .section-sub { text-align:center; color:rgba(255,255,255,0.5); font-size:1rem; max-width:600px; margin:0 auto; }
+    .section-sub { text-align:center; color:rgba(255,255,255,0.5); font-size:1rem; max-width:600px; margin:0 auto; line-height:1.75; }
 
     /* ── HERO ──────────────────────────────────────────────────────────── */
     .scale-hero {
@@ -93,125 +79,91 @@
       display:flex; align-items:center; justify-content:center;
       position:relative; overflow:hidden;
       background:
-        radial-gradient(ellipse 70% 60% at 50% 0%,rgba(201,168,76,0.1) 0%,transparent 65%),
-        radial-gradient(ellipse 50% 40% at 85% 80%,rgba(255,0,80,0.06) 0%,transparent 70%),
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(201,168,76,0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 40% at 10% 80%, rgba(0,242,234,0.05) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 40% at 90% 80%, rgba(255,0,80,0.05) 0%, transparent 70%),
         var(--dark0);
     }
-    .hero-orb { position:absolute; pointer-events:none; border-radius:50%; filter:blur(80px); }
-    .orb-1 { width:600px; height:600px; background:radial-gradient(circle,rgba(201,168,76,0.08) 0%,transparent 70%); top:-120px; right:-120px; animation:orbFloat 22s ease-in-out infinite; }
-    .orb-2 { width:450px; height:450px; background:radial-gradient(circle,rgba(255,0,80,0.05) 0%,transparent 70%); bottom:-60px; left:-80px; animation:orbFloat 28s ease-in-out infinite reverse; }
-    @keyframes orbFloat { 0%,100%{transform:translate(0,0);} 33%{transform:translate(20px,-25px);} 66%{transform:translate(-15px,18px);} }
-    .hero-inner { max-width:860px; width:100%; text-align:center; position:relative; z-index:1; }
-    .hero-badge { display:inline-flex; align-items:center; gap:8px; background:rgba(201,168,76,0.1); border:1px solid rgba(201,168,76,0.25); border-radius:24px; padding:6px 16px; font-size:0.7rem; font-weight:700; letter-spacing:0.18em; text-transform:uppercase; color:var(--gold); margin-bottom:28px; }
+    .hero-orb { position:absolute; pointer-events:none; border-radius:50%; filter:blur(90px); }
+    .orb-1 { width:700px; height:700px; background:radial-gradient(circle,rgba(201,168,76,0.07) 0%,transparent 70%); top:-200px; left:50%; transform:translateX(-50%); animation:orbFloat 24s ease-in-out infinite; }
+    .orb-2 { width:400px; height:400px; background:radial-gradient(circle,rgba(0,242,234,0.05) 0%,transparent 70%); bottom:-60px; left:-60px; animation:orbFloat 30s ease-in-out infinite reverse; }
+    .orb-3 { width:400px; height:400px; background:radial-gradient(circle,rgba(255,0,80,0.04) 0%,transparent 70%); bottom:-60px; right:-60px; animation:orbFloat 26s ease-in-out infinite; }
+    @keyframes orbFloat { 0%,100%{transform:translateX(-50%) translate(0,0);} 33%{transform:translateX(-50%) translate(20px,-30px);} 66%{transform:translateX(-50%) translate(-15px,20px);} }
+    .orb-2,.orb-3 { animation:orbFloat2 28s ease-in-out infinite; }
+    @keyframes orbFloat2 { 0%,100%{transform:translate(0,0);} 33%{transform:translate(15px,-20px);} 66%{transform:translate(-10px,15px);} }
+
+    .hero-inner { max-width:800px; width:100%; text-align:center; position:relative; z-index:1; }
+    .hero-badge { display:inline-flex; align-items:center; gap:8px; background:rgba(201,168,76,0.1); border:1px solid rgba(201,168,76,0.25); border-radius:24px; padding:6px 16px; font-size:0.7rem; font-weight:700; letter-spacing:0.18em; text-transform:uppercase; color:var(--gold); margin-bottom:32px; }
     .badge-dot { width:6px; height:6px; border-radius:50%; background:var(--gold); box-shadow:0 0 8px var(--gold); animation:pulse 2s ease-in-out infinite; }
-    @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
-    .hero-inner h1 { font-size:clamp(2.8rem,6vw,5rem); margin-bottom:24px; letter-spacing:-0.02em; }
-    .hero-inner .lead { font-size:1.15rem; color:rgba(255,255,255,0.65); max-width:640px; margin:0 auto 44px; line-height:1.75; }
-    .hero-cta-row { display:flex; align-items:center; justify-content:center; gap:16px; flex-wrap:wrap; }
-    .hero-stats { display:flex; align-items:center; justify-content:center; gap:48px; margin-top:64px; flex-wrap:wrap; }
-    .hero-stat .num { font-family:'Montserrat',sans-serif; font-weight:900; font-size:2.4rem; line-height:1; margin-bottom:4px; }
-    .hero-stat .label { font-size:0.75rem; color:rgba(255,255,255,0.4); letter-spacing:0.1em; text-transform:uppercase; }
-    .stat-divider { width:1px; height:48px; background:rgba(255,255,255,0.1); }
+    @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.35;} }
 
-    /* ── WHY BRANDS FAIL ───────────────────────────────────────────────── */
-    .why-section {
-      padding:100px 32px;
-      background:var(--dark1);
-      border-top:1px solid rgba(255,255,255,0.05);
-    }
-    .why-inner { max-width:900px; margin:0 auto; }
-    .why-header { margin-bottom:56px; }
-    .why-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:48px; }
-    .why-card {
-      background:rgba(255,0,80,0.04); border:1px solid rgba(255,0,80,0.1);
-      border-radius:14px; padding:28px 24px;
-    }
-    .why-card h4 { font-size:0.9rem; color:var(--pink); margin-bottom:8px; display:flex; align-items:center; gap:8px; }
-    .why-card p { font-size:0.82rem; color:rgba(255,255,255,0.45); line-height:1.7; }
-    .why-answer {
-      background:rgba(201,168,76,0.05); border:1px solid rgba(201,168,76,0.18);
-      border-radius:14px; padding:32px 36px;
-      display:flex; align-items:flex-start; gap:24px;
-    }
-    .why-answer-icon { font-size:2rem; flex-shrink:0; }
-    .why-answer h3 { font-size:1.1rem; margin-bottom:10px; }
-    .why-answer p { font-size:0.9rem; color:rgba(255,255,255,0.55); line-height:1.75; }
+    .hero-inner h1 { font-size:clamp(2.6rem,6vw,4.8rem); margin-bottom:28px; letter-spacing:-0.025em; }
+    .hero-inner .lead { font-size:1.1rem; color:rgba(255,255,255,0.6); max-width:600px; margin:0 auto 20px; line-height:1.8; }
+    .hero-sub-note { font-size:0.82rem; color:rgba(255,255,255,0.32); margin-bottom:44px; }
 
-    /* ── HOW IT WORKS / TIMELINE ───────────────────────────────────────── */
-    .timeline-section {
-      padding:100px 32px;
-      background:var(--dark0);
-      border-top:1px solid rgba(255,255,255,0.05);
+    .hero-cta-row { display:flex; align-items:center; justify-content:center; gap:16px; flex-wrap:wrap; margin-bottom:72px; }
+
+    /* TEAM PREVIEW ROW — hero */
+    .team-preview {
+      display:flex; align-items:center; justify-content:center; gap:0;
+      padding:28px 36px;
+      background:rgba(255,255,255,0.02);
+      border:1px solid rgba(255,255,255,0.07);
+      border-radius:20px;
+      flex-wrap:wrap; gap:0;
     }
-    .timeline-inner { max-width:860px; margin:0 auto; }
-    .timeline-header { margin-bottom:64px; }
-    .tl-track { position:relative; display:flex; flex-direction:column; gap:0; }
-    .tl-track::before {
-      content:''; position:absolute;
-      left:34px; top:0; bottom:0; width:1px;
-      background:linear-gradient(to bottom,var(--gold),rgba(201,168,76,0.1),transparent);
-    }
-    .tl-item { display:flex; gap:40px; align-items:flex-start; padding:0 0 56px; position:relative; }
-    .tl-item:last-child { padding-bottom:0; }
-    .tl-dot {
-      flex-shrink:0; width:68px; height:68px; border-radius:50%;
-      background:rgba(201,168,76,0.08); border:1px solid rgba(201,168,76,0.25);
+    .tp-person { display:flex; flex-direction:column; align-items:center; gap:10px; padding:0 28px; position:relative; }
+    .tp-person + .tp-person::before { content:''; position:absolute; left:0; top:50%; transform:translateY(-50%); height:48px; width:1px; background:rgba(255,255,255,0.07); }
+    .tp-avatar {
+      width:64px; height:64px; border-radius:50%;
+      background:rgba(0,242,234,0.08); border:2px solid rgba(0,242,234,0.2);
       display:flex; align-items:center; justify-content:center;
-      font-family:'Montserrat',sans-serif; font-weight:900;
-      font-size:0.6rem; line-height:1.2; text-align:center;
-      color:var(--gold); letter-spacing:0.06em; text-transform:uppercase;
-      position:relative; z-index:1;
+      font-family:'Montserrat',sans-serif; font-weight:900; font-size:1.1rem; color:var(--teal);
     }
-    .tl-content { flex:1; padding-top:10px; }
-    .tl-period { font-size:0.68rem; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:var(--gold); margin-bottom:8px; }
-    .tl-content h3 { font-size:1.15rem; margin-bottom:10px; }
-    .tl-content > p { font-size:0.875rem; color:rgba(255,255,255,0.5); line-height:1.75; margin-bottom:16px; }
-    .tl-bullets { display:flex; flex-direction:column; gap:8px; }
-    .tl-bullet { display:flex; align-items:flex-start; gap:10px; font-size:0.825rem; color:rgba(255,255,255,0.55); }
-    .tl-bullet i { color:var(--gold); flex-shrink:0; margin-top:3px; font-size:0.7rem; }
-    .tl-callout {
-      background:rgba(201,168,76,0.06); border:1px solid rgba(201,168,76,0.2);
-      border-radius:10px; padding:14px 18px; margin-top:16px;
-      font-size:0.82rem; color:rgba(255,255,255,0.6); line-height:1.65;
+    .tp-avatar.mystery {
+      background:rgba(255,255,255,0.03); border:2px dashed rgba(255,255,255,0.15);
+      color:rgba(255,255,255,0.25); font-size:1.3rem; animation:mysteryPulse 3s ease-in-out infinite;
     }
-    .tl-callout strong { color:var(--gold); }
+    @keyframes mysteryPulse { 0%,100%{border-color:rgba(201,168,76,0.2);} 50%{border-color:rgba(201,168,76,0.5);} }
+    .tp-name { font-family:'Montserrat',sans-serif; font-weight:900; font-size:0.78rem; color:#fff; white-space:nowrap; }
+    .tp-role { font-size:0.65rem; color:rgba(255,255,255,0.35); font-weight:600; letter-spacing:0.06em; text-transform:uppercase; white-space:nowrap; }
+    .tp-role.mystery-role { color:var(--gold); animation:mysteryPulse2 3s ease-in-out infinite; }
+    @keyframes mysteryPulse2 { 0%,100%{opacity:0.5;} 50%{opacity:1;} }
 
-    /* ── WHAT IT TAKES / PACKAGE ───────────────────────────────────────── */
-    .package-section {
+    /* ── PROOF BAR ─────────────────────────────────────────────────────── */
+    .proof-bar {
+      background:linear-gradient(90deg,rgba(201,168,76,0.07) 0%,rgba(201,168,76,0.03) 100%);
+      border-top:1px solid rgba(201,168,76,0.18);
+      border-bottom:1px solid rgba(201,168,76,0.08);
+      padding:32px;
+    }
+    .proof-inner { max-width:900px; margin:0 auto; display:flex; align-items:center; justify-content:center; gap:0; flex-wrap:wrap; }
+    .proof-stat { text-align:center; padding:0 40px; position:relative; }
+    .proof-stat + .proof-stat::before { content:''; position:absolute; left:0; top:50%; transform:translateY(-50%); height:40px; width:1px; background:rgba(201,168,76,0.2); }
+    .proof-num { font-family:'Montserrat',sans-serif; font-weight:900; font-size:2rem; line-height:1; margin-bottom:4px; }
+    .proof-desc { font-size:0.72rem; color:rgba(255,255,255,0.35); letter-spacing:0.1em; text-transform:uppercase; }
+
+    /* ── THE STORY / OPENING ───────────────────────────────────────────── */
+    .story-section {
       padding:100px 32px;
       background:var(--dark1);
-      border-top:1px solid rgba(255,255,255,0.05);
+      border-top:1px solid rgba(255,255,255,0.04);
     }
-    .package-inner { max-width:1100px; margin:0 auto; }
-    .package-header { margin-bottom:64px; }
-    .budget-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; margin-bottom:28px; }
-    .budget-card {
-      background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07);
-      border-radius:16px; padding:36px 28px;
-      position:relative; overflow:hidden;
-      transition:border-color var(--ease),transform var(--ease);
+    .story-inner { max-width:760px; margin:0 auto; }
+    .story-section h2 { font-size:clamp(1.8rem,4vw,2.6rem); margin-bottom:28px; line-height:1.15; }
+    .story-section p { font-size:1rem; color:rgba(255,255,255,0.55); line-height:1.85; margin-bottom:20px; }
+    .story-section p:last-child { margin-bottom:0; }
+    .story-section p strong { color:rgba(255,255,255,0.85); font-weight:700; }
+    .story-pull {
+      font-family:'Montserrat',sans-serif; font-weight:900;
+      font-size:clamp(1.2rem,2.5vw,1.6rem);
+      color:#fff; line-height:1.3;
+      padding:32px 36px;
+      border-left:3px solid var(--gold);
+      background:rgba(201,168,76,0.04);
+      border-radius:0 12px 12px 0;
+      margin:36px 0;
     }
-    .budget-card:hover { border-color:rgba(201,168,76,0.3); transform:translateY(-4px); }
-    .budget-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--gold),var(--gold2)); }
-    .budget-icon { width:52px; height:52px; background:rgba(201,168,76,0.08); border:1px solid rgba(201,168,76,0.15); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.25rem; color:var(--gold); margin-bottom:20px; }
-    .budget-card h3 { font-size:1rem; margin-bottom:8px; }
-    .budget-amount { font-family:'Montserrat',sans-serif; font-weight:900; font-size:1.8rem; color:var(--gold); line-height:1; margin-bottom:6px; }
-    .budget-amount span { font-size:0.9rem; font-weight:400; color:rgba(255,255,255,0.35); }
-    .budget-note { font-size:0.8rem; color:rgba(255,255,255,0.4); line-height:1.6; margin-top:12px; }
-    .budget-tags { display:flex; flex-wrap:wrap; gap:6px; margin-top:16px; }
-    .budget-tag { background:rgba(201,168,76,0.07); border:1px solid rgba(201,168,76,0.15); border-radius:4px; padding:3px 10px; font-size:0.7rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:rgba(201,168,76,0.8); }
-
-    /* Trybe callout */
-    .trybe-callout {
-      display:flex; align-items:flex-start; gap:16px;
-      background:rgba(201,168,76,0.05); border:1px solid rgba(201,168,76,0.18);
-      border-radius:12px; padding:24px 28px;
-    }
-    .trybe-icon { font-size:1.4rem; flex-shrink:0; margin-top:2px; }
-    .trybe-text h4 { font-size:0.9rem; margin-bottom:6px; color:var(--gold); }
-    .trybe-text p { font-size:0.85rem; color:rgba(255,255,255,0.5); line-height:1.7; }
-    .trybe-text a { color:var(--gold); text-decoration:none; font-weight:700; }
-    .trybe-text a:hover { text-decoration:underline; }
 
     /* ── TEAM ──────────────────────────────────────────────────────────── */
     .team-section {
@@ -219,26 +171,152 @@
       background:var(--dark0);
       border-top:1px solid rgba(255,255,255,0.05);
     }
-    .team-inner { max-width:900px; margin:0 auto; }
+    .team-inner { max-width:1060px; margin:0 auto; }
     .team-header { margin-bottom:64px; }
-    .team-grid { display:grid; grid-template-columns:1fr 1fr; gap:32px; }
+    .team-grid { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+
     .team-card {
-      background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07);
-      border-radius:16px; padding:40px 32px;
+      background:rgba(255,255,255,0.025);
+      border:1px solid rgba(255,255,255,0.07);
+      border-radius:18px; padding:40px 36px;
       position:relative; overflow:hidden;
-      transition:border-color var(--ease);
+      transition:border-color var(--ease), transform var(--ease);
     }
-    .team-card:hover { border-color:rgba(0,242,234,0.2); }
+    .team-card:hover { transform:translateY(-3px); border-color:rgba(0,242,234,0.18); }
     .team-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--teal),var(--pink)); }
-    .team-role { font-size:0.65rem; font-weight:700; letter-spacing:0.16em; text-transform:uppercase; color:var(--teal); margin-bottom:12px; }
-    .team-card h3 { font-size:1.5rem; margin-bottom:8px; }
-    .team-card .team-title { font-size:0.82rem; color:rgba(255,255,255,0.4); margin-bottom:20px; }
-    .team-stats { display:flex; gap:24px; flex-wrap:wrap; margin-bottom:20px; }
-    .team-stat .ts-num { font-family:'Montserrat',sans-serif; font-weight:900; font-size:1.5rem; line-height:1; margin-bottom:3px; }
-    .team-stat .ts-label { font-size:0.65rem; color:rgba(255,255,255,0.35); letter-spacing:0.08em; text-transform:uppercase; }
-    .team-card p { font-size:0.85rem; color:rgba(255,255,255,0.5); line-height:1.75; }
-    .team-badges { display:flex; flex-wrap:wrap; gap:8px; margin-top:18px; }
-    .team-badge { background:rgba(0,242,234,0.07); border:1px solid rgba(0,242,234,0.14); border-radius:4px; padding:4px 10px; font-size:0.68rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:rgba(0,242,234,0.7); }
+
+    /* Mystery card */
+    .team-card.mystery-card {
+      border:1px dashed rgba(201,168,76,0.25);
+      background:rgba(201,168,76,0.02);
+    }
+    .team-card.mystery-card:hover { border-color:rgba(201,168,76,0.45); }
+    .team-card.mystery-card::before { background:linear-gradient(90deg,var(--gold),var(--gold2)); }
+
+    .team-role-tag { font-size:0.65rem; font-weight:700; letter-spacing:0.16em; text-transform:uppercase; color:var(--teal); margin-bottom:16px; }
+    .team-role-tag.gold { color:var(--gold); }
+
+    .team-avatar-row { display:flex; align-items:center; gap:18px; margin-bottom:20px; }
+    .t-avatar {
+      width:56px; height:56px; border-radius:50%; flex-shrink:0;
+      background:rgba(0,242,234,0.08); border:2px solid rgba(0,242,234,0.2);
+      display:flex; align-items:center; justify-content:center;
+      font-family:'Montserrat',sans-serif; font-weight:900; font-size:1rem; color:var(--teal);
+    }
+    .t-avatar.mystery-av {
+      background:rgba(201,168,76,0.05); border:2px dashed rgba(201,168,76,0.3);
+      color:rgba(255,255,255,0.2); font-size:1.4rem;
+      animation:mysteryPulse 3s ease-in-out infinite;
+    }
+    .t-name-block h3 { font-size:1.3rem; margin-bottom:3px; }
+    .t-name-block .t-title { font-size:0.8rem; color:rgba(255,255,255,0.35); }
+
+    .team-stats { display:flex; gap:20px; flex-wrap:wrap; margin-bottom:18px; padding-bottom:18px; border-bottom:1px solid rgba(255,255,255,0.06); }
+    .ts { }
+    .ts .ts-num { font-family:'Montserrat',sans-serif; font-weight:900; font-size:1.3rem; line-height:1; margin-bottom:3px; }
+    .ts .ts-lbl { font-size:0.62rem; color:rgba(255,255,255,0.3); letter-spacing:0.08em; text-transform:uppercase; }
+
+    .team-card p { font-size:0.85rem; color:rgba(255,255,255,0.5); line-height:1.75; margin-bottom:16px; }
+    .team-card p:last-child { margin-bottom:0; }
+
+    .team-duties { list-style:none; display:flex; flex-direction:column; gap:7px; margin-bottom:0; }
+    .team-duties li { display:flex; align-items:flex-start; gap:9px; font-size:0.82rem; color:rgba(255,255,255,0.5); line-height:1.5; }
+    .team-duties li i { color:var(--teal); flex-shrink:0; margin-top:3px; font-size:0.65rem; }
+    .team-duties.gold-duties li i { color:var(--gold); }
+
+    /* Mystery open role */
+    .mystery-open-badge {
+      display:inline-flex; align-items:center; gap:6px;
+      background:rgba(201,168,76,0.08); border:1px solid rgba(201,168,76,0.2);
+      border-radius:100px; padding:4px 12px;
+      font-size:0.65rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase;
+      color:var(--gold); margin-bottom:16px;
+      animation:mysteryPulse2 3s ease-in-out infinite;
+    }
+    .mystery-dot { width:5px; height:5px; border-radius:50%; background:var(--gold); }
+
+    /* ── HOW IT WORKS ──────────────────────────────────────────────────── */
+    .system-section {
+      padding:100px 32px;
+      background:var(--dark1);
+      border-top:1px solid rgba(255,255,255,0.05);
+    }
+    .system-inner { max-width:900px; margin:0 auto; }
+    .system-header { margin-bottom:64px; }
+
+    /* Causal chain */
+    .chain { display:flex; flex-direction:column; gap:0; }
+    .chain-step {
+      display:grid; grid-template-columns:48px 1fr;
+      gap:0 28px; align-items:stretch;
+    }
+    .chain-left { display:flex; flex-direction:column; align-items:center; }
+    .chain-node {
+      width:48px; height:48px; border-radius:50%; flex-shrink:0;
+      background:rgba(201,168,76,0.08); border:2px solid rgba(201,168,76,0.25);
+      display:flex; align-items:center; justify-content:center;
+      font-family:'Montserrat',sans-serif; font-weight:900;
+      font-size:0.75rem; color:var(--gold); z-index:1;
+    }
+    .chain-line { flex:1; width:1px; background:linear-gradient(to bottom,rgba(201,168,76,0.25),rgba(201,168,76,0.05)); margin:4px auto; }
+    .chain-step:last-child .chain-line { display:none; }
+    .chain-content { padding:0 0 48px; }
+    .chain-step:last-child .chain-content { padding-bottom:0; }
+    .chain-phase { font-size:0.65rem; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:var(--gold); margin-bottom:6px; }
+    .chain-content h3 { font-size:1.05rem; margin-bottom:10px; }
+    .chain-content p { font-size:0.875rem; color:rgba(255,255,255,0.5); line-height:1.75; margin-bottom:12px; }
+    .chain-bullets { display:flex; flex-direction:column; gap:7px; }
+    .chain-bullet { display:flex; align-items:flex-start; gap:9px; font-size:0.82rem; color:rgba(255,255,255,0.45); }
+    .chain-bullet i { color:var(--gold); flex-shrink:0; margin-top:3px; font-size:0.65rem; }
+    .chain-callout {
+      background:rgba(201,168,76,0.05); border:1px solid rgba(201,168,76,0.18);
+      border-radius:10px; padding:14px 18px; margin-top:14px;
+      font-size:0.82rem; color:rgba(255,255,255,0.55); line-height:1.65;
+    }
+    .chain-callout strong { color:var(--gold); }
+
+    /* ── WHAT IT TAKES ─────────────────────────────────────────────────── */
+    .package-section {
+      padding:100px 32px;
+      background:var(--dark0);
+      border-top:1px solid rgba(255,255,255,0.05);
+    }
+    .package-inner { max-width:1060px; margin:0 auto; }
+    .package-header { margin-bottom:64px; }
+
+    .budget-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; margin-bottom:24px; }
+    .budget-card {
+      background:rgba(255,255,255,0.025); border:1px solid rgba(255,255,255,0.06);
+      border-radius:16px; padding:32px 26px;
+      position:relative; overflow:hidden;
+      transition:border-color var(--ease),transform var(--ease);
+    }
+    .budget-card:hover { border-color:rgba(201,168,76,0.25); transform:translateY(-3px); }
+    .budget-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--gold),var(--gold2)); }
+    .budget-icon { width:48px; height:48px; background:rgba(201,168,76,0.08); border:1px solid rgba(201,168,76,0.15); border-radius:11px; display:flex; align-items:center; justify-content:center; font-size:1.1rem; color:var(--gold); margin-bottom:18px; }
+    .budget-card h3 { font-size:0.95rem; margin-bottom:8px; }
+    .budget-amount { font-family:'Montserrat',sans-serif; font-weight:900; font-size:1.65rem; color:var(--gold); line-height:1; margin-bottom:6px; }
+    .budget-amount span { font-size:0.85rem; font-weight:400; color:rgba(255,255,255,0.3); }
+    .budget-note { font-size:0.8rem; color:rgba(255,255,255,0.38); line-height:1.65; margin-top:10px; }
+    .budget-tags { display:flex; flex-wrap:wrap; gap:5px; margin-top:14px; }
+    .budget-tag { background:rgba(201,168,76,0.07); border:1px solid rgba(201,168,76,0.14); border-radius:4px; padding:3px 9px; font-size:0.68rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:rgba(201,168,76,0.75); }
+
+    .trybe-callout { display:flex; align-items:flex-start; gap:16px; background:rgba(201,168,76,0.04); border:1px solid rgba(201,168,76,0.16); border-radius:12px; padding:22px 26px; }
+    .trybe-callout .tc-icon { font-size:1.3rem; flex-shrink:0; margin-top:2px; }
+    .trybe-callout h4 { font-size:0.88rem; margin-bottom:5px; color:var(--gold); }
+    .trybe-callout p { font-size:0.82rem; color:rgba(255,255,255,0.45); line-height:1.7; }
+    .trybe-callout a { color:var(--gold); text-decoration:none; font-weight:700; }
+    .trybe-callout a:hover { text-decoration:underline; }
+
+    /* Samples bar */
+    .samples-bar {
+      display:flex; align-items:center; gap:32px;
+      background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06);
+      border-radius:14px; padding:28px 32px; margin-top:20px; flex-wrap:wrap;
+    }
+    .samples-num { font-family:'Montserrat',sans-serif; font-weight:900; font-size:2.8rem; color:var(--gold); line-height:1; flex-shrink:0; }
+    .samples-text h4 { font-size:0.9rem; margin-bottom:6px; }
+    .samples-text p { font-size:0.82rem; color:rgba(255,255,255,0.4); line-height:1.65; }
 
     /* ── PRICING ───────────────────────────────────────────────────────── */
     .pricing-section {
@@ -248,80 +326,103 @@
     }
     .pricing-inner { max-width:800px; margin:0 auto; }
     .pricing-header { margin-bottom:64px; }
-    .slider-card {
-      background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08);
-      border-radius:20px; padding:48px 44px;
-      position:relative; overflow:hidden;
-    }
+
+    .slider-card { background:rgba(255,255,255,0.025); border:1px solid rgba(255,255,255,0.07); border-radius:20px; padding:48px 44px; position:relative; overflow:hidden; }
     .slider-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,var(--gold),var(--gold2)); }
     .slider-endpoints { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:36px; }
     .slider-ep { text-align:left; }
     .slider-ep.right { text-align:right; }
-    .ep-retainer { font-family:'Montserrat',sans-serif; font-weight:900; font-size:2rem; color:#fff; line-height:1; margin-bottom:4px; }
-    .ep-retainer span { font-size:1rem; color:rgba(255,255,255,0.5); }
-    .ep-gmv { font-size:0.9rem; color:var(--gold); font-weight:700; margin-bottom:6px; }
-    .ep-label { font-size:0.68rem; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:rgba(255,255,255,0.3); }
+    .ep-retainer { font-family:'Montserrat',sans-serif; font-weight:900; font-size:1.9rem; color:#fff; line-height:1; margin-bottom:4px; }
+    .ep-retainer span { font-size:0.95rem; color:rgba(255,255,255,0.4); }
+    .ep-gmv { font-size:0.88rem; color:var(--gold); font-weight:700; margin-bottom:5px; }
+    .ep-label { font-size:0.65rem; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:rgba(255,255,255,0.28); }
     .slider-track-wrap { margin-bottom:32px; padding:10px 0; }
-    .pricing-slider { -webkit-appearance:none; appearance:none; display:block; width:100%; height:6px; border-radius:3px; outline:none; cursor:pointer; background:rgba(255,255,255,0.12); }
-    .pricing-slider::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:28px; height:28px; border-radius:50%; background:linear-gradient(135deg,var(--gold),var(--gold2)); margin-top:-11px; box-shadow:0 0 0 5px rgba(201,168,76,0.22),0 4px 14px rgba(0,0,0,0.5); cursor:pointer; }
-    .pricing-slider::-moz-range-thumb { width:28px; height:28px; border-radius:50%; border:none; background:linear-gradient(135deg,var(--gold),var(--gold2)); box-shadow:0 0 0 5px rgba(201,168,76,0.22); cursor:pointer; }
-    .slider-output { text-align:center; margin-bottom:36px; padding:24px 20px; border-radius:12px; background:rgba(201,168,76,0.05); border:1px solid rgba(201,168,76,0.14); }
-    .output-label { font-size:0.7rem; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:rgba(255,255,255,0.3); margin-bottom:10px; }
-    .output-main { font-family:'Montserrat',sans-serif; font-weight:900; font-size:1.6rem; color:#fff; line-height:1.3; }
+    .pricing-slider { -webkit-appearance:none; appearance:none; display:block; width:100%; height:6px; border-radius:3px; outline:none; cursor:pointer; background:rgba(255,255,255,0.1); }
+    .pricing-slider::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:28px; height:28px; border-radius:50%; background:linear-gradient(135deg,var(--gold),var(--gold2)); margin-top:-11px; box-shadow:0 0 0 5px rgba(201,168,76,0.2),0 4px 12px rgba(0,0,0,0.5); cursor:pointer; }
+    .pricing-slider::-moz-range-thumb { width:28px; height:28px; border-radius:50%; border:none; background:linear-gradient(135deg,var(--gold),var(--gold2)); box-shadow:0 0 0 5px rgba(201,168,76,0.2); cursor:pointer; }
+    .slider-output { text-align:center; margin-bottom:36px; padding:22px 20px; border-radius:12px; background:rgba(201,168,76,0.05); border:1px solid rgba(201,168,76,0.12); }
+    .output-label { font-size:0.68rem; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:rgba(255,255,255,0.28); margin-bottom:10px; }
+    .output-main { font-family:'Montserrat',sans-serif; font-weight:900; font-size:1.55rem; color:#fff; line-height:1.3; }
     .output-retainer { color:var(--gold); }
     .output-gmv { color:var(--pink); }
-    .output-sep { font-size:1rem; color:rgba(255,255,255,0.4); font-weight:400; }
-    .invest-breakdown { border-top:1px solid rgba(255,255,255,0.07); padding-top:32px; }
-    .invest-label { font-size:0.75rem; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:rgba(255,255,255,0.35); margin-bottom:18px; }
-    .invest-rows { display:flex; flex-direction:column; gap:0; }
-    .invest-row { display:flex; justify-content:space-between; align-items:center; padding:14px 0; border-bottom:1px solid rgba(255,255,255,0.05); }
-    .invest-row:last-child { border-bottom:none; }
-    .invest-row-name { font-size:0.85rem; color:rgba(255,255,255,0.6); font-weight:600; display:flex; align-items:center; gap:8px; }
-    .invest-row-name i { color:var(--gold); font-size:0.7rem; }
-    .invest-row-name .invest-note { font-size:0.72rem; color:rgba(255,255,255,0.3); font-weight:400; margin-left:4px; }
-    .invest-row-val { font-family:'Montserrat',sans-serif; font-weight:900; font-size:0.95rem; color:#fff; }
-    .invest-row-val.dynamic { color:var(--gold); }
-    .invest-total-row { display:flex; justify-content:space-between; align-items:center; padding:20px 0 0; margin-top:8px; border-top:1px solid rgba(255,255,255,0.12); }
-    .invest-total-name { font-family:'Montserrat',sans-serif; font-weight:900; font-size:1rem; color:rgba(255,255,255,0.7); }
-    .invest-total-val { font-family:'Montserrat',sans-serif; font-weight:900; font-size:1.6rem; background:linear-gradient(90deg,var(--gold),var(--gold2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
-    .invest-note-text { font-size:0.75rem; color:rgba(255,255,255,0.22); margin-top:16px; line-height:1.6; }
+    .output-sep { font-size:0.95rem; color:rgba(255,255,255,0.35); font-weight:400; }
 
-    .pricing-card { background:rgba(255,255,255,0.025); border:1px solid rgba(255,255,255,0.07); border-radius:20px; padding:44px; position:relative; overflow:hidden; }
-    .pricing-tag { display:inline-flex; align-items:center; gap:6px; background:rgba(0,242,234,0.07); border:1px solid rgba(0,242,234,0.14); border-radius:100px; padding:5px 14px; font-size:0.68rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--teal); margin-bottom:28px; }
-    .pricing-includes { display:grid; grid-template-columns:1fr 1fr; gap:12px 32px; }
-    .inc-row { display:flex; align-items:flex-start; gap:10px; font-size:0.875rem; color:rgba(255,255,255,0.65); line-height:1.5; }
-    .inc-row i { color:var(--teal); flex-shrink:0; margin-top:3px; font-size:0.75rem; }
-    .pricing-cta-row { display:flex; flex-wrap:wrap; align-items:center; gap:20px; }
-    .pricing-social-proof { font-size:0.82rem; color:rgba(255,255,255,0.35); line-height:1.6; }
-    .pricing-social-proof strong { color:rgba(255,255,255,0.6); }
+    .invest-breakdown { border-top:1px solid rgba(255,255,255,0.06); padding-top:30px; }
+    .invest-label { font-size:0.72rem; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:rgba(255,255,255,0.3); margin-bottom:16px; }
+    .invest-rows { display:flex; flex-direction:column; }
+    .invest-row { display:flex; justify-content:space-between; align-items:center; padding:13px 0; border-bottom:1px solid rgba(255,255,255,0.04); }
+    .invest-row:last-child { border-bottom:none; }
+    .invest-row-name { font-size:0.84rem; color:rgba(255,255,255,0.55); font-weight:600; display:flex; align-items:center; gap:8px; }
+    .invest-row-name i { color:var(--gold); font-size:0.65rem; }
+    .invest-note { font-size:0.7rem; color:rgba(255,255,255,0.28); font-weight:400; margin-left:4px; }
+    .invest-row-val { font-family:'Montserrat',sans-serif; font-weight:900; font-size:0.92rem; color:#fff; }
+    .invest-row-val.dyn { color:var(--gold); }
+    .invest-total-row { display:flex; justify-content:space-between; align-items:center; padding:18px 0 0; margin-top:6px; border-top:1px solid rgba(255,255,255,0.1); }
+    .invest-total-name { font-family:'Montserrat',sans-serif; font-weight:900; font-size:0.95rem; color:rgba(255,255,255,0.65); }
+    .invest-total-val { font-family:'Montserrat',sans-serif; font-weight:900; font-size:1.55rem; background:linear-gradient(90deg,var(--gold),var(--gold2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .invest-footnote { font-size:0.72rem; color:rgba(255,255,255,0.2); margin-top:14px; line-height:1.65; }
+
+    .includes-card { background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); border-radius:18px; padding:40px; margin-top:28px; }
+    .inc-tag { display:inline-flex; align-items:center; gap:6px; background:rgba(0,242,234,0.07); border:1px solid rgba(0,242,234,0.12); border-radius:100px; padding:5px 14px; font-size:0.67rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--teal); margin-bottom:26px; }
+    .inc-grid { display:grid; grid-template-columns:1fr 1fr; gap:11px 32px; }
+    .inc-row { display:flex; align-items:flex-start; gap:10px; font-size:0.875rem; color:rgba(255,255,255,0.6); line-height:1.5; }
+    .inc-row i { color:var(--teal); flex-shrink:0; margin-top:3px; font-size:0.72rem; }
+    .inc-cta-row { display:flex; flex-wrap:wrap; align-items:center; gap:20px; margin-top:32px; }
+    .inc-social-proof { font-size:0.8rem; color:rgba(255,255,255,0.3); line-height:1.6; }
+    .inc-social-proof strong { color:rgba(255,255,255,0.55); }
 
     /* ── FINAL CTA ─────────────────────────────────────────────────────── */
     .final-cta {
       padding:120px 32px; text-align:center;
-      background:radial-gradient(ellipse 60% 60% at 50% 50%,rgba(201,168,76,0.08) 0%,transparent 70%),var(--dark2);
+      background:radial-gradient(ellipse 70% 70% at 50% 50%,rgba(201,168,76,0.08) 0%,transparent 70%),var(--dark2);
       border-top:1px solid rgba(255,255,255,0.05);
     }
-    .final-cta-inner { max-width:600px; margin:0 auto; }
-    .final-cta h2 { font-size:clamp(2rem,5vw,3.2rem); margin-bottom:20px; }
-    .final-cta p { font-size:1.05rem; color:rgba(255,255,255,0.5); margin-bottom:44px; line-height:1.75; }
+    .final-cta-inner { max-width:580px; margin:0 auto; }
+    .final-cta h2 { font-size:clamp(2rem,5vw,3rem); margin-bottom:20px; }
+    .final-cta p { font-size:1rem; color:rgba(255,255,255,0.45); margin-bottom:44px; line-height:1.8; }
 
     /* ── FOOTER ────────────────────────────────────────────────────────── */
     footer { background:var(--dark0); border-top:1px solid rgba(255,255,255,0.06); padding:48px 40px 32px; }
-    .ft-inner { max-width:1100px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:32px; flex-wrap:wrap; margin-bottom:32px; }
+    .ft-inner { max-width:1100px; margin:0 auto 32px; display:flex; align-items:center; justify-content:space-between; gap:32px; flex-wrap:wrap; }
     .ft-logo img { height:28px; width:auto; }
     .ft-links { display:flex; list-style:none; gap:28px; }
-    .ft-links a { color:rgba(255,255,255,0.35); text-decoration:none; font-size:0.8rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; transition:color var(--ease); }
+    .ft-links a { color:rgba(255,255,255,0.3); text-decoration:none; font-size:0.78rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; transition:color var(--ease); }
     .ft-links a:hover { color:#fff; }
     .ft-social { display:flex; gap:10px; }
-    .ft-social a { width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:center; color:rgba(255,255,255,0.4); font-size:0.85rem; text-decoration:none; transition:all var(--ease); }
+    .ft-social a { width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:center; color:rgba(255,255,255,0.35); font-size:0.85rem; text-decoration:none; transition:all var(--ease); }
     .ft-social a:hover { background:rgba(255,255,255,0.12); color:#fff; }
     .ft-bottom { max-width:1100px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; padding-top:24px; border-top:1px solid rgba(255,255,255,0.05); }
-    .ft-bottom p { font-size:0.78rem; color:rgba(255,255,255,0.2); }
+    .ft-bottom p { font-size:0.76rem; color:rgba(255,255,255,0.18); }
 
     /* ── RESPONSIVE ────────────────────────────────────────────────────── */
-    @media(max-width:900px){ .budget-grid{grid-template-columns:1fr;} .team-grid{grid-template-columns:1fr;} .why-grid{grid-template-columns:1fr;} .pricing-includes{grid-template-columns:1fr;} }
-    @media(max-width:768px){ .hero-stats{gap:28px;} .stat-divider{display:none;} .slider-card{padding:32px 24px;} .pricing-card{padding:32px 24px;} .ep-retainer{font-size:1.4rem;} .output-main{font-size:1.2rem;} .invest-total-val{font-size:1.3rem;} .ft-inner{flex-direction:column;text-align:center;} .ft-bottom{flex-direction:column;gap:8px;text-align:center;} .tl-item{gap:24px;} .why-answer{flex-direction:column;gap:12px;} }
-    @media(max-width:480px){ .hero-cta-row{flex-direction:column;align-items:stretch;} .btn-gold,.btn-ghost{justify-content:center;} }
+    @media(max-width:960px) {
+      .team-grid { grid-template-columns:1fr; }
+      .budget-grid { grid-template-columns:1fr; }
+      .inc-grid { grid-template-columns:1fr; }
+      .proof-stat + .proof-stat::before { display:none; }
+      .proof-inner { gap:24px; }
+      .tp-person { padding:12px 20px; }
+    }
+    @media(max-width:768px) {
+      .team-preview { padding:20px; gap:8px; }
+      .slider-card { padding:32px 24px; }
+      .includes-card { padding:28px 24px; }
+      .ep-retainer { font-size:1.4rem; }
+      .output-main { font-size:1.2rem; }
+      .invest-total-val { font-size:1.3rem; }
+      .story-pull { padding:22px 24px; }
+      .chain-step { grid-template-columns:40px 1fr; }
+      .chain-node { width:40px; height:40px; font-size:0.65rem; }
+      .samples-bar { flex-direction:column; gap:16px; }
+      .ft-inner { flex-direction:column; text-align:center; }
+      .ft-bottom { flex-direction:column; gap:8px; text-align:center; }
+    }
+    @media(max-width:480px) {
+      .hero-cta-row { flex-direction:column; align-items:stretch; }
+      .btn-gold,.btn-ghost { justify-content:center; }
+      .tp-person + .tp-person::before { display:none; }
+      .team-preview { flex-direction:column; gap:16px; }
+    }
   </style>
 </head>
 <body>
@@ -363,171 +464,297 @@
   <section class="scale-hero">
     <div class="hero-orb orb-1"></div>
     <div class="hero-orb orb-2"></div>
+    <div class="hero-orb orb-3"></div>
     <div class="hero-inner">
 
       <div class="hero-badge">
         <span class="badge-dot"></span>
-        TikTok Shop &amp; Meta &mdash; Full Scale Package
+        Full-Scale TikTok Shop &amp; Meta Package
       </div>
 
-      <h1>Most Brands<br>Fund This <span class="gg">Wrong.</span><br>Here&rsquo;s How to Do It Right.</h1>
+      <h1>Three People<br>You Know.<br>One We <span class="gg">Find for You.</span></h1>
 
       <p class="lead">
-        TikTok Shop rewards brands that show up with real commitment &mdash; real creators, real samples, real live sessions, and real ad spend behind it. The Scale package is what it looks like to actually fund a program that wins.
+        Most agencies give you an account manager split across 15 clients. The Scale package is built differently &mdash; a dedicated four-person team, each owning a specific piece of your growth. Nobody else is offering this.
       </p>
+      <p class="hero-sub-note">Starting at $23,000/mo total investment &mdash; built around what winning actually requires</p>
 
       <div class="hero-cta-row">
         <a href="/book" class="btn-gold">
           <i class="fa-solid fa-arrow-right"></i>
           Apply for Scale
         </a>
-        <a href="#why" class="btn-ghost">
+        <a href="#team" class="btn-ghost">
           <i class="fa-solid fa-chevron-down"></i>
-          See Why Most Brands Fail
+          Meet the Team
         </a>
       </div>
 
-      <div class="hero-stats">
-        <div class="hero-stat">
-          <div class="num gt">100+</div>
-          <div class="label">Brands Worked With</div>
+      <!-- Team preview -->
+      <div class="team-preview">
+        <div class="tp-person">
+          <div class="tp-avatar">TL</div>
+          <div class="tp-name">Tommy</div>
+          <div class="tp-role">Strategy &amp; Economics</div>
         </div>
-        <div class="stat-divider"></div>
-        <div class="hero-stat">
-          <div class="num gt">1B+</div>
-          <div class="label">Views Through the Community</div>
+        <div class="tp-person">
+          <div class="tp-avatar">J</div>
+          <div class="tp-name">Jina</div>
+          <div class="tp-role">Content &amp; Creators</div>
         </div>
-        <div class="stat-divider"></div>
-        <div class="hero-stat">
-          <div class="num gt">4+</div>
-          <div class="label">Years in TikTok Shop</div>
+        <div class="tp-person">
+          <div class="tp-avatar">B</div>
+          <div class="tp-name">Becca</div>
+          <div class="tp-role">Live Strategy</div>
         </div>
-        <div class="stat-divider"></div>
-        <div class="hero-stat">
-          <div class="num gt">TSP</div>
-          <div class="label">Certified Partner</div>
+        <div class="tp-person">
+          <div class="tp-avatar mystery">?</div>
+          <div class="tp-name">Your Brand Lead</div>
+          <div class="tp-role mystery-role">Recruited for you</div>
         </div>
       </div>
 
     </div>
   </section>
 
-  <!-- WHY BRANDS FAIL -->
-  <section class="why-section" id="why">
-    <div class="why-inner">
-      <div class="why-header">
-        <div class="section-label">The Real Problem</div>
-        <h2 class="section-h2">TikTok Shop Isn&rsquo;t<br>a <span class="gt">Free Channel.</span></h2>
+  <!-- PROOF BAR -->
+  <div class="proof-bar">
+    <div class="proof-inner">
+      <div class="proof-stat">
+        <div class="proof-num gg">$30M+</div>
+        <div class="proof-desc">Generated in one year on this platform</div>
+      </div>
+      <div class="proof-stat">
+        <div class="proof-num gt">1B+</div>
+        <div class="proof-desc">Views through the community</div>
+      </div>
+      <div class="proof-stat">
+        <div class="proof-num gg">100+</div>
+        <div class="proof-desc">Brands worked with</div>
+      </div>
+      <div class="proof-stat">
+        <div class="proof-num gt">4+</div>
+        <div class="proof-desc">Years building in TikTok Shop</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- THE STORY -->
+  <section class="story-section" id="story">
+    <div class="story-inner">
+      <div class="section-label gold" style="text-align:left;">The Honest Truth</div>
+      <h2>TikTok Shop rewards<br>brands that <span class="gg">fund it properly.</span></h2>
+
+      <p>
+        We were part of the team that helped build <strong>$30 million in TikTok Shop revenue in a single year.</strong> Not for one brand &mdash; across four brands, each taken from zero to five figures a month. The platform works. The question is whether you're running the playbook that actually makes it work, or a stripped-down version of it that looks right on paper and underdelivers in practice.
+      </p>
+
+      <p>
+        Here's what we've seen over and over: brands come in with a real product and real demand, and they hire an agency that knows the right words &mdash; affiliates, retainers, GMV Max, live strategy. The problem isn't the strategy. <strong>It's that none of the pieces are actually funded well enough to work, and there's no dedicated person running the day-to-day.</strong> 30 samples go out and nothing happens. An account manager who juggles 20 other clients "checks in" weekly. The ads go live before the organic flywheel is moving. Month three, the brand is frustrated and the agency has an excuse.
+      </p>
+
+      <div class="story-pull">
+        The Scale package exists because we know exactly what threshold each piece of this needs to cross before it starts compounding.
+      </div>
+
+      <p>
+        Creator retainers need to be real commitments, not $500 gifting deals. Sampling needs to move at 300+ per month, not 30. Live sessions need to be planned and executed like a production, not improvised. And the person coordinating all of it needs to know your product catalog cold and talk to your creators every single week &mdash; not as a side responsibility, but as their entire job. <strong>That's what the Brand Lead position is.</strong> We recruit them specifically for you, from a community of creators and operators who already live on this platform.
+      </p>
+    </div>
+  </section>
+
+  <!-- THE TEAM -->
+  <section class="team-section" id="team">
+    <div class="team-inner">
+      <div class="team-header">
+        <div class="section-label">Your Dedicated Team</div>
+        <h2 class="section-h2">Four Roles.<br>One Brand. <span class="gt">Yours.</span></h2>
         <p class="section-sub" style="margin-top:16px;">
-          Brands come in expecting organic magic. They send 20 samples, wait 60 days, and wonder why nothing happened. Here&rsquo;s what actually happens when you underfund it.
+          Every Scale client gets all four. No shared bandwidth, no rotating cast of account managers. Each person owns their lane completely.
         </p>
       </div>
 
-      <div class="why-grid">
-        <div class="why-card">
-          <h4><i class="fa-solid fa-xmark"></i> No real creator commitment</h4>
-          <p>Without paid retainers, creators post when they feel like it. You get one video, maybe two, and then silence. There&rsquo;s no algorithm signal, no momentum, no reason for the platform to push your product.</p>
-        </div>
-        <div class="why-card">
-          <h4><i class="fa-solid fa-xmark"></i> Too few samples, too slow</h4>
-          <p>You need 300+ samples moving per month to generate enough content volume to find what converts. 20 samples tells you almost nothing. It just means 20 creators who may or may not post.</p>
-        </div>
-        <div class="why-card">
-          <h4><i class="fa-solid fa-xmark"></i> No live strategy</h4>
-          <p>TikTok LIVE is one of the highest-converting surfaces on the platform. Brands that skip it leave a massive revenue channel untouched &mdash; and their competitors aren&rsquo;t skipping it.</p>
-        </div>
-        <div class="why-card">
-          <h4><i class="fa-solid fa-xmark"></i> Waiting for organic before running ads</h4>
-          <p>Paid amplification needs something to amplify. But waiting until everything is &ldquo;working&rdquo; before spending means you&rsquo;re always three months behind where you could be.</p>
-        </div>
-      </div>
+      <div class="team-grid">
 
-      <div class="why-answer">
-        <div class="why-answer-icon">&#128161;</div>
-        <div>
-          <h3>The answer isn&rsquo;t a better agency. It&rsquo;s a properly funded program.</h3>
-          <p>
-            The Scale package is built around what it actually costs to win &mdash; not the minimum viable spend, but the threshold where the flywheel actually spins.
-            Creator retainers that guarantee consistent output. 300+ samples per month feeding the top of the funnel. A live strategy converting in real time. And paid ads amplifying everything that&rsquo;s already working.
-            When all of it runs together, the compound effect is real.
+        <!-- Tommy -->
+        <div class="team-card">
+          <div class="team-role-tag">Strategy &amp; Economics</div>
+          <div class="team-avatar-row">
+            <div class="t-avatar">TL</div>
+            <div class="t-name-block">
+              <h3>Tommy Lynch</h3>
+              <div class="t-title">Founder &amp; CEO &mdash; TSP Certified</div>
+            </div>
+          </div>
+          <div class="team-stats">
+            <div class="ts"><div class="ts-num gt">4+</div><div class="ts-lbl">Years in Shop</div></div>
+            <div class="ts"><div class="ts-num gt">100+</div><div class="ts-lbl">Brands</div></div>
+            <div class="ts"><div class="ts-num gt">TSP</div><div class="ts-lbl">Certified</div></div>
+          </div>
+          <ul class="team-duties">
+            <li><i class="fa-solid fa-diamond"></i> Sets and holds the overall strategy</li>
+            <li><i class="fa-solid fa-diamond"></i> Owns unit economics and profitability framework</li>
+            <li><i class="fa-solid fa-diamond"></i> Weekly strategy calls with the brand</li>
+            <li><i class="fa-solid fa-diamond"></i> Paid media direction &mdash; TikTok and Meta</li>
+            <li><i class="fa-solid fa-diamond"></i> Oversees the full team and performance</li>
+          </ul>
+        </div>
+
+        <!-- Jina -->
+        <div class="team-card">
+          <div class="team-role-tag">Content &amp; Creator Lead</div>
+          <div class="team-avatar-row">
+            <div class="t-avatar">J</div>
+            <div class="t-name-block">
+              <h3>Jina</h3>
+              <div class="t-title">Creator turned operator &mdash; 300M+ views</div>
+            </div>
+          </div>
+          <div class="team-stats">
+            <div class="ts"><div class="ts-num gt">300M+</div><div class="ts-lbl">Views</div></div>
+          </div>
+          <ul class="team-duties">
+            <li><i class="fa-solid fa-diamond"></i> Leads content direction and creative strategy</li>
+            <li><i class="fa-solid fa-diamond"></i> Identifies and onboards creator talent</li>
+            <li><i class="fa-solid fa-diamond"></i> Oversees short video output across TikTok + Meta</li>
+            <li><i class="fa-solid fa-diamond"></i> Manages retainer creator relationships via Trybe</li>
+            <li><i class="fa-solid fa-diamond"></i> Knows what makes content move &mdash; from having done it</li>
+          </ul>
+        </div>
+
+        <!-- Becca -->
+        <div class="team-card">
+          <div class="team-role-tag">Live Strategy</div>
+          <div class="team-avatar-row">
+            <div class="t-avatar">B</div>
+            <div class="t-name-block">
+              <h3>Becca</h3>
+              <div class="t-title">TikTok LIVE Lead</div>
+            </div>
+          </div>
+          <ul class="team-duties" style="margin-top:8px;">
+            <li><i class="fa-solid fa-diamond"></i> Plans and runs your full live session calendar</li>
+            <li><i class="fa-solid fa-diamond"></i> Scripts and structures each session around converting products</li>
+            <li><i class="fa-solid fa-diamond"></i> Pairs sessions with flash promos for maximum order velocity</li>
+            <li><i class="fa-solid fa-diamond"></i> Tracks session revenue and optimizes format over time</li>
+            <li><i class="fa-solid fa-diamond"></i> Coordinates live timing with affiliate content for peak reach</li>
+          </ul>
+        </div>
+
+        <!-- Brand Lead — mystery -->
+        <div class="team-card mystery-card">
+          <div class="team-role-tag gold">Brand Lead</div>
+          <div class="mystery-open-badge">
+            <span class="mystery-dot"></span>
+            Open &mdash; recruited for your brand
+          </div>
+          <div class="team-avatar-row">
+            <div class="t-avatar mystery-av"><i class="fa-solid fa-user-secret"></i></div>
+            <div class="t-name-block">
+              <h3 style="color:rgba(255,255,255,0.5);">Your Brand Lead</h3>
+              <div class="t-title">Sourced from our creator community</div>
+            </div>
+          </div>
+          <p style="font-size:0.84rem;color:rgba(255,255,255,0.4);line-height:1.75;margin-bottom:16px;">
+            This person doesn&rsquo;t exist yet &mdash; because they get selected for <em>you</em>. We recruit from our creator community: operators who already live on the platform and understand how it moves. They become embedded in your brand, not spread across a client roster.
           </p>
+          <ul class="team-duties gold-duties">
+            <li><i class="fa-solid fa-diamond"></i> Jumps on creator calls and builds real relationships</li>
+            <li><i class="fa-solid fa-diamond"></i> Learns your product catalog cold &mdash; every SKU, every angle</li>
+            <li><i class="fa-solid fa-diamond"></i> Talks to your creators weekly and keeps them activated</li>
+            <li><i class="fa-solid fa-diamond"></i> Helps orchestrate the day-to-day TikTok Shop strategy</li>
+            <li><i class="fa-solid fa-diamond"></i> One brand. This one. Yours.</li>
+          </ul>
         </div>
+
       </div>
     </div>
   </section>
 
-  <!-- HOW IT UNFOLDS / TIMELINE -->
-  <section class="timeline-section" id="how">
-    <div class="timeline-inner">
-      <div class="timeline-header">
-        <div class="section-label">The Roadmap</div>
-        <h2 class="section-h2">What the First<br><span class="gg">90 Days</span> Look Like</h2>
+  <!-- HOW THE SYSTEM RUNS -->
+  <section class="system-section" id="system">
+    <div class="system-inner">
+      <div class="system-header">
+        <div class="section-label gold">The Playbook</div>
+        <h2 class="section-h2">How the First<br><span class="gg">90 Days</span> Actually Work</h2>
         <p class="section-sub" style="margin-top:16px;">
-          We don&rsquo;t wait for things to &ldquo;warm up.&rdquo; Month one is aggressive on purpose &mdash; we need initial order velocity to get the algorithm moving.
+          We don&rsquo;t wait for things to warm up. Month one is aggressive on purpose &mdash; the algorithm rewards order velocity, and we manufacture it from day one.
         </p>
       </div>
 
-      <div class="tl-track">
+      <div class="chain">
 
-        <div class="tl-item">
-          <div class="tl-dot">WK<br>1&ndash;2</div>
-          <div class="tl-content">
-            <div class="tl-period">Weeks 1 &ndash; 2</div>
-            <h3>Foundation &amp; Audit</h3>
-            <p>We go deep on your shop, your unit economics, and your offer. Nothing gets built until we understand your margins, your best-performing SKUs, and what a winning promo structure looks like for your brand.</p>
-            <div class="tl-bullets">
-              <div class="tl-bullet"><i class="fa-solid fa-diamond"></i> Shop audit &amp; health check</div>
-              <div class="tl-bullet"><i class="fa-solid fa-diamond"></i> Unit economics framework locked</div>
-              <div class="tl-bullet"><i class="fa-solid fa-diamond"></i> Affiliate outreach begins (300 samples/mo cadence set)</div>
-              <div class="tl-bullet"><i class="fa-solid fa-diamond"></i> Creator retainer targets identified via Trybe</div>
+        <div class="chain-step">
+          <div class="chain-left">
+            <div class="chain-node">01</div>
+            <div class="chain-line"></div>
+          </div>
+          <div class="chain-content">
+            <div class="chain-phase">Weeks 1 &ndash; 2</div>
+            <h3>Foundation &amp; Brand Lead Placement</h3>
+            <p>We go deep on your shop, your unit economics, and your offer. Simultaneously, we begin identifying and vetting your Brand Lead from the community &mdash; someone with real platform experience who fits your brand&rsquo;s world.</p>
+            <div class="chain-bullets">
+              <div class="chain-bullet"><i class="fa-solid fa-diamond"></i> Shop audit, health check, and SKU prioritization</div>
+              <div class="chain-bullet"><i class="fa-solid fa-diamond"></i> Unit economics and promo strategy locked</div>
+              <div class="chain-bullet"><i class="fa-solid fa-diamond"></i> Brand Lead identified and onboarded</div>
+              <div class="chain-bullet"><i class="fa-solid fa-diamond"></i> 300 samples/month pipeline set up through Reacher</div>
             </div>
           </div>
         </div>
 
-        <div class="tl-item">
-          <div class="tl-dot">WK<br>3&ndash;4</div>
-          <div class="tl-content">
-            <div class="tl-period">Weeks 3 &ndash; 4</div>
+        <div class="chain-step">
+          <div class="chain-left">
+            <div class="chain-node">02</div>
+            <div class="chain-line"></div>
+          </div>
+          <div class="chain-content">
+            <div class="chain-phase">Weeks 3 &ndash; 4</div>
             <h3>Rebate Campaign &amp; First Wave</h3>
-            <p>Month one we run a rebate campaign. The goal: generate initial order volume fast, feed the algorithm a signal, and give us real conversion data to work with. This is what gets the flywheel moving before organic content even kicks in.</p>
-            <div class="tl-bullets">
-              <div class="tl-bullet"><i class="fa-solid fa-diamond"></i> Rebate campaign live &mdash; designed to drive initial order velocity</div>
-              <div class="tl-bullet"><i class="fa-solid fa-diamond"></i> First wave of affiliate samples out the door</div>
-              <div class="tl-bullet"><i class="fa-solid fa-diamond"></i> Retainer creators onboarded through Trybe</div>
-              <div class="tl-bullet"><i class="fa-solid fa-diamond"></i> Live strategy briefed &amp; session calendar set</div>
+            <p>We run a rebate campaign in month one. This generates real order volume fast &mdash; feeding the algorithm a signal before organic content even kicks in. It&rsquo;s not a hack. It&rsquo;s how you build a shop that creators actually want to post about.</p>
+            <div class="chain-bullets">
+              <div class="chain-bullet"><i class="fa-solid fa-diamond"></i> Rebate campaign live &mdash; initial order velocity generated</div>
+              <div class="chain-bullet"><i class="fa-solid fa-diamond"></i> First creator wave sampled; Brand Lead on calls with each one</div>
+              <div class="chain-bullet"><i class="fa-solid fa-diamond"></i> Retainer creators onboarded through Trybe (TikTok + Meta)</div>
+              <div class="chain-bullet"><i class="fa-solid fa-diamond"></i> Becca&rsquo;s first live sessions planned and scheduled</div>
             </div>
-            <div class="tl-callout">
-              <strong>Why a rebate campaign?</strong> TikTok Shop&rsquo;s algorithm rewards recent order volume. The rebate campaign generates those initial orders legitimately, gets your shop ranked higher, and gives creators a product that&rsquo;s already selling &mdash; which makes their content easier to convert.
-            </div>
-          </div>
-        </div>
-
-        <div class="tl-item">
-          <div class="tl-dot">MO<br>2</div>
-          <div class="tl-content">
-            <div class="tl-period">Month 2</div>
-            <h3>Content Live. Ads On. LIVE Sessions Running.</h3>
-            <p>Creator content starts hitting the feed. LIVE sessions are running weekly. Paid ads on Meta and TikTok go live, amplifying the creator content that&rsquo;s already getting traction. We know what&rsquo;s converting and we push it harder.</p>
-            <div class="tl-bullets">
-              <div class="tl-bullet"><i class="fa-solid fa-diamond"></i> Retainer creators posting consistently to TikTok + Meta via Trybe</div>
-              <div class="tl-bullet"><i class="fa-solid fa-diamond"></i> LIVE sessions generating direct revenue</div>
-              <div class="tl-bullet"><i class="fa-solid fa-diamond"></i> Meta + TikTok paid ads amplifying winners</div>
-              <div class="tl-bullet"><i class="fa-solid fa-diamond"></i> 300 samples/mo pipeline running on autopilot</div>
+            <div class="chain-callout">
+              <strong>Why the rebate campaign?</strong> TikTok Shop&rsquo;s algorithm ranks shops by recent order activity. Higher rank means creators see your product first when they&rsquo;re looking for things to post. We engineer that signal early so everything that comes after has a better foundation.
             </div>
           </div>
         </div>
 
-        <div class="tl-item">
-          <div class="tl-dot">MO<br>3+</div>
-          <div class="tl-content">
-            <div class="tl-period">Month 3 and Beyond</div>
+        <div class="chain-step">
+          <div class="chain-left">
+            <div class="chain-node">03</div>
+            <div class="chain-line"></div>
+          </div>
+          <div class="chain-content">
+            <div class="chain-phase">Month 2</div>
+            <h3>Content Live. LIVE Running. Ads On.</h3>
+            <p>Retainer creators are posting consistently to TikTok and Meta via Trybe. Becca&rsquo;s live sessions are generating direct revenue. Paid media goes live against creator content that&rsquo;s already converting &mdash; not cold creative.</p>
+            <div class="chain-bullets">
+              <div class="chain-bullet"><i class="fa-solid fa-diamond"></i> Retainer creators posting on a consistent weekly cadence</div>
+              <div class="chain-bullet"><i class="fa-solid fa-diamond"></i> Live sessions running &mdash; flash promos coordinated around them</div>
+              <div class="chain-bullet"><i class="fa-solid fa-diamond"></i> Meta + TikTok ads amplifying the content that&rsquo;s working</div>
+              <div class="chain-bullet"><i class="fa-solid fa-diamond"></i> Brand Lead in weekly contact with every active creator</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="chain-step">
+          <div class="chain-left">
+            <div class="chain-node">04</div>
+            <div class="chain-line"></div>
+          </div>
+          <div class="chain-content">
+            <div class="chain-phase">Month 3 and Beyond</div>
             <h3>The Flywheel Compounds.</h3>
-            <p>By now the machine knows what works. We scale the winning creator relationships, double down on converting content formats, run flash sales at peak moments, and systematically grow every week. This is where the investment starts to look obvious in hindsight.</p>
-            <div class="tl-bullets">
-              <div class="tl-bullet"><i class="fa-solid fa-diamond"></i> Top affiliates converted to long-term retainers</div>
-              <div class="tl-bullet"><i class="fa-solid fa-diamond"></i> Flash sale calendar driving monthly GMV spikes</div>
-              <div class="tl-bullet"><i class="fa-solid fa-diamond"></i> Ad spend scaled to proven ROAS</div>
-              <div class="tl-bullet"><i class="fa-solid fa-diamond"></i> Weekly reporting + strategy call with Tommy</div>
+            <p>By now we know what converts. We scale the creator relationships that are working, cut what isn&rsquo;t, and systematically increase spend against proven ROAS. The algorithm is now working with you, not against you.</p>
+            <div class="chain-bullets">
+              <div class="chain-bullet"><i class="fa-solid fa-diamond"></i> Top affiliates converted to long-term retainer partnerships</div>
+              <div class="chain-bullet"><i class="fa-solid fa-diamond"></i> Flash sale calendar locked &mdash; timed to creator posting peaks</div>
+              <div class="chain-bullet"><i class="fa-solid fa-diamond"></i> Ad spend scaled to proven return targets</div>
+              <div class="chain-bullet"><i class="fa-solid fa-diamond"></i> Weekly reporting, monthly strategy &mdash; every number visible</div>
             </div>
           </div>
         </div>
@@ -536,162 +763,69 @@
     </div>
   </section>
 
-  <!-- WHAT IT TAKES / PACKAGE -->
+  <!-- WHAT IT TAKES -->
   <section class="package-section" id="package">
     <div class="package-inner">
       <div class="package-header">
-        <div class="section-label gold">What&rsquo;s Required</div>
-        <h2 class="section-h2">Three Budget Lines.<br>All of Them <span class="gg">Non-Negotiable.</span></h2>
+        <div class="section-label gold">The Required Budgets</div>
+        <h2 class="section-h2">Three Lines.<br>All <span class="gg">Non-Negotiable.</span></h2>
         <p class="section-sub" style="margin-top:16px;">
-          These aren&rsquo;t add-ons. They&rsquo;re the minimum inputs the program needs to work. Cut any one of them and the whole machine slows down.
+          These aren&rsquo;t add-ons or options. They&rsquo;re the minimum inputs the system needs to function. Cut one and the whole thing slows down.
         </p>
       </div>
 
       <div class="budget-grid">
-
         <div class="budget-card">
           <div class="budget-icon"><i class="fa-solid fa-users"></i></div>
           <h3>Creator Retainers</h3>
           <div class="budget-amount">$5,000<span>/mo min</span></div>
-          <p class="budget-note">
-            Paid directly to creators via Trybe. Retainers guarantee consistent output &mdash; not one video, not maybe. We lock in your best performers and build real partnerships that compound over time.
-          </p>
+          <p class="budget-note">Paid to creators via Trybe. Real commitments that guarantee consistent posting &mdash; not gifting deals that may or may not produce content.</p>
           <div class="budget-tags">
             <span class="budget-tag">Via Trybe</span>
             <span class="budget-tag">TikTok + Meta</span>
             <span class="budget-tag">Guaranteed Output</span>
           </div>
         </div>
-
         <div class="budget-card">
           <div class="budget-icon"><i class="fa-solid fa-video"></i></div>
           <h3>Live Strategy</h3>
           <div class="budget-amount">$5,000<span>/mo</span></div>
-          <p class="budget-note">
-            TikTok LIVE is a direct revenue channel. We plan it, run it, and optimize it. Sessions are structured around your best-converting products and paired with flash promos to drive orders in real time.
-          </p>
+          <p class="budget-note">Becca plans and runs every session. Structured around your converting products, timed with flash promos, tracked for revenue every time.</p>
           <div class="budget-tags">
             <span class="budget-tag">TikTok LIVE</span>
             <span class="budget-tag">Flash Promos</span>
             <span class="budget-tag">Direct Revenue</span>
           </div>
         </div>
-
         <div class="budget-card">
           <div class="budget-icon"><i class="fa-solid fa-chart-line"></i></div>
           <h3>Ad Spend</h3>
           <div class="budget-amount">$10,000<span>/mo min</span></div>
-          <p class="budget-note">
-            Meta and TikTok paid media managed through Trybe. We run ads against creator content that&rsquo;s already converting &mdash; not cold creative. Performance-first, not spray-and-pray.
-          </p>
+          <p class="budget-note">Meta and TikTok paid media managed through Trybe. We run ads against creator content that&rsquo;s already proven &mdash; not cold creative.</p>
           <div class="budget-tags">
             <span class="budget-tag">Meta Ads</span>
             <span class="budget-tag">TikTok Ads</span>
             <span class="budget-tag">GMV Max</span>
           </div>
         </div>
-
       </div>
 
       <div class="trybe-callout">
-        <div class="trybe-icon">⚡</div>
-        <div class="trybe-text">
+        <div class="tc-icon">⚡</div>
+        <div>
           <h4>Powered by Trybe</h4>
-          <p>
-            We use <a href="https://jointrybe.com/" target="_blank" rel="noopener">Trybe</a> to manage creator relationships and enable simultaneous posting to Meta <em>and</em> TikTok &mdash; one piece of content, two platforms, double the reach. Creator retainers and paid media all flow through Trybe so performance is tracked in one place.
-          </p>
+          <p>We use <a href="https://jointrybe.com/" target="_blank" rel="noopener">Trybe</a> to manage creator relationships and enable creators to post simultaneously to TikTok <em>and</em> Meta &mdash; one piece of content, two platforms, full reach. Creator retainers and paid media all run through Trybe so every number is visible in one place.</p>
         </div>
       </div>
 
-    </div>
-  </section>
-
-  <!-- SAMPLES REQUIREMENT -->
-  <section style="padding:80px 32px; background:var(--dark0); border-top:1px solid rgba(255,255,255,0.05);">
-    <div style="max-width:860px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:32px; align-items:center;">
-      <div>
-        <div class="section-label" style="text-align:left; margin-bottom:12px;">The Funnel Requirement</div>
-        <h2 style="font-size:clamp(1.6rem,3.5vw,2.4rem); margin-bottom:16px; text-align:left;">300 Samples<br>Per Month. <span class="gg">Minimum.</span></h2>
-        <p style="font-size:0.9rem; color:rgba(255,255,255,0.5); line-height:1.75; margin-bottom:20px;">
-          This is the top of the funnel. You need enough creators testing your product to find the ones who convert &mdash; and you need them posting consistently enough to build real momentum. 300 samples per month is the threshold where you start getting signal. Below that, you&rsquo;re guessing.
-        </p>
-        <p style="font-size:0.9rem; color:rgba(255,255,255,0.5); line-height:1.75;">
-          We manage the entire sampling pipeline through Reacher &mdash; identifying the right creators, tracking fulfillment, and following up to maximize content output. Your job is to have enough product to support it.
-        </p>
-      </div>
-      <div style="display:flex; flex-direction:column; gap:16px;">
-        <div style="background:rgba(201,168,76,0.05); border:1px solid rgba(201,168,76,0.15); border-radius:14px; padding:24px 26px;">
-          <div style="font-family:'Montserrat',sans-serif; font-weight:900; font-size:2.4rem; color:var(--gold); line-height:1; margin-bottom:6px;">300+</div>
-          <div style="font-size:0.72rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:rgba(255,255,255,0.35);">Samples per month</div>
-          <p style="font-size:0.8rem; color:rgba(255,255,255,0.4); margin-top:10px; line-height:1.6;">The minimum to generate enough video volume and conversion data to optimize from.</p>
-        </div>
-        <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); border-radius:14px; padding:24px 26px;">
-          <div style="font-size:0.75rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:rgba(255,255,255,0.35); margin-bottom:10px;">Managed through</div>
-          <div style="font-family:'Montserrat',sans-serif; font-weight:900; font-size:1rem; color:#fff; margin-bottom:4px;">Reacher</div>
-          <p style="font-size:0.8rem; color:rgba(255,255,255,0.4); line-height:1.6;">Full affiliate pipeline management &mdash; sourcing, fulfillment tracking, content follow-up.</p>
+      <div class="samples-bar">
+        <div class="samples-num gg">300+</div>
+        <div class="samples-text">
+          <h4>Samples per month &mdash; the minimum to get real signal</h4>
+          <p>You need enough creators testing your product to find the ones who actually convert. 20 samples tells you almost nothing. 300 per month, managed through Reacher, is where you start building a real affiliate engine &mdash; the Brand Lead is on calls with every creator in that pipeline.</p>
         </div>
       </div>
-    </div>
-  </section>
 
-  <!-- TEAM -->
-  <section class="team-section" id="team">
-    <div class="team-inner">
-      <div class="team-header">
-        <div class="section-label">Who You Work With</div>
-        <h2 class="section-h2">The Team Behind<br><span class="gt">Your Growth.</span></h2>
-        <p class="section-sub" style="margin-top:16px;">
-          Two people who have done this at real scale &mdash; one who built the system from the inside, one who proved it with 300 million views.
-        </p>
-      </div>
-
-      <div class="team-grid">
-        <div class="team-card">
-          <div class="team-role">Founder &amp; CEO</div>
-          <h3>Tommy Lynch</h3>
-          <div class="team-title">TikTok Shop Partner &mdash; Certified (TSP)</div>
-          <div class="team-stats">
-            <div class="team-stat">
-              <div class="ts-num gt">4+</div>
-              <div class="ts-label">Years in Shop</div>
-            </div>
-            <div class="team-stat">
-              <div class="ts-num gt">100+</div>
-              <div class="ts-label">Brands</div>
-            </div>
-          </div>
-          <p>
-            Tommy built Cult Content from inside the TikTok Shop ecosystem before most brands knew it existed. TSP certified. He&rsquo;s run affiliate programs, live strategies, and paid media across categories, and he gives every client the same thing: the unfiltered truth about what it takes to win, and a plan to actually get there.
-          </p>
-          <div class="team-badges">
-            <span class="team-badge">TSP Certified</span>
-            <span class="team-badge">TikTok Shop</span>
-            <span class="team-badge">Paid Media</span>
-            <span class="team-badge">Live Strategy</span>
-          </div>
-        </div>
-
-        <div class="team-card">
-          <div class="team-role">Social Media &amp; Creator Lead</div>
-          <h3>Jina</h3>
-          <div class="team-title">Social Media Manager Turned Creator</div>
-          <div class="team-stats">
-            <div class="team-stat">
-              <div class="ts-num gt">300M+</div>
-              <div class="ts-label">Views</div>
-            </div>
-          </div>
-          <p>
-            Jina started as a social media manager who understood the platform from the operator side. Then she became a creator and proved it from the content side &mdash; 300M+ views, not as a one-hit wonder, but as someone who understands what makes content move at scale. She brings that dual lens to every brand she works with.
-          </p>
-          <div class="team-badges">
-            <span class="team-badge">Creator</span>
-            <span class="team-badge">Short Video</span>
-            <span class="team-badge">Content Strategy</span>
-            <span class="team-badge">Meta + TikTok</span>
-          </div>
-        </div>
-      </div>
     </div>
   </section>
 
@@ -702,7 +836,7 @@
         <div class="section-label gold">The Investment</div>
         <h2 class="section-h2">Cult Content Fee.<br><span class="gg">You Choose the Mix.</span></h2>
         <p class="section-sub" style="margin-top:16px;">
-          The slider sets our management fee. The three budget lines below it are separate &mdash; they go to creators, production, and ad platforms, not to us.
+          The slider controls our management fee. The three budget lines below go directly to creators, production, and ad platforms &mdash; not to us.
         </p>
       </div>
 
@@ -719,11 +853,9 @@
             <div class="ep-label">Higher Retainer</div>
           </div>
         </div>
-
         <div class="slider-track-wrap">
           <input type="range" min="0" max="100" value="0" class="pricing-slider" id="scaleSlider" oninput="scaleSlider(this)" />
         </div>
-
         <div class="slider-output">
           <div class="output-label">Cult Content management fee</div>
           <div class="output-main">
@@ -733,24 +865,23 @@
             <span class="output-sep">&nbsp;of GMV</span>
           </div>
         </div>
-
         <div class="invest-breakdown">
-          <div class="invest-label">Full minimum monthly investment breakdown</div>
+          <div class="invest-label">Full minimum monthly investment</div>
           <div class="invest-rows">
             <div class="invest-row">
-              <div class="invest-row-name"><i class="fa-solid fa-diamond"></i> Cult Content Fee <span class="invest-note">(management + strategy)</span></div>
-              <div class="invest-row-val dynamic" id="breakdownCC">$3,000</div>
+              <div class="invest-row-name"><i class="fa-solid fa-diamond"></i> Cult Content fee <span class="invest-note">(strategy, team, management)</span></div>
+              <div class="invest-row-val dyn" id="breakdownCC">$3,000</div>
             </div>
             <div class="invest-row">
-              <div class="invest-row-name"><i class="fa-solid fa-diamond"></i> Creator Retainers <span class="invest-note">(via Trybe, paid to creators)</span></div>
+              <div class="invest-row-name"><i class="fa-solid fa-diamond"></i> Creator retainers <span class="invest-note">(via Trybe, paid to creators)</span></div>
               <div class="invest-row-val">$5,000+</div>
             </div>
             <div class="invest-row">
-              <div class="invest-row-name"><i class="fa-solid fa-diamond"></i> Live Strategy <span class="invest-note">(TikTok LIVE production)</span></div>
+              <div class="invest-row-name"><i class="fa-solid fa-diamond"></i> Live strategy <span class="invest-note">(Becca &mdash; LIVE production)</span></div>
               <div class="invest-row-val">$5,000</div>
             </div>
             <div class="invest-row">
-              <div class="invest-row-name"><i class="fa-solid fa-diamond"></i> Ad Spend <span class="invest-note">(Meta + TikTok, via Trybe)</span></div>
+              <div class="invest-row-name"><i class="fa-solid fa-diamond"></i> Ad spend <span class="invest-note">(Meta + TikTok, via Trybe)</span></div>
               <div class="invest-row-val">$10,000+</div>
             </div>
           </div>
@@ -758,33 +889,33 @@
             <div class="invest-total-name">Minimum Total</div>
             <div class="invest-total-val" id="breakdownTotal">$23,000/mo</div>
           </div>
-          <div class="invest-note-text">
-            Creator retainers and ad spend scale with the program. The Cult Content GMV fee is calculated on TikTok Shop gross merchandise value and discussed on your strategy call.
+          <div class="invest-footnote">
+            Creator retainers and ad spend scale with the program. The Cult Content GMV fee is calculated on your TikTok Shop gross merchandise value and confirmed on the strategy call.
           </div>
         </div>
       </div>
 
-      <div class="pricing-card" style="margin-top:32px;">
-        <div class="pricing-tag"><i class="fa-solid fa-star" style="font-size:0.65rem;"></i> Everything Included</div>
-        <div class="pricing-includes">
-          <div class="inc-row"><i class="fa-solid fa-check"></i> Month 1 rebate campaign to drive order velocity</div>
-          <div class="inc-row"><i class="fa-solid fa-check"></i> 300+ samples/mo pipeline managed via Reacher</div>
+      <div class="includes-card">
+        <div class="inc-tag"><i class="fa-solid fa-star" style="font-size:0.6rem;"></i> Everything Included</div>
+        <div class="inc-grid">
+          <div class="inc-row"><i class="fa-solid fa-check"></i> Dedicated four-person team for your brand</div>
+          <div class="inc-row"><i class="fa-solid fa-check"></i> Brand Lead recruited from our creator community</div>
+          <div class="inc-row"><i class="fa-solid fa-check"></i> Month 1 rebate campaign for order velocity</div>
+          <div class="inc-row"><i class="fa-solid fa-check"></i> 300+ samples/mo managed via Reacher</div>
           <div class="inc-row"><i class="fa-solid fa-check"></i> Creator retainer program via Trybe</div>
-          <div class="inc-row"><i class="fa-solid fa-check"></i> Simultaneous posting &mdash; TikTok + Meta</div>
-          <div class="inc-row"><i class="fa-solid fa-check"></i> Full TikTok LIVE strategy &amp; execution</div>
+          <div class="inc-row"><i class="fa-solid fa-check"></i> Simultaneous posting to TikTok + Meta</div>
+          <div class="inc-row"><i class="fa-solid fa-check"></i> Full TikTok LIVE strategy run by Becca</div>
           <div class="inc-row"><i class="fa-solid fa-check"></i> Meta + TikTok paid media management</div>
           <div class="inc-row"><i class="fa-solid fa-check"></i> Shop operations, promotions &amp; flash sales</div>
-          <div class="inc-row"><i class="fa-solid fa-check"></i> Unit economics &amp; profitability framework</div>
-          <div class="inc-row"><i class="fa-solid fa-check"></i> Weekly calls with Tommy</div>
-          <div class="inc-row"><i class="fa-solid fa-check"></i> Weekly performance reports via Sisyphus</div>
+          <div class="inc-row"><i class="fa-solid fa-check"></i> Weekly performance reports &amp; strategy calls</div>
         </div>
-        <div class="pricing-cta-row" style="margin-top:36px;">
+        <div class="inc-cta-row">
           <a href="/book" class="btn-gold">
             <i class="fa-solid fa-arrow-right"></i>
             Apply for Scale &mdash; Book a Call
           </a>
-          <div class="pricing-social-proof">
-            <strong>Selective intake.</strong> We only take brands where we&rsquo;re confident we can win.
+          <div class="inc-social-proof">
+            <strong>Selective intake.</strong> We only take brands where we&rsquo;re confident we can win together.
           </div>
         </div>
       </div>
@@ -798,7 +929,7 @@
       <div class="section-label gold">Ready?</div>
       <h2>Fund It Right.<br><span class="gg">Win for Real.</span></h2>
       <p>
-        30 minutes with Tommy. No pitch, no deck. Just an honest conversation about your brand, your margins, and whether the Scale package is the move.
+        30 minutes with Tommy. No pitch, no deck. An honest conversation about your brand, your margins, and whether the Scale package is the right move for where you are right now.
       </p>
       <a href="/book" class="btn-gold" style="font-size:0.95rem;padding:18px 44px;">
         <i class="fa-solid fa-calendar-check"></i>
@@ -814,7 +945,7 @@
       <ul class="ft-links">
         <li><a href="/home">Home</a></li>
         <li><a href="/home#culture">About</a></li>
-        <li><a href="/home#timeline">Services</a></li>
+        <li><a href="/growth-partner">Growth Partner</a></li>
         <li><a href="/affiliate">Affiliates</a></li>
       </ul>
       <div class="ft-social">
@@ -833,8 +964,8 @@
   <script>
     (function(){
       const links = document.querySelectorAll('.nav-links a');
-      const path = window.location.pathname.replace(/\/$/, '') || '/';
-      links.forEach(a => { if ((a.getAttribute('href').replace(/\/$/, '') || '/') === path) a.classList.add('active'); });
+      const path  = window.location.pathname.replace(/\/$/, '') || '/';
+      links.forEach(a => { if ((a.getAttribute('href').replace(/\/$/, '')||'/')===path) a.classList.add('active'); });
       const btn = document.getElementById('mobileMenuBtn');
       const drawer = document.getElementById('mobileDrawer');
       if (btn && drawer) {
@@ -842,28 +973,23 @@
         document.addEventListener('click', e => { if (!drawer.contains(e.target) && e.target !== btn) drawer.classList.remove('open'); });
       }
       var sl = document.getElementById('scaleSlider');
-      if (sl) sl.style.background = 'linear-gradient(to right,#c9a84c 0%,rgba(255,255,255,0.12) 0%)';
+      if (sl) sl.style.background = 'linear-gradient(to right,#c9a84c 0%,rgba(255,255,255,0.1) 0%)';
     })();
 
     function scaleSlider(slider) {
-      var pct      = +slider.value;
-      var pos      = pct / 100;
-      var retainer = Math.round(3000 + pos * 5000);
-      var gmvPct   = +(7 - pos * 4).toFixed(1);
-
-      slider.style.background = 'linear-gradient(to right,#c9a84c ' + pct + '%,rgba(255,255,255,0.12) ' + pct + '%)';
-
-      var outRet = document.getElementById('scaleRetainer');
-      var outGmv = document.getElementById('scaleGmv');
-      if (outRet) outRet.textContent = '$' + retainer.toLocaleString();
-      if (outGmv) outGmv.textContent = gmvPct + '%';
-
-      var ccLine = document.getElementById('breakdownCC');
-      if (ccLine) ccLine.textContent = '$' + retainer.toLocaleString();
-
-      var total = retainer + 5000 + 5000 + 10000;
-      var totalEl = document.getElementById('breakdownTotal');
-      if (totalEl) totalEl.textContent = '$' + total.toLocaleString() + '+/mo';
+      var pct  = +slider.value;
+      var pos  = pct / 100;
+      var ret  = Math.round(3000 + pos * 5000);
+      var gmv  = +(7 - pos * 4).toFixed(1);
+      slider.style.background = 'linear-gradient(to right,#c9a84c '+pct+'%,rgba(255,255,255,0.1) '+pct+'%)';
+      var r = document.getElementById('scaleRetainer');
+      var g = document.getElementById('scaleGmv');
+      var c = document.getElementById('breakdownCC');
+      var t = document.getElementById('breakdownTotal');
+      if (r) r.textContent = '$' + ret.toLocaleString();
+      if (g) g.textContent = gmv + '%';
+      if (c) c.textContent = '$' + ret.toLocaleString();
+      if (t) t.textContent = '$' + (ret + 5000 + 5000 + 10000).toLocaleString() + '+/mo';
     }
   </script>
 
