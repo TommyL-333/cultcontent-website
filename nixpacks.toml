@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ["ffmpeg"]
+nixPkgs = ["ffmpeg", "python3", "gcc", "gnumake"]
 
 [phases.build]
 cmds = ["npm run build"]
