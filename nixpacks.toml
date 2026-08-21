@@ -2,4 +2,4 @@
 nixPkgs = ["ffmpeg", "python3", "gcc", "gnumake"]
 
 [phases.build]
-cmds = ["npm run build"]
+cmds = ["npm rebuild better-sqlite3 --build-from-source", "npm run build"]
