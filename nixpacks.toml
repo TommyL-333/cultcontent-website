@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ["ffmpeg", "python3", "gcc", "gnumake"]
+nixPkgs = ["ffmpeg", "nodejs_22"]
 
 [phases.build]
-cmds = ["npm rebuild better-sqlite3 --build-from-source", "npm run build"]
+cmds = ["npm run build"]
