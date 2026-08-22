@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Apply: Creator Leader — Cult Content</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    min-height: 100%;
+    background: #111111;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    color: #f0f0f0;
+  }
+
+  #page-bg {
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 56px 20px;
+  }
+
+  .wrap { width: 100%; max-width: 480px; }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 36px;
+    text-decoration: none;
+  }
+  .brand img { height: 28px; }
+  .brand-name {
+    font-size: .74rem;
+    font-weight: 800;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,.4);
+  }
+
+  .pill {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: #00F2EA;
+    background: rgba(0,242,234,.08);
+    border: 1px solid rgba(0,242,234,.2);
+    border-radius: 20px;
+    padding: 4px 14px;
+    margin-bottom: 18px;
+  }
+
+  h1 {
+    font-size: clamp(28px, 6vw, 40px);
+    font-weight: 900;
+    line-height: 1.07;
+    letter-spacing: -.025em;
+    color: #fff;
+    margin-bottom: 14px;
+  }
+  h1 .cyan { color: #00F2EA; }
+
+  .sub {
+    font-size: 14px;
+    color: #999;
+    line-height: 1.8;
+    margin-bottom: 18px;
+  }
+
+  .comp-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(0,242,234,.05);
+    border: 1px solid rgba(0,242,234,.15);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 24px;
+    font-size: 13px;
+    color: #ccc;
+  }
+  .comp-row strong { color: #00F2EA; font-weight: 800; }
+
+  .mission {
+    font-size: 13px;
+    color: #999;
+    line-height: 1.75;
+    margin-bottom: 26px;
+  }
+
+  .requirement {
+    font-size: 13px;
+    color: #777;
+    line-height: 1.7;
+    background: rgba(255,0,80,.04);
+    border: 1px solid rgba(255,0,80,.15);
+    border-radius: 10px;
+    padding: 13px 16px;
+    margin-bottom: 24px;
+  }
+  .requirement strong { color: #ff5c8a; }
+
+  .card {
+    background: #161616;
+    border: 1px solid #222;
+    border-radius: 16px;
+    padding: 30px 26px;
+    margin-bottom: 16px;
+  }
+
+  .card-label {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: #555;
+    margin-bottom: 22px;
+  }
+
+  .field { margin-bottom: 18px; }
+  .field:last-of-type { margin-bottom: 0; }
+
+  label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: #777;
+    margin-bottom: 8px;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="url"],
+  textarea {
+    width: 100%;
+    background: #0d0d0d;
+    border: 1px solid #222;
+    border-radius: 9px;
+    color: #f0f0f0;
+    font-size: 15px;
+    font-family: inherit;
+    padding: 13px 14px;
+    outline: none;
+    transition: border-color .15s;
+  }
+  textarea { resize: vertical; min-height: 90px; line-height: 1.5; }
+  input:focus, textarea:focus { border-color: #00F2EA; }
+  input::placeholder, textarea::placeholder { color: #333; }
+
+  .handle-wrap { position: relative; }
+  .handle-at {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #444;
+    font-size: 15px;
+    pointer-events: none;
+  }
+  .handle-wrap input { padding-left: 28px; }
+
+  .field-hint { font-size: 11px; color: #555; margin-top: 7px; line-height: 1.5; }
+  .char-count { font-size: 11px; color: #555; margin-top: 6px; text-align: right; }
+  .char-count.over { color: #ff6688; }
+
+  .video-row { display: flex; gap: 8px; margin-bottom: 10px; }
+  .video-row input { flex: 1; }
+  .video-remove {
+    flex-shrink: 0;
+    width: 42px;
+    height: 42px;
+    background: #0d0d0d;
+    border: 1px solid #222;
+    border-radius: 9px;
+    color: #666;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  .video-remove:hover { color: #ff6688; border-color: rgba(255,0,80,.3); }
+
+  .btn-add-video {
+    width: 100%;
+    background: transparent;
+    border: 1px dashed #2a2a2a;
+    border-radius: 9px;
+    color: #00F2EA;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 12px;
+    cursor: pointer;
+    margin-top: 4px;
+  }
+  .btn-add-video:hover { background: rgba(0,242,234,.04); }
+  .btn-add-video:disabled { opacity: .3; cursor: not-allowed; }
+
+  .checkbox-field {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 0;
+    cursor: pointer;
+  }
+  .checkbox-field input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    accent-color: #00F2EA;
+    margin-top: 1px;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+  .checkbox-label { font-size: 13px; color: #bbb; line-height: 1.5; cursor: pointer; }
+
+  .error-msg {
+    display: none;
+    background: rgba(255,0,80,.07);
+    border: 1px solid rgba(255,0,80,.2);
+    color: #ff6688;
+    font-size: 13px;
+    border-radius: 8px;
+    padding: 11px 14px;
+    margin-bottom: 16px;
+  }
+  .error-msg.show { display: block; }
+
+  .btn-submit {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    background: #00F2EA;
+    color: #000;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: .04em;
+    border: none;
+    border-radius: 10px;
+    padding: 15px 20px;
+    cursor: pointer;
+    transition: opacity .15s;
+    margin-top: 24px;
+    font-family: inherit;
+  }
+  .btn-submit:hover { opacity: .87; }
+  .btn-submit:disabled { opacity: .3; cursor: not-allowed; }
+
+  .spinner {
+    width: 17px;
+    height: 17px;
+    border: 2px solid rgba(0,0,0,.25);
+    border-top-color: #000;
+    border-radius: 50%;
+    animation: spin .55s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .fine { font-size: 11px; color: #444; text-align: center; line-height: 1.65; margin-top: 14px; }
+
+  /* honeypot */
+  .hp-field { position: absolute; left: -9999px; top: -9999px; opacity: 0; height: 0; overflow: hidden; }
+
+  .view { display: none; }
+  .view.active { display: block; }
+
+  .check-ring {
+    width: 70px; height: 70px; border-radius: 50%;
+    border: 2px solid #00F2EA; background: rgba(0,242,234,.07);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 26px; font-size: 28px; color: #00F2EA;
+  }
+  .success-card { background: #161616; border: 1px solid #222; border-radius: 16px; padding: 36px 28px; text-align: center; margin-bottom: 16px; }
+  .success-steps { background: #161616; border: 1px solid #222; border-radius: 12px; padding: 24px 24px; text-align: left; margin-bottom: 16px; }
+
+  .sstep { display: flex; gap: 14px; margin-bottom: 16px; }
+  .sstep:last-child { margin-bottom: 0; }
+  .sstep-n {
+    flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%;
+    background: rgba(0,242,234,.08); border: 1px solid rgba(0,242,234,.2);
+    color: #00F2EA; font-size: 10px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center; margin-top: 1px;
+  }
+  .sstep-title { font-size: 13px; font-weight: 700; color: #ddd; margin-bottom: 3px; }
+  .sstep-desc { font-size: 12px; color: #777; line-height: 1.6; }
+
+  .btn-share {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%; background: transparent; border: 1px solid #2a2a2a; border-radius: 10px;
+    color: #f0f0f0; font-size: 14px; font-weight: 700; padding: 14px 20px;
+    cursor: pointer; font-family: inherit;
+  }
+  .btn-share:hover { border-color: #00F2EA; color: #00F2EA; }
+
+  /* Checkerboard wormhole — subtle, dreamlike motif living behind the hero.
+     Anchored to the top of the page (not the viewport) so it scrolls away
+     naturally once you're past the hero, instead of fighting the form below. */
+  .wormhole-bg {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 820px;
+    overflow: hidden;
+    z-index: 0;
+    pointer-events: none;
+    mask-image: linear-gradient(to bottom, black 0%, black 45%, transparent 92%);
+    -webkit-mask-image: linear-gradient(to bottom, black 0%, black 45%, transparent 92%);
+  }
+  .wormhole-bg::before {
+    content: '';
+    position: absolute;
+    top: -40px; left: 50%;
+    width: 1700px; height: 1700px;
+    margin-left: -850px;
+    background-image:
+      repeating-conic-gradient(from 0deg at 50% 50%, rgba(0,242,234,.05) 0deg 4deg, transparent 4deg 16deg),
+      repeating-radial-gradient(circle at 50% 50%, rgba(255,0,80,.035) 0px 1px, transparent 1px 34px);
+    border-radius: 50%;
+    animation: wormhole-spin 150s linear infinite;
+  }
+  @keyframes wormhole-spin {
+    from { transform: rotate(0deg) scale(1); }
+    50%  { transform: rotate(180deg) scale(1.05); }
+    to   { transform: rotate(360deg) scale(1); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .wormhole-bg::before { animation: none; }
+  }
+  #page-bg { position: relative; z-index: 1; }
+</style>
+</head>
+<body>
+<div class="wormhole-bg" aria-hidden="true"></div>
+<div id="page-bg">
+<div class="wrap">
+
+  <!-- ── Apply form ── -->
+  <div id="view-form" class="view active">
+
+    <a href="https://cultcontent.cc" class="brand">
+      <img src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/68529ceff63e1913ceb4e2e0.png" alt="Cult Content" />
+      <span class="brand-name">Cult Content</span>
+    </a>
+
+    <div class="pill">Now Hiring</div>
+    <h1>Become our<br><span class="cyan">Creator Leader.</span></h1>
+    <p class="sub">Own Cult Content's creator community — recruit, onboard, and activate the TikTok Shop affiliates who drive revenue for every brand we run.</p>
+
+    <div class="comp-row">
+      <i class="fa-solid fa-sack-dollar"></i>
+      <span><strong>$2,750/mo base</strong> + 1% of community GMV</span>
+    </div>
+
+    <p class="mission">You'll run creator outreach and onboarding, keep our top affiliates engaged and posting, and turn casual sign-ups into consistent sellers. You'll also help build and grow our partnerships with Creators4MentalHealth and the Creators Guild of America. This is a builder role — part community manager, part growth operator — sitting right on top of the affiliate pipeline that fuels our brand partners.</p>
+
+    <div class="requirement">
+      <strong>To qualify, post 2 TikTok videos</strong> about why you'd be a great Creator Leader — and make sure one of them answers: <em>&ldquo;If you had to describe the universe with one word, what would you choose and why?&rdquo;</em> Then paste both links below. You can post up to 10 videos total — the more you post, the more chances you have to stand out. Feel free to tag <strong>@tommylynch_</strong> and <strong>@cultcontent.cc</strong> in your posts!
+    </div>
+
+    <div class="card">
+      <div class="card-label">Your info</div>
+
+      <div id="form-error" class="error-msg"></div>
+
+      <div class="field">
+        <label for="inp-name">Name</label>
+        <input id="inp-name" type="text" placeholder="Full name" autocomplete="name" />
+      </div>
+
+      <div class="field">
+        <label for="inp-tiktok">TikTok handle</label>
+        <div class="handle-wrap">
+          <span class="handle-at">@</span>
+          <input id="inp-tiktok" type="text" placeholder="yourhandle" autocomplete="off" autocorrect="off" autocapitalize="off" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="inp-phone">Phone number</label>
+        <input id="inp-phone" type="tel" placeholder="(555) 555-5555" autocomplete="tel" />
+      </div>
+
+      <div class="field">
+        <label for="inp-email">Email</label>
+        <input id="inp-email" type="email" placeholder="you@email.com" autocomplete="email" />
+      </div>
+
+      <div class="field">
+        <label for="inp-motivation">Why do you want this role?</label>
+        <textarea id="inp-motivation" maxlength="2000" placeholder="Tell us why you'd be great at this..."></textarea>
+        <div class="char-count" id="motivation-count">0 / 500</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Required videos</div>
+
+      <div class="field">
+        <label for="inp-video-1">Video link 1</label>
+        <input id="inp-video-1" type="url" placeholder="tiktok.com/@you/video/..." autocomplete="off" />
+      </div>
+
+      <div class="field">
+        <label for="inp-video-2">Video link 2</label>
+        <input id="inp-video-2" type="url" placeholder="tiktok.com/@you/video/..." autocomplete="off" />
+        <div class="field-hint">Both links must be TikTok video or share links (tiktok.com or vm.tiktok.com).</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Additional videos <span style="text-transform:none;font-weight:400;color:#444;">(optional, up to 8 more)</span></div>
+      <div id="extra-videos"></div>
+      <button type="button" class="btn-add-video" id="btn-add-video" onclick="addVideoRow()">+ Add another video link</button>
+    </div>
+
+    <div class="card">
+      <label class="checkbox-field" for="inp-consent">
+        <input id="inp-consent" type="checkbox" />
+        <div class="checkbox-label">I agree to be contacted about this opportunity by phone, text, or email.</div>
+      </label>
+
+      <!-- honeypot — hidden from real users, bots tend to fill every field -->
+      <div class="hp-field" aria-hidden="true">
+        <label for="inp-website">Website</label>
+        <input id="inp-website" type="text" tabindex="-1" autocomplete="off" />
+      </div>
+
+      <button class="btn-submit" id="submit-btn" onclick="submitApply()">
+        Submit Application <i class="fa-solid fa-arrow-right"></i>
+      </button>
+    </div>
+
+    <p class="fine">All applications are reviewed manually. By applying you agree to the event terms.</p>
+
+  </div>
+
+  <!-- ── Success ── -->
+  <div id="view-success" class="view">
+
+    <a href="https://cultcontent.cc" class="brand">
+      <img src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/68529ceff63e1913ceb4e2e0.png" alt="Cult Content" />
+      <span class="brand-name">Cult Content</span>
+    </a>
+
+    <div class="success-card">
+      <div class="check-ring">&#10003;</div>
+      <div class="pill">Application Received</div>
+      <h1>Thanks for<br><span class="cyan">applying.</span></h1>
+      <p style="font-size:14px;color:#888;line-height:1.8;margin-top:12px;">
+        Remember — you need at least 2 TikTok videos on file to qualify, and one of them needs to answer the universe question. We review every application manually.
+      </p>
+    </div>
+
+    <div class="success-steps">
+      <div class="card-label" style="margin-bottom:20px;">What happens next</div>
+      <div class="sstep">
+        <div class="sstep-n">1</div>
+        <div>
+          <div class="sstep-title">We review your videos</div>
+          <div class="sstep-desc">Once you've got 2+ qualifying videos posted, we'll score your application.</div>
+        </div>
+      </div>
+      <div class="sstep">
+        <div class="sstep-n">2</div>
+        <div>
+          <div class="sstep-title">Post more, stand out more</div>
+          <div class="sstep-desc">Posting new videos later? Just re-apply with the same phone or email — we'll add them to your existing application, no duplicate needed.</div>
+        </div>
+      </div>
+      <div class="sstep">
+        <div class="sstep-n">3</div>
+        <div>
+          <div class="sstep-title">Finalists hear back</div>
+          <div class="sstep-desc">We'll reach out by phone, text, or email if you move forward.</div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-share" id="share-btn" onclick="shareApply()">
+      <i class="fa-solid fa-share-nodes"></i> Know a creator who'd be great at this?
+    </button>
+
+    <p class="fine" style="margin-top:16px;">Questions? <a href="mailto:Tommy@cultcontent.cc" style="color:#555;">Tommy@cultcontent.cc</a></p>
+
+  </div>
+
+</div>
+</div>
+
+<script>
+  const SHARE_URL = window.location.origin + '/apply/creator-lead';
+
+  function getSrc() {
+    return new URLSearchParams(window.location.search).get('src') || '';
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('form-error');
+    el.textContent = msg;
+    el.classList.add('show');
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  function clearError() {
+    document.getElementById('form-error').classList.remove('show');
+  }
+
+  // TikTok URL validation — mirrors server-side check
+  function isTikTokUrl(raw) {
+    const url = (raw || '').trim();
+    if (!url) return false;
+    let u;
+    try { u = new URL(url); } catch (_) { return false; }
+    if (!/^https?$/.test(u.protocol.replace(':', ''))) return false;
+    const host = u.hostname.toLowerCase();
+    if (!host.endsWith('tiktok.com')) return false;
+    if (host === 'vm.tiktok.com' || host === 'vt.tiktok.com') return !!u.pathname.slice(1);
+    if (/\/@[^/]+\/video\/\d+/.test(u.pathname)) return true;
+    if (/^\/t\/[\w-]+/.test(u.pathname)) return true;
+    return false;
+  }
+
+  const MAX_ADDITIONAL = 8;
+  let extraCount = 0;
+
+  function addVideoRow() {
+    if (extraCount >= MAX_ADDITIONAL) return;
+    extraCount++;
+    const wrap = document.getElementById('extra-videos');
+    const row = document.createElement('div');
+    row.className = 'video-row';
+    row.innerHTML = `
+      <input type="url" class="extra-video-input" placeholder="tiktok.com/@you/video/..." autocomplete="off" />
+      <button type="button" class="video-remove" aria-label="Remove">&times;</button>
+    `;
+    row.querySelector('.video-remove').addEventListener('click', () => {
+      row.remove();
+      extraCount--;
+      updateAddButton();
+    });
+    wrap.appendChild(row);
+    updateAddButton();
+  }
+
+  function updateAddButton() {
+    document.getElementById('btn-add-video').disabled = extraCount >= MAX_ADDITIONAL;
+  }
+
+  document.getElementById('inp-motivation').addEventListener('input', (e) => {
+    const n = e.target.value.length;
+    const el = document.getElementById('motivation-count');
+    el.textContent = `${n} / 500`;
+    el.classList.toggle('over', n > 500);
+  });
+
+  async function submitApply() {
+    clearError();
+
+    const name        = document.getElementById('inp-name').value.trim();
+    const tiktok       = document.getElementById('inp-tiktok').value.trim().replace(/^@/, '');
+    const phone        = document.getElementById('inp-phone').value.trim();
+    const email        = document.getElementById('inp-email').value.trim();
+    const motivation    = document.getElementById('inp-motivation').value.trim();
+    const video1        = document.getElementById('inp-video-1').value.trim();
+    const video2        = document.getElementById('inp-video-2').value.trim();
+    const consent       = document.getElementById('inp-consent').checked;
+    const honeypot      = document.getElementById('inp-website').value.trim();
+    const extraVideos   = Array.from(document.querySelectorAll('.extra-video-input'))
+      .map(i => i.value.trim()).filter(Boolean);
+
+    if (!name)                              return showError('Please enter your name.');
+    if (!tiktok)                            return showError('Please enter your TikTok handle.');
+    if (!phone)                             return showError('Please enter your phone number.');
+    if (!email || !email.includes('@'))     return showError('Please enter a valid email address.');
+    if (!motivation)                        return showError("Please tell us why you want this role.");
+    if (!video1 || !isTikTokUrl(video1))    return showError('Video link 1 must be a valid TikTok video link.');
+    if (!video2 || !isTikTokUrl(video2))    return showError('Video link 2 must be a valid TikTok video link.');
+    if (video1 === video2)                  return showError('Video links 1 and 2 must be different.');
+    for (const v of extraVideos) {
+      if (!isTikTokUrl(v)) return showError('All additional video links must be valid TikTok links.');
+    }
+    if (!consent)                            return showError('Please agree to be contacted to submit.');
+
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Submitting...';
+
+    try {
+      const resp = await fetch('/api/creator-lead/apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name, tiktokHandle: tiktok, phone, email, motivation,
+          videoLinks: [video1, video2, ...extraVideos],
+          consent, source: getSrc(), website: honeypot,
+        }),
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok || !data.ok) {
+        btn.disabled = false;
+        btn.innerHTML = 'Submit Application <i class="fa-solid fa-arrow-right"></i>';
+        return showError(data.error || 'Something went wrong — please try again.');
+      }
+    } catch (_) {
+      btn.disabled = false;
+      btn.innerHTML = 'Submit Application <i class="fa-solid fa-arrow-right"></i>';
+      return showError('Network error — please check your connection and try again.');
+    }
+
+    document.getElementById('view-form').classList.remove('active');
+    document.getElementById('view-success').classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  async function shareApply() {
+    const shareData = {
+      title: 'Cult Content is hiring a Creator Leader',
+      text: 'Apply to be Cult Content’s next Creator Leader — post 2 TikToks to qualify:',
+      url: SHARE_URL,
+    };
+    if (navigator.share) {
+      try { await navigator.share(shareData); return; } catch (_) {}
+    }
+    try {
+      await navigator.clipboard.writeText(SHARE_URL);
+      const btn = document.getElementById('share-btn');
+      const original = btn.innerHTML;
+      btn.innerHTML = '<i class="fa-solid fa-check"></i> Link copied!';
+      setTimeout(() => { btn.innerHTML = original; }, 2000);
+    } catch (_) {}
+  }
+</script>
+
+</body>
+</html>
