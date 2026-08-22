@@ -1316,7 +1316,9 @@ function formatDuration(seconds) {
 // Registered BEFORE the legacy Supabase handlers below — Express matches routes
 // in registration order, so these working handlers take precedence. Must stay
 // above app.use(requireAuth): creators have no Cloudflare Access session.
-const icSqlite = require('./routes/inner-circle-sqlite')(app, { express });
+let icSqlite;
+try { icSqlite = require('./routes/inner-circle-sqlite')(app, { express }); }
+catch (e) { console.error('[inner-circle-sqlite] route registration failed:', e.message); }
 
 // Content Studio: ensure schema exists (content_credits, content_references,
 // content_generations, client_integrations). Idempotent CREATE TABLE IF NOT EXISTS;
@@ -1801,7 +1803,8 @@ fetch('/api/inner-circle/recordings')
 
 // Covenant: creator commits to a brand → Lark alert to Hasan for manual TC invite.
 // Mounted here (before app.use(requireAuth)) because creators lack CF Access sessions.
-require('./routes/inner-circle-covenant')(app, { requireSession: (icSqlite && icSqlite.requireSqliteSession) || requireCreatorSession, requireCreatorSession, axios, express, getLarkTenantToken });
+try { require('./routes/inner-circle-covenant')(app, { requireSession: (icSqlite && icSqlite.requireSqliteSession) || requireCreatorSession, requireCreatorSession, axios, express, getLarkTenantToken }); }
+catch (e) { console.error('[inner-circle-covenant] route registration failed:', e.message); }
 
 app.post('/api/proposals/publish-public', express.json({ limit: '5mb' }), (req, res) => {
   try {
@@ -3348,7 +3351,10 @@ async function getTopAffiliatesForReport(shopId, limit = 5) {
 // renderReportHTML + generateNarrative now live in lib/weekly-report.js —
 // extracted so the eval harness (lib/weekly-report-narrative.eval.js) can
 // exercise generateNarrative directly, with no server boot required.
-const { renderReportHTML, generateNarrative } = require('./lib/weekly-report');
+let renderReportHTML = () => '<p>Weekly report module not available.</p>';
+let generateNarrative = async () => 'Narrative unavailable.';
+try { ({ renderReportHTML, generateNarrative } = require('./lib/weekly-report')); }
+catch (e) { console.error('[weekly-report] module load failed:', e.message); }
 
 // Orchestrates the full report: data layer + narrative. Delivery/scheduling
 // is deliberately NOT triggered from here — see the /weekly-report/send
@@ -6609,19 +6615,20 @@ app.delete('/api/client/logo', requireClientSession, (req, res) => {
 
 // Creator Cadence engine — portal-admin gated approval page for launch texts + weekly-call reminders.
 // Must be before requireAuth so portal.cultcontent.cc (no CF Access) can reach it.
-const creatorCadence = require('./routes/creator-cadence');
-creatorCadence.mount(app, { DATA_DIR });
+try { require('./routes/creator-cadence').mount(app, { DATA_DIR }); }
+catch (e) { console.error('[creator-cadence] mount failed:', e.message); }
 
-const tiktokApiMap = require('./routes/tiktok-api-map');
-tiktokApiMap.mount(app, { requirePortalAdmin });
+try { require('./routes/tiktok-api-map').mount(app, { requirePortalAdmin }); }
+catch (e) { console.error('[tiktok-api-map] mount failed:', e.message); }
 
-const financialDashboard = require('./routes/financial-dashboard');
-financialDashboard.mount(app, { requirePortalAdmin });
+try { require('./routes/financial-dashboard').mount(app, { requirePortalAdmin }); }
+catch (e) { console.error('[financial-dashboard] mount failed:', e.message); }
 
-const openCollabQueue = require('./routes/open-collab-queue');
-openCollabQueue.mount(app, { DATA_DIR, requirePortalAdmin });
-const linkTracker = require('./routes/link-tracker');
-linkTracker.mount(app, { DATA_DIR });
+try { require('./routes/open-collab-queue').mount(app, { DATA_DIR, requirePortalAdmin }); }
+catch (e) { console.error('[open-collab-queue] mount failed:', e.message); }
+
+try { require('./routes/link-tracker').mount(app, { DATA_DIR }); }
+catch (e) { console.error('[link-tracker] mount failed:', e.message); }
 
 // ── POST /ccc-community-apply ─────────────────────────────────────────────────
 // Same-origin handler so submissions land even if Railway is briefly unreachable.
@@ -15410,7 +15417,13 @@ app.post('/api/ai/generate-image', async (req, res) => {
 // Admin-only CRUD for per-brand weekly creator call schedules. Drives automated
 // SMS reminders + recording association. Backed by the inner_circle.db SQLite
 // volume (shared handle from ./db/inner-circle). Registered BEFORE app.listen().
-const { db: icDb } = require('./db/inner-circle');
+let icDb;
+try { ({ db: icDb } = require('./db/inner-circle')); }
+catch (e) {
+  console.error('[db/inner-circle] load failed:', e.message);
+  const _noOp = { all: () => [], get: () => null, run: () => ({}) };
+  icDb = { prepare: () => _noOp };
+}
 
 // Allowed day values (lowercase). NULL = TBD is permitted.
 const VALID_DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
