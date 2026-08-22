@@ -589,17 +589,11 @@
         <div class="video-portal">
           <div class="video-aspect">
             <iframe
-              src="https://www.youtube.com/embed/vB5Tmla2lLI"
+              src="https://drive.google.com/file/d/10CF8Mk85eDnQkX3HVQTkZXcz03yAKcmF/preview"
               title="Cult Content Creator Program"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowfullscreen id="creator-video">
+              allow="autoplay"
+              allowfullscreen>
             </iframe>
-            <div class="video-placeholder" id="video-placeholder">
-              <div class="play-icon">
-                <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-              </div>
-              <span class="placeholder-label">Your YouTube Video Goes Here</span>
-            </div>
           </div>
         </div>
       </div>
@@ -732,13 +726,6 @@
       if (btn && drawer) {
         btn.addEventListener('click', e => { e.stopPropagation(); drawer.classList.toggle('open'); });
         document.addEventListener('click', e => { if (!drawer.contains(e.target) && e.target !== btn) drawer.classList.remove('open'); });
-      }
-      var iframe = document.getElementById('creator-video');
-      var ph = document.getElementById('video-placeholder');
-      if (iframe && ph) {
-        if ((iframe.getAttribute('src') || '').includes('YOUR_VIDEO_ID')) {
-          iframe.style.display = 'none'; ph.style.display = 'flex';
-        } else { ph.style.display = 'none'; }
       }
     })();
   </script>
