@@ -460,8 +460,8 @@ body::before {
 <script>
 function updateCapitolCanopyCount(a) {
   if (!a) return;
-  document.getElementById('avail-badge').textContent = a.available > 0 ? `${a.available} available` : 'Sold out';
   const shown = Math.max(0, Math.floor(a.available / 3));
+  document.getElementById('avail-badge').textContent = shown > 0 ? `${shown} available` : 'Sold out';
   document.getElementById('avail-line').textContent = shown > 0 ? `${shown} of ${a.total} spots remaining` : 'Sold out — join the waitlist';
   if (a.available === 0) {
     document.getElementById('signup-btn').disabled = true;
