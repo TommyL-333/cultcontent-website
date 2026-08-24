@@ -584,6 +584,17 @@ app.get('/', (req, res, next) => {
 </html>`);
 });
 
+// Public marketing homepage — must be before the dashboard static middleware so
+// dashboard/index.html doesn't win for GET / on cultcontent.cc.
+app.get('/', (req, res, next) => {
+  if ((req.hostname || '').includes('portal.cultcontent.cc')) return next();
+  res.sendFile(path.join(__dirname, 'home.html'));
+});
+app.get('/home', (req, res, next) => {
+  if ((req.hostname || '').includes('portal.cultcontent.cc')) return next();
+  res.sendFile(path.join(__dirname, 'home.html'));
+});
+
 // Serve dashboard static assets (CSS/JS) before auth wall so portal.cultcontent.cc can load them
 app.use(express.static(path.join(__dirname, 'dashboard')));
 
