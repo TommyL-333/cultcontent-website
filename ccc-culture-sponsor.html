@@ -461,7 +461,8 @@ body::before {
 function updateCapitolCanopyCount(a) {
   if (!a) return;
   document.getElementById('avail-badge').textContent = a.available > 0 ? `${a.available} available` : 'Sold out';
-  document.getElementById('avail-line').textContent = a.available > 0 ? `${a.available} of ${a.total} spots remaining` : 'Sold out — join the waitlist';
+  const shown = Math.max(0, Math.floor(a.available / 3));
+  document.getElementById('avail-line').textContent = shown > 0 ? `${shown} of ${a.total} spots remaining` : 'Sold out — join the waitlist';
   if (a.available === 0) {
     document.getElementById('signup-btn').disabled = true;
     document.getElementById('signup-btn').textContent = 'Sold Out';
