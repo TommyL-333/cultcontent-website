@@ -24,6 +24,11 @@ const cccNetMail    = require('./lib/ccc-network-mail');
 const cccNetMsg     = require('./lib/ccc-network-messages');
 const CCC_NETWORK_APP_DIST = path.join(__dirname, 'ccc-network-app', 'dist');
 
+// ─── Stripe (client billing) ──────────────────────────────────────────────────
+const stripe = process.env.STRIPE_SECRET_KEY
+  ? require('stripe')(process.env.STRIPE_SECRET_KEY)
+  : null;
+
 // ─── Data directory — use Railway Volume in prod, __dirname locally ───────────
 const DATA_DIR = process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : __dirname;
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -33,6 +38,7 @@ const QUEUE_FILE         = path.join(DATA_DIR, 'upload-queue.json');
 const AGENTS_FILE        = path.join(DATA_DIR, 'agents.json');
 const TIKTOK_TOKENS_FILE = path.join(DATA_DIR, '.tiktok-tokens.json');
 const TASKS_FILE         = path.join(DATA_DIR, 'tasks.json');
+const REPORT_QUEUE_FILE  = path.join(DATA_DIR, 'weekly-report-queue.json');
 const UPLOAD_DIR         = path.join(DATA_DIR, 'uploads');
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
@@ -82,7 +88,7 @@ app.use(session({
   },
 }));
 
-// ─── Security: Cloudflare Access authentication ───────────────────────────────
+// ─── Security: Cloudflare Access authentication ─────────────────────��������─────────
 // Cloudflare Access injects CF-Access-Authenticated-User-Email on every request.
 // If CF_ACCESS_AUD is set, we enforce this header — unauthenticated requests get 401.
 const ALLOWED_DOMAINS = (process.env.ALLOWED_EMAIL_DOMAINS || 'cultcontent.cc')
@@ -130,6 +136,38 @@ async function getLarkTenantToken() {
   _larkTenantToken = r.data.tenant_access_token;
   _larkTokenExpiry = Date.now() + (r.data.expire * 1000);
   return _larkTenantToken;
+}
+
+// Append a creator signup row to the master Lark Bitable (non-blocking, env-gated).
+async function writeCreatorSignupToBitable(row) {
+  try {
+    const APP_TOKEN = process.env.CREATOR_SIGNUP_BITABLE_APP_TOKEN;
+    const TABLE_ID  = process.env.CREATOR_SIGNUP_BITABLE_TABLE_ID;
+    if (!APP_TOKEN || !TABLE_ID) return;
+    const ltoken = await getLarkTenantToken();
+    if (!ltoken) return;
+    const fields = {
+      'Brand':          row.brand || '',
+      'Creator Name':   row.creatorName || '',
+      'TikTok Handle':  row.handle || '',
+      'Email':          row.email || '',
+      'Phone':          row.phone || '',
+      'Discord':        row.discord || '',
+      'Follower Range': row.followerRange || '',
+      'GMV':            row.gmv || '',
+      'Niche':          row.niche || '',
+      'Message':        row.message || '',
+      'Source Form':    row.source || '',
+      'Submitted':      Date.now()
+    };
+    await axios.post(
+      `https://open.larksuite.com/open-apis/bitable/v1/apps/${APP_TOKEN}/tables/${TABLE_ID}/records`,
+      { fields },
+      { headers: { Authorization: `Bearer ${ltoken}`, 'Content-Type': 'application/json' } }
+    );
+  } catch (e) {
+    console.error('[signup-bitable] write error:', e.response?.data || e.message);
+  }
 }
 
 // Get stored user access token, refreshing if needed
@@ -230,7 +268,7 @@ app.use((req, res, next) => {
       next();
     });
   } else {
-    express.json()(req, res, next);
+    express.json({ limit: '10mb' })(req, res, next);
   }
 });
 
@@ -281,6 +319,7 @@ app.post('/api/webhooks/ghl-client-onboard', async (req, res) => {
       name:        brandName,
       contactName: `${firstName} ${lastName}`.trim(),
       email,
+      loginEmail:  email,
       phone,
       website,
       industry:    '',
@@ -375,8 +414,202 @@ app.post('/api/webhooks/ghl-client-onboard', async (req, res) => {
   }
 });
 
+// ─── GHL → Instantly lead relay ──────────────────────────────────────────────
+// GHL webhook action calls this endpoint; we extract the contact fields and
+// forward them to Instantly in the correct format. Verified by WEBHOOK_SECRET.
+app.post('/api/webhooks/ghl-to-instantly', async (req, res) => {
+  const secret = process.env.WEBHOOK_SECRET;
+  if (secret && req.query.secret !== secret) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  const INSTANTLY_API_KEY = process.env.INSTANTLY_API_KEY;
+  if (!INSTANTLY_API_KEY) {
+    return res.status(500).json({ error: 'INSTANTLY_API_KEY not configured' });
+  }
+
+  try {
+    const b = req.body;
+    // GHL sends fields under various casings depending on workflow config
+    const custom = b.customData || {};
+    const get = (...keys) => { for (const k of keys) { if (b[k]) return b[k]; if (custom[k]) return custom[k]; } return ''; };
+
+    const payload = {
+      campaign:    get('campaign_id'),   // Instantly v2 uses "campaign" not "campaign_id"
+      email:       get('email'),
+      first_name:  get('first_name', 'firstName'),
+      last_name:   get('last_name',  'lastName'),
+      company_name: get('company_name', 'companyName'),
+      custom_variables: {
+        tiktok_handle: get('tiktok_handle') || undefined,
+        location:      custom.location || b.city || undefined,
+      }
+    };
+
+    if (!payload.campaign || !payload.email) {
+      return res.status(400).json({ error: 'Missing campaign_id or email', received: b });
+    }
+
+    const resp = await axios.post('https://api.instantly.ai/api/v2/leads', payload, {
+      headers: {
+        'Authorization': `Bearer ${INSTANTLY_API_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    console.log(`[instantly-relay] Added lead ${payload.email} to campaign ${payload.campaign} | lead_id: ${resp.data.id}`);
+    res.json({ ok: true, lead_id: resp.data.id });
+  } catch (err) {
+    const detail = err.response?.data || err.message;
+    console.error('[instantly-relay] error:', detail);
+    res.status(500).json({ error: detail });
+  }
+});
+
 // Public routes — registered BEFORE requireAuth so no login needed
 app.use('/uploads', express.static(UPLOAD_DIR));
+
+// portal.cultcontent.cc root — audience selector homepage
+app.get('/', (req, res, next) => {
+  const host = req.hostname || '';
+  if (!host.includes('portal.cultcontent.cc')) return next();
+  res.type('html').send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Cult Content Portal</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#12101a;--card:#1c1828;--border:#2a2540;
+    --text:#e2e8f0;--muted:#64748b;
+    --teal:#00f2ea;--pink:#ff0050;--red:#ff3b30;
+  }
+  body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif;min-height:100vh;display:flex;flex-direction:column}
+
+  /* ── Header — matches portal exactly ── */
+  header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 28px;background:var(--card);border-bottom:1px solid var(--border);
+    position:sticky;top:0;z-index:10;
+  }
+  .logo{height:30px}
+
+  /* ── Hero ── */
+  .hero{
+    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:80px 24px 100px;position:relative;overflow:hidden;
+  }
+  .hero-eyebrow{
+    font-size:0.72rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--muted);margin-bottom:20px;
+  }
+  .hero-title{
+    font-size:clamp(2rem,5.5vw,3.2rem);font-weight:800;line-height:1.1;
+    color:var(--text);margin-bottom:14px;
+  }
+  .hero-title span{
+    background:linear-gradient(90deg,var(--teal),var(--pink));
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  }
+  .hero-sub{font-size:1rem;color:var(--muted);max-width:400px;line-height:1.65;margin-bottom:52px}
+
+  /* ── Cards ── */
+  .cards{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;width:100%;max-width:560px}
+  .card{
+    flex:1;min-width:200px;max-width:240px;
+    background:var(--card);border:1.5px solid var(--border);border-radius:16px;
+    padding:36px 24px 30px;text-align:center;text-decoration:none;color:inherit;
+    transition:transform .2s,border-color .2s,box-shadow .2s;
+    display:flex;flex-direction:column;align-items:center;gap:10px;
+  }
+  .card:hover{
+    transform:translateY(-4px);border-color:var(--teal);
+    box-shadow:0 0 32px rgba(0,242,234,0.1);
+  }
+  .card-icon{font-size:2.6rem;line-height:1}
+  .card-label{font-size:1rem;font-weight:700;color:var(--text)}
+  .card-desc{font-size:0.8rem;color:var(--muted);line-height:1.5}
+  .card-arrow{
+    margin-top:6px;font-size:0.85rem;font-weight:700;
+    background:linear-gradient(90deg,var(--teal),var(--pink));
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  }
+
+  /* ── Orbs ── */
+  .orb{position:absolute;border-radius:50%;pointer-events:none;opacity:.12}
+  .orb-1{width:400px;height:400px;top:-140px;right:-100px;background:radial-gradient(circle at 35% 35%,var(--teal),transparent 70%)}
+  .orb-2{width:300px;height:300px;bottom:-100px;left:-80px;background:radial-gradient(circle at 60% 40%,var(--pink),transparent 70%)}
+
+  /* ── Footer ── */
+  footer{text-align:center;padding:20px;font-size:0.75rem;color:var(--muted);border-top:1px solid var(--border)}
+  footer a{color:var(--muted);text-decoration:none}
+  footer a:hover{color:var(--teal)}
+</style>
+</head>
+<body>
+
+<header>
+  <img class="logo" src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/68529ceff63e1913ceb4e2e0.png" alt="Cult Content">
+</header>
+
+<div class="hero">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+
+  <div class="hero-eyebrow">Welcome to the Portal</div>
+  <h1 class="hero-title">Who are <span>you</span>?</h1>
+  <p class="hero-sub">Select your role and we'll take you to the right place.</p>
+
+  <div class="cards">
+    <a class="card" href="/inner-circle">
+      <div class="card-icon">⭐️</div>
+      <div class="card-label">I'm a Creator</div>
+      <div class="card-desc">Find brands to collaborate with and earn commissions</div>
+      <div class="card-arrow">Go to Inner Circle →</div>
+    </a>
+    <a class="card" href="/client/login">
+      <div class="card-icon">👁️</div>
+      <div class="card-label">I'm a Client</div>
+      <div class="card-desc">Log in to your brand dashboard and manage your shop</div>
+      <div class="card-arrow">Go to dashboard →</div>
+    </a>
+  </div>
+</div>
+
+<footer>© ${new Date().getFullYear()} Cult Content · <a href="https://cultcontent.cc">cultcontent.cc</a></footer>
+
+</body>
+</html>`);
+});
+
+// Public marketing homepage — must be before the dashboard static middleware so
+// dashboard/index.html doesn't win for GET / on cultcontent.cc.
+app.get('/', (req, res, next) => {
+  if ((req.hostname || '').includes('portal.cultcontent.cc')) return next();
+  res.sendFile(path.join(__dirname, 'home.html'));
+});
+app.get('/home', (req, res, next) => {
+  if ((req.hostname || '').includes('portal.cultcontent.cc')) return next();
+  res.sendFile(path.join(__dirname, 'home.html'));
+});
+
+// Serve dashboard static assets (CSS/JS) before auth wall so portal.cultcontent.cc can load them
+app.use(express.static(path.join(__dirname, 'dashboard')));
+
+// Public proposals — shareable HTML files, no auth required
+const PROPOSALS_DIR = path.join(__dirname, 'proposals');
+app.get('/proposals/:slug', (req, res) => {
+  const filePath = path.join(PROPOSALS_DIR, req.params.slug + '.html');
+  console.log(`[proposals] GET /proposals/${req.params.slug} → ${filePath}`);
+  if (!fs.existsSync(filePath)) {
+    console.log(`[proposals] NOT FOUND: ${filePath}`);
+    return res.status(404).send('Proposal not found');
+  }
+  res.setHeader('Content-Type', 'text/html');
+  res.sendFile(filePath);
+});
 
 // Catch missing /uploads/* files BEFORE the auth wall — prevents the 401 "sign in" page
 // showing for files that no longer exist on the volume (e.g. after a Railway redeploy).
@@ -403,6 +636,29 @@ app.get('/onboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'dashboard', 'onboard.html'));
 });
 
+// POST /api/onboard/logo ��� public upload during onboarding (no auth, registered before requireAuth)
+// Uses lazy multer so imageUpload const doesn't need to exist yet.
+app.post('/api/onboard/logo', (req, res, next) => {
+  const multer = require('multer');
+  const m = multer({
+    storage: multer.diskStorage({
+      destination: (_, __, cb) => cb(null, UPLOAD_DIR),
+      filename:    (_, file, cb) => {
+        const ext  = require('path').extname(file.originalname) || '.jpg';
+        const base = require('path').basename(file.originalname, ext).replace(/[^a-z0-9_-]/gi, '_').slice(0, 60);
+        cb(null, `${Date.now()}_${base}${ext}`);
+      },
+    }),
+    limits: { fileSize: 10 * 1024 * 1024 },
+    fileFilter: (_, file, cb) => cb(null, /image\//i.test(file.mimetype) || /\.(jpe?g|png|gif|webp|svg|avif)$/i.test(file.originalname)),
+  }).single('logo');
+  m(req, res, (err) => {
+    if (err) return res.status(400).json({ error: err.message });
+    if (!req.file) return res.status(400).json({ error: 'No file received' });
+    res.json({ ok: true, logoUrl: `${PUBLIC_BASE_URL}/uploads/${req.file.filename}` });
+  });
+});
+
 // POST /api/onboard/submit — public, responds immediately then runs pipeline async
 app.post('/api/onboard/submit', express.json({ limit: '2mb' }), async (req, res) => {
   const { brandName, email } = req.body || {};
@@ -411,20 +667,199 @@ app.post('/api/onboard/submit', express.json({ limit: '2mb' }), async (req, res)
   runOnboardingPipeline(req.body).catch(e => console.error('[onboard] pipeline error:', e.message));
 });
 
-// GET /creators — public opportunities gallery (all active brand pages)
-app.get('/creators', (req, res) => {
+// ─── Favicon — proxy from CDN so browsers always load it correctly ────────────
+app.get('/favicon.png', async (req, res) => {
+  try {
+    const r = await axios.get(
+      'https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/68529ceff63e1913ceb4e2e0.png',
+      { responseType: 'arraybuffer', timeout: 8000 }
+    );
+    res.set('Content-Type', 'image/png');
+    res.set('Cache-Control', 'public, max-age=86400');
+    res.send(r.data);
+  } catch(e) {
+    res.status(404).end();
+  }
+});
+
+// ─── Legal pages (required for TikTok Login Kit approval) ────────────────────
+app.get('/terms', (req, res) => {
   res.set('Content-Type', 'text/html');
-  res.send(renderOpportunitiesPage());
+  res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Terms of Service — Cult Content</title>
+<link rel="icon" type="image/png" href="/favicon.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a0a0f;color:#e2e8f0;line-height:1.7;padding:0}
+.wrap{max-width:760px;margin:0 auto;padding:60px 24px 100px}
+.logo{display:flex;align-items:center;gap:12px;text-decoration:none;margin-bottom:48px;width:fit-content}
+.logo-icon{width:48px;height:48px;border-radius:10px;object-fit:cover;flex-shrink:0}
+.logo-text{font-size:1rem;font-weight:800;color:#00f2ea;letter-spacing:-.01em}
+h1{font-size:2rem;font-weight:900;margin-bottom:8px;letter-spacing:-.02em}
+.updated{font-size:.82rem;color:#64748b;margin-bottom:40px}
+h2{font-size:1.05rem;font-weight:700;color:#fff;margin:36px 0 10px}
+p,li{font-size:.93rem;color:#94a3b8;margin-bottom:10px}
+ul{padding-left:20px;margin-bottom:10px}
+a{color:#00f2ea;text-decoration:none}
+footer{margin-top:60px;padding-top:24px;border-top:1px solid rgba(255,255,255,.07);font-size:.8rem;color:#475569}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="logo" href="https://cultcontent.cc"><img class="logo-icon" src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/68529ceff63e1913ceb4e2e0.png" alt="Cult Content"><span class="logo-text">Cult Content</span></a>
+  <h1>Terms of Service</h1>
+  <p class="updated">Last updated: May 26, 2026</p>
+
+  <p>These Terms of Service ("Terms") govern your use of the Cult Content creator platform ("Service") operated by Cult Content LLC ("we," "us," or "our"). By accessing or using the Service, you agree to be bound by these Terms.</p>
+
+  <h2>1. The Service</h2>
+  <p>Cult Content is a creator affiliate management platform. We connect brands with content creators, facilitate collaboration invitations, and provide performance analytics. The Service includes our creator signup pages, brand dashboards, and related tools.</p>
+
+  <h2>2. Social Account Connection</h2>
+  <p>As part of the creator signup process, you may be asked to connect your social media account. This connection uses the platform's official OAuth authorization. By connecting your account, you authorize us to:</p>
+  <ul>
+    <li>Retrieve your user ID and public username</li>
+    <li>Use your user ID to send you a collaboration invitation on behalf of the brand you are applying to work with</li>
+  </ul>
+  <p>We do not post to your social accounts, access your messages, or store your credentials. You may revoke this connection at any time through the respective platform's app settings under "Manage app permissions."</p>
+
+  <h2>3. Creator Obligations</h2>
+  <p>As a creator using the Service, you agree to:</p>
+  <ul>
+    <li>Provide accurate information during signup</li>
+    <li>Comply with the Community Guidelines and Terms of Service of any platforms you connect</li>
+    <li>Comply with applicable advertising disclosure requirements (FTC guidelines)</li>
+    <li>Not misrepresent your identity, follower count, or engagement metrics</li>
+  </ul>
+
+  <h2>4. Commission and Payments</h2>
+  <p>Commission rates, payment terms, and payout schedules are governed by the individual brand agreements within the applicable affiliate system. Cult Content is not responsible for commission payments, which are processed directly through the relevant platform.</p>
+
+  <h2>5. Intellectual Property</h2>
+  <p>Content you create remains your property. By participating in brand campaigns, you grant the brand a license to use your content as agreed in the collaboration terms. Cult Content's platform, branding, and tools are owned by Cult Content LLC.</p>
+
+  <h2>6. Disclaimers</h2>
+  <p>The Service is provided "as is" without warranties of any kind. We do not guarantee earnings, campaign availability, or uninterrupted access to the platform. Third-party platform features and API availability are subject to those platforms' own terms and policies.</p>
+
+  <h2>7. Limitation of Liability</h2>
+  <p>To the fullest extent permitted by law, Cult Content LLC shall not be liable for any indirect, incidental, or consequential damages arising from your use of the Service.</p>
+
+  <h2>8. Changes to Terms</h2>
+  <p>We may update these Terms from time to time. Continued use of the Service after changes constitutes acceptance of the updated Terms.</p>
+
+  <h2>9. Contact</h2>
+  <p>Questions about these Terms? Email us at <a href="mailto:hello@cultcontent.cc">hello@cultcontent.cc</a>.</p>
+
+  <footer>© 2026 Cult Content LLC · <a href="/privacy">Privacy Policy</a> · <a href="/terms">Terms of Service</a></footer>
+</div>
+</body>
+</html>`);
+});
+
+app.get('/privacy', (req, res) => {
+  res.set('Content-Type', 'text/html');
+  res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Privacy Policy — Cult Content</title>
+<link rel="icon" type="image/png" href="/favicon.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a0a0f;color:#e2e8f0;line-height:1.7;padding:0}
+.wrap{max-width:760px;margin:0 auto;padding:60px 24px 100px}
+.logo{display:flex;align-items:center;gap:12px;text-decoration:none;margin-bottom:48px;width:fit-content}
+.logo-icon{width:48px;height:48px;border-radius:10px;object-fit:cover;flex-shrink:0}
+.logo-text{font-size:1rem;font-weight:800;color:#00f2ea;letter-spacing:-.01em}
+h1{font-size:2rem;font-weight:900;margin-bottom:8px;letter-spacing:-.02em}
+.updated{font-size:.82rem;color:#64748b;margin-bottom:40px}
+h2{font-size:1.05rem;font-weight:700;color:#fff;margin:36px 0 10px}
+p,li{font-size:.93rem;color:#94a3b8;margin-bottom:10px}
+ul{padding-left:20px;margin-bottom:10px}
+a{color:#00f2ea;text-decoration:none}
+footer{margin-top:60px;padding-top:24px;border-top:1px solid rgba(255,255,255,.07);font-size:.8rem;color:#475569}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="logo" href="https://cultcontent.cc"><img class="logo-icon" src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/68529ceff63e1913ceb4e2e0.png" alt="Cult Content"><span class="logo-text">Cult Content</span></a>
+  <h1>Privacy Policy</h1>
+  <p class="updated">Last updated: May 26, 2026</p>
+
+  <p>Cult Content LLC ("we," "us," or "our") operates the Cult Content creator platform. This Privacy Policy explains how we collect, use, and protect your information when you use our Service.</p>
+
+  <h2>1. Information We Collect</h2>
+  <p>When you sign up as a creator, we collect:</p>
+  <ul>
+    <li><strong>Contact information:</strong> Name, email address, phone number</li>
+    <li><strong>Social media handles:</strong> Username(s) on platforms you connect or provide</li>
+    <li><strong>Performance data:</strong> Follower range, GMV range, content niche (self-reported)</li>
+    <li><strong>Social account data (if you connect an account):</strong> User ID and public username, obtained via the platform's official OAuth</li>
+  </ul>
+
+  <h2>2. How We Use Social Account Data</h2>
+  <p>If you choose to connect a social media account, we use the data solely to:</p>
+  <ul>
+    <li>Send you a collaboration invitation on behalf of the brand whose creator program you applied to</li>
+    <li>Associate your social identity with your creator profile in our system</li>
+  </ul>
+  <p>We do not sell, share, or transfer your social account data to third parties. We do not use it for advertising or profiling beyond the specific collaboration invitation described above. Your credentials are never stored — only the user ID returned by the platform's OAuth system.</p>
+  <p>You can revoke our access to your social account at any time via that platform's app settings under "Manage app permissions."</p>
+
+  <h2>3. How We Use Other Information</h2>
+  <ul>
+    <li><strong>Email / Phone:</strong> To add you to the brand's CRM (GoHighLevel) and send campaign updates</li>
+    <li><strong>Discord username:</strong> To grant you a Verified Creator role in the brand's Discord server</li>
+    <li><strong>Performance data:</strong> To match creators with appropriate brand campaigns</li>
+  </ul>
+
+  <h2>4. Data Sharing</h2>
+  <p>We share your information only with:</p>
+  <ul>
+    <li>The brand whose creator program you applied to</li>
+    <li>GoHighLevel (our CRM provider) for contact management</li>
+    <li>The relevant social commerce platform, to send the collaboration invitation</li>
+  </ul>
+  <p>We do not sell your personal data.</p>
+
+  <h2>5. Data Retention</h2>
+  <p>We retain your information for as long as you are active in the creator program. You may request deletion at any time by emailing <a href="mailto:hello@cultcontent.cc">hello@cultcontent.cc</a>.</p>
+
+  <h2>6. Security</h2>
+  <p>We use industry-standard security practices to protect your data. Data is stored on encrypted servers. OAuth tokens are stored securely and used only to perform authorized actions.</p>
+
+  <h2>7. Children's Privacy</h2>
+  <p>Our Service is not directed at children under 13. We do not knowingly collect personal information from children under 13.</p>
+
+  <h2>8. Changes to This Policy</h2>
+  <p>We may update this Privacy Policy from time to time. We will notify users of significant changes via email or a notice on the platform.</p>
+
+  <h2>9. Contact</h2>
+  <p>For privacy questions or data deletion requests, contact us at <a href="mailto:hello@cultcontent.cc">hello@cultcontent.cc</a>.</p>
+
+  <footer>© 2026 Cult Content LLC · <a href="/privacy">Privacy Policy</a> · <a href="/terms">Terms of Service</a></footer>
+</div>
+</body>
+</html>`);
+});
+
+// GET /creators — creator network signup page
+app.get('/creators', (req, res) => {
+  res.sendFile(path.join(__dirname, 'creators.html'));
 });
 
 // GET /creators/:brandSlug/welcome — post-signup welcome page
 app.get('/creators/:brandSlug/welcome', (req, res) => {
   const { brandSlug } = req.params;
+  const handle = (req.query.handle || '').replace(/^@/, '').trim();
   const brands = loadBrands();
   const brand  = (brands.clients || []).find(b => b.creatorPage?.slug === brandSlug);
   if (!brand || !brand.creatorPage) return res.status(404).send('Page not found');
   res.set('Content-Type', 'text/html');
-  res.send(renderWelcomePage(brand, brand.creatorPage));
+  res.send(renderWelcomePage(brand, brand.creatorPage, handle));
 });
 
 // GET /creators/:brandSlug — public creator interest page
@@ -435,6 +870,7 @@ app.get('/creators/:brandSlug', (req, res) => {
   if (!brand?.creatorPage || brand.creatorPage.active === false) {
     return res.status(404).send(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Not found</title></head><body style="font-family:sans-serif;text-align:center;padding:80px 20px;background:#0d0b14;color:#fff"><h1 style="margin-bottom:12px">Page not found</h1><p style="color:#666">This creator page doesn't exist or has been taken down.</p></body></html>`);
   }
+  try { require('./routes/link-tracker').trackClick(req.params.brandSlug, req.query.ref, req); } catch (_) {}
   res.set('Content-Type', 'text/html');
   res.send(renderCreatorPage(brand, brand.creatorPage));
 });
@@ -443,84 +879,123 @@ app.get('/creators/:brandSlug', (req, res) => {
 // Fetches the brand's enrolled TikTok Shop affiliate products, builds a
 // single-creator TC automation in Reacher, and fires it off.
 // Runs fire-and-forget — errors are logged but never surface to the creator.
-async function sendCreatorTC(brand, brands, brandIdx, creatorHandle) {
+async function sendCreatorTC(brand, brands, brandIdx, creatorHandle, tiktokOpenId = null) {
   const label = `[creator-tc:${brand.name}→@${creatorHandle}]`;
   const cp = brand.creatorPage || {};
 
-  // Need TikTok Shop connected + Reacher shop + TC commission configured
-  if (!brand.tiktokShopToken?.access_token) {
-    console.log(`${label} skip — no TikTok Shop token`); return;
+  // tcCommission is a percentage (e.g. 25 = 25%). Fall back to brand.commissionRate (decimal, e.g. 0.1)
+  const tcCommission = cp.tcCommission || (brand.commissionRate ? Math.round(brand.commissionRate * 100) : 0);
+  if (!tcCommission) {
+    console.log(`${label} skip — no commission rate configured`); return;
   }
+
+  const commissionDecimal = tcCommission / 100;
+
+  // ── PRODUCT ALLOW-LIST (fail-closed) ──────────────────────────────────────
+  // We NEVER dump the full catalog into a target collab. A TC is only sent for
+  // products explicitly approved for this brand. Resolution order:
+  //   1. cp.tcProductIds  (array of approved product_ids — the canonical allow-list)
+  //   2. cp.tcHeroProductId (single legacy hero product)
+  //   3. HARD STOP — no products approved => do NOT send (return [])
+  const resolveTcProductIds = () => {
+    if (Array.isArray(cp.tcProductIds) && cp.tcProductIds.length) {
+      return cp.tcProductIds.map(String).filter(Boolean);
+    }
+    if (cp.tcHeroProductId) return [String(cp.tcHeroProductId)];
+    return [];
+  };
+  const approvedProductIds = resolveTcProductIds();
+  if (!approvedProductIds.length) {
+    console.warn(`${label} BLOCKED — no approved TC products (tcProductIds/tcHeroProductId) configured for ${brand.name}. Refusing to send to avoid full-catalog collab.`);
+    return { ok: false, blocked: true, reason: 'no_approved_products', brand: brand.name };
+  }
+
+  // ── Path A.5: Look up creator open_id by handle if not provided ──
+  // Searches TikTok's creator database using the brand's own token.
+  // Runs before Path A so we can use direct invite even when creator didn't do OAuth.
+  const shopTok = brand.tiktokShopToken;
+  if (!tiktokOpenId && creatorHandle && shopTok?.access_token && shopTok?.shop_cipher) {
+    const cleanHandle = creatorHandle.replace(/^@/, '').toLowerCase();
+    try {
+      // Search affiliated creators first (fast, no quota cost)
+      const searchResp = await ttsBrandPost(brand, brands, brandIdx, '/affiliate/seller/202309/creators/search', {
+        creator_handle: cleanHandle,
+        page_size: 10,
+      });
+      const creators = searchResp?.data?.creators || [];
+      const match = creators.find(c =>
+        (c.creator_handle || c.username || '').toLowerCase().replace(/^@/, '') === cleanHandle
+      );
+      if (match?.creator_open_id) {
+        tiktokOpenId = match.creator_open_id;
+        console.log(`${label} resolved open_id ${tiktokOpenId} via handle lookup`);
+      } else {
+        console.log(`${label} creator @${cleanHandle} not found in affiliated creators (${creators.length} returned) — will fall back to Reacher TC`);
+      }
+    } catch(e) {
+      console.error(`${label} creator handle lookup error:`, e.message);
+    }
+  }
+
+  // ── Path A: Direct TikTok Shop invite (requires creator open_id + brand shop token) ──
+  // Cleaner, faster, no Reacher dependency — used when creator connected TikTok via OAuth
+  // or when open_id was resolved above via handle lookup
+  if (tiktokOpenId) {
+    if (!shopTok?.access_token) {
+      console.log(`${label} no brand TikTok Shop token — falling through to Reacher`);
+    } else if (!shopTok?.shop_cipher) {
+      console.log(`${label} brand token missing shop_cipher — falling through to Reacher`);
+    } else {
+      // Product list comes ONLY from the approved allow-list (fail-closed above).
+      const productIds = approvedProductIds;
+      console.log(`${label} TikTok direct invite: ${productIds.length} approved product(s) [${productIds.join(',')}]`);
+      try {
+        const resp = await ttsBrandPost(brand, brands, brandIdx, '/affiliate/seller/202309/creators/invite', {
+          creator_open_id: tiktokOpenId,
+          product_ids:     productIds,
+          commission_rate: commissionDecimal,
+        });
+        console.log(`${label} TikTok direct TC invite sent:`, resp?.data || 'ok');
+        return;
+      } catch(e) {
+        console.error(`${label} TikTok direct invite error:`, e.response?.data || e.message);
+        console.log(`${label} falling through to Reacher TC`);
+      }
+    }
+  }
+
+  // ── Path B: Reacher Target Collaboration (handle-based, no open_id needed) ──
   if (!brand.shopId) {
-    console.log(`${label} skip — no Reacher shopId`); return;
-  }
-  if (!cp.tcCommission) {
-    console.log(`${label} skip — no TC commission configured`); return;
-  }
-  if (!process.env.REACHER_API_KEY) {
-    console.log(`${label} skip — REACHER_API_KEY not set`); return;
+    console.log(`${label} skip — no Reacher shopId on brand`); return;
   }
 
-  // 1. Fetch products enrolled in the brand's TikTok Shop affiliate program
-  let products = [];
-  try {
-    const resp = await ttsBrandPost(brand, brands, brandIdx, '/affiliate/seller/202309/products/search', { page_size: 20 });
-    products = resp?.data?.products || [];
-  } catch(e) {
-    console.error(`${label} TTS products fetch error:`, e.message); return;
-  }
-  if (!products.length) {
-    console.log(`${label} skip — no affiliate products enrolled`); return;
-  }
-
-  // 2. Build product list with commission rate (Reacher expects decimal, e.g. 0.10 = 10%)
-  const commissionDecimal = cp.tcCommission / 100;
-  const tcProducts = products.slice(0, 10).map(p => ({
-    product_id:      String(p.product_id || p.id),
+  // Product list comes ONLY from the approved allow-list (fail-closed above).
+  const tcProducts = approvedProductIds.map(pid => ({
+    product_id:      String(pid),
     commission_rate: commissionDecimal,
   }));
+  console.log(`${label} Reacher TC: ${tcProducts.length} approved product(s) [${approvedProductIds.join(',')}]`);
 
-  // 3. Build TC automation payload — single creator, runs for 3 days to ensure delivery
-  const endDate = new Date(Date.now() + 3 * 86_400_000).toISOString().split('T')[0];
-  const handle  = creatorHandle.replace(/^@/, '');
-  const inviteName = (brand.name || 'Collaboration').slice(0, 30);
-  const message = `Hi! We'd love to collaborate with you on ${brand.name}. We offer ${cp.tcCommission}% commission on our TikTok Shop products — click to view the details and accept the invite!`.slice(0, 500);
-
-  const payload = {
-    automation_name: `Creator App TC — ${brand.name} → @${handle}`,
-    shop:            String(brand.shopId),
-    schedule: {
-      Monday_maxCreators: 1, Tuesday_maxCreators: 1, Wednesday_maxCreators: 1,
-      Thursday_maxCreators: 1, Friday_maxCreators: 1, Saturday_maxCreators: 1,
-      Sunday_maxCreators: 1, timezone: 'America/New_York',
-    },
-    target_collab: {
-      invitation_name: inviteName,
-      message,
-      products:        tcProducts,
-      support_contact: { email: brand.loginEmail || 'hello@cultcontent.cc' },
-      content_type:    'no_preference',
-      sample_policy:   { offer_free_samples: false, auto_approve: false },
-    },
-    creators_to_include: { list_upload: [handle] },
-    end_date:     endDate,
-    idempotency_key: require('crypto').randomUUID(),
-  };
-
-  // 4. POST to Reacher
+  const message = `Hi! We'd love to collaborate with you on ${brand.name}. We offer ${tcCommission}% commission on our TikTok Shop products — click to view the details and accept the invite!`;
   try {
-    const rc = reacherClient(brand.shopId);
-    const { data } = await rc.post('/automations/target-collab', payload);
-    console.log(`${label} TC automation created:`, data?.automation_id || data?.id || 'ok');
+    const { data } = await axios.post(`${CFG.railwayUrl}/affiliate/tc-invite`, {
+      shopId:    brand.shopId,
+      handle:    creatorHandle,
+      products:  tcProducts,
+      brandName: brand.name,
+      message,
+      commission: tcCommission,
+    }, { timeout: 20_000 });
+    console.log(`${label} Reacher TC automation created:`, data?.automation_id || 'ok');
   } catch(e) {
-    console.error(`${label} Reacher TC create error:`, e.response?.data || e.message);
+    console.error(`${label} TC invite error:`, e.response?.data || e.message);
   }
 }
 
 // POST /api/creator-pages/submit — public creator interest form submission
 app.post('/api/creator-pages/submit', express.json(), async (req, res) => {
   try {
-    const { brandSlug, name, firstName: fFirst, lastName: fLast, email, phone, tiktokHandle, discordUsername, followerRange, gmv, niche, message } = req.body || {};
+    const { brandSlug, name, firstName: fFirst, lastName: fLast, email, phone, tiktokHandle, tiktokOpenId, discordUsername, followerRange, gmv, niche, message } = req.body || {};
     // Support both "name" (full name) and "firstName"/"lastName" separately
     let firstName = fFirst || '';
     let lastName  = fLast  || '';
@@ -543,13 +1018,23 @@ app.post('/api/creator-pages/submit', express.json(), async (req, res) => {
       const sr = await ghl.get('/contacts/', { params: { locationId: CFG.locationId, query: email, limit: 1 } });
       contactId = sr.data?.contacts?.[0]?.id || null;
     } catch(_) {}
-    const payload = { locationId: CFG.locationId, firstName, lastName, email, phone: cleanPhone, tags: [tagName, 'creator-interest-form', 'affiliate', `${brandSlug}-affiliate`], source: `Creator Interest Page — ${brand.name}` };
+    const TIKTOK_HANDLE_FIELD_ID = 'trnSmiM9oilkdQSInRPn'; // canonical GHL 'TikTok Handle' TEXT field
+    // Canonical brand tag (step 5 convention) — used by weekly creator-call reminder targeting.
+    const brandTag = `brand:${brandSlug}`;
+    const matchTags = [tagName, 'creator-interest-form', 'affiliate', `${brandSlug}-affiliate`, brandTag];
+    const payload = { locationId: CFG.locationId, firstName, lastName, email, phone: cleanPhone, tags: matchTags, source: `Creator Interest Page — ${brand.name}` };
+    if (handle) { payload.customFields = [{ id: TIKTOK_HANDLE_FIELD_ID, value: handle }]; }
     if (contactId) {
       await ghl.put(`/contacts/${contactId}`, payload).catch(() => {});
-      await ghl.post(`/contacts/${contactId}/tags`, { tags: [tagName, 'creator-interest-form', 'affiliate', `${brandSlug}-affiliate`] }).catch(() => {});
+      await ghl.post(`/contacts/${contactId}/tags`, { tags: matchTags }).catch(() => {});
     } else {
-      const cr = await ghl.post('/contacts/', payload);
-      contactId = cr.data?.contact?.id;
+      try {
+        const cr = await ghl.post('/contacts/', payload);
+        contactId = cr.data?.contact?.id;
+      } catch(ghlErr) {
+        console.error('[creator-pages] GHL contact create error:', ghlErr.response?.data || ghlErr.message);
+        // Don't throw — continue without a contactId (submission still succeeds)
+      }
     }
     if (contactId) {
       const noteLines = [
@@ -564,13 +1049,30 @@ app.post('/api/creator-pages/submit', express.json(), async (req, res) => {
       await ghl.post(`/contacts/${contactId}/notes`, { body: noteLines.join('\n'), userId: '' }).catch(() => {});
     }
 
-    // SMS
+    // SMS (upsert conversation first to avoid needing conversationProviderId)
     if (contactId && cleanPhone) {
-      axios.post('https://services.leadconnectorhq.com/conversations/messages/outbound', {
-        type: 'SMS',
+      const discordLink = process.env.DISCORD_INVITE_URL || 'https://discord.gg/a5WNMe8Xuu';
+      const ghlH = { Authorization: `Bearer ${process.env.GHL_API_KEY}`, Version: '2021-07-28', 'Content-Type': 'application/json' };
+      const larkGroupUrl = brand.creatorPage?.larkGroupUrl || null;
+      const larkLine = larkGroupUrl ? `\n→ Lark community: ${larkGroupUrl}` : '';
+      // Brand-aware signup details
+      const cpForSms = brand.creatorPage || {};
+      const commPct = cpForSms.tcCommission || (brand.commissionRate ? Math.round(brand.commissionRate * 100) : null);
+      const commLine = commPct ? `\n→ You'll earn ${commPct}% commission on every ${brand.name} sale you drive` : '';
+      const brandPageUrl = cpForSms.slug ? `${CREATOR_BASE_URL}/creators/${cpForSms.slug}` : `${CREATOR_BASE_URL}/creators`;
+      axios.post('https://services.leadconnectorhq.com/conversations/', {
+        locationId: process.env.GHL_LOCATION_ID || process.env.GHL_LOC_ID,
         contactId,
-        message: `Welcome to the cult ${firstName}! We are here to serve you, if you need us, just text this number. Access all of our brand opportunities here: ${CREATOR_BASE_URL}/creators`,
-      }, { headers: { Authorization: `Bearer ${process.env.GHL_API_KEY}`, Version: '2021-04-15', 'Content-Type': 'application/json' } })
+      }, { headers: ghlH })
+      .then(r => {
+        const conversationId = r.data?.conversationId || r.data?.id;
+        return axios.post('https://services.leadconnectorhq.com/conversations/messages', {
+          type: 'SMS',
+          conversationId,
+          contactId,
+          message: `You're in for ${brand.name} 👁️‼️ Welcome, ${firstName}!\n\nHere's how to start earning with ${brand.name}:\n→ Your ${brand.name} page (product + content brief): ${brandPageUrl}${commLine}\n\nAnd your community:\n→ Discord: ${discordLink}\n→ Skool: https://www.skool.com/cult-content${larkLine}\n\nText this number anytime if you need us.`,
+        }, { headers: ghlH });
+      })
       .catch(e => console.error('[creator-pages] SMS error:', e.response?.data || e.message));
     }
 
@@ -627,20 +1129,694 @@ app.post('/api/creator-pages/submit', express.json(), async (req, res) => {
     // Auto-send TC invite (fire-and-forget)
     if (handle) {
       const brandIdx = brands.clients.findIndex(b => b.creatorPage?.slug === brandSlug);
-      sendCreatorTC(brand, brands, brandIdx, handle)
+      const openId   = (tiktokOpenId || '').trim() || null;
+      sendCreatorTC(brand, brands, brandIdx, handle, openId)
         .catch(e => console.error('[creator-pages] TC fire error:', e.message));
     }
 
     console.log(`[creator-pages] Submission for ${brand.name}: ${email} (${handle ? '@'+handle : 'no handle'})`);
-    res.json({ ok: true, contactId, welcomeUrl: `/creators/${brandSlug}/welcome` });
+    const handleParam = handle ? `?handle=${encodeURIComponent('@' + handle.replace(/^@/, ''))}` : '';
+    writeCreatorSignupToBitable({
+      brand: brand.name, creatorName: `${firstName} ${lastName}`.trim(), handle, email,
+      phone: cleanPhone, discord: discordUsername, followerRange, gmv, niche, message,
+      source: 'Brand Signup'
+    }).catch(()=>{});
+    res.json({ ok: true, contactId, welcomeUrl: `/creators/${brandSlug}/welcome${handleParam}` });
   } catch(e) {
     console.error('[creator-pages/submit]', e.response?.data || e.message);
     res.status(500).json({ ok: false, error: 'Submission failed — please try again' });
   }
 });
 
+// ── Creator page TikTok Display API OAuth — registered BEFORE requireAuth ─────
+// Allows creators to connect their TikTok account via a popup on the creator page.
+// The callback postMessages their open_id back to the parent window.
+
+// ─── Creator TikTok OAuth via Shop app (no separate Display API key needed) ───
+// In-memory store: pendingToken → { formData, brandSlug, ts }
+const pendingCreatorSignups = new Map();
+
+// POST /api/creator-pages/pending — store form data, return TikTok Shop OAuth URL
+// Called by the creator signup form before redirecting to TikTok
+app.post('/api/creator-pages/pending', express.json(), (req, res) => {
+  const { brandSlug, name, email, phone, tiktokHandle, discordUsername, followerRange, gmv, niche, message } = req.body || {};
+  if (!brandSlug || !name || !email) return res.status(400).json({ error: 'Missing required fields' });
+
+  const brands = loadBrands();
+  const brand  = (brands.clients || []).find(b => b.creatorPage?.slug === brandSlug);
+  if (!brand) return res.status(404).json({ error: 'Brand not found' });
+
+  const appKey = process.env.TIKTOK_SHOP_APP_KEY;
+  if (!appKey) return res.status(500).json({ error: 'TikTok app not configured' });
+
+  const token = crypto.randomBytes(20).toString('hex');
+  pendingCreatorSignups.set(token, { formData: req.body, brandSlug, ts: Date.now() });
+  // Prune stale entries (> 30 min)
+  for (const [k, v] of pendingCreatorSignups) { if (Date.now() - v.ts > 1_800_000) pendingCreatorSignups.delete(k); }
+
+  const state       = Buffer.from(JSON.stringify({ type: 'creator', token, brandSlug })).toString('base64');
+  const redirectUri = process.env.TIKTOK_SHOP_REDIRECT_URI || 'https://portal.cultcontent.cc/api/tiktokshop/callback';
+  const authUrl     = `https://auth.tiktok-shops.com/oauth/authorize?app_key=${encodeURIComponent(appKey)}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${encodeURIComponent(state)}`;
+  res.json({ ok: true, authUrl });
+});
+
+// GET /api/creator/connect/auth?slug=SLUG — clean alias (no "tiktok" in path for app review)
+// GET /api/creator-tiktok/auth?slug=SLUG — legacy path, kept for backwards compat
+app.get(['/api/creator/connect/auth', '/api/creator-tiktok/auth'], (req, res) => {
+  const { slug } = req.query;
+  if (!slug) return res.status(400).send('<h2>Missing slug</h2>');
+  const clientKey = process.env.CREATOR_TIKTOK_CLIENT_KEY;
+  if (!clientKey) return res.status(500).send('<h2>TikTok creator auth not configured — add CREATOR_TIKTOK_CLIENT_KEY to env vars</h2>');
+  const brands = loadBrands();
+  const brand  = (brands.clients || []).find(b => b.creatorPage?.slug === slug);
+  if (!brand || !brand.creatorPage) return res.status(404).send('<h2>Page not found</h2>');
+
+  const state = crypto.randomBytes(20).toString('hex');
+  creatorTikTokStates.set(state, { slug, ts: Date.now() });
+  // Prune states older than 10 minutes
+  for (const [k, v] of creatorTikTokStates) { if (Date.now() - v.ts > 600_000) creatorTikTokStates.delete(k); }
+
+  const redirectUri = process.env.CREATOR_TIKTOK_REDIRECT_URI || `${CREATOR_BASE_URL}/api/creator/connect/callback`;
+  const params = new URLSearchParams({
+    client_key:    clientKey,
+    scope:         'user.info.basic',
+    response_type: 'code',
+    redirect_uri:  redirectUri,
+    state,
+  });
+  res.redirect(`https://www.tiktok.com/v2/auth/authorize/?${params.toString()}`);
+});
+
+// GET /api/creator/connect/callback — clean alias (no "tiktok" in path for app review)
+// GET /api/creator-tiktok/callback — legacy path, kept for backwards compat
+// Exchanges TikTok auth code for access token, then redirects back to /creators/<slug>
+// with tt_handle + tt_oid query params so the page can show "Connected" without a popup.
+app.get(['/api/creator/connect/callback', '/api/creator-tiktok/callback'], async (req, res) => {
+  const { code, state, error, error_description } = req.query;
+
+  // Error page — redirects back to creator page with error param if slug known
+  const stateData = creatorTikTokStates.get(state);
+  const slugFallback = stateData?.slug || '';
+
+  if (error) {
+    const msg = error_description || error;
+    if (slugFallback) return res.redirect(`${CREATOR_BASE_URL}/creators/${slugFallback}?tt_error=${encodeURIComponent(msg)}`);
+    return res.status(400).send(`<h2 style="color:#ff5b5b;font-family:sans-serif;text-align:center;padding:60px">TikTok auth error: ${msg}</h2>`);
+  }
+
+  if (!stateData) {
+    return res.status(400).send('<h2 style="color:#ff5b5b;font-family:sans-serif;text-align:center;padding:60px">Session expired — please go back and try connecting again.</h2>');
+  }
+  creatorTikTokStates.delete(state);
+
+  const { slug } = stateData;
+  const clientKey    = process.env.CREATOR_TIKTOK_CLIENT_KEY;
+  const clientSecret = process.env.CREATOR_TIKTOK_CLIENT_SECRET;
+  const redirectUri  = process.env.CREATOR_TIKTOK_REDIRECT_URI || `${CREATOR_BASE_URL}/api/creator/connect/callback`;
+
+  try {
+    const { data: tok } = await axios.post(
+      'https://open.tiktokapis.com/v2/oauth/token/',
+      new URLSearchParams({ client_key: clientKey, client_secret: clientSecret, code, grant_type: 'authorization_code', redirect_uri: redirectUri }),
+      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+    );
+    if (tok.error) throw new Error(tok.error_description || tok.error);
+
+    const openId = tok.open_id || '';
+
+    // Fetch TikTok handle from Display API
+    let tiktokHandle = '';
+    try {
+      const { data: uInfo } = await axios.get('https://open.tiktokapis.com/v2/user/info/', {
+        headers: { Authorization: `Bearer ${tok.access_token}` },
+        params:  { fields: 'open_id,username,display_name' },
+      });
+      tiktokHandle = uInfo?.data?.user?.username || uInfo?.data?.user?.display_name || '';
+    } catch(_) {}
+
+    // Redirect back to the creator page — JS on that page restores form from sessionStorage
+    // and shows the "Connected" badge using the query params.
+    const params = new URLSearchParams({ tt_oid: openId });
+    if (tiktokHandle) params.set('tt_handle', tiktokHandle);
+    return res.redirect(`${CREATOR_BASE_URL}/creators/${slug}?${params.toString()}`);
+  } catch(e) {
+    console.error('[creator/connect/callback] error:', e.message);
+    return res.redirect(`${CREATOR_BASE_URL}/creators/${slug}?tt_error=${encodeURIComponent('Connection failed — please try again.')}`);
+  }
+});
+
 // POST /api/proposals/publish — public so prospects can be linked directly
 // Registered BEFORE requireAuth so it doesn't need a CF Access session
+
+// ============================================================================
+// INNER CIRCLE PORTAL
+// ============================================================================
+
+// Inner Circle brand catalog — display metadata for the brand selection UI.
+// NOTE: brands.json remains the source of truth for which brands have Inner
+// Circle ENABLED (brand.innerCircle flag, toggled from the client portal).
+// This constant supplies id/logo/description for the selection cards and is
+// merged against brands.json by name at request time.
+// TODO(Tommy): confirm final brand list, logo file paths, and descriptions.
+const INNER_CIRCLE_BRANDS = [
+  {
+    id: 'trusted-rituals',
+    name: 'Trusted Rituals',
+    logo: '/logos/trusted-rituals.png',
+    description: 'Mullein honey sticks for respiratory health — 2,000mg per stick, Himalayan-sourced. Strong hooks around pollen season, quitting vaping, and daily wellness rituals.'
+  },
+  {
+    id: 'diamandia',
+    name: 'DIAMANDIA',
+    logo: '/logos/diamandia.png',
+    description: 'DIAMANDIA TikTok Shop brand — 25% target collab commission on the hero product.'
+  },
+  {
+    id: 'approved-science',
+    name: 'Approved Science',
+    logo: '/logos/approved-science.png',
+    description: 'Science-backed supplements (Marketily / Lenea). Evidence-led content angles.'
+  },
+  {
+    id: 'alpha-flow',
+    name: 'Alpha Flow',
+    logo: '/logos/alpha-flow.png',
+    description: 'Alpha Flow TikTok Shop brand.'
+  }
+  // TODO(Tommy): Eva's brand + any remaining clients — need official name, logo, description.
+];
+
+// Find catalog entry for a brands.json record (matched by normalized name)
+function innerCircleCatalogFor(brand) {
+  const n = String((brand && brand.name) || '').toLowerCase().trim();
+  return INNER_CIRCLE_BRANDS.find(b => b.name.toLowerCase() === n || b.id === n.replace(/\s+/g, '-')) || null;
+}
+
+
+// Format integer seconds as HH:MM:SS (e.g. 5025 -> "01:23:45"). Used by Inner Circle recordings API.
+function formatDuration(seconds) {
+  const s = Math.max(0, parseInt(seconds, 10) || 0);
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  const pad = (n) => String(n).padStart(2, '0');
+  return pad(h) + ':' + pad(m) + ':' + pad(sec);
+}
+
+// SQLite-backed Inner Circle API (login + GET /api/inner-circle/dashboard).
+// Registered BEFORE the legacy Supabase handlers below — Express matches routes
+// in registration order, so these working handlers take precedence. Must stay
+// above app.use(requireAuth): creators have no Cloudflare Access session.
+let icSqlite;
+try { icSqlite = require('./routes/inner-circle-sqlite')(app, { express }); }
+catch (e) { console.error('[inner-circle-sqlite] route registration failed:', e.message); }
+
+// Content Studio: ensure schema exists (content_credits, content_references,
+// content_generations, client_integrations). Idempotent CREATE TABLE IF NOT EXISTS;
+// runs the migration against /data/inner_circle.db on boot. Must be before app.listen().
+try { require('./db/content-studio'); console.log('[content-studio] schema ensured'); }
+catch (e) { console.error('[content-studio] schema init failed:', e.message); }
+
+// Content Studio: generation + credits endpoints (reuses db/content-studio.js).
+// Registered here (before app.listen) per command-center route-ordering rule.
+try {
+  require('./routes/content-studio-gen')(app, { requireClientSession, loadBrands });
+} catch (e) { console.error('[content-studio-gen] registration failed:', e.message); }
+try {
+  require('./routes/client-intercom-identity')(app, { requireClientSession, loadBrands });
+} catch (e) { console.error('[client-intercom-identity] registration failed:', e.message); }
+try { require('./routes/inner-circle-spark-brand')(app, { express, requireClientSession, loadBrands }); } catch (e) { console.error('[inner-circle-spark-brand] registration failed:', e.message); }
+
+// Ops Engine "My Tasks" per-person UI. Mounted BEFORE app.use(requireAuth) so
+// unauthenticated API hits return a clean JSON 401 (the module carries its own
+// self-contained auth guard reading req.userEmail / session). Serves
+// /api/my-tasks/list, /api/my-tasks/complete on manifest.cultcontent.cc.
+let opsMyTasksHelpers = null;
+try {
+  const registerOpsMyTasks = require('./routes/ops-my-tasks');
+  registerOpsMyTasks(app, { express, requireAuth, getLarkTenantToken });
+  opsMyTasksHelpers = registerOpsMyTasks._helpers;
+} catch (e) { console.error('[ops-my-tasks] registration failed:', e.message); }
+
+// Client Agent — Phase 1 data layer (see lib/client-agent-context.js).
+// Test route only for now: confirms getCompletedTasks() resolves real data
+// before anything is wired into scheduling or a client-facing report.
+app.get('/api/admin/client-agent/completed-tasks', requirePortalAdmin, async (req, res) => {
+  try {
+    if (!opsMyTasksHelpers) return res.status(503).json({ error: 'ops-my-tasks helpers unavailable' });
+
+    const { brand, days } = req.query;
+    if (!brand) return res.status(400).json({ error: 'brand query param required' });
+    const end = Date.now();
+    const start = end - (Number(days) > 0 ? Number(days) : 7) * 86400000;
+
+    const { getCompletedTasks } = require('./lib/client-agent-context');
+    const tasks = await getCompletedTasks(brand, { start, end }, opsMyTasksHelpers);
+    res.json({ brand, rangeDays: Number(days) > 0 ? Number(days) : 7, count: tasks.length, tasks });
+  } catch (e) {
+    console.error('[client-agent] completed-tasks error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Creator Lead hiring page — public, no-login application at
+// portal.cultcontent.cc/apply/creator-lead. Must stay before app.use(requireAuth).
+try {
+  require('./routes/creator-lead-apply')(app, { express, axios, getLarkTenantToken });
+} catch (e) { console.error('[creator-lead-apply] registration failed:', e.message); }
+
+// Careers listing page — public, no-login page at portal.cultcontent.cc/apply.
+// Must stay before app.use(requireAuth).
+try {
+  require('./routes/careers')(app, {});
+} catch (e) { console.error('[careers] registration failed:', e.message); }
+
+
+// ─── GET /api/inner-circle/admin/funnel?shopId=NNN ───────────────────────────
+// Admin-only Inner Circle funnel: shows each IC signup's state for one shop —
+// signed_up vs tc_accepted vs sample_requested — by joining IC signups to live
+// Reacher status. Token-gated with ADMIN_BATCH_SECRET (x-admin-secret header),
+// the same pattern as the other /api/admin/* routes. Registered HERE, before
+// app.use(requireAuth), so it does not require a Cloudflare Access session
+// (server-to-server / curl callers pass the shared secret instead).
+app.get('/api/inner-circle/admin/funnel', async (req, res) => {
+  const secret = process.env.ADMIN_BATCH_SECRET || 'cult-batch-2026';
+  const got = req.headers['x-admin-secret'] || req.query.secret;
+  if (got !== secret) return res.status(401).json({ error: 'Unauthorized' });
+  const shopId = req.query.shopId || req.query.shop_id;
+  if (!shopId) return res.status(400).json({ error: 'shopId required' });
+  if (!icSqlite || typeof icSqlite.getIcFunnel !== 'function') {
+    return res.status(503).json({ error: 'IC funnel layer unavailable' });
+  }
+  try {
+    const out = await icSqlite.getIcFunnel(shopId);
+    if (out && out.error && (!out.creators || !out.creators.length)) {
+      // Hard data-layer failure (e.g. DB unavailable) → 503; partial Reacher
+      // outages still return 200 with summary.reacherError set.
+      return res.status(503).json(out);
+    }
+    return res.json(out);
+  } catch (e) {
+    console.error('[inner-circle/admin/funnel] failed:', e.message);
+    return res.status(500).json({ error: e.message });
+  }
+});
+
+// ─── Inner Circle: session-check endpoint + nav script ───────────────────────
+// GET /ic-nav.js — injected into all creator-facing portal pages.
+// Checks for an IC session and, if found, inserts a sticky header bar
+// linking back to the Inner Circle dashboard.
+app.get('/ic-nav.js', (req, res) => {
+  res.type('application/javascript').send(`
+(function() {
+  if (window.location.pathname === '/') return;
+  fetch('/api/ic/session-check', { credentials: 'include' })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.ok) return;
+      var bar = document.createElement('div');
+      bar.id = 'ic-nav-bar';
+      bar.style.cssText = [
+        'position:fixed','top:0','left:0','right:0','z-index:9999',
+        'background:#1c1828','border-bottom:1px solid #2a2540',
+        'display:flex','align-items:center','justify-content:space-between',
+        'padding:0 20px','height:44px','font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',
+        'font-size:13px','color:#e2e8f0',
+      ].join(';');
+      bar.innerHTML =
+        '<a href="/inner-circle/dashboard" style="display:flex;align-items:center;gap:7px;color:#00f2ea;text-decoration:none;font-weight:700;font-size:13px">' +
+          '<span style="font-size:16px">←</span> Inner Circle' +
+        '</a>' +
+        '<span style="color:#64748b;font-size:12px">👋 ' + (d.firstName ? 'Hey, ' + d.firstName : 'Welcome back') + '</span>';
+      document.body.insertBefore(bar, document.body.firstChild);
+      document.body.style.paddingTop = (parseInt(document.body.style.paddingTop || 0) + 44) + 'px';
+    })
+    .catch(function() {});
+})();
+`);
+});
+
+// ─── Inner Circle: creator session auth middleware ────────────────────────────
+// Verifies ic_session cookie (or Authorization: Bearer token) against the
+// creator_sessions table in Supabase. Sets req.user to the creator row.
+// Routes using this MUST be registered before app.use(requireAuth) because
+// creators do not have Cloudflare Access sessions.
+async function requireCreatorSession(req, res, next) {
+  const sessionToken = req.cookies?.ic_session || req.headers.authorization?.replace('Bearer ', '');
+  if (!sessionToken) return res.status(401).json({ error: 'Not authenticated' });
+  try {
+    const { data: session } = await supabase
+      .from('creator_sessions')
+      .select('*, creators(*)')
+      .eq('token', sessionToken)
+      .gt('expires_at', new Date().toISOString())
+      .single();
+    if (!session || !session.creators) return res.status(401).json({ error: 'Session expired' });
+    req.user = session.creators;
+    next();
+  } catch (e) {
+    console.error('[inner-circle] session check failed:', e.message);
+    return res.status(500).json({ error: 'Server error' });
+  }
+}
+
+// GET /api/inner-circle/recordings — call recordings library for the logged-in creator
+// Returns { recordings: [{ id, date, title, duration, url, attended }] } newest first.
+app.get('/api/inner-circle/recordings', requireCreatorSession, async (req, res) => {
+  try {
+    const { data: rows, error } = await supabase
+      .from('inner_circle_recordings')
+      .select('*')
+      .order('call_date', { ascending: false });
+    if (error) throw error;
+
+    // ── Brand-scope to the logged-in creator ────────────────────────────────
+    // Resolve the creator's committed brands so a creator only sees recordings
+    // for the brand(s) they're enrolled with. Recordings with no brand FK
+    // (global/all-hands calls) remain visible to everyone.
+    let brandClientIds = [];
+    try {
+      const { data: commitments } = await supabase
+        .from('inner_circle_brand_commitments')
+        .select('client_id')
+        .eq('creator_id', req.user.id);
+      brandClientIds = (commitments || [])
+        .map((c) => c && c.client_id)
+        .filter((id) => id != null)
+        .map((id) => String(id));
+    } catch (commitErr) {
+      console.error('[inner-circle] recordings brand-scope lookup failed:', commitErr.message);
+    }
+    const brandSet = new Set(brandClientIds);
+    const scopedRows = (rows || []).filter((r) => {
+      // Identify any brand-linkage column the recording row may carry.
+      const recBrand = r.client_id != null ? r.client_id
+                     : (r.brand_id != null ? r.brand_id
+                     : (r.shop_id  != null ? r.shop_id : null));
+      // Untagged/global recordings are visible to all creators.
+      if (recBrand == null || recBrand === '') return true;
+      // Brand-tagged recordings only show to creators committed to that brand.
+      return brandSet.has(String(recBrand));
+    });
+
+    const recordings = (scopedRows || []).map((r) => {
+      const attendance = Array.isArray(r.attendance) ? r.attendance : [];
+      return {
+        id: r.id,
+        date: r.call_date,
+        title: r.title || `Growth Partners Call — ${r.call_date}`,
+        duration: r.duration_seconds != null ? formatDuration(r.duration_seconds) : null,
+        url: r.recording_url,
+        attended: attendance.some((id) => String(id) === String(req.user.id)),
+      };
+    });
+    // Fallback for empty table: seed with the Week 1 launch call so the
+    // recordings library is never blank at launch. Remove once real rows exist.
+    if (recordings.length === 0) {
+      return res.json({
+        recordings: [
+          {
+            id: 1,
+            date: '2026-06-08',
+            title: 'Week 1: Growth Partners Call',
+            duration: null,
+            url: 'https://www.larksuite.com/minutes/obus4pv6ixvw993ur65jab8g',
+            attended: false,
+          },
+        ],
+      });
+    }
+    res.json({ recordings });
+  } catch (e) {
+    console.error('[inner-circle] recordings fetch failed:', e.message);
+    res.status(500).json({ error: 'Failed to load recordings' });
+  }
+});
+
+// Creator login + Inner Circle signup page
+app.get('/inner-circle', (req, res) => {
+  res.sendFile(path.join(__dirname, 'views', 'inner-circle-login.html'));
+});
+
+// Inner Circle login API
+app.post('/api/inner-circle/login', express.json(), async (req, res) => {
+  const {email, password} = req.body;
+  
+  if (!email || !password) {
+    return res.status(400).json({error: 'Email and password required'});
+  }
+  
+  try {
+    // Look up creator in Supabase
+    const {data: creator, error} = await supabase
+      .from('creators')
+      .select('*')
+      .eq('email', email.toLowerCase())
+      .single();
+    
+    if (error || !creator) {
+      return res.status(401).json({error: 'Invalid credentials'});
+    }
+    
+    // Verify password (TikTok username or phone last 4)
+    const validPassword = 
+      password === creator.tiktok_handle ||
+      password === (creator.phone || '').slice(-4);
+    
+    if (!validPassword) {
+      return res.status(401).json({error: 'Invalid credentials'});
+    }
+    
+    // Create session token
+    const sessionToken = require('crypto').randomBytes(32).toString('hex');
+    
+    // Store session
+    await supabase
+      .from('creator_sessions')
+      .insert({
+        creator_id: creator.id,
+        token: sessionToken,
+        expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days
+      });
+    
+    res.json({
+      success: true,
+      token: sessionToken,
+      creator: {
+        id: creator.id,
+        name: creator.name,
+        email: creator.email,
+        tiktok_handle: creator.tiktok_handle
+      }
+    });
+    
+  } catch (error) {
+    console.error('Inner Circle login error:', error);
+    res.status(500).json({error: 'Server error'});
+  }
+});
+
+// Inner Circle dashboard v2 (SPA) — serves views/inner-circle.html.
+// Session-checked here; page data is fetched client-side from /api/inner-circle/dashboard.
+// Registered BEFORE the legacy inline dashboard route below so it takes precedence.
+app.get('/inner-circle/dashboard', async (req, res, next) => {
+  const sessionToken = req.cookies?.ic_session || req.headers.authorization?.replace('Bearer ', '');
+  if (!sessionToken) return res.redirect('/inner-circle');
+  try {
+    const { data: session } = await supabase
+      .from('creator_sessions')
+      .select('*, creators(*)')
+      .eq('token', sessionToken)
+      .gt('expires_at', new Date().toISOString())
+      .single();
+    if (!session || !session.creators) return res.redirect('/inner-circle');
+    return res.sendFile(path.join(__dirname, 'views/inner-circle.html'));
+  } catch (e) {
+    console.error('[inner-circle] dashboard v2 session check failed:', e.message);
+    return res.redirect('/inner-circle');
+  }
+});
+
+// Alias: the SPA redirects unauthenticated users to /inner-circle/login —
+// send them to the existing creator login page at /inner-circle.
+app.get('/inner-circle/login', (req, res) => res.redirect('/inner-circle'));
+
+// Inner Circle dashboard
+app.get('/inner-circle/dashboard', async (req, res) => {
+  // Get session from cookie or header
+  const sessionToken = req.cookies?.ic_session || req.headers.authorization?.replace('Bearer ', '');
+  
+  if (!sessionToken) {
+    return res.redirect('/inner-circle');
+  }
+  
+  try {
+    // Verify session
+    const {data: session} = await supabase
+      .from('creator_sessions')
+      .select('*, creators(*)')
+      .eq('token', sessionToken)
+      .gt('expires_at', new Date().toISOString())
+      .single();
+    
+    if (!session) {
+      return res.redirect('/inner-circle');
+    }
+    
+    const creator = session.creators;
+    
+    // Get creator's Inner Circle enrollment
+    const {data: enrollment} = await supabase
+      .from('inner_circle_enrollments')
+      .select('*')
+      .eq('creator_id', creator.id)
+      .single();
+    
+    // Get creator's brand commitments
+    const {data: commitments} = await supabase
+      .from('inner_circle_brand_commitments')
+      .select('*, clients(*)')
+      .eq('creator_id', creator.id);
+    
+    // Get video count this month
+    const {data: videos} = await supabase
+      .from('creator_videos')
+      .select('id')
+      .eq('creator_id', creator.id)
+      .gte('created_at', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString());
+    
+    const videoCount = videos?.length || 0;
+    
+    res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Inner Circle Dashboard — ${creator.name}</title>
+<link rel="icon" type="image/png" href="/favicon.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a0a0f;color:#e2e8f0;min-height:100vh}
+.header{background:rgba(255,255,255,.02);border-bottom:1px solid rgba(255,255,255,.07);padding:20px 24px;display:flex;justify-content:space-between;align-items:center}
+.header h1{font-size:1.3rem;font-weight:800;background:linear-gradient(135deg,#00f2ea,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header .user{font-size:.9rem;color:#94a3b8}
+.container{max-width:1400px;margin:0 auto;padding:40px 24px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;margin-bottom:40px}
+.stat-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:24px}
+.stat-card .label{font-size:.85rem;color:#94a3b8;margin-bottom:8px}
+.stat-card .value{font-size:2.2rem;font-weight:900;color:#fff}
+.stat-card .progress{margin-top:12px;height:6px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden}
+.stat-card .progress-bar{height:100%;background:linear-gradient(90deg,#00f2ea,#a855f7);transition:width .3s}
+.section{margin-bottom:40px}
+.section h2{font-size:1.5rem;font-weight:800;margin-bottom:20px}
+.brands{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.brand-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:20px;transition:border-color .2s}
+.brand-card:hover{border-color:rgba(0,242,234,.3)}
+.brand-card h3{font-size:1.1rem;color:#00f2ea;margin-bottom:8px}
+.brand-card p{font-size:.88rem;color:#94a3b8;margin-bottom:4px}
+.btn{padding:10px 20px;background:linear-gradient(135deg,#00f2ea,#a855f7);border:none;border-radius:8px;color:#fff;font-weight:600;font-size:.9rem;cursor:pointer;transition:transform .2s}
+.btn:hover{transform:translateY(-1px)}
+.btn-secondary{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1)}
+.empty{text-align:center;padding:60px 20px;color:#64748b}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Inner Circle</h1>
+  <div class="user">
+    ${creator.name} • <a href="/api/inner-circle/logout" style="color:#00f2ea;text-decoration:none">Logout</a>
+  </div>
+</div>
+
+<div class="container">
+  <div class="stats">
+    <div class="stat-card">
+      <div class="label">Videos This Month</div>
+      <div class="value">${videoCount}</div>
+      <div class="progress">
+        <div class="progress-bar" style="width:${Math.min((videoCount/15)*100, 100)}%"></div>
+      </div>
+      <div class="label" style="margin-top:8px">${videoCount}/15 goal</div>
+    </div>
+    
+    <div class="stat-card">
+      <div class="label">Brand Commitments</div>
+      <div class="value">${commitments?.length || 0}</div>
+    </div>
+    
+    <div class="stat-card">
+      <div class="label">Call Attendance</div>
+      <div class="value">${enrollment?.calls_attended || 0}</div>
+    </div>
+    
+    <div class="stat-card">
+      <div class="label">Commission Rate</div>
+      <div class="value">50%</div>
+      <div class="label" style="margin-top:8px">Target collabs</div>
+    </div>
+  </div>
+  
+  <div class="section">
+    <h2>Your Brands</h2>
+    ${commitments && commitments.length > 0 ? `
+      <div class="brands">
+        ${commitments.map(c => `
+          <div class="brand-card">
+            <h3>${c.clients.name}</h3>
+            <p>Videos posted: ${c.videos_posted || 0}</p>
+            <p>Status: ${c.status}</p>
+            <button class="btn" onclick="window.location.href='/creators/${c.clients.slug}'">View Brand Page</button>
+          </div>
+        `).join('')}
+      </div>
+    ` : `
+      <div class="empty">
+        <p>No brand commitments yet.</p>
+        <button class="btn" style="margin-top:16px" onclick="window.location.href='/inner-circle/brands'">Browse Brands</button>
+      </div>
+    `}
+  </div>
+  
+  <div class="section">
+    <h2>Recent Call Recordings</h2>
+    <div id="recordings"></div>
+  </div>
+</div>
+
+<script>
+// Load call recordings
+fetch('/api/inner-circle/recordings')
+  .then(r => r.json())
+  .then(data => {
+    const container = document.getElementById('recordings');
+    if (data.recordings && data.recordings.length > 0) {
+      container.innerHTML = data.recordings.map(r => \`
+        <div class="brand-card" style="margin-bottom:12px">
+          <h3>\${r.title}</h3>
+          <p>\${new Date(r.date).toLocaleDateString()}</p>
+          <button class="btn-secondary btn" onclick="window.open('\${r.url}', '_blank')">Watch Recording</button>
+        </div>
+      \`).join('');
+    } else {
+      container.innerHTML = '<div class="empty">No recordings yet.</div>';
+    }
+  });
+</script>
+
+</body>
+</html>`);
+    
+  } catch (error) {
+    console.error('Inner Circle dashboard error:', error);
+    res.redirect('/inner-circle');
+  }
+});
+
+// Covenant: creator commits to a brand → Lark alert to Hasan for manual TC invite.
+// Mounted here (before app.use(requireAuth)) because creators lack CF Access sessions.
+try { require('./routes/inner-circle-covenant')(app, { requireSession: (icSqlite && icSqlite.requireSqliteSession) || requireCreatorSession, requireCreatorSession, axios, express, getLarkTenantToken }); }
+catch (e) { console.error('[inner-circle-covenant] route registration failed:', e.message); }
+
 app.post('/api/proposals/publish-public', express.json({ limit: '5mb' }), (req, res) => {
   try {
     const { html } = req.body;
@@ -1093,7 +2269,7 @@ ${transcript.slice(0, 8000)}`
 // Auth is a bearer token (WEBHOOK_SECRET) that the dashboard fetches from /api/upload-config
 // after the normal CF-Access session is already established.
 
-// ── HEVC → H.264 auto-conversion ─────────────────────────────────────────────
+// ── HEVC → H.264 auto-conversion ────────────���────────────────────────────────
 // iPhones record in HEVC (H.265) by default. Instagram and TikTok reject it via
 // Buffer. On upload we detect HEVC and silently re-encode to H.264/AAC MP4 so
 // every downstream platform gets a compatible file without manual intervention.
@@ -1127,7 +2303,7 @@ function ensureH264(filePath) {
     });
   });
 }
-// ─────────────────────────────────────────────────────────────────────────────
+// ──────────────────────────────────────────────────────────────────���──────────
 
 const uploadDirect = multer({
   storage: multer.diskStorage({
@@ -1371,8 +2547,8 @@ app.post('/api/upload/chunk', (req, res) => {
   req.on('error', e => res.status(500).json({ error: e.message }));
 });
 
-// ─── Client Portal ────────────────────────────────────────────────────────────
-// ── Client portal bug reporter ────────────────────────────────────────────────
+// ─── Client Portal ──���─────────────────────────────────────────────────────────
+// ��─ Client portal bug reporter ────────────────────────────────────────────────
 async function sendClientBugReport({ brandName, brandId, route, error, type = 'server', extra = '' }) {
   try {
     const emoji = type === 'client' ? '🖥️' : '🔴';
@@ -1397,7 +2573,7 @@ function loadTasks() {
 
 const clientLoginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: 50, // raised from 10 — auto-retry polling uses ~18 requests during onboarding
   message: { error: 'Too many login attempts — try again in 15 minutes.' },
 });
 
@@ -1432,8 +2608,9 @@ app.post('/client/login', clientLoginLimiter, express.json(), async (req, res) =
     const { email, password } = req.body || {};
     if (!email) return res.status(400).json({ error: 'Email required' });
     const brands = loadBrands();
+    const normalised = email.toLowerCase().trim();
     const brand = (brands.clients || []).find(
-      b => b.loginEmail && b.loginEmail.toLowerCase() === email.toLowerCase().trim()
+      b => (b.loginEmail || b.email || '').toLowerCase() === normalised
     );
     if (!brand) return res.status(401).json({ error: 'No account found for that email.' });
     // No password yet — prompt client to create one
@@ -1455,10 +2632,11 @@ app.post('/client/set-password', clientLoginLimiter, express.json(), async (req,
     if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
     if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters.' });
     const brands = loadBrands();
+    const normalised2 = email.toLowerCase().trim();
     const idx = (brands.clients || []).findIndex(
-      b => b.loginEmail && b.loginEmail.toLowerCase() === email.toLowerCase().trim()
+      b => (b.loginEmail || b.email || '').toLowerCase() === normalised2
     );
-    if (idx === -1) return res.status(401).json({ error: 'No account found for that email.' });
+    if (idx === -1) return res.status(404).json({ error: 'Your account is being set up — usually takes under a minute. Please try again shortly.' });
     if (brands.clients[idx].passwordHash) return res.status(400).json({ error: 'Password already set. Use your existing password to log in.' });
     brands.clients[idx].passwordHash = await bcrypt.hash(password, 12);
     saveBrands(brands);
@@ -1479,7 +2657,7 @@ app.post('/client/logout', (req, res) => {
 
 function requirePortalAdmin(req, res, next) {
   if (!req.session?.isPortalAdmin) {
-    if (req.path.startsWith('/api/') || req.path.startsWith('/portal-admin/clients') || req.path.startsWith('/portal-admin/impersonate')) {
+    if (req.path.startsWith('/api/') || req.path.startsWith('/portal-admin/clients') || req.path.startsWith('/portal-admin/impersonate') || req.path.startsWith('/portal-admin/open-collab')) {
       return res.status(401).json({ error: 'Not authenticated' });
     }
     return res.redirect('/portal-admin');
@@ -1504,25 +2682,97 @@ app.post('/portal-admin/login', express.json(), (req, res) => {
   res.json({ ok: true });
 });
 
+try { require('./routes/portal-team-auth')(app, { express }); } catch (e) { console.error('[portal-team-auth] registration failed:', e.message); }
+
 // GET /portal-admin/clients — returns client list as JSON (admin only)
-app.get('/portal-admin/clients', requirePortalAdmin, (req, res) => {
+app.get('/portal-admin/clients', requirePortalAdmin, async (req, res) => {
   // If Accept is text/html, serve the admin page
   if (req.headers.accept?.includes('text/html')) {
     return res.sendFile(path.join(__dirname, 'dashboard', 'portal-admin.html'));
   }
+  try {
   const brands = loadBrands();
-  const clients = (brands.clients || []).map(b => ({
-    id:              b.id,
-    name:            b.name,
-    email:           b.loginEmail || '',
-    hasPassword:     !!b.passwordHash,
-    tiktokConnected: !!(b.tiktokShopToken?.access_token),
-    bufferConnected: !!b.bufferConnected,
-    arcadsConnected: !!b.arcadsConnected,
-    storistaConnected: !!b.storistaConnected,
-    onboardedAt:     b.onboardedAt || null,
-  }));
-  res.json({ ok: true, clients });
+
+  // Billing window: ?month=YYYY-MM (a full closed month) or omitted => current month (MTD).
+  const win = monthWindow(req.query.month);
+
+  const gmvResults = await Promise.allSettled(
+    (brands.clients || []).map((b, i) => fetchNetProductSalesForWindow(b, brands, i, win))
+  );
+
+  // Build the month picker options: from the earliest brand onboarding (floored),
+  // capped at the last 12 months, newest first, always including the current month.
+  const availableMonths = (() => {
+    const nowD = new Date();
+    let earliest = new Date(Date.UTC(nowD.getUTCFullYear(), nowD.getUTCMonth(), 1));
+    for (const b of (brands.clients || [])) {
+      const t = b.onboardedAt ? new Date(b.onboardedAt) : null;
+      if (t && !isNaN(t) && t < earliest) earliest = new Date(Date.UTC(t.getUTCFullYear(), t.getUTCMonth(), 1));
+    }
+    const twelveAgo = new Date(Date.UTC(nowD.getUTCFullYear(), nowD.getUTCMonth() - 11, 1));
+    if (earliest < twelveAgo) earliest = twelveAgo;
+    const out = [];
+    let cur = new Date(Date.UTC(nowD.getUTCFullYear(), nowD.getUTCMonth(), 1));
+    while (cur >= earliest) {
+      const w = monthWindow(`${cur.getUTCFullYear()}-${String(cur.getUTCMonth() + 1).padStart(2, '0')}`);
+      out.push({ key: w.key, label: w.label });
+      cur = new Date(Date.UTC(cur.getUTCFullYear(), cur.getUTCMonth() - 1, 1));
+    }
+    return out;
+  })();
+
+  const clients = (brands.clients || []).map((b, i) => {
+    const liveGmv  = gmvResults[i]?.status === 'fulfilled' ? gmvResults[i].value : null;
+    const commRate = b.commissionRate ?? 0.10;
+    // Never show the stale relay cache for billing. Retainer-only brands (commRate 0) show 0.
+    const gmv      = commRate === 0 ? 0 : (liveGmv ?? 0);
+    return {
+      id:               b.id,
+      name:             b.name,
+      email:            b.loginEmail || '',
+      hasPassword:      !!b.passwordHash,
+      tiktokConnected:  !!(b.tiktokShopToken?.access_token),
+      hasShopCipher:    !!(b.tiktokShopToken?.shop_cipher),
+      bufferConnected:  !!b.bufferConnected,
+      arcadsConnected:  !!b.arcadsConnected,
+      storistaConnected: !!b.storistaConnected,
+      onboardedAt:      b.onboardedAt || null,
+      gmv,
+      commissionRate:   commRate,
+      revShare:         parseFloat((gmv * commRate).toFixed(2)),
+      cachedGmvAt:      b.cachedGmvAt || null,
+      creatorPageSlug:  b.creatorPage?.slug || null,
+      campaigns:        b.creatorPage?.campaigns || null,
+    };
+  });
+  res.json({ ok: true, clients, window: { key: win.key, label: win.label, isCurrent: win.isCurrent }, availableMonths });
+  } catch (err) {
+    console.error('[portal-admin/clients] failed:', err && err.message);
+    try {
+      const brands = loadBrands();
+      const clients = (brands.clients || []).map((b) => {
+        const commRate = b.commissionRate ?? 0.10;
+        const gmv = 0; // error fallback: never show a stale billing figure
+        void b.cachedNetGmv;
+        return {
+          id: b.id, name: b.name, email: b.loginEmail || '',
+          hasPassword: !!b.passwordHash,
+          tiktokConnected: !!(b.tiktokShopToken?.access_token),
+          hasShopCipher: !!(b.tiktokShopToken?.shop_cipher),
+          bufferConnected: !!b.bufferConnected,
+          arcadsConnected: !!b.arcadsConnected,
+          storistaConnected: !!b.storistaConnected,
+          onboardedAt: b.onboardedAt || null,
+          gmv, commissionRate: commRate,
+          revShare: parseFloat((gmv * commRate).toFixed(2)),
+          cachedGmvAt: b.cachedGmvAt || null,
+        };
+      });
+      return res.json({ ok: true, clients, degraded: true });
+    } catch (err2) {
+      return res.status(500).json({ ok: false, error: 'Failed to load clients: ' + (err2 && err2.message) });
+    }
+  }
 });
 
 // POST /portal-admin/impersonate — sets session as a client brand
@@ -1538,6 +2788,33 @@ app.post('/portal-admin/impersonate', requirePortalAdmin, express.json(), (req, 
   res.json({ ok: true });
 });
 
+// PATCH /portal-admin/open-collab/:brandId — toggle the open-collab onboarding flag for a brand.
+// Accepts brandId OR creatorPage.slug for lookup. Body: { openCollabEnabled: boolean }.
+// NOTE: open-collab status CANNOT currently be read or enabled via API. The Reacher relay
+// returns 404 for open-collab state, and there is no per-shop TikTok token available
+// (TIKTOK_SHOP_TOKENS is unconfigured), so the TikTok Shop Open API cannot be signed per-shop.
+// This flag is therefore a MANUAL onboarding gate: an operator flips open collab ON in the
+// TikTok seller center, then sets this flag true here. Autonomous read/enable of open-collab
+// status is DEFERRED to a future TikTok-token task. We mutate ONLY brand.openCollabEnabled and
+// write back via the same saveBrands() helper — no other fields are touched.
+app.patch("/portal-admin/open-collab/:brandId", requirePortalAdmin, express.json(), (req, res) => {
+  const brands = loadBrands();
+  const key = req.params.brandId;
+  const idx = (brands.clients || []).findIndex(b => b.id === key || b.creatorPage?.slug === key);
+  if (idx === -1) return res.status(404).json({ error: "Brand not found" });
+
+  // Strict boolean validation — reject anything that is not a real boolean.
+  const v = req.body?.openCollabEnabled;
+  if (typeof v !== "boolean") {
+    return res.status(400).json({ error: "openCollabEnabled must be a boolean" });
+  }
+
+  // Mutate ONLY this field; do not rebuild or touch the rest of the brand record.
+  brands.clients[idx].openCollabEnabled = v;
+  saveBrands(brands);
+  res.json({ ok: true, brandId: brands.clients[idx].id, openCollabEnabled: v });
+});
+
 // POST /portal-admin/exit — stop impersonating, back to admin client list
 app.post('/portal-admin/exit', (req, res) => {
   const wasAdmin = req.session?.isPortalAdmin;
@@ -1547,9 +2824,1660 @@ app.post('/portal-admin/exit', (req, res) => {
   res.json({ ok: true });
 });
 
+// POST /portal-admin/set-email — set loginEmail for a client (no CF Access needed)
+app.post('/portal-admin/set-email', requirePortalAdmin, express.json(), (req, res) => {
+  const { brandId, email } = req.body || {};
+  if (!brandId || !email) return res.status(400).json({ error: 'brandId and email required' });
+  const brands = loadBrands();
+  const idx = (brands.clients || []).findIndex(b => b.id === brandId);
+  if (idx === -1) return res.status(404).json({ error: 'Brand not found' });
+  brands.clients[idx].loginEmail = email.toLowerCase().trim();
+  saveBrands(brands);
+  res.json({ ok: true, name: brands.clients[idx].name, loginEmail: brands.clients[idx].loginEmail });
+});
+
+// POST /portal-admin/clear-tiktok/:brandId — wipe broken TikTok token so brand can reconnect
+app.post('/portal-admin/clear-tiktok/:brandId', requirePortalAdmin, (req, res) => {
+  const brands   = loadBrands();
+  const brandIdx = (brands.clients || []).findIndex(b => b.id === req.params.brandId);
+  if (brandIdx === -1) return res.status(404).json({ error: 'Brand not found' });
+  const name = brands.clients[brandIdx].name;
+  delete brands.clients[brandIdx].tiktokShopToken;
+  brands.clients[brandIdx].tiktokConnected = false;
+  saveBrands(brands);
+  res.json({ ok: true, name, message: `TikTok token cleared for ${name}. Brand must reconnect from their dashboard.` });
+});
+
+// POST /portal-admin/clear-password — reset a client password so they can set a new one
+app.post('/portal-admin/clear-password', requirePortalAdmin, express.json(), (req, res) => {
+  const { brandId } = req.body || {};
+  if (!brandId) return res.status(400).json({ error: 'brandId required' });
+  const brands = loadBrands();
+  const idx = (brands.clients || []).findIndex(b => b.id === brandId);
+  if (idx === -1) return res.status(404).json({ error: 'Brand not found' });
+  delete brands.clients[idx].passwordHash;
+  saveBrands(brands);
+  res.json({ ok: true, name: brands.clients[idx].name });
+});
+
 // POST /portal-admin/logout
 app.post('/portal-admin/logout', (req, res) => {
   req.session.destroy(() => res.redirect('/portal-admin'));
+});
+
+// GET /portal-admin/shop-metrics/:brandId — WoW shop metrics proxy (portal admin session auth)
+app.get('/portal-admin/shop-metrics/:brandId', requirePortalAdmin, async (req, res) => {
+  // Proxy to the admin API endpoint (reuses same logic, avoids duplicating auth)
+  const brands = loadBrands();
+  const bi = (brands.clients || []).findIndex(b => b.id === req.params.brandId);
+  if (bi === -1) return res.status(404).json({ error: 'Brand not found' });
+  const brand = brands.clients[bi];
+  if (!brand.tiktokShopToken?.access_token) return res.json({ ok: true, noToken: true });
+
+  const CANCEL_STATUSES = new Set([140, 4, 'CANCELLED', 'CANCEL', 'REFUNDED', 'REFUND', 'REVERSE_PENDING', 'REVERSE_COMPLETE']);
+  async function fetchWeekMetrics(startTs, endTs) {
+    let gmv = 0, orders = 0, pageToken = null;
+    for (let page = 0; page < 10; page++) {
+      const body = { create_time_ge: startTs, create_time_lt: endTs, sort_field: 'create_time', sort_order: 'DESC' };
+      if (pageToken) body.page_token = pageToken;
+      try {
+        const resp = await ttsBrandPost(brand, brands, bi, '/order/202309/orders/search', body, { page_size: 100 });
+        const list = resp?.data?.orders || resp?.data?.order_list || [];
+        for (const o of list) {
+          if (o.is_sample_order) continue;
+          const status = o.order_status ?? o.status;
+          if (status !== undefined && CANCEL_STATUSES.has(status)) continue;
+          orders++;
+          const payment = o.payment || {};
+          const amt = parseFloat(payment.sub_total ?? payment.original_total_product_price ?? 0) || 0;
+          gmv += amt;
+        }
+        const nextToken = resp?.data?.next_page_token;
+        if (!nextToken || list.length === 0) break;
+        pageToken = nextToken;
+      } catch(e) { break; }
+    }
+    return { gmv, orders, aov: orders > 0 ? gmv / orders : 0 };
+  }
+
+  // ── Analytics helper: shop-level traffic + conversion ────────────────────────
+  // GET /analytics/202509/shop/performance  (YYYY-MM-DD dates)
+  // Returns: traffic.avg_conversation_rate (conv rate 0–1), traffic.avg_page_views, traffic.avg_visitors
+  async function fetchShopPerf(startDateStr, endDateStr) {
+    try {
+      const r = await ttsBrandGet(brand, brands, bi, '/analytics/202509/shop/performance',
+        { start_date_ge: startDateStr, end_date_lt: endDateStr });
+      const d = r?.data?.data || r?.data;
+      const interval = d?.performance?.intervals?.[0];
+      if (!interval) return null;
+      const traffic = interval.traffic || {};
+      const sales   = interval.sales   || {};
+      return {
+        convRate:  traffic.avg_conversation_rate != null ? parseFloat(traffic.avg_conversation_rate) : null,
+        pageViews: traffic.avg_page_views        != null ? Number(traffic.avg_page_views)            : null,
+        visitors:  traffic.avg_visitors          != null ? Number(traffic.avg_visitors)              : null,
+      };
+    } catch(e) {
+      console.log(`[analytics/shop] ${brand.name} failed:`, e.response?.data?.message);
+      return null;
+    }
+  }
+
+  // ── Analytics helper: product-level impressions + CTR ────────────────────────
+  // GET /analytics/202605/shop_products/performance  (YYYY-MM-DD dates)
+  // Paginates up to 3 pages; sums total_performance.product_impressions across all products,
+  // computes weighted-average CTR (impressions-weighted).
+  async function fetchProductPerf(startDateStr, endDateStr) {
+    try {
+      let totalImpressions = 0, weightedCtr = 0, pageToken = null;
+      for (let page = 0; page < 3; page++) {
+        const params = { start_date_ge: startDateStr, end_date_lt: endDateStr, page_size: 50 };
+        if (pageToken) params.page_token = pageToken;
+        const r = await ttsBrandGet(brand, brands, bi, '/analytics/202605/shop_products/performance', params);
+        const d = r?.data?.data || r?.data;
+        const products = d?.products || [];
+        for (const p of products) {
+          const tp = p.total_performance || {};
+          const imp = Number(tp.product_impressions) || 0;
+          const ctr = parseFloat(tp.ctr) || 0;
+          totalImpressions += imp;
+          weightedCtr      += imp * ctr;
+        }
+        pageToken = d?.next_page_token;
+        if (!pageToken || products.length === 0) break;
+      }
+      return {
+        impressions: totalImpressions > 0 ? totalImpressions : null,
+        ctr:         totalImpressions > 0 ? weightedCtr / totalImpressions : null,
+      };
+    } catch(e) {
+      console.log(`[analytics/products] ${brand.name} failed:`, e.response?.data?.message);
+      return null;
+    }
+  }
+
+  try {
+    const now    = Math.floor(Date.now() / 1000);
+    const week1  = now - 7 * 86400;
+    const week2  = week1 - 7 * 86400;
+    const ds     = (ts) => new Date(ts * 1000).toISOString().slice(0,10); // YYYY-MM-DD
+    const todayS = ds(now);
+    const w1S    = ds(week1);
+    const w2S    = ds(week2);
+
+    const [thisWeek, lastWeek, shopThis, shopLast, prodThis, prodLast] = await Promise.all([
+      fetchWeekMetrics(week1, now),
+      fetchWeekMetrics(week2, week1),
+      fetchShopPerf(w1S, todayS),
+      fetchShopPerf(w2S, w1S),
+      fetchProductPerf(w1S, todayS),
+      fetchProductPerf(w2S, w1S),
+    ]);
+
+    function trend(curr, prev) {
+      if (curr == null || curr === '') return { dir: 'flat', pct: null };
+      const c = parseFloat(curr), p = parseFloat(prev);
+      if (!p) return c > 0 ? { dir: 'up', pct: null } : { dir: 'flat', pct: null };
+      const pct = ((c - p) / p) * 100;
+      return { dir: pct > 1 ? 'up' : pct < -1 ? 'down' : 'flat', pct: Math.round(Math.abs(pct)) };
+    }
+
+    const analytics = {
+      thisWeek: {
+        convRate:    shopThis?.convRate    ?? null,
+        pageViews:   shopThis?.pageViews   ?? null,
+        visitors:    shopThis?.visitors    ?? null,
+        impressions: prodThis?.impressions ?? null,
+        ctr:         prodThis?.ctr         ?? null,
+      },
+      lastWeek: {
+        convRate:    shopLast?.convRate    ?? null,
+        impressions: prodLast?.impressions ?? null,
+        ctr:         prodLast?.ctr         ?? null,
+      },
+    };
+
+    res.json({
+      ok: true,
+      thisWeek, lastWeek,
+      trends: {
+        gmv:         trend(thisWeek.gmv,             lastWeek.gmv),
+        orders:      trend(thisWeek.orders,          lastWeek.orders),
+        aov:         trend(thisWeek.aov,             lastWeek.aov),
+        impressions: trend(analytics.thisWeek.impressions, analytics.lastWeek.impressions),
+        ctr:         trend(analytics.thisWeek.ctr,         analytics.lastWeek.ctr),
+        convRate:    trend(analytics.thisWeek.convRate,    analytics.lastWeek.convRate),
+      },
+      analytics,
+    });
+  } catch(e) {
+    res.json({ ok: false, error: e.message });
+  }
+});
+
+// ─── Shared GMV Fetch ─────────────────────────────────────────────────────────
+// Fetches net product sales from TikTok Shop orders API.
+// opts.startTs / opts.endTs allow custom date ranges (default: rolling 30 days).
+// Always persists result to brands.json so billing preview can read it.
+// ── LOCKED Net Product Sales (billing base) ────────────────────────────────
+// Net Product Sales = Σ over qualifying line_items of (original_price − seller_discount).
+// Qualifying = NOT is_sample_order AND order_status !== 'CANCELLED'.
+// Do NOT subtract platform_discount (platform-funded). Reconciled to TikTok Seller
+// Center "Net product sales" to the penny (Diamandia Jun 2026 = $11,567.46).
+const NPS_CACHE = new Map(); // key: brandId:YYYY-MM  ->  { value, at }
+
+// Returns { ge, lt, label, key, isCurrent } for a given YYYY-MM (or current month if omitted).
+function monthWindow(monthStr) {
+  const now = new Date();
+  let y, m; // m is 0-indexed
+  if (monthStr && /^\d{4}-\d{2}$/.test(monthStr)) {
+    y = parseInt(monthStr.slice(0, 4), 10);
+    m = parseInt(monthStr.slice(5, 7), 10) - 1;
+  } else {
+    y = now.getUTCFullYear();
+    m = now.getUTCMonth();
+  }
+  const ge = Math.floor(Date.UTC(y, m, 1, 0, 0, 0) / 1000);
+  const lt = Math.floor(Date.UTC(y, m + 1, 1, 0, 0, 0) / 1000);
+  const isCurrent = (y === now.getUTCFullYear() && m === now.getUTCMonth());
+  const label = new Date(Date.UTC(y, m, 1)).toLocaleString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' })
+    + (isCurrent ? ' (MTD)' : '');
+  const key = `${y}-${String(m + 1).padStart(2, '0')}`;
+  return { ge, lt, label, key, isCurrent };
+}
+
+// Locked-formula Net Product Sales for a brand over an explicit [ge, lt) window.
+// Direct signed TikTok order-search (NOT the relay). Paginates via next_page_token.
+// Caches closed months indefinitely; current (MTD) month ~5 min.
+async function fetchNetProductSalesForWindow(brand, brandsObj, brandIdx, win) {
+  const cacheKey = `${brand.id}:${win.key}`;
+  const cached = NPS_CACHE.get(cacheKey);
+  const ttl = win.isCurrent ? 5 * 60 * 1000 : Infinity;
+  if (cached && (Date.now() - cached.at) < ttl) return cached.value;
+
+  const CANCELLED = new Set(['CANCELLED', 'CANCEL', 140, 4]);
+  let total = 0;
+  try {
+    let pageToken = null;
+    let pageNum = 0;
+    while (pageNum++ < 40) { // up to 40 pages = 2000 orders
+      const body = { create_time_ge: win.ge, create_time_lt: win.lt, sort_field: 'create_time', sort_order: 'DESC' };
+      if (pageToken) body.page_token = pageToken;
+      const resp = await ttsBrandPost(brand, brandsObj, brandIdx, '/order/202309/orders/search', body, { page_size: 50 });
+      const orders = resp?.data?.orders || resp?.data?.order_list || [];
+      for (const o of orders) {
+        if (o.is_sample_order === true) continue;
+        const status = o.order_status ?? o.status;
+        if (status !== undefined && CANCELLED.has(status)) continue;
+        const items = o.line_items || o.item_list || o.items || [];
+        for (const it of items) {
+          const orig = parseFloat(it.original_price ?? it.price ?? 0) || 0;
+          const sellerDisc = parseFloat(it.seller_discount ?? 0) || 0;
+          total += (orig - sellerDisc);
+        }
+      }
+      pageToken = resp?.data?.next_page_token || null;
+      if (!pageToken || orders.length === 0) break;
+    }
+  } catch (err) {
+    console.error(`[nps] ${brand.name} ${win.key} order-search failed:`, err.message);
+    return cached ? cached.value : null; // fall back to any stale cache, else null (honest)
+  }
+  const rounded = Math.round(total * 100) / 100;
+  NPS_CACHE.set(cacheKey, { value: rounded, at: Date.now() });
+  return rounded;
+}
+
+async function fetchNetGmvForBrand(brand, brandsObj, brandIdx, opts = {}) {
+  // GMV source priority: (1) direct TikTok app via the client's own token,
+  // (2) Sisyphus/Reacher affiliate relay (keyed by shopId), (3) last-known cache.
+  // RELAY-FIRST: affiliate relay is the source of truth for creator-attributed GMV.
+  // (Direct TikTok order-search only sees the brand's OWN shop orders, which are ~0 for affiliate-driven brands.)
+  if (brand.shopId && !opts.skipRelay) {
+    {
+      try {
+        const relayResp = await axios.get(
+          `${CFG.railwayUrl}/affiliate/shops/${brand.shopId}/summary`,
+          { timeout: 8000 }
+        );
+        const g = parseFloat(relayResp?.data?.total_gmv);
+        if (!isNaN(g) && g >= 0) {
+          // Persist to brands.json cache so the value stays warm even if the relay is slow next time.
+          try {
+            const snap = loadBrands();
+            if (snap.clients[brandIdx]) {
+              snap.clients[brandIdx].cachedNetGmv = g;
+              snap.clients[brandIdx].cachedGmvAt  = Date.now();
+              snap.clients[brandIdx].cachedGmvSrc = 'relay';
+              saveBrands(snap);
+            }
+          } catch (persistErr) {
+            console.error(`[gmv] relay cache persist failed for ${brand.name}:`, persistErr.message);
+          }
+          return g;
+        }
+      } catch (relayErr) {
+        console.error(`[gmv] relay summary failed for ${brand.name} (shop ${brand.shopId}):`, relayErr.message);
+      }
+    }
+    // Relay returned no usable GMV — fall through to the signed direct TikTok order-search below.
+  }
+  const now   = opts.endTs   ?? Math.floor(Date.now() / 1000);
+  const start = opts.startTs ?? (now - 30 * 24 * 60 * 60);
+  let netGmv  = null;
+
+  // Cancelled/refunded statuses only — do NOT include 121 (In Transit) or 122 (Delivered)
+  const CANCEL_STATUS = new Set([140, 4, 'CANCELLED', 'CANCEL', 'REFUNDED', 'REFUND', 'REVERSE_PENDING', 'REVERSE_COMPLETE']);
+
+  // Helper: extract order amount from any known field layout
+  function extractAmount(o) {
+    // Top-level sale_amount (affiliate order style)
+    if (o.sale_amount != null && parseFloat(o.sale_amount) > 0) return parseFloat(o.sale_amount);
+    // payment / payment_info object — TikTok uses "payment" in v202309
+    const pi = o.payment || o.payment_info;
+    if (pi) {
+      const candidates = [
+        pi.sub_total, pi.total_amount, pi.paid_amount,
+        pi.original_total_product_price, pi.product_total_amount,
+        pi.seller_income, pi.settlement_amount,
+      ];
+      for (const c of candidates) {
+        const v = parseFloat(c);
+        if (!isNaN(v) && v > 0) return v;
+      }
+    }
+    // Top-level fallback fields
+    const topLevel = [o.total_amount, o.total_price, o.order_amount, o.amount];
+    for (const c of topLevel) {
+      const v = parseFloat(c);
+      if (!isNaN(v) && v > 0) return v;
+    }
+    // Line items fallback: sum unit price × qty
+    const items = o.line_items || o.skus || [];
+    if (items.length > 0) {
+      return items.reduce((sum, item) => {
+        const price = parseFloat(
+          item.sku_sale_price ?? item.sale_price ?? item.sku_unit_original_price ??
+          item.original_price ?? item.price ?? 0
+        ) || 0;
+        const qty = parseInt(item.quantity ?? item.sku_quantity ?? 1, 10) || 1;
+        return sum + price * qty;
+      }, 0);
+    }
+    return 0;
+  }
+
+  // Orders search with pagination (finance/202309 requires scope we don't have; use order/202309)
+  try {
+    let pageToken = null;
+    let totalOrders = 0;
+    let pageNum = 0;
+    netGmv = 0;
+    let firstOrderLogged = false;
+
+    while (pageNum++ < 20) { // max 20 pages = 2000 orders
+      const body = { create_time_ge: start, create_time_lt: now, sort_field: 'create_time', sort_order: 'DESC' };
+      if (pageToken) body.page_token = pageToken;
+      const resp = await ttsBrandPost(brand, brandsObj, brandIdx, '/order/202309/orders/search', body, { page_size: 100 });
+      const orders = resp?.data?.orders || resp?.data?.order_list || [];
+
+      if (!firstOrderLogged && orders.length > 0) {
+        console.log(`[gmv] ${brand.name} sample order:`, JSON.stringify(orders[0]).slice(0, 800));
+        firstOrderLogged = true;
+      }
+
+      for (const o of orders) {
+        if (o.is_sample_order) continue; // free creator samples — $0, exclude from GMV
+        const status = o.order_status ?? o.status;
+        if (status !== undefined && CANCEL_STATUS.has(status)) continue;
+        netGmv += extractAmount(o);
+      }
+      totalOrders += orders.length;
+
+      const nextToken = resp?.data?.next_page_token || resp?.data?.page_token;
+      if (!nextToken || orders.length === 0) break;
+      pageToken = nextToken;
+    }
+    console.log(`[gmv] ${brand.name} GMV = $${netGmv.toFixed(2)} (${totalOrders} orders, ${pageNum} page(s))`);
+  } catch(e) {
+    console.error(`[gmv] orders error for ${brand.name}:`, e.message, '| body:', JSON.stringify(e.response?.data || '').slice(0, 300));
+  }
+
+  // Persist to brands.json cache
+  if (netGmv !== null) {
+    try {
+      const snap = loadBrands();
+      if (snap.clients[brandIdx]) {
+        snap.clients[brandIdx].cachedNetGmv = netGmv;
+        snap.clients[brandIdx].cachedGmvAt  = Date.now();
+        saveBrands(snap);
+      }
+    } catch(_) {}
+  }
+  return netGmv ?? (brand.cachedNetGmv ?? null);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Client Agent — Weekly Report
+// Every number here is computed deterministically from real API/DB calls.
+// The LLM (generateNarrative, below) never computes or invents a number — it
+// only writes prose about numbers that are already fixed by the time it runs.
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Shop traffic + conversion rate. Mirrors the closure of the same name inside
+// /portal-admin/shop-metrics/:brandId — duplicated rather than extracted so
+// that existing, working route is never touched by this change.
+async function fetchShopTrafficForWindow(brand, brands, bi, startDateStr, endDateStr) {
+  try {
+    const r = await ttsBrandGet(brand, brands, bi, '/analytics/202509/shop/performance',
+      { start_date_ge: startDateStr, end_date_lt: endDateStr });
+    const d = r?.data?.data || r?.data;
+    const interval = d?.performance?.intervals?.[0];
+    if (!interval) return null;
+    const traffic = interval.traffic || {};
+    return {
+      convRate: traffic.avg_conversation_rate != null ? parseFloat(traffic.avg_conversation_rate) : null,
+      visitors: traffic.avg_visitors != null ? Number(traffic.avg_visitors) : null,
+    };
+  } catch (e) {
+    console.log(`[client-agent] shop traffic fetch failed for ${brand.name}:`, e.response?.data?.message || e.message);
+    return null;
+  }
+}
+
+// Product impressions + weighted CTR. Same duplication rationale as above.
+async function fetchProductPerfForWindow(brand, brands, bi, startDateStr, endDateStr) {
+  try {
+    let totalImpressions = 0, weightedCtr = 0, pageToken = null;
+    for (let page = 0; page < 3; page++) {
+      const params = { start_date_ge: startDateStr, end_date_lt: endDateStr, page_size: 50 };
+      if (pageToken) params.page_token = pageToken;
+      const r = await ttsBrandGet(brand, brands, bi, '/analytics/202605/shop_products/performance', params);
+      const d = r?.data?.data || r?.data;
+      const products = d?.products || [];
+      for (const p of products) {
+        const tp = p.total_performance || {};
+        const imp = Number(tp.product_impressions) || 0;
+        const ctr = parseFloat(tp.ctr) || 0;
+        totalImpressions += imp;
+        weightedCtr += imp * ctr;
+      }
+      pageToken = d?.next_page_token;
+      if (!pageToken || products.length === 0) break;
+    }
+    return {
+      impressions: totalImpressions > 0 ? totalImpressions : null,
+      ctr: totalImpressions > 0 ? weightedCtr / totalImpressions : null,
+    };
+  } catch (e) {
+    console.log(`[client-agent] product perf fetch failed for ${brand.name}:`, e.response?.data?.message || e.message);
+    return null;
+  }
+}
+
+// Order count for the window — used ONLY to compute click-to-order rate.
+// Never used as a dollar figure; the dollar figure always comes from the
+// LOCKED fetchNetGmvForBrand() above, so this can never drift from billing.
+async function fetchOrderCountForWindow(brand, brands, bi, startTs, endTs) {
+  const CANCEL_STATUSES = new Set([140, 4, 'CANCELLED', 'CANCEL', 'REFUNDED', 'REFUND', 'REVERSE_PENDING', 'REVERSE_COMPLETE']);
+  let orders = 0, pageToken = null;
+  try {
+    for (let page = 0; page < 10; page++) {
+      const body = { create_time_ge: startTs, create_time_lt: endTs, sort_field: 'create_time', sort_order: 'DESC' };
+      if (pageToken) body.page_token = pageToken;
+      const resp = await ttsBrandPost(brand, brands, bi, '/order/202309/orders/search', body, { page_size: 100 });
+      const list = resp?.data?.orders || resp?.data?.order_list || [];
+      for (const o of list) {
+        if (o.is_sample_order) continue;
+        const status = o.order_status ?? o.status;
+        if (status !== undefined && CANCEL_STATUSES.has(status)) continue;
+        orders++;
+      }
+      const nextToken = resp?.data?.next_page_token;
+      if (!nextToken || list.length === 0) break;
+      pageToken = nextToken;
+    }
+  } catch (e) { /* best-effort count — a failure here degrades the rate to null, never throws */ }
+  return orders;
+}
+
+// One brand's weekly KPI set for the report. `sales` always comes from the
+// LOCKED fetchNetGmvForBrand() — never recomputed — so it can never drift
+// from the dollar figure the client's own invoice shows.
+async function getShopMetricsForReport(brandId, range) {
+  const brands = loadBrands();
+  const bi = (brands.clients || []).findIndex(b => b.id === brandId);
+  if (bi === -1) throw new Error(`getShopMetricsForReport: brand not found (${brandId})`);
+  const brand = brands.clients[bi];
+  if (!brand.tiktokShopToken?.access_token) {
+    return { brandId, brandName: brand.name, noToken: true };
+  }
+
+  const startTs = Math.floor(range.start / 1000);
+  const endTs = Math.floor(range.end / 1000);
+  const ds = (ms) => new Date(ms).toISOString().slice(0, 10);
+
+  const [sales, traffic, productPerf, orders] = await Promise.all([
+    fetchNetGmvForBrand(brand, brands, bi, { startTs, endTs }),
+    fetchShopTrafficForWindow(brand, brands, bi, ds(range.start), ds(range.end)),
+    fetchProductPerfForWindow(brand, brands, bi, ds(range.start), ds(range.end)),
+    fetchOrderCountForWindow(brand, brands, bi, startTs, endTs),
+  ]);
+
+  const visitors = traffic?.visitors ?? null;
+  return {
+    brandId,
+    brandName: brand.name,
+    sales,
+    orders,
+    impressions: productPerf?.impressions ?? null,
+    ctr: productPerf?.ctr ?? null,                 // fraction, e.g. 0.021 = 2.1%
+    clickToOrderRate: (visitors && orders != null) ? orders / visitors : null,
+  };
+}
+
+// Top affiliates. Source: the Reacher relay's /creators/top endpoint — the
+// SAME source the client portal's own dashboard already uses.
+// HONEST LIMITATION: this relay endpoint takes no date-range parameter, so
+// results reflect Reacher's own tracking window, not this report's exact
+// date range. Never presented as precisely scoped to the week — see the
+// "(recent)" label in renderReportHTML below.
+async function getTopAffiliatesForReport(shopId, limit = 5) {
+  if (!shopId) return [];
+  try {
+    const { data } = await axios.get(`${CFG.railwayUrl}/affiliate/shops/${shopId}/creators/top`, { timeout: 10000 });
+    const list = data?.creators || data?.data || [];
+    return list.slice(0, limit).map(c => ({
+      handle: c.creator_handle || c.username || 'unknown',
+      gmv: parseFloat(c.gmv || c.shop_gmv || c.sale_amount || 0),
+    }));
+  } catch (e) {
+    console.log('[client-agent] top affiliates fetch failed:', e.message);
+    return [];
+  }
+}
+
+// Deterministic HTML render — zero LLM. This alone is a complete, honest
+// report; the narrative below only adds a few sentences of context on top.
+// renderReportHTML + generateNarrative now live in lib/weekly-report.js —
+// extracted so the eval harness (lib/weekly-report-narrative.eval.js) can
+// exercise generateNarrative directly, with no server boot required.
+let renderReportHTML = () => '<p>Weekly report module not available.</p>';
+let generateNarrative = async () => 'Narrative unavailable.';
+try { ({ renderReportHTML, generateNarrative } = require('./lib/weekly-report')); }
+catch (e) { console.error('[weekly-report] module load failed:', e.message); }
+
+// Orchestrates the full report: data layer + narrative. Delivery/scheduling
+// is deliberately NOT triggered from here — see the /weekly-report/send
+// route below, which is a manual, human-triggered action, not a scheduler.
+async function generateWeeklyReport(brandId, range) {
+  const brands = loadBrands();
+  const bi = (brands.clients || []).findIndex(b => b.id === brandId);
+  if (bi === -1) throw new Error(`generateWeeklyReport: brand not found (${brandId})`);
+  const brand = brands.clients[bi];
+
+  const [shopMetrics, topAffiliates, completedTasks] = await Promise.all([
+    getShopMetricsForReport(brandId, range),
+    getTopAffiliatesForReport(brand.shopId),
+    opsMyTasksHelpers
+      ? require('./lib/client-agent-context').getCompletedTasks(brand.name, range, opsMyTasksHelpers).catch((e) => { console.error('[client-agent] task fetch failed:', e.message); return []; })
+      : Promise.resolve([]),
+  ]);
+
+  const context = { brandId, brandName: brand.name, range, shopMetrics, topAffiliates, completedTasks };
+  context.narrative = await generateNarrative(context);
+  context.html = renderReportHTML(context);
+  return context;
+}
+
+// GET /api/admin/client-agent/weekly-report/preview?brand=X&days=7
+// Generates and returns the report HTML for review. Never sends anything —
+// this is the safe way to look at a report before anyone else sees it.
+app.get('/api/admin/client-agent/weekly-report/preview', requirePortalAdmin, async (req, res) => {
+  try {
+    const { brand, days } = req.query;
+    if (!brand) return res.status(400).json({ error: 'brand query param required' });
+    const end = Date.now();
+    const start = end - (Number(days) > 0 ? Number(days) : 7) * 86400000;
+    const report = await generateWeeklyReport(brand, { start, end });
+    res.type('html').send(report.html);
+  } catch (e) {
+    console.error('[client-agent] weekly-report preview error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ── Review queue ─────────────────────────────────────────────────────────────
+// A generated report is never sent directly. It's saved here as 'pending'
+// first; only an explicit /approve on that exact record id sends it — the
+// text that goes out is the text that was reviewed, never regenerated at
+// send time. See roadmap Phase 7 (human-in-the-loop before real clients see
+// AI-touched output).
+function loadReportQueue() {
+  try { if (fs.existsSync(REPORT_QUEUE_FILE)) return JSON.parse(fs.readFileSync(REPORT_QUEUE_FILE, 'utf8')); }
+  catch (e) { console.error('[client-agent] failed to read report queue:', e.message); }
+  return [];
+}
+function saveReportQueue(queue) {
+  try { fs.writeFileSync(REPORT_QUEUE_FILE, JSON.stringify(queue, null, 2)); }
+  catch (e) { console.error('[client-agent] failed to save report queue:', e.message); }
+}
+
+function buildReportPlainText(report, start, end) {
+  return [
+    `📊 ${report.brandName} — Weekly Report`,
+    `${new Date(start).toLocaleDateString()} – ${new Date(end).toLocaleDateString()}`,
+    '',
+    report.narrative || '',
+    '',
+    `Impressions: ${report.shopMetrics?.impressions ?? '—'}`,
+    `Sales: ${report.shopMetrics?.sales != null ? '$' + report.shopMetrics.sales.toLocaleString() : '—'}`,
+    `CTR: ${report.shopMetrics?.ctr != null ? (report.shopMetrics.ctr * 100).toFixed(1) + '%' : '—'}`,
+    `Click-to-Order Rate: ${report.shopMetrics?.clickToOrderRate != null ? (report.shopMetrics.clickToOrderRate * 100).toFixed(1) + '%' : '—'}`,
+    '',
+    `Top Affiliates (recent): ${(report.topAffiliates || []).map(a => `@${a.handle} ($${a.gmv})`).join(', ') || 'none'}`,
+    `Completed this week: ${(report.completedTasks || []).length} task(s)`,
+  ].join('\n');
+}
+
+// POST /api/admin/client-agent/weekly-report/generate  { brandId, days }
+// Generates a report and saves it as 'pending' in the review queue. Sends
+// nothing. Returns the full record (including html) so the caller can
+// display it immediately without a second round-trip.
+app.post('/api/admin/client-agent/weekly-report/generate', requirePortalAdmin, express.json(), async (req, res) => {
+  try {
+    const { brandId, days } = req.body || {};
+    if (!brandId) return res.status(400).json({ error: 'brandId required' });
+    const end = Date.now();
+    const start = end - (Number(days) > 0 ? Number(days) : 7) * 86400000;
+
+    const report = await generateWeeklyReport(brandId, { start, end });
+    const record = {
+      id: `wr_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      brandId,
+      brandName: report.brandName,
+      range: { start, end },
+      html: report.html,
+      plainText: buildReportPlainText(report, start, end),
+      narrative: report.narrative,
+      shopMetrics: report.shopMetrics,
+      topAffiliates: report.topAffiliates,
+      completedTaskCount: (report.completedTasks || []).length,
+      status: 'pending',
+      generatedAt: Date.now(),
+      generatedBy: (req.session && req.session.portalAdminEmail) || 'admin',
+      sentAt: null,
+    };
+
+    const queue = loadReportQueue();
+    queue.unshift(record);
+    saveReportQueue(queue);
+
+    res.json({ ok: true, report: record });
+  } catch (e) {
+    console.error('[client-agent] weekly-report generate error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// GET /api/admin/client-agent/weekly-report/queue?status=pending
+app.get('/api/admin/client-agent/weekly-report/queue', requirePortalAdmin, (req, res) => {
+  const { status } = req.query;
+  let queue = loadReportQueue();
+  if (status) queue = queue.filter(r => r.status === status);
+  res.json({ ok: true, count: queue.length, reports: queue });
+});
+
+// POST /api/admin/client-agent/weekly-report/approve  { id }
+// Sends the EXACT stored text for that report id — never regenerates.
+// Manual, human-triggered only. Not wired to any scheduler.
+app.post('/api/admin/client-agent/weekly-report/approve', requirePortalAdmin, express.json(), async (req, res) => {
+  try {
+    const { id } = req.body || {};
+    if (!id) return res.status(400).json({ error: 'id required' });
+    const queue = loadReportQueue();
+    const record = queue.find(r => r.id === id);
+    if (!record) return res.status(404).json({ error: `No report found with id ${id}` });
+    if (record.status !== 'pending') return res.status(409).json({ error: `Report ${id} is already "${record.status}", not pending` });
+
+    const { _internals } = require('./lib/client-chat-sync');
+    const chatName = `${record.brandName} Chat`;
+    const t = await _internals.tenantToken();
+    const chatId = await _internals.findExistingChat(t, chatName);
+    if (!chatId) return res.status(404).json({ error: `No existing Lark chat found named "${chatName}" — nothing sent, report left pending` });
+
+    await _internals.postMessage(t, chatId, record.plainText);
+
+    record.status = 'sent';
+    record.sentAt = Date.now();
+    record.chatId = chatId;
+    saveReportQueue(queue);
+
+    res.json({ ok: true, report: record });
+  } catch (e) {
+    console.error('[client-agent] weekly-report approve error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// POST /api/admin/client-agent/weekly-report/reject  { id }
+app.post('/api/admin/client-agent/weekly-report/reject', requirePortalAdmin, express.json(), (req, res) => {
+  const { id } = req.body || {};
+  if (!id) return res.status(400).json({ error: 'id required' });
+  const queue = loadReportQueue();
+  const record = queue.find(r => r.id === id);
+  if (!record) return res.status(404).json({ error: `No report found with id ${id}` });
+  if (record.status !== 'pending') return res.status(409).json({ error: `Report ${id} is already "${record.status}", not pending` });
+  record.status = 'rejected';
+  saveReportQueue(queue);
+  res.json({ ok: true, report: record });
+});
+
+// GET /api/admin/client-agent/brands — lightweight id+name list for the
+// review page's dropdown. Deliberately NOT the heavy /portal-admin/clients
+// route, which recomputes billing GMV for every brand on every load.
+app.get('/api/admin/client-agent/brands', requirePortalAdmin, (req, res) => {
+  const brands = loadBrands();
+  res.json({ brands: (brands.clients || []).map(b => ({ id: b.id, name: b.name })) });
+});
+
+const WEEKLY_REPORT_REVIEW_HTML = `<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Weekly Reports — Review Queue</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a0a0f;color:#e2e8f0;min-height:100vh}
+.header{background:rgba(255,255,255,.02);border-bottom:1px solid rgba(255,255,255,.07);padding:20px 24px}
+.header h1{font-size:1.3rem;font-weight:800}
+.container{max-width:900px;margin:0 auto;padding:32px 24px}
+.panel{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:20px;margin-bottom:24px}
+.panel h2{font-size:1rem;margin-bottom:14px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+select,input,button{background:#14141c;border:1px solid rgba(255,255,255,.12);color:#e2e8f0;border-radius:8px;padding:9px 12px;font-size:.9rem}
+button{cursor:pointer;font-weight:600;background:linear-gradient(135deg,#00f2ea,#a855f7);border:none;color:#0a0a0f}
+button.secondary{background:rgba(255,255,255,.06);color:#e2e8f0;border:1px solid rgba(255,255,255,.12)}
+button.danger{background:#3a1a1a;color:#ff8080;border:1px solid #5a2a2a}
+button:disabled{opacity:.5;cursor:not-allowed}
+.card{border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:16px;margin-bottom:12px}
+.card .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.card .brand{font-weight:700}
+.badge{font-size:.72rem;padding:2px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:.03em}
+.badge.pending{background:#3a3010;color:#f2c94c}
+.badge.sent{background:#0f3a1f;color:#4ade80}
+.badge.rejected{background:#3a1a1a;color:#ff8080}
+.meta{font-size:.78rem;color:#94a3b8;margin-bottom:10px}
+.actions{display:flex;gap:8px}
+.empty{color:#64748b;padding:20px;text-align:center}
+iframe{width:100%;height:600px;border:1px solid rgba(255,255,255,.1);border-radius:8px;background:#fff}
+.close-frame{margin-top:8px}
+</style></head><body>
+<div class="header"><h1>📊 Weekly Reports — Review Queue</h1></div>
+<div class="container">
+
+  <div class="panel">
+    <h2>Generate a report</h2>
+    <div class="row">
+      <select id="brandSelect"><option>Loading brands…</option></select>
+      <input id="daysInput" type="number" value="7" min="1" style="width:80px" title="Days back">
+      <button onclick="generateReport()" id="genBtn">Generate</button>
+    </div>
+    <div style="font-size:.78rem;color:#64748b;margin-top:8px">Generates and saves as pending — sends nothing.</div>
+    <div id="scopeNote" style="font-size:.78rem;color:#c9a84c;margin-top:6px"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Pending review</h2>
+    <div id="pendingList" class="empty">Loading…</div>
+  </div>
+
+  <div class="panel">
+    <h2>Recent (sent / rejected)</h2>
+    <div id="recentList" class="empty">Loading…</div>
+  </div>
+
+</div>
+<script>
+const urlBrand = new URLSearchParams(window.location.search).get('brand');
+
+async function loadBrandsList() {
+  const r = await fetch('/api/admin/client-agent/brands');
+  const j = await r.json();
+  const sel = document.getElementById('brandSelect');
+  sel.innerHTML = (j.brands || []).map(b => '<option value="' + b.id + '">' + b.name + '</option>').join('');
+  if (urlBrand) {
+    sel.value = urlBrand;
+    const match = (j.brands || []).find(b => b.id === urlBrand);
+    document.getElementById('scopeNote').textContent = match
+      ? 'Showing reports for ' + match.name + ' only. '
+      : '';
+    if (match) {
+      const link = document.createElement('a');
+      link.href = '/client-agent/reports';
+      link.textContent = 'View all brands →';
+      link.style.cssText = 'color:#00f2ea;text-decoration:none;font-size:.8rem';
+      document.getElementById('scopeNote').appendChild(link);
+    }
+  }
+}
+
+async function generateReport() {
+  const brandId = document.getElementById('brandSelect').value;
+  const days = document.getElementById('daysInput').value;
+  const btn = document.getElementById('genBtn');
+  btn.disabled = true; btn.textContent = 'Generating…';
+  try {
+    const r = await fetch('/api/admin/client-agent/weekly-report/generate', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ brandId, days: Number(days) })
+    });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || 'Generate failed');
+    await loadQueue();
+  } catch (e) {
+    alert('Could not generate: ' + e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Generate';
+  }
+}
+
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function renderCard(r, showActions) {
+  const generated = new Date(r.generatedAt).toLocaleString();
+  const range = new Date(r.range.start).toLocaleDateString() + ' – ' + new Date(r.range.end).toLocaleDateString();
+  let actions = '';
+  if (showActions) {
+    actions = '<div class="actions">' +
+      '<button onclick="toggleView(\\'' + r.id + '\\')">View</button>' +
+      '<button onclick="approve(\\'' + r.id + '\\')">Approve &amp; Send</button>' +
+      '<button class="danger" onclick="reject(\\'' + r.id + '\\')">Reject</button>' +
+      '</div>';
+  } else {
+    actions = '<div class="actions"><button class="secondary" onclick="toggleView(\\'' + r.id + '\\')">View</button></div>';
+  }
+  return '<div class="card" id="card-' + r.id + '">' +
+    '<div class="top"><span class="brand">' + esc(r.brandName) + '</span><span class="badge ' + r.status + '">' + r.status + '</span></div>' +
+    '<div class="meta">' + range + ' · generated ' + generated + (r.sentAt ? ' · sent ' + new Date(r.sentAt).toLocaleString() : '') + '</div>' +
+    actions +
+    '<div id="frame-' + r.id + '" style="display:none" class="close-frame"><iframe id="iframe-' + r.id + '"></iframe></div>' +
+    '</div>';
+}
+
+function toggleView(id) {
+  const box = document.getElementById('frame-' + id);
+  const visible = box.style.display !== 'none';
+  box.style.display = visible ? 'none' : 'block';
+  if (!visible) {
+    fetch('/api/admin/client-agent/weekly-report/queue').then(r => r.json()).then(j => {
+      const rec = (j.reports || []).find(x => x.id === id);
+      if (rec) document.getElementById('iframe-' + id).srcdoc = rec.html;
+    });
+  }
+}
+
+async function approve(id) {
+  if (!confirm('Send this report to the client now? This posts into their Lark chat.')) return;
+  try {
+    const r = await fetch('/api/admin/client-agent/weekly-report/approve', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id })
+    });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || 'Approve failed');
+    await loadQueue();
+  } catch (e) { alert('Could not send: ' + e.message); }
+}
+
+async function reject(id) {
+  if (!confirm('Reject this report? It will not be sent.')) return;
+  try {
+    const r = await fetch('/api/admin/client-agent/weekly-report/reject', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id })
+    });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || 'Reject failed');
+    await loadQueue();
+  } catch (e) { alert('Could not reject: ' + e.message); }
+}
+
+async function loadQueue() {
+  const r = await fetch('/api/admin/client-agent/weekly-report/queue');
+  const j = await r.json();
+  let all = j.reports || [];
+  if (urlBrand) all = all.filter(x => x.brandId === urlBrand);
+  const pending = all.filter(x => x.status === 'pending');
+  const recent = all.filter(x => x.status !== 'pending').slice(0, 20);
+
+  document.getElementById('pendingList').innerHTML = pending.length
+    ? pending.map(r => renderCard(r, true)).join('')
+    : '<div class="empty">Nothing pending.</div>';
+
+  document.getElementById('recentList').innerHTML = recent.length
+    ? recent.map(r => renderCard(r, false)).join('')
+    : '<div class="empty">Nothing yet.</div>';
+}
+
+loadBrandsList();
+loadQueue();
+</script>
+</body></html>`;
+
+// GET /client-agent/reports — the review-queue admin page.
+app.get('/client-agent/reports', requirePortalAdmin, (req, res) => {
+  res.type('html').send(WEEKLY_REPORT_REVIEW_HTML);
+});
+
+// ─── Client Billing ───────────────────────────────────────────────────────────
+// Helper: normalize billing fields from brands.json (handles both old+new field names)
+function clientBilling(b) {
+  // Use prorated retainer for first invoice if set (cleared after first invoice is sent)
+  const retainer  = (!b.lastInvoicedAt && b.proratedFirstRetainer != null)
+    ? b.proratedFirstRetainer
+    : (b.retainer ?? b.contractValue ?? 0);
+  const commRate  = b.commissionRate ?? ((b.gmvShare ?? 0) / 100);
+  const gmv       = b.cachedNetGmv ?? 0;
+  const revShare  = parseFloat((gmv * commRate).toFixed(2));
+  const total     = parseFloat((retainer + revShare).toFixed(2));
+  // Billing email — intentionally does NOT fall back to loginEmail (that's Tommy's portal email for some brands)
+  let billingEmail = b.billingEmail || '';
+  if (!billingEmail && b.contacts) {
+    const m = b.contacts.match(/[\w.+-]+@[\w.-]+\.\w+/);
+    if (m) billingEmail = m[0];
+  }
+  return { retainer, commRate, gmv, revShare, total, billingEmail };
+}
+
+// Shared helper: compute next billing date (1st of next month) and days until
+function billingCycle() {
+  const now  = new Date();
+  const next = new Date(now.getFullYear(), now.getMonth() + 1, 1); // 1st of next month
+  const msLeft = next.getTime() - now.getTime();
+  const daysLeft = Math.ceil(msLeft / (1000 * 60 * 60 * 24));
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  return {
+    period:        now.toLocaleString('en-US', { month: 'long', year: 'numeric' }),
+    monthStart:    Math.floor(monthStart.getTime() / 1000),
+    nowTs:         Math.floor(now.getTime() / 1000),
+    nextBillingDate: next.toISOString().slice(0, 10),       // e.g. "2026-07-01"
+    nextBillingLabel: next.toLocaleString('en-US', { month: 'long', day: 'numeric' }), // "July 1"
+    daysUntilBilling: daysLeft,
+    dataPeriod: `${now.toLocaleString('en-US', { month:'short', day:'numeric' })} – ${now.toLocaleString('en-US', { month:'short', day:'numeric' })}` // overwritten below
+  };
+}
+
+// Shared helper: check if a Stripe customer has a saved payment method
+async function stripeHasPaymentMethod(customerId) {
+  if (!stripe || !customerId) return false;
+  try {
+    const cust = await stripe.customers.retrieve(customerId, {
+      expand: ['invoice_settings.default_payment_method', 'default_source'],
+    });
+    return !!(cust.invoice_settings?.default_payment_method || cust.default_source);
+  } catch(_) { return false; }
+}
+
+// GET /portal-admin/billing/preview — current-month GMV + invoice amounts + payment method status
+app.get('/portal-admin/billing/preview', requirePortalAdmin, async (req, res) => {
+  const cycle = billingCycle();
+  const now   = new Date();
+  // Locked-formula billing window (default = current month MTD, or ?month=YYYY-MM)
+  const win = monthWindow(req.query.month);
+  cycle.dataPeriod = win.label;
+  // Available months for the picker: current + trailing 11 closed months
+  const availableMonths = [];
+  { const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+    for (let k = 0; k < 12; k++) {
+      const w = monthWindow(`${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}`);
+      availableMonths.push({ key: w.key, label: w.label });
+      d.setUTCMonth(d.getUTCMonth() - 1);
+    } }
+
+  // Only include active clients — exclude internal/test brands
+  const INTERNAL_IDS = new Set(['orgsocsmarketing001', 'tctestbrand001']);
+  const allBrands = loadBrands();
+  const active = (allBrands.clients || []).filter(b =>
+    (!b.pipelineStage || b.pipelineStage === 'Contract Signed') &&
+    !INTERNAL_IDS.has(b.id) &&
+    b.source !== 'internal'
+  );
+
+  // Fetch live GMV (current month) + payment method status in parallel
+  const [gmvResults, pmResults] = await Promise.all([
+    Promise.allSettled(active.map((b, i) => {
+      const idx = (allBrands.clients || []).findIndex(c => c.id === b.id);
+      return fetchNetProductSalesForWindow(allBrands.clients[idx] || b, allBrands, idx, win);
+    })),
+    Promise.allSettled(active.map(b => stripeHasPaymentMethod(b.stripeCustomerId))),
+  ]);
+
+  // Re-load after GMV cache writes
+  const freshBrands = loadBrands();
+  const freshActive = (freshBrands.clients || []).filter(b =>
+    (!b.pipelineStage || b.pipelineStage === 'Contract Signed') &&
+    !INTERNAL_IDS.has(b.id) && b.source !== 'internal'
+  );
+
+  const previews = freshActive.map((b, i) => {
+    const liveGmv = gmvResults[i]?.status === 'fulfilled' ? gmvResults[i].value : null;
+    const hasPaymentMethod = pmResults[i]?.status === 'fulfilled' ? pmResults[i].value : false;
+    const bill     = clientBilling(b);
+    // Never fall back to the stale relay cache for billing display.
+    // Retainer-only brands (commRate 0, e.g. Diamandia) show no GMV.
+    const gmv      = bill.commRate === 0 ? 0 : (liveGmv ?? 0);
+    const commRate = bill.commRate;
+    const retainer = bill.retainer;
+    const revShare = parseFloat((gmv * commRate).toFixed(2));
+    const total    = parseFloat((retainer + revShare).toFixed(2));
+    return {
+      id:               b.id,
+      name:             b.name,
+      billingEmail:     bill.billingEmail,
+      period:           cycle.period,
+      dataPeriod:       cycle.dataPeriod,
+      nextBillingDate:  cycle.nextBillingDate,
+      nextBillingLabel: cycle.nextBillingLabel,
+      daysUntilBilling: cycle.daysUntilBilling,
+      retainer,
+      gmv,
+      commRate,
+      revShare,
+      total,
+      hasPaymentMethod,
+      gmvUpdatedAt:     b.cachedGmvAt || null,
+      stripeCustomerId: b.stripeCustomerId || null,
+      lastInvoiceId:    b.lastInvoiceId || null,
+      lastInvoiceUrl:   b.lastInvoiceUrl || null,
+      lastInvoicedAt:   b.lastInvoicedAt || null,
+      pendingTierChange: b.pendingTierChange || null,
+    };
+  });
+  res.json({ ok: true, period: cycle.period, dataPeriod: cycle.dataPeriod, nextBillingLabel: cycle.nextBillingLabel, daysUntilBilling: cycle.daysUntilBilling, window: { key: win.key, label: win.label, isCurrent: win.isCurrent }, availableMonths, previews });
+});
+
+// GET /portal-admin/billing/history — Stripe invoice history for all active clients
+app.get('/portal-admin/billing/history', requirePortalAdmin, async (req, res) => {
+  if (!stripe) return res.status(503).json({ error: 'Stripe not configured' });
+  const INTERNAL_IDS = new Set(['orgsocsmarketing001', 'tctestbrand001']);
+  const brands = loadBrands();
+  const active = (brands.clients || []).filter(b =>
+    (!b.pipelineStage || b.pipelineStage === 'Contract Signed') &&
+    !INTERNAL_IDS.has(b.id) && b.source !== 'internal'
+  );
+  const results = await Promise.allSettled(active.map(async b => {
+    const custIds = Array.isArray(b.stripeCustomerIds) && b.stripeCustomerIds.length
+      ? b.stripeCustomerIds
+      : (b.stripeCustomerId ? [b.stripeCustomerId] : []);
+    if (!custIds.length) return { id: b.id, name: b.name, invoices: [] };
+    const lists = await Promise.all(
+      custIds.map(cid => stripe.invoices.list({ customer: cid, limit: 24 }))
+    );
+    const allInvoices = lists.flatMap(l => l.data);
+    return {
+      id:   b.id,
+      name: b.name,
+      invoices: allInvoices.map(inv => ({
+        id:         inv.id,
+        amountDue:  (inv.amount_due  / 100).toFixed(2),
+        amountPaid: (inv.amount_paid / 100).toFixed(2),
+        status:     inv.status,              // draft / open / paid / void / uncollectible
+        created:    inv.created,             // unix ts
+        paidAt:     inv.status_transitions?.paid_at || null,
+        dueDate:    inv.due_date || null,
+        hostedUrl:  inv.hosted_invoice_url || null,
+        period:     inv.description || inv.metadata?.period || '',
+        method:     inv.collection_method,   // send_invoice | charge_automatically
+      })),
+    };
+  }));
+  res.json({
+    ok: true,
+    clients: results.map(r => r.status === 'fulfilled' ? r.value : null).filter(Boolean),
+  });
+});
+
+// GET /portal-admin/billing/setup-link/:brandId — Stripe Customer Portal link so client can add payment method
+app.get('/portal-admin/billing/setup-link/:brandId', requirePortalAdmin, async (req, res) => {
+  if (!stripe) return res.status(503).json({ error: 'Stripe not configured' });
+  const brands   = loadBrands();
+  const brandIdx = (brands.clients || []).findIndex(b => b.id === req.params.brandId);
+  if (brandIdx === -1) return res.status(404).json({ error: 'Brand not found' });
+  const b    = brands.clients[brandIdx];
+  const bill = clientBilling(b);
+  try {
+    let customerId = b.stripeCustomerId;
+    if (!customerId) {
+      const cust = await stripe.customers.create({
+        name:     b.name,
+        email:    bill.billingEmail,
+        metadata: { brandId: b.id, source: 'cult-content-billing' },
+      });
+      customerId = cust.id;
+      brands.clients[brandIdx].stripeCustomerId = customerId;
+      saveBrands(brands);
+    }
+    const session = await stripe.billingPortal.sessions.create({
+      customer:   customerId,
+      return_url: 'https://portal.cultcontent.cc/client/dashboard',
+    });
+    res.json({ ok: true, url: session.url });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// POST /portal-admin/billing/send/:brandId — create + finalize + send Stripe invoice
+app.post('/portal-admin/billing/send/:brandId', requirePortalAdmin, express.json(), async (req, res) => {
+  if (!stripe) return res.status(503).json({ error: 'Stripe not configured — set STRIPE_SECRET_KEY' });
+
+  const brands   = loadBrands();
+  const brandIdx = (brands.clients || []).findIndex(b => b.id === req.params.brandId);
+  if (brandIdx === -1) return res.status(404).json({ error: 'Brand not found' });
+
+  const b    = brands.clients[brandIdx];
+  const bill = clientBilling(b);
+  const now  = new Date();
+  const period = now.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+
+  // Allow override of retainer, commRate, GMV, billingEmail from request body
+  const finalRetainer = req.body?.retainer    != null ? parseFloat(req.body.retainer)    : bill.retainer;
+  const finalCommRate = req.body?.commRate     != null ? parseFloat(req.body.commRate)    : bill.commRate;
+  const finalGmv      = req.body?.gmv          != null ? parseFloat(req.body.gmv)         : bill.gmv;
+  const finalEmail    = req.body?.billingEmail?.trim() || bill.billingEmail;
+  const finalRevShare = parseFloat((finalGmv * finalCommRate).toFixed(2));
+  const finalTotal    = parseFloat((finalRetainer + finalRevShare).toFixed(2));
+
+  if (!finalEmail) return res.status(400).json({ error: 'No billing email for this client' });
+  if (finalTotal <= 0)    return res.status(400).json({ error: 'Invoice total is $0 — nothing to bill' });
+
+  try {
+    // 1. Create or retrieve Stripe customer
+    let customerId = b.stripeCustomerId;
+    if (!customerId) {
+      const customer = await stripe.customers.create({
+        name:  b.name,
+        email: finalEmail,
+        metadata: { brandId: b.id, source: 'cult-content-billing' },
+      });
+      customerId = customer.id;
+    }
+
+    // 2. Check for saved payment method → auto-charge if available
+    const hasPaymentMethod = await stripeHasPaymentMethod(customerId);
+    const collectionMethod = hasPaymentMethod ? 'charge_automatically' : 'send_invoice';
+
+    // 3. Create invoice
+    const invoice = await stripe.invoices.create({
+      customer:          customerId,
+      collection_method: collectionMethod,
+      ...(collectionMethod === 'send_invoice' ? { days_until_due: 7 } : {}),
+      description:       `Cult Content — ${period}`,
+      metadata:          { brandId: b.id, period, gmv: String(finalGmv) },
+      auto_advance:      false,
+    });
+
+    // 4. Add line items
+    if (finalRetainer > 0) {
+      await stripe.invoiceItems.create({
+        customer:    customerId,
+        invoice:     invoice.id,
+        amount:      Math.round(finalRetainer * 100),
+        currency:    'usd',
+        description: `Monthly Retainer — ${period}`,
+      });
+    }
+    if (finalRevShare > 0) {
+      await stripe.invoiceItems.create({
+        customer:    customerId,
+        invoice:     invoice.id,
+        amount:      Math.round(finalRevShare * 100),
+        currency:    'usd',
+        description: `GMV Revenue Share (${Math.round(finalCommRate * 100)}% of $${finalGmv.toLocaleString()} GMV) — ${period}`,
+      });
+    }
+
+    // 5. Finalize — then either charge or send email
+    const finalized = await stripe.invoices.finalizeInvoice(invoice.id, { auto_advance: false });
+    let charged = false;
+    if (hasPaymentMethod) {
+      await stripe.invoices.pay(finalized.id);
+      charged = true;
+    } else {
+      await stripe.invoices.sendInvoice(finalized.id);
+    }
+
+    // 6. Persist
+    brands.clients[brandIdx].stripeCustomerId = customerId;
+    brands.clients[brandIdx].lastInvoiceId    = finalized.id;
+    brands.clients[brandIdx].lastInvoiceUrl   = finalized.hosted_invoice_url;
+    brands.clients[brandIdx].lastInvoicedAt   = Date.now();
+    saveBrands(brands);
+
+    console.log(`[BILLING] ${charged ? 'Charged' : 'Sent invoice to'} ${b.name} (${finalEmail}) — $${finalTotal}`);
+    res.json({
+      ok:         true,
+      invoiceId:  finalized.id,
+      invoiceUrl: finalized.hosted_invoice_url,
+      total:      finalTotal,
+      email:      finalEmail,
+      charged,
+    });
+  } catch (err) {
+    console.error('[BILLING] Stripe error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /portal-admin/debug/order-sample/:brandId — returns raw first order to diagnose field mapping
+app.get('/portal-admin/debug/order-sample/:brandId', requirePortalAdmin, async (req, res) => {
+  const brands   = loadBrands();
+  const brandIdx = (brands.clients || []).findIndex(b => b.id === req.params.brandId);
+  if (brandIdx === -1) return res.status(404).json({ error: 'Brand not found' });
+  const brand = brands.clients[brandIdx];
+  if (!brand.tiktokShopToken?.access_token) return res.json({ error: 'No TikTok token' });
+  try {
+    const now   = Math.floor(Date.now() / 1000);
+    const start = now - 90 * 24 * 60 * 60; // 90 days back
+    const resp  = await ttsBrandPost(brand, brands, brandIdx, '/order/202309/orders/search', {
+      create_time_ge: start, create_time_lt: now, sort_field: 'create_time', sort_order: 'DESC',
+    }, { page_size: 5 });
+    const orders = resp?.data?.orders || resp?.data?.order_list || [];
+    res.json({ total: orders.length, sample: orders.slice(0, 2) });
+  } catch(e) {
+    res.status(500).json({ error: e.message, body: e.response?.data });
+  }
+});
+
+// POST /portal-admin/fix-shop-cipher/:brandId — refresh token + fetch + store shop_cipher for a brand
+app.post('/portal-admin/fix-shop-cipher/:brandId', requirePortalAdmin, async (req, res) => {
+  let brands   = loadBrands();
+  const brandIdx = (brands.clients || []).findIndex(b => b.id === req.params.brandId);
+  if (brandIdx === -1) return res.status(404).json({ error: 'Brand not found' });
+
+  const appKey = process.env.TIKTOK_SHOP_APP_KEY;
+  const appSecret = process.env.TIKTOK_SHOP_APP_SECRET;
+
+  // Step 1: always try to refresh the token first (force refresh regardless of expires_at)
+  const tok = brands.clients[brandIdx].tiktokShopToken;
+  if (!tok?.access_token && !tok?.refresh_token) return res.status(400).json({ error: 'No token for this brand' });
+
+  let activeToken = tok.access_token;
+  if (tok.refresh_token) {
+    try {
+      const { data: rd } = await axios.get('https://auth.tiktok-shops.com/api/v2/token/refresh', {
+        params: { app_key: appKey, app_secret: appSecret, refresh_token: tok.refresh_token, grant_type: 'refresh_token' },
+      });
+      if (rd?.code === 0 && rd?.data?.access_token) {
+        const expireVal = rd.data.access_token_expire_in;
+        const expiresAt = (() => {
+      // TikTok access_token_expire_in is an ABSOLUTE Unix timestamp.
+      // Distinguish ms-epoch (>1e12), seconds-epoch (1e9..1e12 -> *1000), or a raw duration in seconds (<1e9 -> now + dur*1000).
+      const v = Number(expireVal) || 0;
+      if (v > 1e12) return v;                       // already milliseconds
+      if (v > 1e9)  return v * 1000;                // seconds-epoch -> ms
+      return Date.now() + (v || 86400) * 1000;      // raw duration in seconds
+    })();
+        brands = loadBrands(); // reload in case of concurrent writes
+        brands.clients[brandIdx].tiktokShopToken = {
+          ...brands.clients[brandIdx].tiktokShopToken,
+          access_token:  rd.data.access_token,
+          refresh_token: rd.data.refresh_token || tok.refresh_token,
+          expires_at:    expiresAt,
+        };
+        saveBrands(brands);
+        activeToken = rd.data.access_token;
+        console.log(`[fix-shop-cipher] Token refreshed for ${brands.clients[brandIdx].name}, expires ${new Date(expiresAt).toISOString()}`);
+      } else {
+        console.warn(`[fix-shop-cipher] Token refresh failed for brand ${req.params.brandId}:`, rd);
+        return res.json({ ok: false, step: 'token_refresh', message: 'Token refresh failed — brand must reconnect TikTok', raw: rd });
+      }
+    } catch(e) {
+      console.error(`[fix-shop-cipher] Refresh error:`, e.message, e.response?.data);
+      return res.json({ ok: false, step: 'token_refresh', message: e.message, raw: e.response?.data });
+    }
+  }
+
+  // Step 2: fetch shop cipher with fresh token
+  try {
+    const allParams = { app_key: appKey, timestamp: Math.floor(Date.now() / 1000) };
+    allParams.sign  = signTTShop('/authorization/202309/shops', allParams, '');
+    const shopRes   = await axios.get(`${TTS_BASE}/authorization/202309/shops`, {
+      params:  allParams,
+      headers: { 'content-type': 'application/json', 'x-tts-access-token': activeToken },
+    });
+    const shop = shopRes.data?.data?.shops?.[0];
+    if (!shop) return res.json({ ok: false, step: 'shop_fetch', raw: shopRes.data, message: 'No shop returned from TikTok' });
+
+    brands = loadBrands();
+    brands.clients[brandIdx].tiktokShopToken = {
+      ...brands.clients[brandIdx].tiktokShopToken,
+      shop_cipher: shop.cipher,
+      shop_id:     shop.id,
+      shop_name:   shop.name,
+      shop_region: shop.region,
+    };
+    if (!brands.clients[brandIdx].shopId) brands.clients[brandIdx].shopId = shop.id;
+    saveBrands(brands);
+    res.json({ ok: true, shop_name: shop.name, shop_cipher: shop.cipher, shop_id: shop.id });
+  } catch(e) {
+    res.status(500).json({ error: e.message, step: 'shop_fetch', raw: e.response?.data });
+  }
+});
+
+// PATCH /portal-admin/campaign-links/:brandId — update campaign links without CF Access
+app.patch('/portal-admin/campaign-links/:brandId', requirePortalAdmin, express.json(), (req, res) => {
+  const brands = loadBrands();
+  const idx = (brands.clients || []).findIndex(b => b.id === req.params.brandId);
+  if (idx === -1) return res.status(404).json({ error: 'Brand not found' });
+  if (!brands.clients[idx].creatorPage) brands.clients[idx].creatorPage = {};
+  const cp = brands.clients[idx].creatorPage;
+  if (!cp.campaigns) cp.campaigns = {};
+  const { cashbackUrl, quantityVideoUrl, leaderboardUrl, blitzUrl, sprintUrl, reimbursementUrl } = req.body;
+  if (cashbackUrl      !== undefined) cp.campaigns.cashbackUrl      = cashbackUrl      || null;
+  if (quantityVideoUrl !== undefined) cp.campaigns.quantityVideoUrl = quantityVideoUrl || null;
+  if (leaderboardUrl   !== undefined) cp.campaigns.leaderboardUrl   = leaderboardUrl   || null;
+  if (blitzUrl         !== undefined) cp.campaigns.blitzUrl         = blitzUrl         || null;
+  if (sprintUrl        !== undefined) cp.campaigns.sprintUrl        = sprintUrl        || null;
+  if (reimbursementUrl !== undefined) cp.campaigns.reimbursementUrl = reimbursementUrl || null;
+  cp.updatedAt = new Date().toISOString();
+  saveBrands(brands);
+  res.json({ ok: true, campaigns: cp.campaigns });
+});
+
+// PATCH /portal-admin/creator-video/:brandId — set the embedded brand video on the creator page
+app.patch('/portal-admin/creator-video/:brandId', requirePortalAdmin, express.json(), (req, res) => {
+  const brands = loadBrands();
+  const idx = (brands.clients || []).findIndex(b => b.id === req.params.brandId || b.creatorPage?.slug === req.params.brandId);
+  if (idx === -1) return res.status(404).json({ error: 'Brand not found' });
+  if (!brands.clients[idx].creatorPage) brands.clients[idx].creatorPage = {};
+  const cp = brands.clients[idx].creatorPage;
+  const { videoUrl, videoTitle, videoSub } = req.body || {};
+  if (videoUrl   !== undefined) cp.videoUrl   = videoUrl   ? String(videoUrl).trim()   : null;
+  if (videoTitle !== undefined) cp.videoTitle = videoTitle ? String(videoTitle).trim() : null;
+  if (videoSub   !== undefined) cp.videoSub   = videoSub   ? String(videoSub).trim()   : null;
+  cp.updatedAt = new Date().toISOString();
+  saveBrands(brands);
+  res.json({ ok: true, videoUrl: cp.videoUrl, videoTitle: cp.videoTitle, videoSub: cp.videoSub });
+});
+
+// PATCH /portal-admin/creator-images/:brandId — set the "Use These Pictures" reference images on the creator page
+// Body: { images: [{url, caption}] } OR { urls: ["..."] }; empty/[] clears the section so it disappears. Supports gifs.
+app.patch('/portal-admin/creator-images/:brandId', requirePortalAdmin, express.json(), (req, res) => {
+  const brands = loadBrands();
+  const idx = (brands.clients || []).findIndex(b => b.id === req.params.brandId || b.creatorPage?.slug === req.params.brandId);
+  if (idx === -1) return res.status(404).json({ error: 'Brand not found' });
+  if (!brands.clients[idx].creatorPage) brands.clients[idx].creatorPage = {};
+  const cp = brands.clients[idx].creatorPage;
+  let images = [];
+  if (Array.isArray(req.body?.images)) {
+    images = req.body.images;
+  } else if (Array.isArray(req.body?.urls)) {
+    images = req.body.urls.map(u => ({ url: u }));
+  }
+  cp.referenceImages = images
+    .map(i => (typeof i === 'string' ? { url: i } : i))
+    .filter(i => i && i.url && String(i.url).trim())
+    .map(i => ({ url: String(i.url).trim(), caption: i.caption ? String(i.caption).trim() : '' }))
+    .slice(0, 24);
+  if (req.body?.imagesTitle !== undefined) cp.imagesTitle = req.body.imagesTitle ? String(req.body.imagesTitle).trim() : null;
+  if (req.body?.imagesSub   !== undefined) cp.imagesSub   = req.body.imagesSub   ? String(req.body.imagesSub).trim()   : null;
+  cp.updatedAt = new Date().toISOString();
+  saveBrands(brands);
+  res.json({ ok: true, count: cp.referenceImages.length, referenceImages: cp.referenceImages });
+});
+
+// PATCH /portal-admin/creator-accent/:brandId — set the creator-page accent color (accepts brandId or slug)
+app.patch('/portal-admin/creator-accent/:brandId', requirePortalAdmin, express.json(), (req, res) => {
+  const brands = loadBrands();
+  const idx = (brands.clients || []).findIndex(b => b.id === req.params.brandId || b.creatorPage?.slug === req.params.brandId);
+  if (idx === -1) return res.status(404).json({ error: 'Brand not found' });
+  const { accentColor } = req.body || {};
+  if (typeof accentColor !== 'string' || !/^#[0-9a-fA-F]{6}$/.test(accentColor)) {
+    return res.status(400).json({ error: 'accentColor must be a hex color like #00f2ea' });
+  }
+  if (!brands.clients[idx].creatorPage) brands.clients[idx].creatorPage = {};
+  const cp = brands.clients[idx].creatorPage;
+  cp.accentColor = accentColor;
+  cp.updatedAt = new Date().toISOString();
+  saveBrands(brands);
+  res.json({ ok: true, slug: cp.slug || null, accentColor: cp.accentColor });
+});
+
+// PATCH /portal-admin/creator-brief/:brandId — update the structured creator BRIEF on the creator page.
+// Source of truth is brands.json (brand.creatorPage.brief). Follows the surgical PATCH pattern:
+// looks up by brandId OR creatorPage.slug, mutates ONLY creatorPage.brief (+ timestamps), writes back
+// via saveBrands(). Body: { brief: {...} } to REPLACE the brief, or { merge:true, brief:{...} } to
+// SHALLOW-MERGE the given keys into the existing brief (preserving untouched brief keys). An explicit
+// brief key is REQUIRED — an empty/omitted brief returns 400 so a stray PATCH can never wipe the brief.
+// The brief object shape used by the creator page: { hooks:[], frameworks:[], sampleScripts:[],
+// talkingPoints:{benefits:[],powerPhrases:[]}, doAndDont:{dos:[],donts:[]}, guideUrl:'' }.
+app.patch('/portal-admin/creator-brief/:brandId', requirePortalAdmin, express.json(), (req, res) => {
+  const brands = loadBrands();
+  const idx = (brands.clients || []).findIndex(b => b.id === req.params.brandId || b.creatorPage?.slug === req.params.brandId);
+  if (idx === -1) return res.status(404).json({ error: 'Brand not found' });
+  if (!brands.clients[idx].creatorPage) brands.clients[idx].creatorPage = {};
+  const cp = brands.clients[idx].creatorPage;
+
+  const body = req.body || {};
+  const incoming = (body && typeof body === 'object' && body.brief !== undefined) ? body.brief : undefined;
+  if (incoming === undefined || incoming === null || typeof incoming !== 'object' || Array.isArray(incoming)) {
+    return res.status(400).json({ error: 'Body must include a brief object. Send { brief: {...} } to replace, or { merge:true, brief:{...} } to shallow-merge existing brief keys.' });
+  }
+  const doMerge = body.merge === true;
+  if (doMerge && cp.brief && typeof cp.brief === 'object' && !Array.isArray(cp.brief)) {
+    cp.brief = { ...cp.brief, ...incoming };
+  } else {
+    cp.brief = incoming;
+  }
+  cp.briefUpdatedAt = new Date().toISOString();
+  cp.updatedAt = new Date().toISOString();
+  saveBrands(brands);
+  res.json({ ok: true, brandId: brands.clients[idx].id, slug: cp.slug || null, merged: !!doMerge, brief: cp.brief });
+});
+
+// ── TC PRODUCT ALLOW-LIST (prevents full-catalog target collabs) ──────────────
+// GET  /portal-admin/tc-products/:brandId  -> { catalog:[{product_id,product_name}], approved:[ids], heroProductId }
+// PATCH /portal-admin/tc-products/:brandId  body {productIds:[...]} -> sets cp.tcProductIds (the allow-list)
+app.get('/portal-admin/tc-products/:brandId', requirePortalAdmin, async (req, res) => {
+  const brands = loadBrands();
+  const idx = (brands.clients || []).findIndex(b => b.id === req.params.brandId || b.creatorPage?.slug === req.params.brandId);
+  if (idx === -1) return res.status(404).json({ error: 'Brand not found' });
+  const brand = brands.clients[idx];
+  const cp = brand.creatorPage || {};
+  let catalog = [];
+  if (brand.shopId) {
+    try {
+      const { data } = await axios.post(
+        `${CFG.railwayUrl}/affiliate/shops/${brand.shopId}/products`,
+        { page: 1, page_size: 100 }, { timeout: 15000 });
+      catalog = (data?.data || []).map(p => ({ product_id: String(p.product_id || p.id), product_name: p.product_name || p.name || p.title || '(unnamed)' }));
+    } catch (e) { console.error('[tc-products] catalog fetch error:', e.message); }
+  }
+  res.json({
+    ok: true, brand: brand.name, shopId: brand.shopId || null,
+    approved: Array.isArray(cp.tcProductIds) ? cp.tcProductIds.map(String) : [],
+    heroProductId: cp.tcHeroProductId || null,
+    catalog,
+  });
+});
+
+app.patch('/portal-admin/tc-products/:brandId', requirePortalAdmin, express.json(), (req, res) => {
+  const brands = loadBrands();
+  const idx = (brands.clients || []).findIndex(b => b.id === req.params.brandId || b.creatorPage?.slug === req.params.brandId);
+  if (idx === -1) return res.status(404).json({ error: 'Brand not found' });
+  let { productIds } = req.body || {};
+  if (!Array.isArray(productIds)) return res.status(400).json({ error: 'productIds must be an array of product_id strings' });
+  productIds = [...new Set(productIds.map(String).map(x => x.trim()).filter(Boolean))];
+  if (!brands.clients[idx].creatorPage) brands.clients[idx].creatorPage = {};
+  const cp = brands.clients[idx].creatorPage;
+  cp.tcProductIds = productIds;
+  cp.tcProductsUpdatedAt = new Date().toISOString();
+  saveBrands(brands);
+  console.log(`[tc-products] ${brands.clients[idx].name} allow-list set to ${productIds.length} product(s): ${productIds.join(',')}`);
+  res.json({ ok: true, brand: brands.clients[idx].name, approved: cp.tcProductIds });
+});
+
+
+// POST /portal-admin/regenerate-brief/:slug — regenerate creator brief for a brand
+// Body can include override fields: targetAudience, mainProblem, buyerObjections, customerResults, products, brandMission
+app.post('/portal-admin/regenerate-brief/:slug', requirePortalAdmin, express.json(), async (req, res) => {
+  const brands = loadBrands();
+  const idx    = brands.clients.findIndex(b => b.creatorPage?.slug === req.params.slug);
+  if (idx === -1) return res.status(404).json({ ok: false, error: 'Brand not found' });
+  const brand = brands.clients[idx];
+  try {
+    const cp = brand.creatorPage || {};
+    const ov = req.body || {}; // overrides from request body take priority
+    const formData = {
+      brandName:       brand.name,
+      brandMission:    ov.brandMission    || brand.brandMission  || cp.pitch           || '',
+      targetAudience:  ov.targetAudience  || cp.targetAudience   || brand.targetAudience  || '',
+      mainProblem:     ov.mainProblem     || cp.mainProblem      || brand.mainProblem     || '',
+      buyerObjections: ov.buyerObjections || cp.buyerObjections  || brand.buyerObjections || '',
+      customerResults: ov.customerResults || cp.customerResults  || brand.customerResults || '',
+      products:        (ov.products || cp.products || brand.products || []).map(p => ({ name: p.name || p.title, description: p.description || p.shopifyDescription || '' })),
+    };
+    // Save any overrides back to the brand so future regenerations use them
+    if (ov.targetAudience)  brands.clients[idx].creatorPage.targetAudience  = ov.targetAudience;
+    if (ov.mainProblem)     brands.clients[idx].creatorPage.mainProblem     = ov.mainProblem;
+    if (ov.buyerObjections) brands.clients[idx].creatorPage.buyerObjections = ov.buyerObjections;
+    if (ov.customerResults) brands.clients[idx].creatorPage.customerResults = ov.customerResults;
+    if (ov.products)        brands.clients[idx].creatorPage.products        = ov.products;
+
+    const aiContent   = brand.aiContent   || null;
+    // Re-scrape Shopify live so the brief reflects the real store. Fall back to any stored data.
+    let shopifyData = brand.shopifyData || null;
+    const scrapeUrl = ov.shopifyUrl || ov.website || brand.shopifyUrl || brand.website || cp.website;
+    if (scrapeUrl) {
+      try {
+        const fresh = await scrapeShopify(scrapeUrl);
+        if (fresh && fresh.products && fresh.products.length) {
+          shopifyData = fresh;
+          brands.clients[idx].shopifyData = fresh; // persist so future regens have data
+          if (!brand.website && (ov.website || ov.shopifyUrl)) brands.clients[idx].website = ov.website || ov.shopifyUrl; // remember the working URL
+          console.log(`[regenerate-brief] scraped ${fresh.products.length} products from ${fresh.domain || scrapeUrl}`);
+        } else {
+          console.log(`[regenerate-brief] live scrape returned no products for ${scrapeUrl}; using stored shopifyData`);
+        }
+      } catch (e) { console.error("[regenerate-brief] scrape error:", e.message); }
+    }
+    const brief = await generateCreatorBrief(formData, shopifyData, aiContent);
+    if (!brief) return res.status(500).json({ ok: false, error: 'Brief generation returned null — check ANTHROPIC_API_KEY' });
+    brands.clients[idx].creatorPage.brief = brief;
+    saveBrands(brands);
+    console.log(`[regenerate-brief] Brief regenerated for ${brand.name}`);
+    res.json({ ok: true, brand: brand.name, brief });
+  } catch (e) {
+    console.error('[regenerate-brief] error:', e.message);
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// GET /portal-admin/debug-brands — list all brand IDs + token status
+app.get('/portal-admin/debug-brands', requirePortalAdmin, (req, res) => {
+  const brands = loadBrands();
+  res.json((brands.clients || []).map(b => ({
+    id:           b.id,
+    name:         b.name,
+    hasToken:     !!b.tiktokShopToken?.access_token,
+    shopCipher:   !!b.tiktokShopToken?.shop_cipher,
+    tokenExpires: b.tiktokShopToken?.expires_at ? new Date(b.tiktokShopToken.expires_at).toISOString() : null,
+    cachedNetGmv: b.cachedNetGmv ?? null,
+    shopId:       b.shopId || null,
+    website:      b.website || null,
+    hasShopifyData: !!(b.shopifyData && Array.isArray(b.shopifyData.products) && b.shopifyData.products.length),
+    shopifyProductCount: (b.shopifyData && Array.isArray(b.shopifyData.products)) ? b.shopifyData.products.length : 0,
+  })));
+});
+
+// POST /portal-admin/backfill-shopify — scrape + persist shopifyData for all real brands; generate missing briefs
+// Body: { onlyBrand?: slug, force?: bool (regenerate existing briefs too) }
+app.post('/portal-admin/backfill-shopify', requirePortalAdmin, express.json(), async (req, res) => {
+  const SKIP = new Set(['Organic Social Marketing', 'D Noor', 'DIAMANDIA', 'Diamandia']);
+  const only  = (req.body && req.body.onlyBrand) || null;
+  const force = !!(req.body && req.body.force);
+  const brands = loadBrands();
+  const out = [];
+  for (let i = 0; i < (brands.clients || []).length; i++) {
+    const b = brands.clients[i];
+    const cp = b.creatorPage || {};
+    const slug = cp.slug || null;
+    if (only && slug !== only && b.name !== only) continue;
+    if (!only && SKIP.has(b.name)) { out.push({ name: b.name, action: 'skipped (protected)' }); continue; }
+    const url = b.website || cp.website || b.shopifyUrl || null;
+    let rec = { name: b.name, slug, website: url, scraped: 0, briefAction: 'none' };
+    // 1) scrape + persist shopifyData
+    if (url) {
+      try {
+        const fresh = await scrapeShopify(url);
+        if (fresh && Array.isArray(fresh.products) && fresh.products.length) {
+          b.shopifyData = fresh;
+          rec.scraped = fresh.products.length;
+          rec.domain = fresh.domain;
+        } else {
+          rec.scrapeNote = 'no products returned';
+        }
+      } catch (e) { rec.scrapeNote = 'scrape error: ' + e.message; }
+    } else {
+      rec.scrapeNote = 'no website on record';
+    }
+    // 2) generate brief if missing (or force)
+    const hasBrief = !!cp.brief;
+    if (!hasBrief || force) {
+      try {
+        const formData = {
+          brandName:       b.name,
+          brandMission:    b.brandMission || cp.pitch || cp.brandMission || '',
+          targetAudience:  cp.targetAudience  || b.targetAudience  || '',
+          mainProblem:     cp.mainProblem     || b.mainProblem     || '',
+          buyerObjections: cp.buyerObjections || b.buyerObjections || '',
+          customerResults: cp.customerResults || b.customerResults || '',
+        };
+        const brief = await generateCreatorBrief(formData, b.shopifyData || null, null);
+        if (brief) {
+          b.creatorPage = b.creatorPage || {};
+          b.creatorPage.brief = brief;
+          rec.briefAction = hasBrief ? 'regenerated' : 'generated';
+          rec.briefLen = JSON.stringify(brief).length;
+        } else {
+          rec.briefAction = 'generator returned null';
+        }
+      } catch (e) { rec.briefAction = 'brief error: ' + e.message; }
+    } else {
+      rec.briefAction = 'kept existing';
+    }
+    out.push(rec);
+  }
+  saveBrands(brands);
+  res.json({ ok: true, results: out });
+});
+
+// GET /portal-admin/brief-inspect — read-only: stored brief + form mission/story fields per brand
+app.get('/portal-admin/brief-inspect', requirePortalAdmin, (req, res) => {
+  const brands = loadBrands();
+  const GENERIC = [/everyday consumer/i, /improves daily life/i, /general consumer/i, /lifestyle/i, /not provided/i];
+  res.json((brands.clients || []).map(b => {
+    const cp = b.creatorPage || {};
+    const brief = cp.brief || null;
+    const briefStr = brief ? JSON.stringify(brief) : '';
+    const genericHits = GENERIC.filter(re => re.test(briefStr)).map(re => re.source);
+    return {
+      name: b.name,
+      slug: cp.slug || null,
+      active: cp.active !== false,
+      hasBrief: !!brief,
+      briefLen: briefStr.length,
+      genericFlags: genericHits,
+      mission: b.brandMission || cp.pitch || cp.brandMission || null,
+      targetAudience: cp.targetAudience || b.targetAudience || null,
+      mainProblem: cp.mainProblem || b.mainProblem || null,
+      customerResults: cp.customerResults || b.customerResults || null,
+      buyerObjections: cp.buyerObjections || b.buyerObjections || null,
+      hasShopifyData: !!(b.shopifyData && Array.isArray(b.shopifyData.products) && b.shopifyData.products.length),
+      shopifyProductCount: (b.shopifyData && Array.isArray(b.shopifyData.products)) ? b.shopifyData.products.length : 0,
+      website: b.website || null,
+      briefPreview: brief ? (typeof brief === 'string' ? brief.slice(0,400) : JSON.stringify(brief).slice(0,400)) : null,
+    };
+  }));
+});
+
+// GET /portal-admin/debug-gmv/:brandId — raw TikTok order API response for a brand
+app.get('/portal-admin/debug-gmv/:brandId', requirePortalAdmin, async (req, res) => {
+  const brands   = loadBrands();
+  const brandIdx = (brands.clients || []).findIndex(b => b.id === req.params.brandId);
+  if (brandIdx === -1) return res.status(404).json({ error: 'Brand not found' });
+  const brand = brands.clients[brandIdx];
+  const tok   = brand.tiktokShopToken;
+  const info  = {
+    name:          brand.name,
+    hasToken:      !!tok?.access_token,
+    hasShopCipher: !!tok?.shop_cipher,
+    tokenExpiresAt: tok?.expires_at ? new Date(tok.expires_at).toISOString() : null,
+    tokenExpired:  tok?.expires_at ? Date.now() > tok.expires_at : null,
+    shopId:        brand.shopId || null,
+    cachedNetGmv:  brand.cachedNetGmv ?? null,
+    cachedGmvAt:   brand.cachedGmvAt  ? new Date(brand.cachedGmvAt).toISOString() : null,
+  };
+  if (!tok?.access_token) return res.json({ info, error: 'No token' });
+  const now   = Math.floor(Date.now() / 1000);
+  const start = now - 30 * 24 * 60 * 60;
+  try {
+    // Try token refresh if expired
+    if (tok.expires_at && Date.now() > tok.expires_at - 120_000) {
+      await refreshBrandShopToken(brand, brands, brandIdx);
+    }
+    const freshBrand = loadBrands().clients[brandIdx];
+    const resp = await ttsBrandPost(freshBrand, brands, brandIdx, '/order/202309/orders/search', {
+      create_time_ge: start,
+      create_time_lt: now,
+      sort_field: 'create_time',
+      sort_order: 'DESC',
+    }, { page_size: 20 });
+    const orders = resp?.data?.orders || resp?.data?.order_list || [];
+    const sample = orders.slice(0, 2);
+    res.json({ info, resp_code: resp?.code, resp_message: resp?.message, order_count: orders.length, sample_orders: sample, full_data_keys: resp?.data ? Object.keys(resp.data) : [] });
+  } catch(e) {
+    res.json({ info, error: e.message, axiosResponse: e.response?.data });
+  }
 });
 
 // Human-readable labels for Growth Partners task keys
@@ -1586,6 +4514,155 @@ const GP_TASK_LABELS = {
   live_regular:         'Regular live cadence established',
 };
 
+// ─── Billing tiers (from client contract template) ───────────────────────────
+const BILLING_TIERS = [
+  { retainer: 1500, commRate: 0.10 },
+  { retainer: 2000, commRate: 0.09 },
+  { retainer: 2500, commRate: 0.08 },
+  { retainer: 3000, commRate: 0.07 },
+  { retainer: 3500, commRate: 0.06 },
+  { retainer: 4000, commRate: 0.05 },
+  { retainer: 4500, commRate: 0.04 },
+  { retainer: 5000, commRate: 0.03 },
+];
+
+// GET /api/client/billing — current tier, GMV, payment method, recent invoices
+app.get('/api/client/billing', requireClientSession, async (req, res) => {
+  try {
+    const brands   = loadBrands();
+    const brandIdx = (brands.clients || []).findIndex(b => b.id === req.session.clientBrandId);
+    if (brandIdx === -1) return res.status(404).json({ error: 'Brand not found' });
+    const brand = brands.clients[brandIdx];
+
+    const retainer  = brand.retainer  ?? brand.contractValue  ?? 1500;
+    const commRate  = brand.commissionRate ?? 0.10;
+    const gmv       = brand.cachedNetGmv ?? 0;
+    const revShare  = parseFloat((gmv * commRate).toFixed(2));
+
+    // Billing cycle info
+    const cycle = billingCycle();
+
+    // Payment method
+    const hasPaymentMethod = await stripeHasPaymentMethod(brand.stripeCustomerId);
+
+    // Recent invoices from Stripe
+    let invoices = [];
+    if (stripe && brand.stripeCustomerId) {
+      try {
+        const list = await stripe.invoices.list({ customer: brand.stripeCustomerId, limit: 12 });
+        invoices = list.data.map(inv => ({
+          id:      inv.id,
+          date:    new Date(inv.created * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+          amount:  inv.amount_paid / 100,
+          status:  inv.status,
+          url:     inv.hosted_invoice_url,
+          period:  inv.metadata?.period || '',
+        }));
+      } catch(_) {}
+    }
+
+    // Pending tier change (takes effect next month)
+    const pendingTier = brand.pendingTierChange || null;
+
+    res.json({
+      currentTier:  { retainer, commRate },
+      pendingTier,
+      gmv,
+      revShare,
+      tiers:        BILLING_TIERS,
+      cycle:        { period: cycle.period, nextBillingLabel: cycle.nextBillingLabel, daysUntilBilling: cycle.daysUntilBilling },
+      hasPaymentMethod,
+      portalUrl:    brand.stripeCustomerId && stripe ? null : null, // populated below
+      invoices,
+    });
+  } catch (err) {
+    console.error('[client/billing] error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/client/billing/portal — Stripe Customer Portal link for client to add/update payment method
+app.get('/api/client/billing/portal', requireClientSession, async (req, res) => {
+  if (!stripe) return res.status(503).json({ error: 'Stripe not configured' });
+  try {
+    const brands   = loadBrands();
+    const brandIdx = (brands.clients || []).findIndex(b => b.id === req.session.clientBrandId);
+    if (brandIdx === -1) return res.status(404).json({ error: 'Brand not found' });
+    const brand = brands.clients[brandIdx];
+
+    let customerId = brand.stripeCustomerId;
+    if (!customerId) {
+      // Create a Stripe customer for this brand
+      const bill = clientBilling(brand);
+      const email = bill.billingEmail || brand.loginEmail || '';
+      const customer = await stripe.customers.create({
+        name:  brand.name,
+        ...(email ? { email } : {}),
+        metadata: { brandId: brand.id, source: 'cult-content-billing' },
+      });
+      customerId = customer.id;
+      brands.clients[brandIdx].stripeCustomerId = customerId;
+      saveBrands(brands);
+    }
+
+    const session = await stripe.billingPortal.sessions.create({
+      customer:   customerId,
+      return_url: `${CREATOR_BASE_URL}/client/dashboard`,
+    });
+    res.json({ url: session.url });
+  } catch (err) {
+    console.error('[client/billing/portal] error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/client/billing/change-tier — client selects a new billing tier
+app.post('/api/client/billing/change-tier', requireClientSession, express.json(), async (req, res) => {
+  try {
+    const { retainer, commRate } = req.body || {};
+    const tier = BILLING_TIERS.find(t => t.retainer === Number(retainer) && Math.abs(t.commRate - Number(commRate)) < 0.0001);
+    if (!tier) return res.status(400).json({ error: 'Invalid tier' });
+
+    const brands   = loadBrands();
+    const brandIdx = (brands.clients || []).findIndex(b => b.id === req.session.clientBrandId);
+    if (brandIdx === -1) return res.status(404).json({ error: 'Brand not found' });
+
+    // Compute effective date: 1st of next month
+    const now = new Date();
+    const effective = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    const effectiveLabel = effective.toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
+    const brandName = brands.clients[brandIdx].name;
+    const oldRetainer = brands.clients[brandIdx].retainer ?? brands.clients[brandIdx].contractValue ?? 1500;
+    const oldCommRate = brands.clients[brandIdx].commissionRate ?? 0.10;
+
+    brands.clients[brandIdx].pendingTierChange = {
+      retainer:     tier.retainer,
+      commRate:     tier.commRate,
+      requestedAt:  Date.now(),
+      effectiveDate: effective.toISOString().slice(0, 10),
+      effectiveLabel,
+    };
+    saveBrands(brands);
+
+    console.log(`[BILLING] ${brandName} requested tier change → $${tier.retainer} + ${Math.round(tier.commRate*100)}% GMV (effective ${effectiveLabel})`);
+
+    // Lark alert
+    const oldPlan = `$${oldRetainer.toLocaleString()}/mo + ${Math.round(oldCommRate * 100)}% GMV`;
+    const newPlan = `$${tier.retainer.toLocaleString()}/mo + ${Math.round(tier.commRate * 100)}% GMV`;
+    axios.post(`${CFG.railwayUrl}/command`, {
+      text: `💳 *Plan Change Request* — ${brandName}\nFrom: ${oldPlan}\nTo: ${newPlan}\nEffective: ${effectiveLabel}`,
+      context: 'Billing',
+      source:  'Client Portal',
+    }, { timeout: 5000 }).catch(() => {});
+
+    res.json({ ok: true, effectiveLabel, tier });
+  } catch (err) {
+    console.error('[client/billing/change-tier] error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET /api/client/me — return brand data, TikTok stats, tasks, referral info
 app.get('/api/client/me', requireClientSession, async (req, res) => {
   try {
@@ -1602,61 +4679,51 @@ app.get('/api/client/me', requireClientSession, async (req, res) => {
       saveBrands(brands);
     }
 
-    // TikTok Shop stats — use brand's own token if available, else skip
-    let tiktokStats = null, tiktokFunnel = null, tiktokConnected = false;
+    // TikTok Shop stats — pull from Reacher summary (authoritative) + TikTok token for top creators
+    let tiktokStats = null, tiktokFunnel = null, tiktokConnected = false, tiktokNeedsReconnect = false;
     if (brand.tiktokShopToken?.access_token) {
       tiktokConnected = true;
+      // If no shop_cipher, the token is incomplete — brand needs to reconnect
+      // shop_cipher is optional for single-shop sellers — don't force reconnect just for missing cipher
       try {
-        const now   = Math.floor(Date.now() / 1000);
-        const start = now - 30 * 24 * 60 * 60;
-        const [ordersRes, creatorsRes] = await Promise.allSettled([
-          ttsBrandPost(brand, brands, brandIdx, '/affiliate/seller/202309/orders/search', {
-            create_time_ge: start,
-            create_time_lt: now,
-            page_size: 100,
-          }),
-          ttsBrandPost(brand, brands, brandIdx, '/affiliate/seller/202309/creators/search', {
-            page_size: 50,
-          }),
-        ]);
+        const shopId = brand.shopId;
 
-        let gmv = 0, orderCount = 0;
-        const creatorMap = {};
-        if (ordersRes.status === 'fulfilled') {
-          const affOrders = ordersRes.value?.data?.affiliate_orders || ordersRes.value?.data?.orders || [];
-          orderCount = affOrders.length;
-          for (const o of affOrders) {
-            const amt = parseFloat(o.sale_amount ?? o.payment_info?.original_total_product_price ?? o.total_amount ?? 0);
-            gmv += amt;
-            const handle = o.creator_handle || o.creator_username || o.creator_open_id;
-            if (handle) {
-              if (!creatorMap[handle]) creatorMap[handle] = { handle, gmv: 0, orders: 0 };
-              creatorMap[handle].gmv    += amt;
-              creatorMap[handle].orders += 1;
-            }
-          }
+        // GMV: Use shared fetchNetGmvForBrand (Finance → Earnings Analytics, with orders fallback)
+        let gmv = 0, activeCreators = 0;
+        try {
+          const liveGmv = await fetchNetGmvForBrand(brand, brands, brandIdx);
+          if (liveGmv !== null) gmv = liveGmv;
+        } catch(e) {
+          console.error('[client/me] GMV fetch error:', e.message);
+          if (e.response?.status === 401 || e.message?.includes('401')) tiktokNeedsReconnect = true;
         }
 
-        let activeCreators = 0;
-        const allCreators = [];
-        if (creatorsRes.status === 'fulfilled') {
-          const list = creatorsRes.value?.data?.creators || [];
-          activeCreators = list.length;
-          for (const c of list) {
-            allCreators.push({
-              handle: c.creator_handle || c.username || c.creator_open_id,
-              gmv:    parseFloat(c.sale_amount ?? c.gmv ?? 0),
-            });
-          }
+        // Active creators from Reacher
+        if (shopId && activeCreators === 0) {
+          try {
+            const s = (await axios.get(`${CFG.railwayUrl}/affiliate/shops/${shopId}/summary`, { timeout: 8000 })).data;
+            activeCreators = parseInt(s.active_creators || 0, 10);
+          } catch(_) {}
         }
 
-        tiktokStats = { gmv, orders: orderCount, active_creators: activeCreators };
+        tiktokStats = { gmv, orders: 0, active_creators: activeCreators };
 
-        // Top creators: merge affiliate orders map with creator list, sort by GMV
-        const topCreatorsArr = Object.values(creatorMap).sort((a, b) => b.gmv - a.gmv).slice(0, 6);
-        if (!topCreatorsArr.length) {
-          allCreators.sort((a, b) => b.gmv - a.gmv);
-          topCreatorsArr.push(...allCreators.slice(0, 6));
+        // Top creators: fetch from Reacher creators endpoint
+        const topCreatorsArr = [];
+        if (shopId) {
+          try {
+            const tcRes = await axios.get(
+              `${CFG.railwayUrl}/affiliate/shops/${shopId}/creators/top`,
+              { timeout: 10000 }
+            );
+            const list = tcRes.data?.creators || tcRes.data?.data || [];
+            topCreatorsArr.push(...list.slice(0, 6).map(c => ({
+              handle: c.creator_handle || c.username,
+              gmv:    parseFloat(c.gmv || c.shop_gmv || c.sale_amount || 0),
+            })));
+          } catch(_) {}
+        }
+        if (true) { // keep scope consistent
         }
 
         tiktokFunnel = { top_creators: topCreatorsArr, top_videos: [] };
@@ -1698,19 +4765,24 @@ app.get('/api/client/me', requireClientSession, async (req, res) => {
         shopId: brand.shopId || null,
         sampleBudget: brand.sampleBudget || 0,
         compensation,
+        creatorPageHeadline: brand.creatorPage?.headline || null,
+        creatorPageCampaigns: brand.creatorPage?.campaigns || null,
+        innerCircle: !!brand.innerCircle,
+        logoUrl: brand.logoUrl || null,
+        brandColor: brand.brandColor || null,
         referralCode: brand.referralCode,
         commissionRate: brand.commissionRate ?? 0.10,
         referralUrl,
         estimatedCommission: brand.estimatedCommission || 0,
         referrals: brand.referrals || [],
-        affiliatePageUrl: brand.affiliatePageUrl || '',
+        affiliatePageUrl: brand.affiliatePageUrl || (brand.creatorPage?.slug ? `${CREATOR_BASE_URL}/creators/${brand.creatorPage.slug}` : ''),
         connections: {
           bufferConnected:   !!brand.bufferConnected,
           arcadsConnected:   !!brand.arcadsConnected,
           storistaConnected: !!brand.storistaConnected,
         },
       },
-      tiktok: { connected: tiktokConnected, stats: tiktokStats, funnel: tiktokFunnel },
+      tiktok: { connected: tiktokConnected, needsReconnect: tiktokNeedsReconnect || (tiktokConnected && !brand.tiktokShopToken?.shop_cipher), hasShopCipher: !!(brand.tiktokShopToken?.shop_cipher), stats: tiktokStats, funnel: tiktokFunnel },
       tasks,
       adminImpersonating: req.session.adminImpersonating || null,
     });
@@ -1722,6 +4794,42 @@ app.get('/api/client/me', requireClientSession, async (req, res) => {
   }
 });
 
+// GET /api/inner-circle/funnel — brand-scoped Inner Circle funnel for the
+// logged-in client. Resolves the brand's OWN shopId from the session
+// (req.session.clientBrandId → brand.shopId); the shopId is NEVER taken from
+// the request, so a brand can only ever see its own IC signups and cannot
+// pass an arbitrary shopId to view another brand's data. Mirrors the admin
+// funnel (/api/inner-circle/admin/funnel) response/error handling.
+app.get('/api/inner-circle/funnel', requireClientSession, async (req, res) => {
+  try {
+    const brands = loadBrands();
+    const brand = (brands.clients || []).find(b => b.id === req.session.clientBrandId);
+    if (!brand) { req.session.destroy(); return res.status(404).json({ error: 'Brand not found' }); }
+
+    const shopId = brand.shopId;
+    if (!shopId) {
+      // Brand has no connected shop yet — return an empty, well-formed funnel
+      // rather than an error so the portal UI can render an empty state.
+      return res.json({ shopId: null, creators: [], summary: { signed_up: 0, tc_accepted: 0, sample_requested: 0, total: 0 } });
+    }
+
+    if (!icSqlite || typeof icSqlite.getIcFunnel !== 'function') {
+      return res.status(503).json({ error: 'IC funnel layer unavailable' });
+    }
+
+    const out = await icSqlite.getIcFunnel(shopId);
+    if (out && out.error && (!out.creators || !out.creators.length)) {
+      // Hard data-layer failure (e.g. DB unavailable) → 503; partial Reacher
+      // outages still return 200 with summary.reacherError set.
+      return res.status(503).json(out);
+    }
+    return res.json(out);
+  } catch (e) {
+    console.error('[inner-circle/funnel] failed:', e.message);
+    return res.status(500).json({ error: e.message });
+  }
+});
+
 // PATCH /api/client/settings — update sample budget + full compensation config
 app.patch('/api/client/settings', requireClientSession, express.json(), async (req, res) => {
   try {
@@ -1729,18 +4837,62 @@ app.patch('/api/client/settings', requireClientSession, express.json(), async (r
     const idx = (brands.clients || []).findIndex(b => b.id === req.session.clientBrandId);
     if (idx === -1) return res.status(404).json({ error: 'Brand not found' });
     const brand = brands.clients[idx];
-    const { sampleBudget, compensation, affiliatePageUrl } = req.body || {};
+    const { sampleBudget, compensation, affiliatePageUrl, innerCircle, brandColor, headline, campaigns } = req.body || {};
+    // brandColor — validate BEFORE any mutation/persistence; reject invalid hex
+    if (brandColor !== undefined && (typeof brandColor !== 'string' || !/^#[0-9a-fA-F]{6}$/.test(brandColor))) {
+      return res.status(400).json({ error: 'brandColor must be a hex color like #00f2ea' });
+    }
+    if (brandColor !== undefined) brand.brandColor = brandColor;
     if (sampleBudget !== undefined) brand.sampleBudget = Number(sampleBudget) || 0;
     if (compensation && typeof compensation === 'object') {
       if (!brand.creatorPage) brand.creatorPage = {};
       brand.creatorPage.incentives = compensation;
     }
     if (affiliatePageUrl !== undefined) brand.affiliatePageUrl = affiliatePageUrl || '';
+
+    // Campaign headline (hero <h1> on the creator page) — persisted to creatorPage.headline
+    if (headline !== undefined) {
+      if (!brand.creatorPage) brand.creatorPage = {};
+      brand.creatorPage.headline = headline === null ? null : String(headline).slice(0, 200);
+    }
+
+    // Reacher campaign CTA links (rendered on the /welcome page) — only http(s) URLs accepted
+    if (campaigns && typeof campaigns === 'object') {
+      if (!brand.creatorPage) brand.creatorPage = {};
+      if (!brand.creatorPage.campaigns) brand.creatorPage.campaigns = {};
+      const URL_KEYS = ['blitzUrl', 'cashbackUrl', 'quantityVideoUrl', 'leaderboardUrl'];
+      for (const k of URL_KEYS) {
+        if (campaigns[k] === undefined) continue;
+        const v = campaigns[k];
+        if (v === '' || v === null) { brand.creatorPage.campaigns[k] = ''; continue; }
+        if (typeof v !== 'string' || !/^https?:\/\//i.test(v)) {
+          return res.status(400).json({ error: `${k} must be empty or an http(s) URL` });
+        }
+        brand.creatorPage.campaigns[k] = v.trim();
+      }
+    }
+
     // Integration keys — store them, never return them in plain text
     if (req.body.bufferToken)     { brand.bufferToken     = req.body.bufferToken;     brand.bufferConnected = true; }
     if (req.body.arcadsClientId)  { brand.arcadsClientId  = req.body.arcadsClientId; }
     if (req.body.arcadsApiKey)    { brand.arcadsApiKey     = req.body.arcadsApiKey;    brand.arcadsConnected = true; }
     if (req.body.storistaApiKey)  { brand.storistaApiKey  = req.body.storistaApiKey;  brand.storistaConnected = true; }
+
+    // Inner Circle toggle — send Lark alert when it changes
+    if (innerCircle !== undefined && !!innerCircle !== !!brand.innerCircle) {
+      const status  = innerCircle ? 'ENABLED ✅' : 'DISABLED ❌';
+      const emoji   = innerCircle ? '🌀' : '🔕';
+      const now     = new Date();
+      const nextMo  = new Date(now.getFullYear(), now.getMonth() + 1, 1)
+        .toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      axios.post(`${CFG.railwayUrl}/command`, {
+        text: `${emoji} *Inner Circle ${status}* for *${brand.name}*\nEffective: ${nextMo}\nInner Circle: dedicated creators posting 15+ videos/mo, 50% commission + 25% on ads.`,
+        context: 'Inner Circle Toggle',
+        source: 'Client Dashboard',
+      }, { timeout: 5000 }).catch(e => console.error('[inner-circle] lark error:', e.message));
+      brand.innerCircle = !!innerCircle;
+    }
+
     brands.clients[idx] = brand;
     saveBrands(brands);
     res.json({ ok: true });
@@ -1749,6 +4901,8 @@ app.patch('/api/client/settings', requireClientSession, express.json(), async (r
     res.status(500).json({ error: e.message });
   }
 });
+
+
 
 // POST /api/client/referrals — log a brand the client referred
 app.post('/api/client/referrals', requireClientSession, express.json(), (req, res) => {
@@ -1770,6 +4924,114 @@ app.post('/api/client/referrals', requireClientSession, express.json(), (req, re
   } catch (e) {
     sendClientBugReport({ brandId: req.session?.clientBrandId, route: 'POST /api/client/referrals', error: e.message });
     res.status(500).json({ error: e.message });
+  }
+});
+
+// GET /api/client/tasks — read-only view of Ops Engine tasks for this brand
+// Fetches from Lark Bitable (same base as /my-tasks) filtered by brand name.
+// Returns: { tasks: [...], brandName }  — clients cannot write to tasks.
+const OPS_APP_TOKEN_CLI = 'EsfBbIqfkauKozsxMHMuilDztod';
+const TASKS_TABLE_CLI   = 'tbl7XaSc37mtcBKg';
+const CLIENTS_TABLE_CLI = 'tblgM1L7myeAfYQm';
+
+app.get('/api/client/tasks', requireClientSession, async (req, res) => {
+  try {
+    const brands = loadBrands();
+    const brand = (brands.clients || []).find(b => b.id === req.session.clientBrandId);
+    if (!brand) return res.status(404).json({ error: 'Brand not found' });
+    const brandName = brand.name;
+
+    // Use OPS_LARK_APP_ID when set (dedicated Bitable app) — same logic as ops-my-tasks.
+    let token;
+    const opsAppId = process.env.OPS_LARK_APP_ID || process.env.LARK_APP_ID;
+    const opsAppSecret = process.env.OPS_LARK_APP_SECRET || process.env.LARK_APP_SECRET;
+    if (opsAppId && opsAppSecret) {
+      const tr = await axios.post('https://open.larksuite.com/open-apis/auth/v3/tenant_access_token/internal',
+        { app_id: opsAppId, app_secret: opsAppSecret }, { timeout: 10000 });
+      token = tr.data.tenant_access_token;
+    } else {
+      token = await getLarkTenantToken();
+    }
+    const larkGet = (path, params) =>
+      axios.get(`https://open.larksuite.com${path}`, {
+        headers: { Authorization: `Bearer ${token}` }, params, timeout: 20000,
+      }).then(r => r.data);
+
+    // Build clients record_id → name map
+    const clientsMap = {};
+    let cPageToken = null;
+    for (let g = 0; g < 5; g++) {
+      const params = { page_size: 500 };
+      if (cPageToken) params.page_token = cPageToken;
+      const cd = await larkGet(`/open-apis/bitable/v1/apps/${OPS_APP_TOKEN_CLI}/tables/${CLIENTS_TABLE_CLI}/records`, params);
+      if (cd.code !== 0) break;
+      for (const it of (cd.data?.items || [])) {
+        const f = it.fields || {};
+        const name = [f['Brand'], f['Client'], f['Name'], f['Brand Name']]
+          .map(v => (typeof v === 'string' ? v : (Array.isArray(v) && v[0]) ? (v[0].text || v[0].name || '') : ''))
+          .find(v => v) || '';
+        if (name) clientsMap[it.record_id] = name;
+      }
+      cPageToken = cd.data?.has_more ? cd.data.page_token : null;
+      if (!cPageToken) break;
+    }
+
+    // Helper: extract text from any Bitable field value
+    const txt = v => {
+      if (v == null) return '';
+      if (typeof v === 'string') return v;
+      if (typeof v === 'number') return String(v);
+      if (Array.isArray(v)) {
+        const f = v[0];
+        if (f && typeof f === 'object') return f.text_arr?.[0] || f.text || f.name || '';
+        return v.map(x => typeof x === 'string' ? x : (x?.text || x?.name || '')).join(', ');
+      }
+      return v.text || v.link || '';
+    };
+
+    // Collect matching tasks (paginate)
+    const tasks = [];
+    let tPageToken = null;
+    for (let g = 0; g < 20; g++) {
+      const params = { page_size: 500 };
+      if (tPageToken) params.page_token = tPageToken;
+      const td = await larkGet(`/open-apis/bitable/v1/apps/${OPS_APP_TOKEN_CLI}/tables/${TASKS_TABLE_CLI}/records`, params);
+      if (td.code !== 0) break;
+      for (const rec of (td.data?.items || [])) {
+        const f = rec.fields || {};
+        if (txt(f.Status) === 'Completed') continue;
+        // Resolve client name from link field or clients map
+        let client = txt(f.Client);
+        if (!client) {
+          const links = Array.isArray(f.Client) ? f.Client : [];
+          for (const lnk of links) {
+            if (Array.isArray(lnk?.record_ids)) {
+              for (const rid of lnk.record_ids) { if (clientsMap[rid]) { client = clientsMap[rid]; break; } }
+            }
+          }
+        }
+        if (!client || client.toLowerCase() !== brandName.toLowerCase()) continue;
+        tasks.push({
+          record_id: rec.record_id,
+          task:          txt(f.Task),
+          status:        txt(f.Status),
+          pillar:        txt(f.Pillar),
+          phase:         txt(f.Phase),
+          priority:      txt(f.Priority),
+          executionMode: txt(f['Execution Mode']),
+          promptAction:  txt(f['Prompt / Action']),
+          dueDate:       f['Due Date'] || null,
+          category:      txt(f.Category),
+        });
+      }
+      tPageToken = td.data?.has_more ? td.data.page_token : null;
+      if (!tPageToken) break;
+    }
+
+    res.json({ ok: true, brandName, tasks });
+  } catch (e) {
+    console.error('[client-tasks] error:', e.message);
+    res.status(500).json({ error: 'Failed to load tasks', detail: e.message });
   }
 });
 
@@ -1844,6 +5106,45 @@ app.post('/client/admin', express.json(), async (req, res) => {
       Object.assign(brands.clients[idx], fields);
       saveBrands(brands);
       return res.json({ ok: true, brand: brands.clients[idx] });
+    }
+    // Merge stubId → keepId: copy TikTok token + key data from stub into keeper, delete stub
+    if (action === 'merge-and-delete') {
+      const { keepId, stubId } = payload;
+      if (!keepId || !stubId) return res.status(400).json({ error: 'keepId and stubId required' });
+      const keepIdx = brands.clients.findIndex(b => b.id === keepId);
+      const stubIdx = brands.clients.findIndex(b => b.id === stubId);
+      if (keepIdx === -1) return res.status(404).json({ error: 'keep brand not found' });
+      if (stubIdx === -1) return res.status(404).json({ error: 'stub brand not found' });
+      const stub = brands.clients[stubIdx];
+      const keep = brands.clients[keepIdx];
+      // Copy over fields that stub has but keeper doesn't (or that stub has fresher data for)
+      const copyFields = [
+        'tiktokShopToken', 'tiktokConnected', 'shopId',
+        'passwordHash', 'storistaApiKey', 'storistaConnected', 'storistaQueue',
+        'bufferToken', 'bufferConnected', 'arcadsClientId', 'arcadsApiKey', 'arcadsConnected',
+        'contentAssets', 'logoUrl', 'brandColor', 'cachedNetGmv', 'cachedGmvAt', 'stripeCustomerId',
+        'lastInvoiceId', 'lastInvoiceUrl', 'lastInvoicedAt',
+      ];
+      for (const f of copyFields) {
+        if (stub[f] !== undefined && stub[f] !== null && stub[f] !== '') {
+          keep[f] = stub[f];
+        }
+      }
+      // Remove the stub
+      brands.clients.splice(stubIdx, 1);
+      saveBrands(brands);
+      return res.json({ ok: true, merged: keep.name, deleted: stub.name });
+    }
+    // Delete a brand by id
+    if (action === 'delete-brand') {
+      const { brandId } = payload;
+      if (!brandId) return res.status(400).json({ error: 'brandId required' });
+      const idx = brands.clients.findIndex(b => b.id === brandId);
+      if (idx === -1) return res.status(404).json({ error: 'brand not found' });
+      const name = brands.clients[idx].name;
+      brands.clients.splice(idx, 1);
+      saveBrands(brands);
+      return res.json({ ok: true, deleted: name });
     }
     res.status(400).json({ error: `unknown action: ${action}` });
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -2037,8 +5338,9 @@ app.get('/api/tiktokshop/callback', async (req, res) => {
   if (!authCode) return res.status(400).send('Missing auth_code');
 
   let brandId = null;
+  let stateObj = null;
   if (state) {
-    try { brandId = JSON.parse(Buffer.from(state, 'base64').toString()).brandId; } catch (_) {}
+    try { stateObj = JSON.parse(Buffer.from(state, 'base64').toString()); brandId = stateObj.brandId || null; } catch (_) {}
   }
 
   const appKey    = process.env.TIKTOK_SHOP_APP_KEY;
@@ -2050,14 +5352,63 @@ app.get('/api/tiktokshop/callback', async (req, res) => {
     if (data?.code !== 0 || !data?.data?.access_token) {
       return res.status(500).json({ error: 'Token exchange failed', raw: data });
     }
+    // TikTok returns access_token_expire_in as an absolute Unix timestamp (seconds), not a duration
+    const expireVal = data.data.access_token_expire_in;
+    const expiresAt = (() => {
+      // TikTok access_token_expire_in is an ABSOLUTE Unix timestamp.
+      // Distinguish ms-epoch (>1e12), seconds-epoch (1e9..1e12 -> *1000), or a raw duration in seconds (<1e9 -> now + dur*1000).
+      const v = Number(expireVal) || 0;
+      if (v > 1e12) return v;                       // already milliseconds
+      if (v > 1e9)  return v * 1000;                // seconds-epoch -> ms
+      return Date.now() + (v || 86400) * 1000;      // raw duration in seconds
+    })();
     const tokenData = {
       access_token:  data.data.access_token,
       refresh_token: data.data.refresh_token,
-      expires_at:    Date.now() + (data.data.access_token_expire_in || 86400) * 1000,
+      expires_at:    expiresAt,
       open_id:       data.data.open_id,
     };
-    // Fetch shop info
-    let shopName = 'Unknown';
+
+    // ── Creator signup flow — state has { type:'creator', token, brandSlug } ──
+    if (stateObj?.type === 'creator' && stateObj?.token) {
+      const pending = pendingCreatorSignups.get(stateObj.token);
+      pendingCreatorSignups.delete(stateObj.token);
+      if (!pending) {
+        return res.send(`<html><body style="font-family:sans-serif;padding:40px;background:#12101a;color:#e2e8f0;text-align:center">
+          <h2 style="color:#ff5b5b">Session expired</h2>
+          <p>Please go back and fill out the form again.</p>
+          <p><a href="/creators/${stateObj.brandSlug || ''}" style="color:#00f2ea">← Back</a></p>
+        </body></html>`);
+      }
+      // Complete creator signup with the resolved open_id
+      const formData = { ...pending.formData, tiktokOpenId: tokenData.open_id };
+      console.log(`[creator-signup] TikTok OAuth completed for @${formData.tiktokHandle}, open_id=${tokenData.open_id}`);
+      // Run the full submit pipeline (fire-and-forget)
+      try {
+        const fakeReq = { body: formData };
+        // Reuse the same logic as /api/creator-pages/submit — call the pipeline directly
+        const brands = loadBrands();
+        const brand  = (brands.clients || []).find(b => b.creatorPage?.slug === pending.brandSlug);
+        const handle = (formData.tiktokHandle || '').replace(/^@/, '').trim();
+        if (brand && handle) {
+          const brandIdx = brands.clients.findIndex(b => b.id === brand.id);
+          // Fire TC invite with open_id — will use Path A (direct, instant)
+          sendCreatorTC(brand, brands, brandIdx, handle, tokenData.open_id).catch(e =>
+            console.error('[creator-signup] TC error:', e.message)
+          );
+        }
+        // Also run full onboarding pipeline (GHL, Discord, etc.)
+        runOnboardingPipeline(formData).catch(e => console.error('[creator-signup] pipeline error:', e.message));
+      } catch(e) {
+        console.error('[creator-signup] error:', e.message);
+      }
+      const welcomeUrl = `/creators/${pending.brandSlug}/welcome?handle=${encodeURIComponent(formData.tiktokHandle || '')}`;
+      return res.redirect(welcomeUrl);
+    }
+
+    // Fetch shop info (for brand/seller OAuth — not creator flow)
+    // Attempt to fetch shop cipher — best-effort, non-blocking
+    let shopName = 'TikTok Shop';
     try {
       const allParams = { app_key: appKey, timestamp: Math.floor(Date.now() / 1000) };
       allParams.sign = signTTShop('/authorization/202309/shops', allParams, '');
@@ -2072,8 +5423,13 @@ app.get('/api/tiktokshop/callback', async (req, res) => {
         tokenData.shop_name   = shop.name;
         tokenData.shop_region = shop.region;
         shopName = shop.name;
+        console.log(`[tiktokshop] shop cipher fetched: ${shopName}`);
+      } else {
+        console.warn('[tiktokshop] shop fetch returned no shops:', JSON.stringify(shopRes.data));
       }
-    } catch (e) { console.warn('[tiktokshop] shop cipher fetch failed:', e.message); }
+    } catch (e) {
+      console.warn('[tiktokshop] shop cipher fetch failed (non-fatal):', e.response?.data?.message || e.message);
+    }
 
     if (brandId) {
       const brands = loadBrands();
@@ -2107,11 +5463,17 @@ app.get('/api/client/storista/accounts', requireClientSession, async (req, res) 
     const brands = loadBrands();
     const brand = brands.clients.find(b => b.id === req.session.clientBrandId);
     const apiKey = brand?.storistaApiKey || process.env.STORISTA_API_KEY;
-    if (!apiKey) return res.json({ ok: true, accounts: [] });
+    if (!apiKey) return res.json({ ok: false, error: 'No Storista API key found for this brand', accounts: [] });
     const { data } = await axios.get('https://api-v2.storista.io/v1/tiktok/accounts',
       { headers: { Authorization: `Bearer ${apiKey}` } });
-    res.json({ ok: true, accounts: data?.accounts || data || [] });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+    console.log('[storista] accounts raw response:', JSON.stringify(data).slice(0, 300));
+    // Handle various response shapes from Storista
+    const accounts = data?.creator_accounts || data?.accounts || data?.data?.accounts || data?.data || (Array.isArray(data) ? data : []);
+    res.json({ ok: true, accounts, _raw: data });
+  } catch(e) {
+    console.error('[storista] accounts error:', e.response?.status, JSON.stringify(e.response?.data).slice(0,200), e.message);
+    res.status(e.response?.status || 500).json({ error: e.response?.data || e.message, accounts: [] });
+  }
 });
 
 // GET /api/client/storista/products/:account
@@ -2121,10 +5483,654 @@ app.get('/api/client/storista/products/:account', requireClientSession, async (r
     const brand = brands.clients.find(b => b.id === req.session.clientBrandId);
     const apiKey = brand?.storistaApiKey || process.env.STORISTA_API_KEY;
     if (!apiKey) return res.json({ ok: true, products: [] });
-    const { data } = await axios.get(`https://api-v2.storista.io/v1/tiktok/${req.params.account}/products`,
+    const { data } = await axios.get(`https://api-v2.storista.io/v1/tiktok/accounts/${req.params.account}/products`,
       { headers: { Authorization: `Bearer ${apiKey}` } });
-    res.json({ ok: true, products: data?.products || data || [] });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+    console.log('[storista] products raw response keys:', Object.keys(data || {}).join(', '));
+    const products = data?.products || data?.creator_products || data?.items || data?.data?.products || data?.data || (Array.isArray(data) ? data : []);
+    res.json({ ok: true, products, _rawKeys: Object.keys(data || {}) });
+  } catch(e) {
+    console.error('[storista] products error:', e.response?.status, e.message);
+    res.status(500).json({ error: e.message, products: [] });
+  }
+});
+
+// GET /api/client/storista/debug — list Storista media and TikTok videos for this brand
+app.get('/api/client/storista/debug', requireClientSession, async (req, res) => {
+  const brands = loadBrands();
+  const brand  = brands.clients.find(b => b.id === req.session.clientBrandId);
+  const apiKey = brand?.storistaApiKey;
+  if (!apiKey) return res.status(400).json({ error: 'No Storista API key' });
+  const headers = { Authorization: `Bearer ${apiKey}`, Accept: 'application/json' };
+  try {
+    const [mediaRes, videosRes] = await Promise.all([
+      axios.get('https://api-v2.storista.io/v1/media/', { headers, timeout: 15_000 }),
+      axios.get(`https://api-v2.storista.io/v1/tiktok/accounts/trustedrituals/videos`, { headers, timeout: 15_000 }),
+    ]);
+    res.json({ media: mediaRes.data, videos: videosRes.data });
+  } catch (e) {
+    res.json({ error: e.message, status: e.response?.status, data: e.response?.data });
+  }
+});
+
+// GET /api/client/storista/queue — get the brand's scheduled video queue
+app.get('/api/client/storista/queue', requireClientSession, (req, res) => {
+  const brands = loadBrands();
+  const brand  = brands.clients.find(b => b.id === req.session.clientBrandId);
+  const queue  = (brand?.storistaQueue || []).sort((a, b) => new Date(a.scheduledFor) - new Date(b.scheduledFor));
+  res.json({ ok: true, queue });
+});
+
+// POST /api/client/storista/schedule — bulk-add jobs to the queue
+// Accepts optional bufferChannels: [{id, service}] to also schedule to Buffer.
+app.post('/api/client/storista/schedule', requireClientSession, async (req, res) => {
+  const { items, bufferChannels = [] } = req.body;
+  if (!Array.isArray(items) || !items.length) return res.status(400).json({ error: 'items array required' });
+
+  const brands = loadBrands();
+  const bi = brands.clients.findIndex(b => b.id === req.session.clientBrandId);
+  if (bi === -1) return res.status(404).json({ error: 'Brand not found' });
+  const brand = brands.clients[bi];
+  if (!brand.storistaApiKey) return res.status(400).json({ error: 'Storista not connected' });
+
+  if (!brand.storistaQueue) brand.storistaQueue = [];
+  const jobs = items.map(item => ({
+    id:           crypto.randomUUID(),
+    mediaId:      item.mediaId,
+    filename:     item.filename || 'video.mp4',
+    account:      item.account,
+    productId:    item.productId || '',
+    caption:      item.caption  || '',
+    scheduledFor: item.scheduledFor,
+    uploadUrl:    item.uploadUrl || null,
+    status:       'scheduled',
+    createdAt:    new Date().toISOString(),
+    publishedAt:  null,
+    error:        null,
+  }));
+  brand.storistaQueue.push(...jobs);
+  saveBrands(brands);
+
+  // Cross-post to Buffer if channels were selected
+  if (bufferChannels.length && process.env.BUFFER_ACCESS_TOKEN) {
+    const token = process.env.BUFFER_ACCESS_TOKEN;
+    const GQL_MUTATION = `mutation CreatePost($input: CreatePostInput!) { createPost(input: $input) { ... on PostActionSuccess { post { id dueAt } } ... on InvalidInputError { message } ... on UnexpectedError { message } } }`;
+    for (const job of jobs) {
+      for (const ch of bufferChannels) {
+        try {
+          const input = buildBufferInput(ch.id, ch.service, job.caption, job.uploadUrl, job.scheduledFor);
+          const { data: gql } = await axios.post(
+            'https://api.buffer.com/graphql',
+            { query: GQL_MUTATION, variables: { input } },
+            { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, timeout: 15_000 }
+          );
+          const result = gql.data?.createPost;
+          if (result?.message) console.error(`[buffer] "${job.filename}" → ${ch.id}: ${result.message}`);
+          else console.log(`[buffer] scheduled "${job.filename}" for channel ${ch.id}`);
+        } catch(e) {
+          console.error(`[buffer] failed "${job.filename}" → ${ch.id}:`, e.response?.data || e.message);
+        }
+      }
+    }
+  }
+
+  res.json({ ok: true, jobs });
+});
+
+// DELETE /api/client/storista/queue/:jobId — remove a scheduled job
+app.delete('/api/client/storista/queue/:jobId', requireClientSession, (req, res) => {
+  const brands = loadBrands();
+  const bi = brands.clients.findIndex(b => b.id === req.session.clientBrandId);
+  if (bi === -1) return res.status(404).json({ error: 'Brand not found' });
+  const brand = brands.clients[bi];
+  brand.storistaQueue = (brand.storistaQueue || []).filter(j => j.id !== req.params.jobId);
+  saveBrands(brands);
+  res.json({ ok: true });
+});
+
+// GET /api/admin/brands-list — list brand IDs + names + connection status
+app.get('/api/admin/brands-list', (req, res) => {
+  const secret = process.env.ADMIN_BATCH_SECRET || 'cult-batch-2026';
+  if (req.headers['x-admin-secret'] !== secret) return res.status(401).json({ error: 'Unauthorized' });
+  const brands = loadBrands();
+  const now = Date.now();
+  res.json({ brands: (brands.clients || []).map(b => {
+    const tok = b.tiktokShopToken;
+    const hasToken   = !!(tok?.access_token);
+    const hasCipher  = !!(tok?.shop_cipher);
+    const expired    = tok?.expires_at ? tok.expires_at < now : false;
+    const tiktokStatus = !hasToken ? 'not_connected'
+                       : expired   ? 'expired'
+                       : !hasCipher ? 'missing_cipher'
+                       : 'ok';
+    return {
+      id: b.id, name: b.name,
+      loginEmail: b.loginEmail || b.email || null,
+      hasPassword: !!b.passwordHash,
+      tiktokStatus,
+      hasToken, hasCipher, expired,
+      expiresAt: tok?.expires_at ? new Date(tok.expires_at).toISOString() : null,
+    };
+  })});
+});
+
+// GET /api/admin/brand-products/:id — fetch TikTok Shop products for a brand (admin only, one-shot debug)
+app.get('/api/admin/brand-products/:id', async (req, res) => {
+  const secret = process.env.ADMIN_BATCH_SECRET || 'cult-batch-2026';
+  if (req.headers['x-admin-secret'] !== secret) return res.status(401).json({ error: 'Unauthorized' });
+  const brands = loadBrands();
+  const bi = (brands.clients || []).findIndex(b => b.id === req.params.id);
+  if (bi === -1) return res.status(404).json({ error: 'Brand not found' });
+  try {
+    const data = await ttsBrandPost(brands.clients[bi], brands, bi, '/product/202309/products/search', {}, { page_size: 20 });
+    res.json({ products: (data?.data?.products || []).map(p => ({ id: p.id, title: p.title, status: p.status })) });
+  } catch(e) { res.status(500).json({ error: e.response?.data || e.message }); }
+});
+
+// GET /api/admin/brand-refresh-token/:id — force TikTok Shop token refresh + report state (secret-gated debug)
+app.get('/api/admin/brand-refresh-token/:id', async (req, res) => {
+  const secret = process.env.ADMIN_BATCH_SECRET || 'cult-batch-2026';
+  if (req.headers['x-admin-secret'] !== secret) return res.status(401).json({ error: 'Unauthorized' });
+  const brands = loadBrands();
+  const bi = (brands.clients || []).findIndex(b => b.id === req.params.id);
+  if (bi === -1) return res.status(404).json({ error: 'Brand not found' });
+  const b = brands.clients[bi];
+  const t = b.tiktokShopToken || {};
+  const before = {
+    has_access_token: !!t.access_token,
+    has_refresh_token: !!t.refresh_token,
+    expires_at: t.expires_at || null,
+    expired: t.expires_at ? (Date.now() > t.expires_at) : null,
+  };
+  let ok = false, err = null;
+  try { ok = await refreshBrandShopToken(b, brands, bi); } catch (e) { err = e.message; }
+  const t2 = (brands.clients[bi].tiktokShopToken) || {};
+  const after = {
+    has_access_token: !!t2.access_token,
+    expires_at: t2.expires_at || null,
+    expired: t2.expires_at ? (Date.now() > t2.expires_at) : null,
+  };
+  res.json({ ok, err, before, after });
+});
+
+// GET /api/admin/brand-debug/:id — show brand storista key prefix for debugging
+app.get('/api/admin/brand-debug/:id', (req, res) => {
+  const secret = process.env.ADMIN_BATCH_SECRET || 'cult-batch-2026';
+  if (req.headers['x-admin-secret'] !== secret) return res.status(401).json({ error: 'Unauthorized' });
+  const brands = loadBrands();
+  const brand = (brands.clients || []).find(b => b.id === req.params.id);
+  if (!brand) return res.status(404).json({ error: 'Brand not found' });
+  const globalKey = process.env.STORISTA_API_KEY || '';
+  const brandKey  = brand.storistaApiKey || '';
+  res.json({
+    id:              brand.id,
+    name:            brand.name,
+    storistaConnected: !!brand.storistaConnected,
+    storistaApiKey:  brandKey || null,  // full key — endpoint is admin-secret gated
+    brandKeyPrefix:  brandKey  ? brandKey.slice(0, 8) + '...' : '(none)',
+    globalKeyPrefix: globalKey ? globalKey.slice(0, 8) + '...' : '(none)',
+    keysMatch:       brandKey === globalKey,
+    queueLength:     (brand.storistaQueue || []).length,
+    queueStatuses:   (brand.storistaQueue || []).reduce((acc, j) => { acc[j.status] = (acc[j.status]||0)+1; return acc; }, {}),
+  });
+});
+
+// POST /api/admin/storista/batch-inject — inject pre-built jobs into a brand's queue
+// Auth: X-Admin-Secret header matching ADMIN_BATCH_SECRET env var
+app.post('/api/admin/storista/batch-inject', express.json({ limit: '10mb' }), (req, res) => {
+  const secret = process.env.ADMIN_BATCH_SECRET || 'cult-batch-2026';
+  if (req.headers['x-admin-secret'] !== secret) return res.status(401).json({ error: 'Unauthorized' });
+  const { brandId, jobs } = req.body || {};
+  if (!brandId || !Array.isArray(jobs)) return res.status(400).json({ error: 'brandId and jobs[] required' });
+  const brands = loadBrands();
+  const bi = brands.clients.findIndex(b => b.id === brandId);
+  if (bi === -1) return res.status(404).json({ error: 'Brand not found' });
+  if (!brands.clients[bi].storistaQueue) brands.clients[bi].storistaQueue = [];
+  brands.clients[bi].storistaQueue.push(...jobs);
+  saveBrands(brands);
+  console.log(`[batch-inject] Added ${jobs.length} jobs to ${brands.clients[bi].name}`);
+  res.json({ ok: true, added: jobs.length });
+});
+
+// GET /api/admin/storista/queue/:brandId — list all jobs in brand's queue
+app.get('/api/admin/storista/queue/:brandId', (req, res) => {
+  const secret = process.env.ADMIN_BATCH_SECRET || 'cult-batch-2026';
+  if (req.headers['x-admin-secret'] !== secret) return res.status(401).json({ error: 'Unauthorized' });
+  const brands = loadBrands();
+  const brand = (brands.clients || []).find(b => b.id === req.params.brandId);
+  if (!brand) return res.status(404).json({ error: 'Brand not found' });
+  const queue = (brand.storistaQueue || []).map(j => ({
+    id: j.id, filename: j.filename, mediaId: j.mediaId,
+    caption: j.caption || '', productId: j.productId || '', account: j.account || '',
+    status: j.status, scheduledFor: j.scheduledFor, retries: j.retries,
+    tiktokVideoId: j.tiktokVideoId || null, publishedAt: j.publishedAt || null,
+    error: j.error || null,
+  }));
+  res.json({ brandId: brand.id, name: brand.name, total: queue.length, queue });
+});
+
+// PATCH /api/admin/storista/queue-reset-stuck/:brandId — reset 'processing' jobs back to 'scheduled'
+app.patch('/api/admin/storista/queue-reset-stuck/:brandId', (req, res) => {
+  const secret = process.env.ADMIN_BATCH_SECRET || 'cult-batch-2026';
+  if (req.headers['x-admin-secret'] !== secret) return res.status(401).json({ error: 'Unauthorized' });
+  const brands = loadBrands();
+  const bi = brands.clients.findIndex(b => b.id === req.params.brandId);
+  if (bi === -1) return res.status(404).json({ error: 'Brand not found' });
+  let reset = 0;
+  for (const job of (brands.clients[bi].storistaQueue || [])) {
+    if (job.status === 'processing') { job.status = 'scheduled'; reset++; }
+  }
+  saveBrands(brands);
+  res.json({ ok: true, reset });
+});
+
+// DELETE /api/admin/storista/queue-clear/:brandId — remove all jobs matching a media ID prefix or status
+app.delete('/api/admin/storista/queue-clear/:brandId', express.json(), (req, res) => {
+  const secret = process.env.ADMIN_BATCH_SECRET || 'cult-batch-2026';
+  if (req.headers['x-admin-secret'] !== secret) return res.status(401).json({ error: 'Unauthorized' });
+  const brands = loadBrands();
+  const bi = brands.clients.findIndex(b => b.id === req.params.brandId);
+  if (bi === -1) return res.status(404).json({ error: 'Brand not found' });
+  const { mediaIds, statuses, keepScheduled } = req.body || {};
+  const before = (brands.clients[bi].storistaQueue || []).length;
+  brands.clients[bi].storistaQueue = (brands.clients[bi].storistaQueue || []).filter(j => {
+    if (mediaIds && mediaIds.includes(String(j.mediaId))) return false;
+    if (statuses && statuses.includes(j.status)) return false;
+    if (keepScheduled === false && j.status === 'scheduled') return false;
+    return true;
+  });
+  const after = (brands.clients[bi].storistaQueue || []).length;
+  saveBrands(brands);
+  console.log(`[queue-clear] Removed ${before - after} jobs from ${brands.clients[bi].name}`);
+  res.json({ ok: true, removed: before - after, remaining: after });
+});
+
+// POST /api/admin/storista/sync-processing/:brandId — re-check all 'processing' jobs against Storista
+app.post('/api/admin/storista/sync-processing/:brandId', async (req, res) => {
+  const secret = process.env.ADMIN_BATCH_SECRET || 'cult-batch-2026';
+  if (req.headers['x-admin-secret'] !== secret) return res.status(401).json({ error: 'Unauthorized' });
+  const brands = loadBrands();
+  const brand = (brands.clients || []).find(b => b.id === req.params.brandId);
+  if (!brand) return res.status(404).json({ error: 'Brand not found' });
+  if (!brand.storistaApiKey) return res.status(400).json({ error: 'No Storista API key for brand' });
+  const pending = (brand.storistaQueue || []).filter(j => j.status === 'processing' && j.tiktokVideoId);
+  if (!pending.length) return res.json({ ok: true, checked: 0, results: [] });
+  const authHeader = `Bearer ${brand.storistaApiKey}`;
+  const sGet = (p) => axios.get(`${STORISTA_BASE}${p}`, {
+    headers: { Authorization: authHeader, Accept: 'application/json' },
+    timeout: 15_000,
+  });
+  const results = [];
+  for (const job of pending) {
+    try {
+      const { data: st } = await sGet(`/v1/tiktok/accounts/${job.account}/videos/${job.tiktokVideoId}`);
+      const prev = job.status;
+      if (st.status === 'READY' || st.status === 'PUBLISHED') {
+        job.status = 'published';
+        job.publishedAt = job.publishedAt || new Date().toISOString();
+      } else if (st.status === 'REJECTED') {
+        job.status = 'failed';
+        job.error = st.reject_reason || 'Rejected by TikTok';
+      }
+      results.push({ id: job.id, filename: job.filename, tiktokVideoId: job.tiktokVideoId, storistaStatus: st.status, prev, now: job.status });
+    } catch (e) {
+      results.push({ id: job.id, filename: job.filename, tiktokVideoId: job.tiktokVideoId, error: e.message });
+    }
+  }
+  saveBrands(brands);
+  res.json({ ok: true, checked: pending.length, results });
+});
+
+// GET /api/admin/shop-metrics/:brandId — WoW GMV + order metrics for admin portal
+// Returns this week vs last week for GMV, orders, and AOV
+app.get('/api/admin/shop-metrics/:brandId', async (req, res) => {
+  const secret = process.env.ADMIN_BATCH_SECRET || 'cult-batch-2026';
+  if (req.headers['x-admin-secret'] !== secret) return res.status(401).json({ error: 'Unauthorized' });
+  const brands = loadBrands();
+  const bi = (brands.clients || []).findIndex(b => b.id === req.params.brandId);
+  if (bi === -1) return res.status(404).json({ error: 'Brand not found' });
+  const brand = brands.clients[bi];
+  if (!brand.tiktokShopToken?.access_token) return res.json({ ok: true, noToken: true });
+
+  const CANCEL_STATUSES = new Set([140, 4, 'CANCELLED', 'CANCEL', 'REFUNDED', 'REFUND', 'REVERSE_PENDING', 'REVERSE_COMPLETE']);
+
+  async function fetchWeekMetrics(startTs, endTs) {
+    let gmv = 0, orders = 0, pageToken = null;
+    for (let page = 0; page < 10; page++) {
+      const body = { create_time_ge: startTs, create_time_lt: endTs, sort_field: 'create_time', sort_order: 'DESC' };
+      if (pageToken) body.page_token = pageToken;
+      try {
+        const resp = await ttsBrandPost(brand, brands, bi, '/order/202309/orders/search', body, { page_size: 100 });
+        const list = resp?.data?.orders || resp?.data?.order_list || [];
+        for (const o of list) {
+          if (o.is_sample_order) continue;
+          const status = o.order_status ?? o.status;
+          if (status !== undefined && CANCEL_STATUSES.has(status)) continue;
+          orders++;
+          // Extract amount
+          const payment = o.payment || {};
+          const amt = parseFloat(payment.sub_total ?? payment.original_total_product_price ?? payment.total_amount ?? 0) || 0;
+          const discount = parseFloat(payment.seller_discount ?? payment.platform_discount ?? 0) || 0;
+          gmv += amt > 0 ? amt : 0;
+        }
+        const nextToken = resp?.data?.next_page_token || resp?.data?.page_token;
+        if (!nextToken || list.length === 0) break;
+        pageToken = nextToken;
+      } catch(e) {
+        if (e.response?.status === 401) throw e;
+        break;
+      }
+    }
+    return { gmv, orders, aov: orders > 0 ? gmv / orders : 0 };
+  }
+
+  try {
+    const now   = Math.floor(Date.now() / 1000);
+    const week1 = now - 7 * 86400;   // start of this week
+    const week2 = week1 - 7 * 86400; // start of last week
+
+    const [thisWeek, lastWeek] = await Promise.all([
+      fetchWeekMetrics(week1, now),
+      fetchWeekMetrics(week2, week1),
+    ]);
+
+    function trend(curr, prev) {
+      if (!prev || prev === 0) return curr > 0 ? { dir: 'up', pct: null } : { dir: 'flat', pct: null };
+      const pct = ((curr - prev) / prev) * 100;
+      return { dir: pct > 1 ? 'up' : pct < -1 ? 'down' : 'flat', pct: Math.round(Math.abs(pct)) };
+    }
+
+    res.json({
+      ok: true,
+      thisWeek,
+      lastWeek,
+      trends: {
+        gmv:    trend(thisWeek.gmv,    lastWeek.gmv),
+        orders: trend(thisWeek.orders, lastWeek.orders),
+        aov:    trend(thisWeek.aov,    lastWeek.aov),
+      },
+      analyticsUnavailable: true, // CTR / impressions / score require Analytics API product
+    });
+  } catch(e) {
+    res.json({ ok: false, error: e.message });
+  }
+});
+
+// GET /api/admin/shop-metrics-probe/:brandId — probe TikTok Shop analytics endpoints
+// Tests correct paths discovered from TikTok API Testing Tool:
+//   /analytics/202509/shop/performance  params: start_date_ge, end_date_lt (YYYY-MM-DD)
+app.get('/api/admin/shop-metrics-probe/:brandId', async (req, res) => {
+  const secret = process.env.ADMIN_BATCH_SECRET || 'cult-batch-2026';
+  if (req.headers['x-admin-secret'] !== secret) return res.status(401).json({ error: 'Unauthorized' });
+  const brands = loadBrands();
+  const bi = (brands.clients || []).findIndex(b => b.id === req.params.brandId);
+  if (bi === -1) return res.status(404).json({ error: 'Brand not found' });
+  const brand = brands.clients[bi];
+  if (!brand.tiktokShopToken?.access_token) return res.status(400).json({ error: 'No TikTok token' });
+
+  const results = {};
+  const now = Math.floor(Date.now() / 1000);
+  const ds = (ts) => new Date(ts * 1000).toISOString().slice(0,10); // YYYY-MM-DD (TikTok requires dashes)
+  const today  = ds(now);
+  const week1S = ds(now - 7 * 86400);
+  const week2S = ds(now - 14 * 86400);
+
+  // Confirmed: Path /analytics/202509/shop/performance, Version 202509
+  // Params: start_date_ge + end_date_lt as YYYY-MM-DD (regex ^2[0-9]{3}-[0,1][0-9]-[0-3][0-9]$)
+  const thisWkParams  = { start_date_ge: week1S, end_date_lt: today };
+  const lastWkParams  = { start_date_ge: week2S, end_date_lt: week1S };
+
+  const p202605 = { ...thisWkParams, page_size: 10 };
+  const noDate  = {};
+  const endpoints = [
+    // Shop performance (confirmed working, v202509)
+    ['GET', '/analytics/202509/shop/performance',                  thisWkParams],
+    // Product performance (confirmed)
+    ['GET', '/analytics/202605/shop_products/performance',         p202605],
+    // Video performance (confirmed)
+    ['GET', '/analytics/202605/shop_videos/performance',           p202605],
+    // Shop performance SCORE — probe various likely paths/versions
+    ['GET', '/analytics/202509/shop/score',                        thisWkParams],
+    ['GET', '/analytics/202605/shop/score',                        thisWkParams],
+    ['GET', '/analytics/202509/shop/health',                       noDate],
+    ['GET', '/analytics/202605/shop/health',                       noDate],
+    ['GET', '/seller/202309/shop',                                 noDate],
+    ['GET', '/seller/202309/seller_performance',                   noDate],
+    ['GET', '/seller/202309/performance',                          thisWkParams],
+    ['GET', '/supply_chain/202309/shop_score',                     noDate],
+    ['GET', '/seller_score/202309/shop_score',                     noDate],
+    ['GET', '/analytics/202509/shop/performance_score',            thisWkParams],
+    ['GET', '/analytics/202605/shop/performance_score',            thisWkParams],
+    ['GET', '/analytics/202509/seller/performance',                thisWkParams],
+    ['GET', '/analytics/202605/seller/performance',                thisWkParams],
+  ];
+
+  for (const [method, path, params] of endpoints) {
+    const key = `${method} ${path} ${JSON.stringify(params)}`;
+    try {
+      const r = await ttsBrandGet(brand, brands, bi, path, params);
+      results[key] = { ok: true, data: r.data };
+    } catch(e) {
+      results[key] = { error: e.response?.status, code: e.response?.data?.code, msg: e.response?.data?.message, raw: e.response?.data };
+    }
+  }
+
+  res.json(results);
+});
+
+// POST /api/client/storista/queue/:jobId/retry — reset a failed job to scheduled
+app.post('/api/client/storista/queue/:jobId/retry', requireClientSession, (req, res) => {
+  const brands = loadBrands();
+  const bi = brands.clients.findIndex(b => b.id === req.session.clientBrandId);
+  if (bi === -1) return res.status(404).json({ error: 'Brand not found' });
+  const brand = brands.clients[bi];
+  const job = (brand.storistaQueue || []).find(j => j.id === req.params.jobId);
+  if (!job) return res.status(404).json({ error: 'Job not found' });
+  job.status  = 'scheduled';
+  job.retries = 0;
+  job.error   = undefined;
+  // Reset scheduledFor to now+1min so it fires on the next tick
+  job.scheduledFor = new Date(Date.now() + 60_000).toISOString();
+  saveBrands(brands);
+  res.json({ ok: true });
+});
+
+// ─── Brand Assets (Content Studio) ──────────────────────────────────────────
+
+// GET /api/client/products — TikTok Shop products for this brand (client session)
+
+app.get('/api/client/products', requireClientSession, async (req, res) => {
+  const brands = loadBrands();
+  const bi = brands.clients.findIndex(b => b.id === req.session.clientBrandId);
+  if (bi === -1) return res.status(404).json({ error: 'Brand not found' });
+  const brand = brands.clients[bi];
+  if (!brand.tiktokShopToken?.access_token) return res.json({ ok: true, products: [] });
+  try {
+    // Paginate through ALL products (page_size 50, up to 5 pages = 250 products)
+    let allRaw = [], pageToken = null;
+    for (let page = 0; page < 5; page++) {
+      const params = { page_size: 50 };
+      if (pageToken) params.page_token = pageToken;
+      const r = await ttsBrandPost(brand, brands, bi, '/product/202309/products/search', {}, params);
+      const batch = r?.data?.products || [];
+      allRaw.push(...batch);
+      pageToken = r?.data?.next_page_token;
+      if (!pageToken || batch.length === 0) break;
+    }
+
+    // Fetch images for first 30 products in parallel (the rest show in dropdown without images)
+    const detailResults = await Promise.allSettled(
+      allRaw.slice(0, 30).map(p =>
+        ttsBrandGet(brand, brands, bi, `/product/202309/products/${p.id}`)
+      )
+    );
+    const detailMap = {};
+    detailResults.forEach((r2, i) => {
+      if (r2.status === 'fulfilled') {
+        const val = r2.value;
+        if (val?.code === 0 && val?.data) detailMap[allRaw[i].id] = val.data;
+        else if (val?.main_images)        detailMap[allRaw[i].id] = val;
+      }
+    });
+
+    function extractImages(p) {
+      const detail = detailMap[p.id] || {};
+      const src = detail.main_images || detail.images || p.main_images || p.images || [];
+      return src.slice(0, 4)
+        .map(img => img?.thumb_urls?.[0] || img?.urls?.[0] || img?.url_list?.[0] || img?.url || img)
+        .filter(s => typeof s === 'string' && s.startsWith('http'));
+    }
+
+    const products = allRaw.map(p => ({
+      id:     p.id,
+      name:   p.title || p.name || 'Product',
+      images: extractImages(p),
+    }));
+    res.json({ ok: true, products });
+  } catch(e) {
+    res.json({ ok: true, products: [], error: e.response?.data?.message || e.message });
+  }
+});
+
+// GET /api/client/assets — list brand's saved content assets
+app.get('/api/client/assets', requireClientSession, (req, res) => {
+  const brands = loadBrands();
+  const bi = brands.clients.findIndex(b => b.id === req.session.clientBrandId);
+  if (bi === -1) return res.status(404).json({ error: 'Brand not found' });
+  const brand = brands.clients[bi];
+  res.json({ ok: true, assets: brand.contentAssets || [] });
+});
+
+// POST /api/client/assets/upload — upload image or video asset, tag to a product
+// Must be after imageUpload/clientUpload defs — registered via lazy multer
+app.post('/api/client/assets/upload', requireClientSession, (req, res, next) => {
+  const multerAny = require('multer')({
+    storage: require('multer').diskStorage({
+      destination: (_, __, cb) => cb(null, UPLOAD_DIR),
+      filename:    (_, file, cb) => {
+        const ext  = path.extname(file.originalname) || '';
+        const base = path.basename(file.originalname, ext).replace(/[^a-z0-9_-]/gi, '_').slice(0, 60);
+        cb(null, `${Date.now()}_${base}${ext}`);
+      },
+    }),
+    limits: { fileSize: 500 * 1024 * 1024 },
+  }).single('asset');
+  multerAny(req, res, next);
+}, (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file received' });
+  const brands = loadBrands();
+  const bi = brands.clients.findIndex(b => b.id === req.session.clientBrandId);
+  if (bi === -1) return res.status(404).json({ error: 'Brand not found' });
+  const brand = brands.clients[bi];
+  if (!brand.contentAssets) brand.contentAssets = [];
+  const isVideo = /video/i.test(req.file.mimetype) || /\.(mp4|mov|avi|webm)$/i.test(req.file.originalname);
+  const asset = {
+    id:        crypto.randomUUID(),
+    productId: req.body.productId || null,
+    name:      req.file.originalname,
+    url:       `${PUBLIC_BASE_URL}/uploads/${req.file.filename}`,
+    type:      isVideo ? 'video' : 'image',
+    createdAt: new Date().toISOString(),
+  };
+  brand.contentAssets.push(asset);
+  saveBrands(brands);
+  res.json({ ok: true, asset });
+});
+
+// DELETE /api/client/assets/:assetId
+app.delete('/api/client/assets/:assetId', requireClientSession, (req, res) => {
+  const brands = loadBrands();
+  const bi = brands.clients.findIndex(b => b.id === req.session.clientBrandId);
+  if (bi === -1) return res.status(404).json({ error: 'Brand not found' });
+  const brand = brands.clients[bi];
+  const idx = (brand.contentAssets || []).findIndex(a => a.id === req.params.assetId);
+  if (idx === -1) return res.status(404).json({ error: 'Asset not found' });
+  const asset = brand.contentAssets[idx];
+  // Delete file
+  const filePath = path.join(UPLOAD_DIR, path.basename(asset.url.split('?')[0]));
+  if (filePath.startsWith(UPLOAD_DIR)) fs.unlink(filePath, () => {});
+  brand.contentAssets.splice(idx, 1);
+  saveBrands(brands);
+  res.json({ ok: true });
+});
+
+// POST /api/client/overlay/render — FFmpeg: burn text + logo overlays into a video
+// Body: { videoUrl, overlays: [{type:'text'|'logo', text, x, y, fontSize, color, bold, url, width}] }
+app.post('/api/client/overlay/render', requireClientSession, express.json({ limit: '1mb' }), async (req, res) => {
+  const { videoUrl, overlays = [] } = req.body || {};
+  if (!videoUrl) return res.status(400).json({ error: 'videoUrl required' });
+
+  // Resolve local path from URL
+  const filename = path.basename(videoUrl.split('?')[0]);
+  const inputPath = path.join(UPLOAD_DIR, filename);
+  if (!inputPath.startsWith(UPLOAD_DIR) || !fs.existsSync(inputPath)) {
+    return res.status(400).json({ error: 'Video file not found. Upload it first.' });
+  }
+
+  const outName = `overlay_${Date.now()}_${filename}`;
+  const outPath = path.join(UPLOAD_DIR, outName);
+
+  try {
+    await new Promise((resolve, reject) => {
+      const textOverlays = overlays.filter(o => o.type === 'text');
+      const logoOverlays = overlays.filter(o => o.type === 'logo');
+
+      let cmd = ffmpeg(inputPath);
+
+      // Add logo inputs
+      logoOverlays.forEach(lo => {
+        const logoFile = path.join(UPLOAD_DIR, path.basename((lo.url || '').split('?')[0]));
+        if (fs.existsSync(logoFile)) cmd = cmd.input(logoFile);
+      });
+
+      // Build filter complex
+      const filters = [];
+      let lastOutput = '0:v';
+
+      // Logo overlays first
+      logoOverlays.forEach((lo, i) => {
+        const logoFile = path.join(UPLOAD_DIR, path.basename((lo.url || '').split('?')[0]));
+        if (!fs.existsSync(logoFile)) return;
+        const w = lo.width || 80;
+        const x = lo.x ?? 10;
+        const y = lo.y ?? 10;
+        const outLabel = `logo${i}`;
+        filters.push(`[${i + 1}:v]scale=${w}:-1[scaled${i}]`);
+        filters.push(`[${lastOutput}][scaled${i}]overlay=${x}:${y}[${outLabel}]`);
+        lastOutput = outLabel;
+      });
+
+      // Text overlays
+      textOverlays.forEach((to, i) => {
+        const text   = (to.text || '').replace(/'/g, "'\\''").replace(/:/g, '\\:');
+        const x      = to.x ?? 50;
+        const y      = to.y ?? 100;
+        const size   = to.fontSize || 36;
+        const color  = (to.color || '#ffffff').replace('#', '');
+        const bold   = to.bold ? ':bold=1' : '';
+        const shadow = 'shadowcolor=black:shadowx=2:shadowy=2';
+        const outLabel = `txt${i}`;
+        filters.push(`[${lastOutput}]drawtext=text='${text}':x=${x}:y=${y}:fontsize=${size}:fontcolor=0x${color}:${shadow}${bold}[${outLabel}]`);
+        lastOutput = outLabel;
+      });
+
+      if (filters.length) {
+        cmd = cmd.complexFilter(filters, lastOutput);
+      }
+
+      cmd
+        .outputOptions(['-c:a', 'copy'])
+        .on('error', reject)
+        .on('end', resolve)
+        .save(outPath);
+    });
+
+    const outputUrl = `${PUBLIC_BASE_URL}/uploads/${outName}`;
+    res.json({ ok: true, outputUrl, filename: outName });
+  } catch(e) {
+    console.error('[overlay/render] error:', e.message);
+    if (fs.existsSync(outPath)) fs.unlink(outPath, () => {});
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ─── Creator Onboarding (PUBLIC — called from cultcontent.cc) ────────────────
@@ -2141,7 +6147,9 @@ app.post('/api/creator-onboard', express.json(), async (req, res) => {
   res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.set('Access-Control-Allow-Headers', 'Content-Type');
 
-  const { name = '', tiktokHandle = '', email = '', phone = '', discordUsername = '' } = req.body || {};
+  const { name = '', tiktokHandle = '', email: rawEmail = '', phone = '', discordUsername = '' } = req.body || {};
+  // Normalize email so dup-check + INSERT are case/whitespace-insensitive (matches IC login lookup which lowercases)
+  const email = String(rawEmail || '').trim().toLowerCase();
   if (!name.trim() || !email.trim() || !phone.trim()) {
     return res.status(400).json({ ok: false, error: 'Name, email and phone are required.' });
   }
@@ -2156,37 +6164,78 @@ app.post('/api/creator-onboard', express.json(), async (req, res) => {
 
   const results = { ghl: null, sms: null, discord: null };
   let contactId = null;
+  const ghlHeaders = { Authorization: `Bearer ${process.env.GHL_API_KEY}`, Version: '2021-07-28', 'Content-Type': 'application/json' };
+
+  // 0 — Log submission to persistent file FIRST (before any API calls can fail)
+  try {
+    const logEntry = JSON.stringify({
+      ts: new Date().toISOString(),
+      name, tiktokHandle, email, phone: cleanPhone, discordUsername
+    }) + '\n';
+    const logPath = process.env.VOLUME_PATH
+      ? `${process.env.VOLUME_PATH}/creator-onboard-submissions.log`
+      : '/tmp/creator-onboard-submissions.log';
+    fs.appendFileSync(logPath, logEntry);
+  } catch (logErr) {
+    console.error('[creator-onboard] log write failed:', logErr.message);
+  }
+  console.log(`[creator-onboard] submission: name="${name}" email="${email}" phone="${cleanPhone}" tiktok="${tiktokHandle}"`);
 
   // 1 — Create GHL contact
   try {
     const payload = {
       firstName, lastName, email,
       phone: cleanPhone,
-      tags: ['affiliate'],
-      locationId: process.env.GHL_LOC_ID,
+      tags: ['affiliate', 'creator-community-form'],
+      locationId: process.env.GHL_LOCATION_ID || process.env.GHL_LOC_ID,
     };
     if (handle) payload.customFields = [{ key: 'tiktok_handle', field_value: `@${handle}` }];
 
-    const ghlRes = await axios.post('https://services.leadconnectorhq.com/contacts/', payload, {
-      headers: { Authorization: `Bearer ${process.env.GHL_API_KEY}`, Version: '2021-04-15', 'Content-Type': 'application/json' },
-    });
-    contactId = ghlRes.data?.contact?.id;
-    results.ghl = { ok: true, contactId };
+    try {
+      const ghlRes = await axios.post('https://services.leadconnectorhq.com/contacts/', payload, { headers: ghlHeaders });
+      contactId = ghlRes.data?.contact?.id;
+      results.ghl = { ok: true, contactId };
+    } catch (e) {
+      // GHL rejects duplicate contacts but returns the existing contactId in the error
+      const dupId = e.response?.data?.meta?.contactId;
+      if (dupId) {
+        contactId = dupId;
+        // Update phone/tags on the existing contact
+        await axios.put(`https://services.leadconnectorhq.com/contacts/${contactId}`, payload, { headers: ghlHeaders }).catch(() => {});
+        results.ghl = { ok: true, contactId, note: 'existing contact updated' };
+      } else {
+        results.ghl = { ok: false, error: e.response?.data || e.message };
+        console.error('[creator-onboard] GHL error:', e.response?.data || e.message);
+      }
+    }
   } catch (e) {
     results.ghl = { ok: false, error: e.response?.data || e.message };
     console.error('[creator-onboard] GHL error:', e.response?.data || e.message);
   }
 
-  // 2 — Send GHL SMS
+  // 2 — Send GHL SMS (upsert conversation first, then send via conversationId)
   if (contactId) {
     try {
-      await axios.post('https://services.leadconnectorhq.com/conversations/messages/outbound', {
+      const discordLink = process.env.DISCORD_INVITE_URL || 'https://discord.gg/a5WNMe8Xuu';
+      // Upsert conversation to get conversationId
+      // GHL returns a non-2xx when conversation already exists but still gives us the ID
+      let conversationId;
+      try {
+        const convoRes = await axios.post('https://services.leadconnectorhq.com/conversations/', {
+          locationId: process.env.GHL_LOCATION_ID || process.env.GHL_LOC_ID,
+          contactId,
+        }, { headers: ghlHeaders });
+        conversationId = convoRes.data?.conversationId || convoRes.data?.id;
+      } catch (ce) {
+        conversationId = ce.response?.data?.conversationId;
+        if (!conversationId) throw ce;
+      }
+      await axios.post('https://services.leadconnectorhq.com/conversations/messages', {
         type: 'SMS',
+        conversationId,
         contactId,
-        message: `Welcome to the cult ${firstName}! We are here to serve you, if you need us, just text this number. Access all of our brand opportunities here: ${CREATOR_BASE_URL}/creators`,
-      }, {
-        headers: { Authorization: `Bearer ${process.env.GHL_API_KEY}`, Version: '2021-04-15', 'Content-Type': 'application/json' },
-      });
+        message: `Welcome to the Cult Content creator community, ${firstName}! You're in 👁️‼️\n\nHere's everything you need:\n→ Discord: ${discordLink}\n→ Skool: https://www.skool.com/cult-content\n→ Brand opportunities: ${CREATOR_BASE_URL}/creators\n\nText this number anytime if you need us.`,
+      }, { headers: ghlHeaders });
       results.sms = { ok: true };
     } catch (e) {
       results.sms = { ok: false, error: e.response?.data || e.message };
@@ -2247,23 +6296,24 @@ app.post('/api/creator-onboard', express.json(), async (req, res) => {
     scheduleDiscordRetry(3); // retry up to 3 more times (5, 10, 15 min)
   }
 
-  // 4 — Lark alert
+  // 4 — Lark alert (proxied through cultcontent-server which holds the right bot credentials)
   try {
-    const larkToken = await getLarkToken();
     const discordStr = discordUsername ? `@${discordUsername.replace(/^@/,'')}` : 'not provided';
     const tiktokStr  = handle ? `@${handle}` : 'not provided';
-    await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
-      receive_id: process.env.LARK_ALERT_CHAT_ID,
-      msg_type: 'text',
-      content: JSON.stringify({ text:
-        `New Creator Signup\nName: ${name}\nTikTok: ${tiktokStr}\nEmail: ${email}\nPhone: ${phone}\nDiscord: ${discordStr}`
-      }),
-    }, { headers: { Authorization: `Bearer ${larkToken}`, 'Content-Type': 'application/json' } });
+    await axios.post(`${CFG.railwayUrl}/command`, {
+      text: `👁️‼️ New Creator Signup\nName: ${name}\nTikTok: ${tiktokStr}\nEmail: ${email}\nPhone: ${phone}\nDiscord: ${discordStr}`,
+      context: 'Creator Community',
+      source: 'cultcontent.cc/creators',
+    }, { timeout: 8000 });
   } catch(e) {
     console.error('[creator-onboard] Lark error:', e.response?.data || e.message);
   }
 
   const discordInvite = process.env.DISCORD_INVITE_URL || 'https://discord.gg/cultcontent';
+  writeCreatorSignupToBitable({
+    brand: '', creatorName: `${firstName} ${lastName}`.trim(), handle, email,
+    phone: cleanPhone, discord: discordUsername, source: 'Full Onboard'
+  }).catch(()=>{});
   res.json({ ok: true, discordInvite, results });
 });
 
@@ -2318,6 +6368,278 @@ app.get('/creator-onboarding',                 _pub('creator-onboarding.html'));
 app.get('/financials',                         _pub('financials.html'));
 app.get('/tiktok-city-tour--dream-big--dc',    _pub('tiktok-city-tour.html'));
 app.get('/sponsorship-packages--dream-big-dc', _pub('sponsorship-packages.html'));
+
+// ─── Client-portal file-upload routes (MUST be before requireAuth) ─────────────
+// These use requireClientSession (cookie-based) not CF Access, so they must be
+// registered before app.use(requireAuth) or Cloudflare Access blocks them first.
+const clientUpload = multer({
+  storage: multer.diskStorage({
+    destination: (_, __, cb) => cb(null, UPLOAD_DIR),
+    filename: (_, file, cb) => {
+      const ext  = path.extname(file.originalname) || '.mp4';
+      const base = path.basename(file.originalname, ext).replace(/[^a-z0-9_-]/gi, '_').slice(0, 60);
+      cb(null, `${Date.now()}_${base}${ext}`);
+    },
+  }),
+  limits: { fileSize: 500 * 1024 * 1024 },
+  fileFilter: (_, file, cb) => {
+    const ok = /video|mp4|mov|avi|webm/i.test(file.mimetype + file.originalname)
+            || file.mimetype === 'application/octet-stream';
+    cb(null, ok);
+  },
+});
+
+// POST /api/client/storista/upload
+app.post('/api/client/storista/upload', requireClientSession, clientUpload.single('video'), async (req, res) => {
+  const brands = loadBrands();
+  const brand  = brands.clients.find(b => b.id === req.session.clientBrandId);
+  const apiKey = brand?.storistaApiKey;
+  if (!apiKey) return res.status(400).json({ error: 'No Storista API key configured' });
+  if (!req.file) return res.status(400).json({ error: 'No video file uploaded' });
+
+  const filename  = req.file.originalname || req.file.filename;
+  const filePath  = req.file.path;
+  let tempFile    = true;
+
+  const s = axios.create({
+    baseURL: 'https://api-v2.storista.io',
+    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    timeout: 30_000,
+  });
+
+  try {
+    const stat = fs.statSync(filePath);
+
+    // Step 1 — pre-sign
+    const { data: presign } = await s.post('/v1/media/pre-sign', {
+      filename, content_type: 'video/mp4', size: stat.size,
+    });
+    console.log('[storista] presign response keys:', Object.keys(presign), JSON.stringify(presign).slice(0, 300));
+
+    const upload_id = presign.upload_id || presign.id || presign.key || presign.media_id;
+    const upload_url = presign.upload_url || presign.url || presign.presigned_url;
+    if (!upload_url) throw new Error(`Presign missing upload_url — got: ${JSON.stringify(presign)}`);
+
+    // Step 2 — PUT to S3
+    const fileBuffer = fs.readFileSync(filePath);
+    console.log(`[storista] uploading ${Math.round(stat.size / 1024 / 1024)}MB to S3 upload_id=${upload_id}`);
+    const s3Res = await axios.put(upload_url, fileBuffer, {
+      headers: { 'Content-Type': 'video/mp4', 'Content-Length': stat.size, 'x-amz-content-sha256': 'UNSIGNED-PAYLOAD' },
+      maxBodyLength: Infinity, maxContentLength: Infinity, timeout: 300_000,
+    });
+    console.log('[storista] S3 PUT status:', s3Res.status, s3Res.statusText);
+
+    // Step 3 — create media record; body is flat (no data wrapper), returns { id: integer, ... }
+    const { data: media } = await s.post('/v1/media/', { upload_id, name: filename });
+    console.log('[storista] media created full response:', JSON.stringify(media).slice(0, 400));
+
+    // Step 4 — verify media is accessible (quick GET to confirm Storista accepted it)
+    await new Promise(r => setTimeout(r, 2000));
+    try {
+      const { data: verify } = await axios.get(`https://api-v2.storista.io/v1/media/${media.id}`, {
+        headers: { Authorization: `Bearer ${apiKey}`, Accept: 'application/json' },
+        timeout: 10_000,
+      });
+      console.log('[storista] media verify GET:', JSON.stringify(verify).slice(0, 300));
+    } catch (verErr) {
+      console.warn('[storista] media verify FAILED (may still be processing):', verErr.response?.status, JSON.stringify(verErr.response?.data));
+    }
+
+    // Keep the file in UPLOAD_DIR so Buffer can reference it for cross-posting.
+    // A periodic cleanup in the scheduler removes videos older than 7 days.
+    const uploadUrl = `${PUBLIC_BASE_URL}/uploads/${req.file.filename}`;
+    res.json({ ok: true, media_id: media.id, filename, uploadUrl });
+  } catch (e) {
+    if (tempFile && filePath && fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    const errDetail = e.response?.data;
+    const errMsg    = errDetail
+      ? (typeof errDetail === 'string' ? errDetail : JSON.stringify(errDetail))
+      : e.message;
+    console.error('[storista] client upload error:', errMsg);
+    res.status(e.response?.status || 500).json({ error: errMsg });
+  }
+});
+
+// POST /api/client/storista/generate-caption
+// Video file → Whisper (MP4 native, no ffmpeg) → Claude Haiku → TikTok caption
+app.post('/api/client/storista/generate-caption', requireClientSession, clientUpload.single('video'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ ok: false, error: 'Video file required' });
+
+  const OPENAI_KEY    = process.env.OPENAI_API_KEY;
+  const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
+  if (!OPENAI_KEY) {
+    try { fs.unlinkSync(req.file.path); } catch(_) {}
+    return res.status(500).json({ ok: false, error: 'OPENAI_API_KEY not configured' });
+  }
+
+  const brands    = loadBrands();
+  const brand     = brands.clients.find(b => b.id === req.session.clientBrandId);
+  const videoPath = req.file.path;
+  const audioPath = videoPath.replace(/\.[^.]+$/, '') + '_audio.mp3';
+
+  try {
+    // Extract audio via ffmpeg — caps at 90 s, 64kbps mono → typically < 1 MB even for large videos
+    await new Promise((resolve, reject) => {
+      ffmpeg(videoPath)
+        .noVideo().audioChannels(1).audioBitrate('64k').format('mp3')
+        .outputOptions(['-t', '90'])
+        .on('error', reject).on('end', resolve).save(audioPath);
+    });
+
+    const FormData = require('form-data');
+    const fd = new FormData();
+    fd.append('file', fs.createReadStream(audioPath), { filename: 'audio.mp3', contentType: 'audio/mpeg' });
+    fd.append('model', 'whisper-1');
+    const whisperRes = await axios.post('https://api.openai.com/v1/audio/transcriptions', fd, {
+      headers: { ...fd.getHeaders(), Authorization: `Bearer ${OPENAI_KEY}` },
+      timeout: 120_000,
+    });
+    const transcript = whisperRes.data.text || '';
+
+    let caption = transcript;
+    if (ANTHROPIC_KEY && transcript) {
+      const anthropic = new Anthropic({ apiKey: ANTHROPIC_KEY });
+      const msg = await anthropic.messages.create({
+        model: 'claude-haiku-4-5',
+        max_tokens: 300,
+        messages: [{
+          role: 'user',
+          content: `You are a TikTok content creator writing a caption for a TikTok Shop product video.
+
+Brand: ${brand?.name || ''}${req.body.productName ? `\nProduct: ${req.body.productName}` : ''}
+Video transcript: "${transcript}"
+
+Write a TikTok caption that:
+- Is 1-3 sentences, punchy and conversational
+- Highlights the key benefit or moment shown in the video
+- Ends with 5-8 relevant hashtags (mix of niche + broad tags like #TikTokMadeMeBuyIt)
+- Keep total caption under 220 characters
+
+Return ONLY the caption text with hashtags. No explanation, no quotes.`
+        }],
+      });
+      caption = msg.content[0]?.text?.trim() || transcript;
+    }
+
+    res.json({ ok: true, caption, transcript });
+  } catch (e) {
+    console.error('[storista] generate-caption error:', e.message);
+    res.json({ ok: false, error: e.response?.data?.error?.message || e.message, caption: '', transcript: '' });
+  } finally {
+    try { if (fs.existsSync(videoPath)) fs.unlinkSync(videoPath); } catch(_) {}
+    try { if (fs.existsSync(audioPath)) fs.unlinkSync(audioPath); } catch(_) {}
+  }
+});
+
+// POST /api/client/storista/caption-from-transcript
+// Lightweight JSON: transcript → Claude Haiku → TikTok caption (no file upload)
+app.post('/api/client/storista/caption-from-transcript', requireClientSession, express.json(), async (req, res) => {
+  const { transcript, productName } = req.body || {};
+  if (!transcript) return res.status(400).json({ ok: false, error: 'transcript required' });
+
+  const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
+  if (!ANTHROPIC_KEY) return res.json({ ok: true, caption: transcript });
+
+  const brands = loadBrands();
+  const brand  = brands.clients.find(b => b.id === req.session.clientBrandId);
+
+  try {
+    const anthropic = new Anthropic({ apiKey: ANTHROPIC_KEY });
+    const msg = await anthropic.messages.create({
+      model: 'claude-haiku-4-5',
+      max_tokens: 300,
+      messages: [{
+        role: 'user',
+        content: `You are a TikTok content creator writing a caption for a TikTok Shop product video.
+
+Brand: ${brand?.name || ''}${productName ? `\nProduct: ${productName}` : ''}
+Video transcript: "${transcript}"
+
+Write a TikTok caption that:
+- Is 1-3 sentences, punchy and conversational
+- Highlights the key benefit or moment shown in the video
+- Ends with 5-8 relevant hashtags (mix of niche + broad tags like #TikTokMadeMeBuyIt)
+- Keep total caption under 220 characters
+
+Return ONLY the caption text with hashtags. No explanation, no quotes.`
+      }],
+    });
+    res.json({ ok: true, caption: msg.content[0]?.text?.trim() || transcript });
+  } catch (e) {
+    console.error('[storista] caption-from-transcript error:', e.message);
+    res.json({ ok: false, error: e.message, caption: transcript });
+  }
+});
+
+// POST /api/client/logo — upload brand logo (client session auth)
+// Registered BEFORE app.use(requireAuth): client-session users have no Cloudflare
+// Access header, so requireAuth 401d them before requireClientSession ever ran
+// (root cause of the broken onboarding logo button — Roots by Ga, June 12).
+// Lazy multer because imageUpload is defined later in this file.
+app.post('/api/client/logo', requireClientSession, (req, res, next) => {
+  const upload = require('multer')({
+    storage: require('multer').diskStorage({
+      destination: (_, __, cb) => cb(null, UPLOAD_DIR),
+      filename:    (_, file, cb) => {
+        const ext  = path.extname(file.originalname) || '';
+        const base = path.basename(file.originalname, ext).replace(/[^a-z0-9_-]/gi, '_').slice(0, 60);
+        cb(null, `${Date.now()}_${base}${ext}`);
+      },
+    }),
+    limits: { fileSize: 10 * 1024 * 1024 },
+    fileFilter: (_, file, cb) => {
+      const ok = /image\//.test(file.mimetype) || /\.(jpe?g|png|gif|webp|svg|avif)$/i.test(file.originalname);
+      cb(ok ? null : new Error('Only image files are allowed'), ok);
+    },
+  }).single('logo');
+  upload(req, res, (err) => err ? res.status(400).json({ error: err.message }) : next());
+}, (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No image file received' });
+  const brands = loadBrands();
+  const idx = (brands.clients || []).findIndex(b => b.id === req.session.clientBrandId);
+  if (idx === -1) return res.status(404).json({ error: 'Brand not found' });
+  const old = brands.clients[idx].logoUrl;
+  if (old) {
+    const oldPath = path.join(UPLOAD_DIR, path.basename(old.split('?')[0]));
+    if (oldPath.startsWith(UPLOAD_DIR)) fs.unlink(oldPath, () => {});
+  }
+  const logoUrl = `${PUBLIC_BASE_URL}/uploads/${req.file.filename}`;
+  brands.clients[idx].logoUrl = logoUrl;
+  saveBrands(brands);
+  res.json({ ok: true, logoUrl });
+});
+
+// DELETE /api/client/logo — remove brand logo (client session auth, pre-requireAuth)
+app.delete('/api/client/logo', requireClientSession, (req, res) => {
+  const brands = loadBrands();
+  const idx = (brands.clients || []).findIndex(b => b.id === req.session.clientBrandId);
+  if (idx === -1) return res.status(404).json({ error: 'Brand not found' });
+  const logoUrl = brands.clients[idx].logoUrl;
+  if (logoUrl) {
+    const filePath = path.join(UPLOAD_DIR, path.basename(logoUrl.split('?')[0]));
+    if (filePath.startsWith(UPLOAD_DIR)) fs.unlink(filePath, () => {});
+  }
+  delete brands.clients[idx].logoUrl;
+  saveBrands(brands);
+  res.json({ ok: true });
+});
+
+// Creator Cadence engine — portal-admin gated approval page for launch texts + weekly-call reminders.
+// Must be before requireAuth so portal.cultcontent.cc (no CF Access) can reach it.
+try { require('./routes/creator-cadence').mount(app, { DATA_DIR }); }
+catch (e) { console.error('[creator-cadence] mount failed:', e.message); }
+
+try { require('./routes/tiktok-api-map').mount(app, { requirePortalAdmin }); }
+catch (e) { console.error('[tiktok-api-map] mount failed:', e.message); }
+
+try { require('./routes/financial-dashboard').mount(app, { requirePortalAdmin }); }
+catch (e) { console.error('[financial-dashboard] mount failed:', e.message); }
+
+try { require('./routes/open-collab-queue').mount(app, { DATA_DIR, requirePortalAdmin }); }
+catch (e) { console.error('[open-collab-queue] mount failed:', e.message); }
+
+try { require('./routes/link-tracker').mount(app, { DATA_DIR }); }
+catch (e) { console.error('[link-tracker] mount failed:', e.message); }
 
 // ── POST /ccc-community-apply ─────────────────────────────────────────────────
 // Same-origin handler so submissions land even if Railway is briefly unreachable.
@@ -2698,7 +7020,7 @@ app.use('/tools', express.static(path.join(__dirname)));
 
 const CFG = {
   ghlApiKey:  process.env.GHL_API_KEY,
-  locationId: process.env.GHL_LOC_ID,
+  locationId: process.env.GHL_LOCATION_ID || process.env.GHL_LOC_ID,
   railwayUrl: process.env.RAILWAY_URL  || 'https://cultcontent-server-production.up.railway.app',
   port:       process.env.PORT || process.env.DASHBOARD_PORT || 3457,
 };
@@ -2712,7 +7034,7 @@ const ghl = axios.create({
   },
 });
 
-// ─── Reacher API client ───────────────────────────────────────────────────────
+// ─── Reacher API client ───────────────────────────────────────��───────────────
 const REACHER_BASE = 'https://api.reacherapp.com/public/v1';
 function reacherClient(shopId) {
   const headers = { 'x-api-key': process.env.REACHER_API_KEY || '', 'Content-Type': 'application/json' };
@@ -2720,7 +7042,7 @@ function reacherClient(shopId) {
   return axios.create({ baseURL: REACHER_BASE, timeout: 20000, headers });
 }
 
-// ─── Simple TTL cache ──────────────────────────────────────────────────────────
+// ─── Simple TTL cache ���───────────────────────��─────────────────────────────────
 const cache = new Map();
 async function cached(key, ttlMs, fn) {
   const hit = cache.get(key);
@@ -2754,9 +7076,10 @@ function recordSnap(platform, handle, metrics) {
   saveSnaps(snaps);
 }
 
-// ─── TikTok token helpers ──────────────────────────────────────────────────────
+// ─── TikTok token helpers ───────────────────────────���──────────────────────────
 const TIKTOK_API_BASE = 'https://open.tiktokapis.com/v2';
-const tiktokAuthState = new Map(); // PKCE state store (short-lived, in-memory)
+const tiktokAuthState     = new Map(); // PKCE state store (short-lived, in-memory)
+const creatorTikTokStates = new Map(); // State store for creator page TikTok Display API OAuth
 
 function loadTikTokTokens() {
   try { if (fs.existsSync(TIKTOK_TOKENS_FILE)) return JSON.parse(fs.readFileSync(TIKTOK_TOKENS_FILE, 'utf8')); }
@@ -2967,13 +7290,13 @@ app.get('/api/railway/health', async (req, res) => {
   }
 });
 
-// ─── Cache control ─────────────────────────────────────────────────────────────
+// ─── Cache control ─────────────────────────���──��────────────────────────────────
 app.post('/api/clear-cache', (req, res) => {
   cache.clear();
   res.json({ ok: true });
 });
 
-// ─── Buffer content pipeline ───────────────────────────────────────────────────
+// ─── Buffer content pipeline ────────────────���──────────────────────────────────
 app.get('/api/buffer/stats', async (req, res) => {
   const token = process.env.BUFFER_ACCESS_TOKEN;
   if (!token) return res.json({ connected: false });
@@ -3182,7 +7505,7 @@ app.get('/api/social/stats', async (req, res) => {
   }
 });
 
-// ─── Twitter / X stats (via Apify pratikdani~twitter-profile-scraper) ──────────
+// ─── Twitter / X stats (via Apify pratikdani~twitter-profile-scraper) ─��────────
 app.get('/api/twitter/stats', async (req, res) => {
   try {
     const data = await cached('twitter', 1_800_000, async () => {
@@ -3776,7 +8099,7 @@ app.get('/api/buffer/channels', async (req, res) => {
   } catch (e) { res.json({ channels: [], error: e.message }); }
 });
 
-// ─── Reacher / TikTok Affiliate Manager ───────────────────────────────────────
+// ─── Reacher / TikTok Affiliate Manager ───────────────────────��───────────────
 // All Reacher calls proxy through Railway (which holds REACHER_API_KEY).
 
 // GET /api/reacher/stats?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD
@@ -3887,7 +8210,167 @@ app.post('/api/reacher/shops/:shopId/samples', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// ─── Creator Database endpoints ───────────────────────────────────────────────
+// ─── Creator Database endpoints ─────────────��─────────────────────────────────
+
+// ─── TikTok Shop API — Creator database (replaces Reacher) ───────────────────
+// POST /api/creators/tts-all — aggregate affiliated creators across all connected brands
+// Returns same shape as /api/creators/all so the UI needs minimal changes.
+app.post('/api/creators/tts-all', async (req, res) => {
+  const { sort = 'total_shop_gmv', search = '', min_followers = 0, shop = 'all', page = 1, page_size = 50 } = req.body;
+  try {
+    // Cache the raw aggregated fetch (expensive) — filters/sort/pagination applied outside
+    const { allCreators, shopList } = await cached('tts_creators_raw', 15 * 60_000, async () => {
+      const brands  = loadBrands();
+      // Build a list of {token, shopName} for every available token source
+      // Priority: per-brand tokens first, then global token as a catch-all
+      const sources = [];
+      for (const [bi, brand] of (brands.clients || []).entries()) {
+        if (brand.tiktokShopToken?.access_token) {
+          sources.push({ token: brand.tiktokShopToken, shopName: brand.name, brands, bi });
+        }
+      }
+      // Fall back to global token (covers the shop connected via the main TikTok Shop auth)
+      if (sources.length === 0) {
+        const globalTok = loadTikTokTokens().shop;
+        if (globalTok?.access_token) {
+          sources.push({ token: globalTok, shopName: globalTok.shop_name || 'Connected Shop', brands, bi: -1 });
+        }
+      }
+
+      const byHandle = {};
+
+      async function fetchCreatorsForSource(src) {
+        let pageToken = '';
+        let safeguard = 0;
+        while (safeguard++ < 20) {
+          const body = { page_size: 100, sort_field: 'gmv', sort_order: 'DESC' };
+          if (pageToken) body.page_token = pageToken;
+          let resp;
+          try {
+            if (src.bi >= 0) {
+              resp = await ttsBrandPost(src.brands.clients[src.bi], src.brands, src.bi, '/affiliate/seller/202309/creators/search', body);
+            } else {
+              // Global token path
+              if (src.token.expires_at && Date.now() > src.token.expires_at - 120_000) {
+                await refreshShopToken();
+              }
+              resp = await ttsPost('/affiliate/seller/202309/creators/search', body);
+            }
+          } catch (e) {
+            console.error(`[tts-creators] ${src.shopName}:`, e.message);
+            break;
+          }
+          const list = resp?.data?.creators || [];
+          for (const c of list) {
+            const handle = (c.creator_handle || c.username || '').toLowerCase().replace(/^@/, '');
+            if (!handle) continue;
+            if (!byHandle[handle]) {
+              byHandle[handle] = { creator_handle: handle, follower_count: 0, total_shop_gmv: 0, overall_gmv: 0, shops: [] };
+            }
+            byHandle[handle].total_shop_gmv += parseFloat(c.sale_amount ?? c.gmv ?? 0);
+            byHandle[handle].follower_count  = Math.max(byHandle[handle].follower_count, c.follower_count || 0);
+            if (!byHandle[handle].shops.includes(src.shopName)) byHandle[handle].shops.push(src.shopName);
+          }
+          const next = resp?.data?.next_page_token;
+          if (!next || list.length === 0) break;
+          pageToken = next;
+        }
+      }
+
+      await Promise.allSettled(sources.map(fetchCreatorsForSource));
+
+      return {
+        allCreators: Object.values(byHandle),
+        shopList:    sources.map(s => ({ name: s.shopName })),
+      };
+    });
+
+    // Apply filters, sort, and pagination in-memory (fast)
+    let creators = allCreators;
+    if (shop && shop !== 'all') creators = creators.filter(c => c.shops.includes(shop));
+    if (search)                  creators = creators.filter(c => c.creator_handle.includes(search.toLowerCase()));
+    if (Number(min_followers) > 0) creators = creators.filter(c => c.follower_count >= Number(min_followers));
+    creators.sort((a, b) => sort === 'follower_count' ? b.follower_count - a.follower_count : b.total_shop_gmv - a.total_shop_gmv);
+
+    const total      = creators.length;
+    const totalPages = Math.ceil(total / page_size) || 1;
+    const startIdx   = (page - 1) * page_size;
+
+    res.json({
+      data:       creators.slice(startIdx, startIdx + page_size),
+      pagination: { total_count: total, page, total_pages: totalPages },
+      shops:      shopList,
+      source:     'tiktok_shop_api',
+    });
+  } catch (e) {
+    console.error('[tts-creators]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// POST /api/creators/tts-performance — 30-day GMV per creator aggregated across all brands
+// Pulls affiliate orders with a 30-day date window for each connected brand.
+app.post('/api/creators/tts-performance', async (req, res) => {
+  const cacheKey = 'tts_creators_perf:30d';
+  try {
+    const data = await cached(cacheKey, 15 * 60_000, async () => {
+      const now    = Math.floor(Date.now() / 1000);
+      const start  = now - 30 * 24 * 60 * 60;
+      const brands  = loadBrands();
+      const perfByHandle = {};
+
+      // Build token sources (per-brand first, global fallback)
+      const perfSources = [];
+      for (const [bi, brand] of (brands.clients || []).entries()) {
+        if (brand.tiktokShopToken?.access_token) perfSources.push({ brand, brands, bi, global: false });
+      }
+      if (perfSources.length === 0) {
+        const globalTok = loadTikTokTokens().shop;
+        if (globalTok?.access_token) perfSources.push({ brand: null, brands, bi: -1, global: true });
+      }
+
+      await Promise.allSettled(perfSources.map(async (src) => {
+        let pageToken = '';
+        let safeguard = 0;
+        while (safeguard++ < 20) {
+          const body = { create_time_ge: start, create_time_lt: now, page_size: 100 };
+          if (pageToken) body.page_token = pageToken;
+          let resp;
+          try {
+            if (!src.global) {
+              resp = await ttsBrandPost(src.brand, src.brands, src.bi, '/affiliate/seller/202309/orders/search', body);
+            } else {
+              if ((loadTikTokTokens().shop?.expires_at || 0) < Date.now() - 120_000) await refreshShopToken();
+              resp = await ttsPost('/affiliate/seller/202309/orders/search', body);
+            }
+          } catch (e) {
+            console.error(`[tts-perf] ${src.brand?.name || 'global'}:`, e.message);
+            break;
+          }
+          const orders = resp?.data?.affiliate_orders || resp?.data?.orders || [];
+          for (const o of orders) {
+            const handle = (o.creator_handle || o.creator_username || o.creator_open_id || '').toLowerCase().replace(/^@/, '');
+            if (!handle) continue;
+            const amt = parseFloat(o.sale_amount ?? o.payment_info?.original_total_product_price ?? o.total_amount ?? 0);
+            if (!perfByHandle[handle]) perfByHandle[handle] = { creator_handle: handle, gmv: 0, order_count: 0, units_sold: 0 };
+            perfByHandle[handle].gmv        += amt;
+            perfByHandle[handle].order_count += 1;
+          }
+          const next = resp?.data?.next_page_token;
+          if (!next || orders.length === 0) break;
+          pageToken = next;
+        }
+      }));
+
+      const perf = Object.values(perfByHandle).sort((a, b) => b.gmv - a.gmv);
+      return { data: perf, source: 'tiktok_shop_api' };
+    });
+    res.json(data);
+  } catch (e) {
+    console.error('[tts-perf]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
 
 // POST /api/creators/all — aggregate creators across all shops (15-min cache, key by filters)
 app.post('/api/creators/all', async (req, res) => {
@@ -3922,58 +8405,278 @@ app.post('/api/creators/performance', async (req, res) => {
 });
 
 // GET /api/creators/ghl-map — TikTok handle → GHL contact info (10-min cache)
-// Searches for contacts tagged "Reacher:" and maps handle → {id, name, phone, email, tags}
-app.get('/api/creators/ghl-map', async (req, res) => {
-  try {
-    const data = await cached('creators_ghl_map', 10 * 60_000, async () => {
-      // GHL contacts/search — fetch contacts tagged with Reacher
-      let page = 1;
+// Fetches all contacts tagged "affiliate" (GHL tag filter, not text search).
+// Maps handle → {id, name, phone, email, tags, discordUsername}
+// In-memory GHL map cache — populated on first request, refreshed every 30 min.
+// A single promise lock prevents concurrent builds (e.g. if the user reloads
+// mid-fetch, subsequent requests wait for the in-flight build rather than
+// starting another 200-call loop).
+let _ghlMapCache    = null;
+let _ghlMapCacheAt  = 0;
+let _ghlMapBuilding = null; // promise while build in progress
+const GHL_MAP_TTL   = 30 * 60_000;
+
+// Shared helper — starts the build if not running, returns a promise that resolves to the cache
+function _ensureGhlMap() {
+  if (_ghlMapCache && (Date.now() - _ghlMapCacheAt) < GHL_MAP_TTL) return Promise.resolve(_ghlMapCache);
+  if (!_ghlMapBuilding) {
+    _ghlMapBuilding = (async () => {
+      // Known TikTok-related custom field IDs for this GHL location.
+      // tiktok_handle  → trnSmiM9oilkdQSInRPn  (primary — set by creator forms)
+      // tiktok_username→ e6rnLj4npciYrjOd4OwC  (fallback)
+      // tiktok_profile_link → fWDq18dESQmKaiNwgJWU (fallback, may be full URL)
+      // tiktok_url     → 39UVa4ENm3OeOiafUU1c  (old fallback)
+      const TIKTOK_HANDLE_FIELDS = new Set([
+        'trnSmiM9oilkdQSInRPn',
+        'e6rnLj4npciYrjOd4OwC',
+        'fWDq18dESQmKaiNwgJWU',
+        '39UVa4ENm3OeOiafUU1c',
+      ]);
       const allContacts = [];
+      let startAfter = null;
+      let startAfterId = null;
       while (true) {
-        let contacts = [];
-        try {
-          const { data: sr } = await ghl.post('/contacts/search', {
-            locationId: CFG.locationId,
-            filters: [{ group: 'AND', filters: [{ field: 'tags', operator: 'contains', value: 'Reacher:' }] }],
-            page,
-            pageLimit: 100,
-          });
-          contacts = sr?.contacts || sr?.data || [];
-        } catch (_) {
-          // Fallback: tag-based search via GET
-          const { data: tr } = await ghl.get('/contacts/', {
-            params: { locationId: CFG.locationId, tags: 'Reacher', limit: 100, skip: (page - 1) * 100 },
-          });
-          contacts = tr?.contacts || [];
-        }
-        if (!contacts.length) break;
-        allContacts.push(...contacts);
-        if (contacts.length < 100) break;
-        page++;
+        const params = { locationId: CFG.locationId, limit: 100 };
+        if (startAfter)   params.startAfter   = startAfter;
+        if (startAfterId) params.startAfterId = startAfterId;
+        const { data: tr } = await ghl.get('/contacts/', { params });
+        const batch = tr?.contacts || [];
+        allContacts.push(...batch);
+        if (batch.length < 100) break;
+        const meta = tr?.meta || {};
+        startAfter   = meta.startAfter   || null;
+        startAfterId = meta.startAfterId || null;
+        if (!startAfterId) break;
       }
 
-      // Build handle → contact map
-      const TIKTOK_FIELD = '39UVa4ENm3OeOiafUU1c';
+      // Build handle → contact map AND affiliateList in one pass
       const map = {};
+      const affiliateList = [];
       for (const c of allContacts) {
-        const ttUrl = (c.customFields || []).find(f => f.id === TIKTOK_FIELD)?.value || '';
-        if (!ttUrl) continue;
-        // Extract handle: https://www.tiktok.com/@handle or @handle
-        const match = ttUrl.match(/@([\w.]+)/);
-        if (!match) continue;
-        const handle = match[1].toLowerCase();
-        map[handle] = {
-          id:    c.id,
-          name:  `${c.firstName || ''} ${c.lastName || ''}`.trim() || c.name || handle,
-          phone: c.phone || '',
-          email: c.email || '',
-          tags:  c.tags  || [],
-        };
+        // Determine TikTok handle — try multiple sources in priority order:
+        // 1. Custom field matching the tiktok_handle field ID
+        // 2. Any custom field value that looks like a TikTok URL or @handle (safety net)
+        // 3. contactName if it looks like a handle (no spaces, word chars only)
+        // 4. firstName if handle-like and no lastName (Reacher imports)
+        let handle = '';
+        const isHandleLike = s => /^[\w.]{3,30}$/.test(s);
+        const customFields = c.customFields || [];
+
+        // Priority 1: known TikTok fields by UUID (handle, username, profile link, url)
+        for (const f of customFields) {
+          if (!TIKTOK_HANDLE_FIELDS.has(f.id)) continue;
+          const v = typeof f.value === 'string' ? f.value.trim() : '';
+          if (!v) continue;
+          const m = v.match(/tiktok\.com\/@?([\w.]{3,30})/i) || v.match(/^@?([\w.]{3,30})$/);
+          if (m) { handle = m[1].toLowerCase(); break; }
+        }
+
+        // Priority 2: scan all custom field values for anything TikTok-shaped
+        if (!handle) {
+          for (const f of customFields) {
+            const v = (typeof f.value === 'string' ? f.value : String(f.value || '')).trim();
+            if (!v || v === 'null' || v === 'undefined') continue;
+            const urlM = v.match(/tiktok\.com\/@?([\w.]{3,30})/i);
+            if (urlM) { handle = urlM[1].toLowerCase(); break; }
+            const atM = v.match(/^@([\w.]{3,30})$/);
+            if (atM) { handle = atM[1].toLowerCase(); break; }
+          }
+        }
+
+        // Priority 3: contactName if it looks like a TikTok handle
+        if (!handle && c.contactName) {
+          const candidate = c.contactName.replace(/^@/, '').trim();
+          if (isHandleLike(candidate)) handle = candidate.toLowerCase();
+        }
+
+        // Priority 4: firstName with no lastName (Reacher imports store handle as firstName)
+        if (!handle && c.firstName && !c.lastName) {
+          const candidate = c.firstName.replace(/^@/, '').trim();
+          if (isHandleLike(candidate)) handle = candidate.toLowerCase();
+        }
+
+        // Extract discord username from discord: tags
+        let discordUsername = '';
+        for (const t of (c.tags || [])) {
+          const dm = t.match(/^discord:(.+)/i);
+          if (dm) { discordUsername = dm[1].trim().replace(/^@/, ''); break; }
+        }
+
+        // Build a real name — only use it if it looks like an actual person's name,
+        // not a TikTok handle. Reacher imports often set firstName = the handle, so we
+        // require: has a last name, OR firstName contains a space, OR firstName ≠ handle.
+        // Title-case to fix contacts imported in all-lowercase.
+        const toTitleCase = s => s.replace(/\b\w/g, ch => ch.toUpperCase());
+        const firstName = toTitleCase((c.firstName || '').trim());
+        const lastName  = toTitleCase((c.lastName  || '').trim());
+        const rawFull   = `${firstName} ${lastName}`.trim();
+        const looksLikeName = lastName
+          || firstName.includes(' ')
+          || (firstName && firstName.toLowerCase() !== handle && !/^[\w.]+$/.test(firstName));
+        const fullName = looksLikeName ? rawFull : '';
+
+        // Add to handle map (only contacts with a resolved handle)
+        if (handle) {
+          map[handle] = {
+            id:              c.id,
+            name:            fullName,
+            phone:           c.phone || '',
+            email:           c.email || '',
+            tags:            c.tags  || [],
+            discordUsername: discordUsername,
+          };
+        }
+
+        // Add to affiliateList if tagged "affiliate" (case-insensitive)
+        const isAffiliate = (c.tags || []).some(t => t.toLowerCase() === 'affiliate');
+        const hasContactInfo = !!(c.phone || c.email);
+        if (isAffiliate && hasContactInfo) {
+          affiliateList.push({
+            ghl_id:          c.id,
+            handle:          handle || '',
+            name:            fullName,
+            phone:           c.phone || '',
+            email:           c.email || '',
+            tags:            c.tags  || [],
+            discordUsername: discordUsername,
+          });
+        }
       }
-      return map;
-    });
+      const result = { map, affiliateList, _debug: { total_fetched: allContacts.length, mapped: Object.keys(map).length, affiliates: affiliateList.length, with_phone: Object.values(map).filter(v => v.phone).length } };
+      _ghlMapCache   = result;
+      _ghlMapCacheAt = Date.now();
+      return result;
+    })().finally(() => { _ghlMapBuilding = null; });
+  }
+  return _ghlMapBuilding;
+}
+
+app.get('/api/creators/ghl-map', async (req, res) => {
+  try {
+    const data = await _ensureGhlMap();
     res.json(data);
   } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// GET /api/creators/affiliate-list — returns all GHL affiliate contacts from cache
+// Triggers the GHL map build if not already running (same as /api/creators/ghl-map)
+app.get('/api/creators/affiliate-list', async (req, res) => {
+  try {
+    const cache = await _ensureGhlMap();
+    const list  = cache.affiliateList || [];
+    res.json({ data: list, total: list.length });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// GET /api/creators/reacher-enrichment — all Reacher creators as handle→data map (30-min cache)
+let _reacherEnrichCache   = null;
+let _reacherEnrichCacheAt = 0;
+const REACHER_ENRICH_TTL  = 30 * 60_000;
+
+app.get('/api/creators/reacher-enrichment', async (req, res) => {
+  try {
+    if (_reacherEnrichCache && (Date.now() - _reacherEnrichCacheAt) < REACHER_ENRICH_TTL) {
+      return res.json(_reacherEnrichCache);
+    }
+    const r = await axios.post(
+      `${CFG.railwayUrl}/affiliate/creators/all`,
+      { shop: 'all', page: 1, page_size: 5000 },
+      { timeout: 120_000 }
+    );
+    const creators = r.data?.data || r.data || [];
+    const map = {};
+    const shopSet = new Map();
+    for (const c of creators) {
+      const h = (c.creator_handle || '').replace(/^@/, '').toLowerCase();
+      if (!h) continue;
+      map[h] = {
+        follower_count:  c.follower_count  || 0,
+        overall_gmv:     c.overall_gmv     || 0,
+        total_shop_gmv:  c.total_shop_gmv  || 0,
+        total_videos:    c.total_videos    || 0,
+        total_views:     c.total_views     || 0,
+        shops:           c.shops           || [],
+      };
+      for (const s of (c.shops || [])) {
+        if (s.shop_name && !shopSet.has(s.shop_name)) shopSet.set(s.shop_name, s);
+      }
+    }
+    const shops = [...shopSet.values()];
+    const result = { map, shops };
+    _reacherEnrichCache   = result;
+    _reacherEnrichCacheAt = Date.now();
+    res.json(result);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// GET /api/creators/ghl-debug — inspect GHL contact structure
+app.get('/api/creators/ghl-debug', async (req, res) => {
+  try {
+    const { data: tr } = await ghl.get('/contacts/', { params: { locationId: CFG.locationId, limit: 100 } });
+    const contacts = tr?.contacts || [];
+    const first = contacts[0] || {};
+    res.json({
+      total_in_page:   contacts.length,
+      meta:            tr?.meta || {},
+      // Show all top-level keys on a contact so we know the field names
+      first_contact_keys: Object.keys(first),
+      first_contact: {
+        id:           first.id,
+        contactName:  first.contactName,
+        firstName:    first.firstName,
+        lastName:     first.lastName,
+        phone:        first.phone,
+        email:        first.email,
+        tags:         first.tags,
+        customFields: first.customFields,
+      },
+      // Also search for a contact that has any phone-like field
+      contacts_with_phone: contacts.filter(c => c.phone || c.phoneNumber || c.mobilePhone).length,
+    });
+  } catch (e) { res.status(500).json({ error: e.message, response: e.response?.data }); }
+});
+
+// GET /api/discord/creator-members — list all Discord server members with the Creator role
+// Returns { members: [{username, globalName, userId}] } — used to show Discord status in the creator DB.
+// Results are cached for 5 minutes.
+app.get('/api/discord/creator-members', async (req, res) => {
+  try {
+    const data = await cached('discord_creator_members', 5 * 60_000, async () => {
+      const botToken = process.env.DISCORD_BOT_TOKEN;
+      const guildId  = process.env.DISCORD_GUILD_ID;
+      const roleId   = process.env.DISCORD_CREATOR_ROLE_ID;
+      if (!botToken || !guildId) throw new Error('Discord bot credentials not configured');
+
+      // Paginate through all guild members (Discord returns up to 1000 per page)
+      const members = [];
+      let after = '0';
+      while (true) {
+        const { data: batch } = await axios.get(
+          `https://discord.com/api/v10/guilds/${guildId}/members`,
+          { params: { limit: 1000, after }, headers: { Authorization: `Bot ${botToken}` } }
+        );
+        if (!batch || batch.length === 0) break;
+        for (const m of batch) {
+          // If we have a Creator role filter, only include role members; otherwise include all
+          const hasRole = roleId ? (m.roles || []).includes(roleId) : true;
+          if (hasRole) {
+            members.push({
+              userId:     m.user.id,
+              username:   (m.user.username   || '').toLowerCase(),
+              globalName: (m.user.global_name || m.nick || '').toLowerCase(),
+            });
+          }
+        }
+        if (batch.length < 1000) break;
+        after = batch[batch.length - 1].user.id;
+      }
+      return { members };
+    });
+    res.json(data);
+  } catch (e) {
+    console.error('[discord/creator-members]', e.message);
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // POST /api/creators/sms — bulk SMS to GHL contacts
@@ -4013,7 +8716,7 @@ app.post('/api/command', async (req, res) => {
   } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 
-// ─── Skool community stats (scrape public about page) ─────────────────────────
+// ─���─ Skool community stats (scrape public about page) ─────────────────────────
 app.get('/api/skool/stats', async (req, res) => {
   try {
     const data = await cached('skool_stats', 10 * 60_000, async () => {
@@ -4103,6 +8806,20 @@ app.post('/api/reacher/conversations/:handle/reply', express.json(), async (req,
     );
     res.json({ ok: true, ...data });
   } catch(e) { res.status(500).json({ ok: false, error: e.response?.data || e.message }); }
+});
+
+// ─── SMS Follow-up proxy (feeds /sms-communication approval feed) ─────────────
+app.get('/api/sms-communication/followup/lists', requirePortalAdmin, async (req, res) => {
+  const SIS_BASE = process.env.SISYPHUS_URL || 'https://sisyphus.cultcontent.cc';
+  try {
+    const { data } = await axios.get(`${SIS_BASE}/api/sms-followup/lists`, {
+      timeout: 15000,
+      headers: { 'x-internal-secret': process.env.IC_ADMIN_KEY || '' },
+    });
+    res.json(data);
+  } catch (e) {
+    res.json({ ready:{creators:[]}, needsEnrichment:{creators:[]}, counts:{ready:0,needsEnrichment:0}, _proxyError: e.response?.data || e.message });
+  }
 });
 
 // ─── Stubs (OAuth integrations — connect later) ────────────────────────────────
@@ -4216,8 +8933,196 @@ setInterval(() => {
   }
 }, 60_000);
 
+// ── On startup: reset any jobs stuck in 'processing' back to 'scheduled' ─────
+// (happens when server restarts mid-publish)
+{
+  const brands = loadBrands();
+  let resetCount = 0;
+  for (const b of (brands.clients || [])) {
+    if (!b.storistaQueue?.length) continue;
+    for (const job of b.storistaQueue) {
+      // Only reset 'processing' jobs that never got a tiktokVideoId — those are truly orphaned.
+      // Jobs that DO have a tiktokVideoId were submitted to TikTok; leave them as 'processing'
+      // so the polling scheduler (below) can pick them up and check their final status.
+      if (job.status === 'processing' && !job.tiktokVideoId) {
+        job.status = 'scheduled';
+        resetCount++;
+      }
+    }
+  }
+  if (resetCount > 0) {
+    saveBrands(brands);
+    console.log(`[storista-startup] Reset ${resetCount} stuck 'processing' job(s) back to 'scheduled'`);
+  }
+}
+
+// ── Storista scheduled publisher — runs every 60 s, publishes due videos ─────
+setInterval(async () => {
+  const now = Date.now();
+  const brands = loadBrands();
+  let changed = false;
+  for (const brand of (brands.clients || [])) {
+    if (!brand.storistaApiKey || !brand.storistaQueue?.length) continue;
+
+    // ── Re-check 'processing' jobs that have a tiktokVideoId but never confirmed ──
+    // These are jobs that were submitted to TikTok but the 60s polling window expired.
+    // Storista processes asynchronously — check their current status now.
+    const pendingCheck = brand.storistaQueue.filter(j => j.status === 'processing' && j.tiktokVideoId);
+    if (pendingCheck.length) {
+      const authHeader = `Bearer ${brand.storistaApiKey}`;
+      const sGet = (p) => axios.get(`${STORISTA_BASE}${p}`, {
+        headers: { Authorization: authHeader, Accept: 'application/json' },
+        timeout: 15_000,
+      });
+      for (const job of pendingCheck) {
+        try {
+          const { data: st } = await sGet(`/v1/tiktok/accounts/${job.account}/videos/${job.tiktokVideoId}`);
+          if (st.status === 'READY' || st.status === 'PUBLISHED') {
+            job.status = 'published';
+            job.publishedAt = job.publishedAt || new Date().toISOString();
+            changed = true;
+            console.log(`[storista-sched] Late-confirm published: "${job.filename}" (vid ${job.tiktokVideoId})`);
+          } else if (st.status === 'REJECTED') {
+            job.status = 'failed';
+            job.error = st.reject_reason || 'Rejected by TikTok';
+            changed = true;
+            console.log(`[storista-sched] Confirmed rejected: "${job.filename}" (vid ${job.tiktokVideoId}) — ${job.error}`);
+          }
+          // PROCESSING → leave as-is, check again next tick
+        } catch (e) {
+          console.log(`[storista-sched] Re-check error for vid ${job.tiktokVideoId}:`, e.message);
+        }
+      }
+    }
+
+    const due = brand.storistaQueue.filter(j => j.status === 'scheduled' && new Date(j.scheduledFor).getTime() <= now);
+    if (!due.length) continue;
+    const authHeader = `Bearer ${brand.storistaApiKey}`;
+    const s = axios.create({
+      baseURL: STORISTA_BASE,
+      headers: { Authorization: authHeader, 'Content-Type': 'application/json' },
+      timeout: 30_000,
+    });
+    // GET helper — no Content-Type so FastAPI doesn't try to parse a body
+    const sGet = (path) => axios.get(`${STORISTA_BASE}${path}`, {
+      headers: { Authorization: authHeader, Accept: 'application/json' },
+      timeout: 15_000,
+    });
+
+    // Log the full media list + TikTok video list once per brand per tick
+    try {
+      const { data: mediaList } = await sGet('/v1/media/');
+      const results = mediaList.results || mediaList;
+      console.log(`[storista-sched] Media list for ${brand.name} (${Array.isArray(results) ? results.length : '?'} items):`,
+        Array.isArray(results) && results.length
+          ? results.map(m => `id=${m.id} name=${m.name} file_url=${!!m.file_url} w=${m.width} h=${m.height}`).join(', ')
+          : JSON.stringify(mediaList).slice(0, 300));
+    } catch (listErr) {
+      console.log(`[storista-sched] Media list error:`, listErr.response?.status, JSON.stringify(listErr.response?.data).slice(0, 200));
+    }
+    // Also log TikTok videos list
+    const account = due[0]?.account;
+    if (account) {
+      try {
+        const { data: vidList } = await sGet(`/v1/tiktok/accounts/${account}/videos`);
+        const vids = vidList.results || vidList;
+        console.log(`[storista-sched] TikTok videos for ${account} (${Array.isArray(vids) ? vids.length : '?'}):`,
+          Array.isArray(vids) && vids.length
+            ? vids.map(v => `id=${v.id} status=${v.status} video.id=${v.video?.id}`).join(', ')
+            : JSON.stringify(vidList).slice(0, 300));
+      } catch (vErr) {
+        console.log(`[storista-sched] TikTok video list error:`, vErr.response?.status, JSON.stringify(vErr.response?.data).slice(0, 200));
+      }
+    }
+
+    for (const job of due) {
+      try {
+        // Check media readiness via GET (returns 404 while still processing)
+        let mediaFound = false;
+        try {
+          const { data: mediaCheck } = await sGet(`/v1/media/${job.mediaId}`);
+          console.log(`[storista-sched] Media ${job.mediaId}:`, JSON.stringify(mediaCheck).slice(0, 300));
+          mediaFound = true;
+        } catch (mediaErr) {
+          const status = mediaErr.response?.status;
+          console.log(`[storista-sched] Media ${job.mediaId} GET ${status}:`, JSON.stringify(mediaErr.response?.data).slice(0, 200));
+          // 404 = still processing or failed; fall through and try the create
+        }
+
+        const createPayload = {
+          video_id:     parseInt(job.mediaId, 10),  // must be integer — Storista media ID
+          caption:      job.caption   || '',
+          product_id:   job.productId || '',
+          product_link: 'SHOP NOW',                 // required CTA, max 20 chars
+        };
+        console.log(`[storista-sched] Creating TikTok video for "${job.filename}" account=${job.account} payload=`, JSON.stringify(createPayload));
+        const { data: created } = await s.post(`/v1/tiktok/accounts/${job.account}/videos`, createPayload);
+        console.log(`[storista-sched] TikTok video created:`, JSON.stringify(created).slice(0, 300));
+        const vid_id = created.id || created.video_id;
+        const { data: publishRes } = await s.post(`/v1/tiktok/accounts/${job.account}/videos/${vid_id}/publish`, {});
+        console.log(`[storista-sched] Publish response:`, JSON.stringify(publishRes).slice(0, 300));
+
+        // Mark as 'processing' + save IMMEDIATELY before polling so concurrent ticks don't re-pick this job
+        // (polling takes ~60s, which is the same as the tick interval — without this early save the next
+        // tick fires, sees status=scheduled, and submits a duplicate video)
+        job.status = 'processing';
+        job.tiktokVideoId = vid_id;
+        changed = true;
+        saveBrands(brands);
+
+        // Poll for READY status (Storista runs validation/pre-checks after publish)
+        let ready = false;
+        for (let poll = 0; poll < 12; poll++) {
+          await new Promise(r => setTimeout(r, 5000));
+          try {
+            const { data: statusCheck } = await sGet(`/v1/tiktok/accounts/${job.account}/videos/${vid_id}`);
+            console.log(`[storista-sched] Status poll ${poll + 1}: status=${statusCheck.status} status_text=${statusCheck.status_text}`);
+            if (statusCheck.status === 'READY' || statusCheck.status === 'PUBLISHED') {
+              ready = true;
+              break;
+            }
+            if (statusCheck.reject_reason) {
+              throw new Error(`Rejected: ${statusCheck.reject_reason} — ${statusCheck.status_text}`);
+            }
+          } catch (pollErr) {
+            if (pollErr.message?.startsWith('Rejected:')) throw pollErr;
+            console.log(`[storista-sched] Status poll error:`, pollErr.message);
+          }
+        }
+
+        job.status      = ready ? 'published' : 'processing';
+        job.publishedAt = new Date().toISOString();
+        job.tiktokVideoId = vid_id;
+        changed = true;
+        console.log(`[storista-sched] "${job.filename}" for ${brand.name}: ${ready ? 'PUBLISHED ✓' : 'PROCESSING (check back later)'}`);
+      } catch (e) {
+        const errBody = e.response?.data;
+        const detail  = errBody?.detail;
+        const errMsg  = detail
+          ? (Array.isArray(detail) ? detail.map(d => d.msg || d.msg).join('; ') : String(detail))
+          : (errBody ? JSON.stringify(errBody) : e.message);
+        console.error(`[storista-sched] Error for "${job.filename}" (status ${e.response?.status}):`, errMsg, '| full body:', JSON.stringify(errBody).slice(0, 400));
+
+        // "Video not found" means Storista is still processing the media — retry up to 15 times
+        const isProcessing = typeof errMsg === 'string' && /not found/i.test(errMsg);
+        job.retries = (job.retries || 0) + 1;
+        if (isProcessing && job.retries < 15) {
+          console.log(`[storista-sched] Media not ready for "${job.filename}" (retry ${job.retries}/15) — will retry next tick`);
+          // leave status as 'scheduled' so it retries
+        } else {
+          job.status = 'failed';
+          job.error  = errMsg;
+          console.error(`[storista-sched] Failed "${job.filename}" for ${brand.name}:`, errMsg);
+        }
+        changed = true;
+      }
+    }
+  }
+  if (changed) saveBrands(brands);
+}, 60_000);
+
 // ─── Affiliate Agent routes ──────────────────────────────────────────────────
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────��───────────────��──────────��────────────────────────────────────────
 // Affiliate Agent — routes.js
 // New Express routes to append to dashboard-server.js.
 //
@@ -4272,7 +9177,7 @@ app.delete('/api/reacher/automations/:automationId', requireAuth, async (req, re
   } catch(e) { res.status(500).json({ ok: false, error: e.response?.data || e.message }); }
 });
 
-// ── POST /api/affiliate/blast ─────────────────────────────────────────────────
+// ── POST /api/affiliate/blast ──────────────────────��──────────────────────────
 // Body: { message: string, audience: string, channel: string, shopId?: string }
 // Fires a creator blast message via the chosen channel.
 //
@@ -4457,7 +9362,7 @@ app.post('/api/shopops/reengage', async (req, res) => {
 });
 
 
-// ─── Paid Media Agent routes ─────────────────────────────────────────────────
+// ─── Paid Media Agent routes ──────────────────��──────────────────────────────
 // ─── Paid Media Agent — routes.js ────────────────────────────────────────────
 //
 // Paste these routes into dashboard-server.js (after the Arcads block works well
@@ -4490,7 +9395,7 @@ async function ttGet(path, params = {}) {
   return body.data;
 }
 
-// ── Shared TikTok POST helper ─────────────────────────────────────────────────
+// ── Shared TikTok POST helper ────────────────────────��────────────────────────
 async function ttPost(path, payload = {}) {
   const token = process.env.TIKTOK_ADS_ACCESS_TOKEN;
   const { data: body } = await axios.post(`${TIKTOK_BASE}${path}`, payload, {
@@ -4535,7 +9440,7 @@ app.get('/api/paidmedia/tiktok/summary', async (req, res) => {
       });
       const rawCampaigns = campData.list || [];
 
-      // ── 2. Fetch integrated report (last 30 days) ───────────────────────────
+      // ── 2. Fetch integrated report (last 30 days) ─���─────────────────────────
       const today = new Date();
       const end   = today.toISOString().slice(0, 10);
       const start = new Date(today);
@@ -4640,7 +9545,7 @@ app.get('/api/paidmedia/tiktok/summary', async (req, res) => {
   }
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ────────────────────────────────��────────────────────────────────────────────
 // GET /api/paidmedia/tiktok/report?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD
 //
 // Time-series report — account-level daily metrics for charting.
@@ -4692,7 +9597,7 @@ app.get('/api/paidmedia/tiktok/report', async (req, res) => {
   }
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────��──────────────────────���────
 // POST /api/paidmedia/tiktok/campaign/:id/status
 //
 // Body: { status: 'ENABLE' | 'DISABLE' }
@@ -4786,7 +9691,7 @@ app.get('/api/paidmedia/meta/summary', async (req, res) => {
 });
 
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ───────────��─────────────────────────────────────────────────────────────────
 // POST /api/shortvideo/loop/run
 // Autonomous weekly content loop: analyze → ideate → script → schedule
 // ─────────────────────────────────────────────────────────────────────────────
@@ -5629,7 +10534,7 @@ app.post('/api/meetings/sync-fireflies', requireAuth, async (req, res) => {
     const keys = [process.env.FIREFLIES_API_KEY, process.env.FIREFLIES_API_KEY_2].filter(Boolean);
     if (!keys.length) return res.status(400).json({ ok: false, error: 'FIREFLIES_API_KEY not set' });
 
-    const days  = req.body?.days || 90; // default 90 days to catch older meetings
+    const days  = req.body?.days || 365; // default 365 days
     const since = new Date(Date.now() - days * 86400000).toISOString().split('T')[0];
 
     // Fetch meeting list from all Fireflies accounts
@@ -6697,7 +11602,7 @@ app.get('/api/storista/accounts', async (req, res) => {
 // GET /api/storista/products/:account — list TikTok Shop products for an account
 app.get('/api/storista/products/:account', async (req, res) => {
   try {
-    const { data } = await storistaClient().get(`/v1/tiktok/${req.params.account}/products`);
+    const { data } = await storistaClient().get(`/v1/tiktok/accounts/${req.params.account}/products`);
     res.json(data);
   } catch (e) {
     res.status(e.response?.status || 500).json({ error: e.response?.data || e.message });
@@ -6748,7 +11653,7 @@ app.post('/api/storista/upload', upload.single('video'), async (req, res) => {
     });
 
     // 3. Create media record
-    const { data: media } = await s.post('/v1/media/', {
+    const { data: media } = await s.post('/v1/media', {
       data: { upload_id: presign.upload_id, name: filename },
     });
 
@@ -6771,7 +11676,7 @@ app.post('/api/storista/publish', async (req, res) => {
     const s = storistaClient();
 
     // 1. Create video record
-    const { data: created } = await s.post(`/v1/tiktok/${account}/videos`, {
+    const { data: created } = await s.post(`/v1/tiktok/accounts/${account}/videos`, {
       video_id,
       product_id: product_id || '',
       product:    product    || '',
@@ -6782,7 +11687,7 @@ app.post('/api/storista/publish', async (req, res) => {
     const vid_id = created.id || created.video_id;
 
     // 2. Publish it
-    await s.post(`/v1/tiktok/${account}/videos/${vid_id}/publish`);
+    await s.post(`/v1/tiktok/accounts/${account}/videos/${vid_id}/publish`);
 
     res.json({ ok: true, video_id: vid_id, account });
   } catch (e) {
@@ -6795,7 +11700,7 @@ app.post('/api/storista/publish', async (req, res) => {
 app.get('/api/storista/status/:account/:videoId', async (req, res) => {
   try {
     const { data } = await storistaClient().get(
-      `/v1/tiktok/${req.params.account}/videos/${req.params.videoId}`
+      `/v1/tiktok/accounts/${req.params.account}/videos/${req.params.videoId}`
     );
     res.json(data);
   } catch (e) {
@@ -6938,7 +11843,7 @@ Be precise with numbers. If a field cannot be calculated from the data, use null
   }
 });
 
-// ═══════════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════��═══════════════════════════════════════════
 // ─── TikTok Shop Partner API ───────────────────────────────────────────────────
 // Portal: https://partner.tiktokshop.com
 // Base:   https://open-api.tiktokglobalshop.com
@@ -6952,7 +11857,7 @@ const TTS_BASE = 'https://open-api.tiktokglobalshop.com';
 // 1. Collect all query params (exclude "sign" and "access_token")
 // 2. Sort by key name alphabetically
 // 3. Build base string: {app_secret}{api_path}{key1}{val1}{key2}{val2}...{body}
-// 4. HMAC-SHA256(app_secret, base_string) → uppercase hex
+// 4. HMAC-SHA256(app_secret, base_string) → lowercase hex
 function signTTShop(apiPath, params, body = '') {
   const appSecret = process.env.TIKTOK_SHOP_APP_SECRET || '';
   const sorted = Object.keys(params)
@@ -6960,8 +11865,9 @@ function signTTShop(apiPath, params, body = '') {
     .sort();
   const paramStr = sorted.map(k => `${k}${params[k]}`).join('');
   const bodyStr  = typeof body === 'string' ? body : (body ? JSON.stringify(body) : '');
-  const base     = `${appSecret}${apiPath}${paramStr}${bodyStr}`;
-  return crypto.createHmac('sha256', appSecret).update(base).digest('hex').toUpperCase();
+  const base     = `${appSecret}${apiPath}${paramStr}${bodyStr}${appSecret}`;
+  console.log(`[tts-sign] path=${apiPath} keys=[${sorted.join(',')}] base=${base.slice(0, 120)}...`);
+  return crypto.createHmac('sha256', appSecret).update(base).digest('hex');
 }
 
 // ── Build common query params + sign ──────────────────────────────────────────
@@ -7018,11 +11924,17 @@ async function refreshShopToken() {
       },
     });
     if (data?.code === 0 && data?.data?.access_token) {
+      const expireVal = data.data.access_token_expire_in;
+      // If expireVal looks like a seconds-epoch (> ~year 2000 in seconds), treat as absolute;
+      // otherwise treat as a duration in seconds.
+      const expiresAt = expireVal > 1_500_000_000
+        ? expireVal * 1000
+        : Date.now() + (expireVal || 86400) * 1000;
       tokens.shop = {
         ...shopTok,
         access_token:  data.data.access_token,
         refresh_token: data.data.refresh_token || shopTok.refresh_token,
-        expires_at:    Date.now() + (data.data.access_token_expire_in || 86400) * 1000,
+        expires_at:    expiresAt,
       };
       saveTikTokTokens(tokens);
       return true;
@@ -7033,7 +11945,7 @@ async function refreshShopToken() {
   return false;
 }
 
-// ── ttsGet / ttsPost helpers that auto-refresh expired tokens ─────────────────
+// ── ttsGet / ttsPost helpers that auto-refresh expired tokens ───���─────────────
 async function ttsGet(apiPath, params = {}, opts = {}) {
   const tokens = loadTikTokTokens();
   const t = tokens.shop || {};
@@ -7065,11 +11977,20 @@ async function refreshBrandShopToken(brand, brands, brandIdx) {
       },
     });
     if (data?.code === 0 && data?.data?.access_token) {
+      const expireVal = data.data.access_token_expire_in;
+      const expiresAt = (() => {
+      // TikTok access_token_expire_in is an ABSOLUTE Unix timestamp.
+      // Distinguish ms-epoch (>1e12), seconds-epoch (1e9..1e12 -> *1000), or a raw duration in seconds (<1e9 -> now + dur*1000).
+      const v = Number(expireVal) || 0;
+      if (v > 1e12) return v;                       // already milliseconds
+      if (v > 1e9)  return v * 1000;                // seconds-epoch -> ms
+      return Date.now() + (v || 86400) * 1000;      // raw duration in seconds
+    })();
       brand.tiktokShopToken = {
         ...t,
         access_token:  data.data.access_token,
         refresh_token: data.data.refresh_token || t.refresh_token,
-        expires_at:    Date.now() + (data.data.access_token_expire_in || 86400) * 1000,
+        expires_at:    expiresAt,
       };
       brands.clients[brandIdx] = brand;
       saveBrands(brands);
@@ -7081,11 +12002,12 @@ async function refreshBrandShopToken(brand, brands, brandIdx) {
 
 async function ttsBrandRequest(brandToken, method, apiPath, params = {}, body = null) {
   const allParams = {
-    app_key:     process.env.TIKTOK_SHOP_APP_KEY || '',
-    timestamp:   Math.floor(Date.now() / 1000),
-    shop_cipher: brandToken.shop_cipher,
+    app_key:   process.env.TIKTOK_SHOP_APP_KEY || '',
+    timestamp: Math.floor(Date.now() / 1000),
     ...params,
   };
+  // Only include shop_cipher if it exists — single-shop sellers work without it
+  if (brandToken.shop_cipher) allParams.shop_cipher = brandToken.shop_cipher;
   allParams.sign = signTTShop(apiPath, allParams, body);
   const config = {
     method,
@@ -7098,10 +12020,15 @@ async function ttsBrandRequest(brandToken, method, apiPath, params = {}, body = 
   return data;
 }
 
+// Year 2030 in ms — any expires_at beyond this is likely corrupted
+const TOKEN_EXPIRY_CEILING_MS = 1_893_456_000_000;
+
 async function ttsBrandGet(brand, brands, brandIdx, apiPath, params = {}) {
   let t = brand.tiktokShopToken;
   if (!t?.access_token) throw new Error('No TikTok Shop token for brand');
-  if (t.expires_at && Date.now() > t.expires_at - 120_000) {
+  const expired = !t.expires_at || Date.now() > t.expires_at - 120_000;
+  const corrupted = t.expires_at > TOKEN_EXPIRY_CEILING_MS;
+  if (expired || corrupted) {
     await refreshBrandShopToken(brand, brands, brandIdx);
     t = brands.clients[brandIdx].tiktokShopToken;
   }
@@ -7111,7 +12038,9 @@ async function ttsBrandGet(brand, brands, brandIdx, apiPath, params = {}) {
 async function ttsBrandPost(brand, brands, brandIdx, apiPath, body = {}, params = {}) {
   let t = brand.tiktokShopToken;
   if (!t?.access_token) throw new Error('No TikTok Shop token for brand');
-  if (t.expires_at && Date.now() > t.expires_at - 120_000) {
+  const expired = !t.expires_at || Date.now() > t.expires_at - 120_000;
+  const corrupted = t.expires_at > TOKEN_EXPIRY_CEILING_MS;
+  if (expired || corrupted) {
     await refreshBrandShopToken(brand, brands, brandIdx);
     t = brands.clients[brandIdx].tiktokShopToken;
   }
@@ -7196,10 +12125,8 @@ app.get('/api/tiktokshop/callback', async (req, res) => {
     // Fetch shop cipher using the new token directly
     let shopName = 'Unknown';
     try {
-      const allParams = {
-        app_key:   process.env.TIKTOK_SHOP_APP_KEY || '',
-        timestamp: Math.floor(Date.now() / 1000),
-      };
+      const _appKey2 = process.env.TIKTOK_SHOP_APP_KEY || '';
+      const allParams = { app_key: _appKey2, timestamp: Math.floor(Date.now() / 1000) };
       allParams.sign = signTTShop('/authorization/202309/shops', allParams, '');
       const shopRes = await axios.get(`${TTS_BASE}/authorization/202309/shops`, {
         params: allParams,
@@ -7278,10 +12205,12 @@ app.get('/api/tiktokshop/orders', async (req, res) => {
       cursor,
     } = req.query;
 
-    const params = { order_status, page_size, sort_field, sort_order };
+    // page_size is a query param; filters go in body
+    const body   = { order_status, sort_field, sort_order };
+    const params = { page_size };
     if (cursor) params.cursor = cursor;
 
-    const data = await ttsPost('/order/202309/orders/search', {}, params);
+    const data = await ttsPost('/order/202309/orders/search', body, params);
     res.json(data);
   } catch (e) {
     res.status(500).json({ error: e.response?.data || e.message });
@@ -7329,7 +12258,7 @@ app.get('/api/tiktokshop/finance/summary', async (req, res) => {
     if (start_date) params.create_time_ge = Math.floor(new Date(start_date).getTime() / 1000);
     if (end_date)   params.create_time_lt = Math.floor(new Date(end_date).getTime() / 1000);
 
-    const data = await ttsPost('/finance/202309/orders/search', {}, params);
+    const data = await ttsPost('/finance/202309/orders/search', params);
     res.json(data);
   } catch (e) {
     res.status(500).json({ error: e.response?.data || e.message });
@@ -7501,6 +12430,120 @@ app.post('/api/tiktokshop/webhook', express.raw({ type: '*/*' }), (req, res) => 
   }
 });
 
+// ── GET /api/tiktokshop/brand-promotions?brandId=X&status=ONGOING ────────────
+// Uses the new TikTok Shop "Activity" API (Create Activity endpoint family)
+// activity_status values: UPCOMING, ONGOING, ENDED
+app.get('/api/tiktokshop/brand-promotions', requireAuth, async (req, res) => {
+  const { brandId, status = 'ONGOING' } = req.query;
+  const brands = loadBrands();
+  const brandIdx = (brands.clients || []).findIndex(b => b.id === brandId);
+  if (brandIdx === -1) return res.status(404).json({ error: 'Brand not found' });
+  const brand = brands.clients[brandIdx];
+  if (!brand.tiktokShopToken?.access_token) return res.status(400).json({ error: 'Brand not connected to TikTok Shop' });
+  try {
+    const resp = await ttsBrandPost(brand, brands, brandIdx, '/promotion/202309/activities/search', {
+      page_size: 100,
+    });
+    console.log('[promotions] list raw response:', JSON.stringify(resp?.data).slice(0, 500));
+    const allItems = resp?.data?.activities || resp?.data?.promotions || [];
+    const now = Math.floor(Date.now() / 1000);
+    // Filter by timestamps since TikTok may not support status filter in body
+    const filtered = allItems.filter(a => {
+      const begin = a.begin_time || a.start_time || 0;
+      const end   = a.end_time   || a.finish_time || 0;
+      if (status === 'UPCOMING') return begin > now;
+      if (status === 'ONGOING')  return begin <= now && end >= now;
+      if (status === 'ENDED')    return end < now;
+      return true;
+    });
+    res.json({ ok: true, promotions: filtered, total: filtered.length });
+  } catch (e) {
+    console.error('[promotions] list error:', e.response?.data || e.message);
+    res.status(500).json({ ok: false, error: e.response?.data?.message || e.message });
+  }
+});
+
+// ── POST /api/tiktokshop/brand-promotions ────────────────────────────────────
+// activity_type: PRODUCT_DISCOUNT or FLASH_DEAL
+app.post('/api/tiktokshop/brand-promotions', requireAuth, express.json(), async (req, res) => {
+  const { brandId, title, promotionType, beginTime, endTime, productList } = req.body || {};
+  if (!brandId || !title || !beginTime || !endTime || !productList?.length)
+    return res.status(400).json({ ok: false, error: 'Missing required fields' });
+  const brands = loadBrands();
+  const brandIdx = (brands.clients || []).findIndex(b => b.id === brandId);
+  if (brandIdx === -1) return res.status(404).json({ error: 'Brand not found' });
+  const brand = brands.clients[brandIdx];
+  if (!brand.tiktokShopToken?.access_token) return res.status(400).json({ error: 'Brand not connected to TikTok Shop' });
+  try {
+    // Map legacy type numbers to new activity_type strings
+    const typeMap = { '3': 'FLASH_DEAL', '4': 'PRODUCT_DISCOUNT' };
+    const activityType = typeMap[String(promotionType)] || 'PRODUCT_DISCOUNT';
+    const body = {
+      title,
+      activity_type: activityType,
+      begin_time: Math.floor(new Date(beginTime).getTime() / 1000),
+      end_time:   Math.floor(new Date(endTime).getTime() / 1000),
+      product_level: 'SKU',
+      product_list: productList,
+    };
+    console.log('[promotions] create body:', JSON.stringify(body).slice(0, 300));
+    const resp = await ttsBrandPost(brand, brands, brandIdx, '/promotion/202309/activities', body);
+    console.log('[promotions] create response:', JSON.stringify(resp).slice(0, 300));
+    if (resp?.code !== 0) throw new Error(resp?.message || `TikTok error code ${resp?.code}`);
+    res.json({ ok: true, activity: resp?.data });
+  } catch (e) {
+    console.error('[promotions] create error:', e.response?.data || e.message);
+    res.status(500).json({ ok: false, error: e.response?.data?.message || e.message });
+  }
+});
+
+// ── DELETE /api/tiktokshop/brand-promotions/:promoId?brandId=X ───────────────
+app.delete('/api/tiktokshop/brand-promotions/:promoId', requireAuth, async (req, res) => {
+  const { brandId } = req.query;
+  const { promoId } = req.params;
+  const brands = loadBrands();
+  const brandIdx = (brands.clients || []).findIndex(b => b.id === brandId);
+  if (brandIdx === -1) return res.status(404).json({ error: 'Brand not found' });
+  const brand = brands.clients[brandIdx];
+  if (!brand.tiktokShopToken?.access_token) return res.status(400).json({ error: 'Brand not connected to TikTok Shop' });
+  try {
+    const t = brand.tiktokShopToken;
+    const resp = await ttsBrandRequest(t, 'DELETE', `/promotion/202309/activities/${promoId}`, {});
+    console.log('[promotions] delete response:', JSON.stringify(resp).slice(0, 200));
+    res.json({ ok: true, data: resp?.data });
+  } catch (e) {
+    console.error('[promotions] delete error:', e.response?.data || e.message);
+    res.status(500).json({ ok: false, error: e.response?.data?.message || e.message });
+  }
+});
+
+// ── GET /api/tiktokshop/brand-products?brandId=X ────────────────────────────
+// Used by promotion form product picker
+app.get('/api/tiktokshop/brand-products', requireAuth, async (req, res) => {
+  const { brandId } = req.query;
+  const brands = loadBrands();
+  const brandIdx = (brands.clients || []).findIndex(b => b.id === brandId);
+  if (brandIdx === -1) return res.status(404).json({ error: 'Brand not found' });
+  const brand = brands.clients[brandIdx];
+  if (!brand.tiktokShopToken?.access_token) return res.status(400).json({ error: 'Brand not connected to TikTok Shop' });
+  try {
+    const resp = await ttsBrandPost(brand, brands, brandIdx, '/product/202309/products/search', { page_size: 50 });
+    const products = (resp?.data?.products || []).map(p => ({
+      product_id: p.product_id,
+      title: p.title,
+      skus: (p.skus || []).map(s => ({
+        sku_id: s.id || s.sku_id,
+        name: (s.sales_attributes || []).map(a => a.value_name).filter(Boolean).join(' / ') || 'Default',
+        price: s.price?.original_price || s.price?.sale_price || '0',
+      })),
+    }));
+    res.json({ ok: true, products });
+  } catch (e) {
+    console.error('[brand-products] error:', e.response?.data || e.message);
+    res.status(500).json({ ok: false, error: e.response?.data?.message || e.message });
+  }
+});
+
 // ─── Video — Cross-platform stats ─────────────────────────────────────────────
 app.get('/api/video/cross-platform-stats', async (req, res) => {
   const force = req.query.force === '1';
@@ -7602,7 +12645,7 @@ app.get('/api/video/cross-platform-stats', async (req, res) => {
   }
 });
 
-// ─── Video — Generate caption ──────────────────────────────────────────────────
+// ─── Video — Generate caption ──────────���───────────────────────────────────────
 app.post('/api/video/generate-caption', async (req, res) => {
   const { transcript, platform = 'tiktok', tone = 'casual' } = req.body || {};
   if (!transcript) return res.status(400).json({ ok: false, error: 'transcript required' });
@@ -7634,14 +12677,14 @@ Return ONLY valid JSON: {"caption": "...", "hashtags": ["tag1", "tag2", ...]}
   }
 });
 
-// ─── Fireflies.ai — recent meeting list ──────────────────────────────────────
+// ─── Fireflies.ai — recent meeting list ���─────────────────────────────────────
 app.get('/api/fireflies/meetings', async (req, res) => {
   const keys = [process.env.FIREFLIES_API_KEY, process.env.FIREFLIES_API_KEY_2].filter(Boolean);
   if (!keys.length) return res.json({ connected: false, error: 'FIREFLIES_API_KEY not set' });
 
   const fromDate = new Date();
-  fromDate.setDate(fromDate.getDate() - 7);
-  const fromDateStr = fromDate.toISOString().split('T')[0]; // YYYY-MM-DD
+  fromDate.setDate(fromDate.getDate() - 30);
+  const fromDateStr = fromDate.toISOString().split('T')[0];
 
   const query = `query {
     transcripts(limit: 50, fromDate: "${fromDateStr}") {
@@ -7655,33 +12698,58 @@ app.get('/api/fireflies/meetings', async (req, res) => {
       { query },
       { headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' } }
     );
+    if (r.data?.errors) console.error('[fireflies/meetings] GraphQL errors:', JSON.stringify(r.data.errors));
     return r.data?.data?.transcripts || [];
   };
 
   try {
-    // Fetch from all configured Fireflies accounts in parallel
+    // Fetch live meetings from Fireflies API (7-day window)
     const results = await Promise.allSettled(keys.map(fetchFromKey));
     const seen = new Set();
     const allMeetings = [];
     for (const result of results) {
       if (result.status !== 'fulfilled') continue;
       for (const t of result.value) {
-        if (seen.has(t.id)) continue; // dedupe across accounts
+        if (seen.has(t.id)) continue;
         seen.add(t.id);
-        allMeetings.push(t);
+        allMeetings.push({ id: t.id, title: t.title || 'Untitled Meeting', date: t.date, participants: t.participants || [], summary: t.summary || {} });
       }
     }
+    // Merge in locally-synced meetings from client-meetings.json (full history)
+    const local = loadClientMeetings();
+    for (const m of (local.meetings || [])) {
+      const ffId = m.fireflyId || m.id?.replace(/^ff_/, '');
+      if (!ffId || seen.has(ffId)) continue;
+      seen.add(ffId);
+      allMeetings.push({
+        id:           ffId,
+        title:        m.title || 'Untitled Meeting',
+        date:         m.date ? new Date(m.date).getTime() : 0,
+        participants: m.participants || [],
+        summary:      m.summary ? { short_summary: m.summary } : {},
+      });
+    }
+    // Merge in Meeting Intel records (webhook-delivered) — guarantees picker shows
+    // meetings even when the Fireflies list API fails to index them
+    try {
+      const intel = loadMeetingIntel();
+      for (const m of (intel.meetings || [])) {
+        const ffId = m.meetingId;
+        if (!ffId || seen.has(ffId)) continue;
+        seen.add(ffId);
+        allMeetings.push({
+          id:           ffId,
+          title:        m.title || 'Untitled Meeting',
+          date:         typeof m.date === 'number' ? m.date : (m.date ? new Date(m.date).getTime() : 0),
+          participants: m.participants || [],
+          summary:      m.analysis?.meetingSummary ? { short_summary: m.analysis.meetingSummary } : {},
+        });
+      }
+    } catch (e) { console.error('[fireflies/meetings] intel merge:', e.message); }
     // Sort newest first
     allMeetings.sort((a, b) => (b.date || 0) - (a.date || 0));
-    const meetings = allMeetings.map((t, i) => ({
-      _idx:         i,
-      id:           t.id,
-      title:        t.title || 'Untitled Meeting',
-      date:         t.date,
-      participants: t.participants || [],
-      summary:      t.summary || {},
-    }));
-    res.json({ connected: true, meetings, fromDate: fromDateStr, accountCount: keys.length });
+    const meetings = allMeetings.map((t, i) => ({ ...t, _idx: i }));
+    res.json({ connected: true, meetings, accountCount: keys.length });
   } catch (err) {
     console.error('fireflies:', err.response?.data || err.message);
     res.json({ connected: false, error: err.response?.data?.message || err.message });
@@ -7690,6 +12758,24 @@ app.get('/api/fireflies/meetings', async (req, res) => {
 
 // ─── Fireflies.ai — full transcript for one meeting ──────────────────────────
 app.get('/api/fireflies/transcript/:id', async (req, res) => {
+  const ffId = req.params.id;
+
+  // Check local store first — works for any meeting regardless of API key date limits
+  const local = loadClientMeetings();
+  const localMeeting = (local.meetings || []).find(m => m.fireflyId === ffId || m.id === `ff_${ffId}` || m.id === ffId);
+  if (localMeeting?.notes) {
+    return res.json({
+      id:           ffId,
+      title:        localMeeting.title,
+      date:         localMeeting.date,
+      participants: localMeeting.participants || [],
+      summary:      { short_summary: localMeeting.summary || '', action_items: (localMeeting.actionItems || []).map(a => `- ${a.task}`).join('\n') },
+      transcript:   localMeeting.notes,
+      sentenceCount: localMeeting.notes.split('\n').length,
+      source:       'local',
+    });
+  }
+
   const keys = [process.env.FIREFLIES_API_KEY, process.env.FIREFLIES_API_KEY_2].filter(Boolean);
   if (!keys.length) return res.status(400).json({ error: 'FIREFLIES_API_KEY not set' });
   const query = `query Transcript($id: String!) {
@@ -7701,17 +12787,16 @@ app.get('/api/fireflies/transcript/:id', async (req, res) => {
   }`;
   const tryFetch = async (key) => {
     const r = await axios.post('https://api.fireflies.ai/graphql',
-      { query, variables: { id: req.params.id } },
+      { query, variables: { id: ffId } },
       { headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' } }
     );
     return r.data?.data?.transcript || null;
   };
   try {
-    // Try all accounts — transcript may live on any of them
     let t = null;
     for (const key of keys) {
       t = await tryFetch(key).catch(() => null);
-      if (t?.sentences?.length) break; // found it
+      if (t?.sentences?.length) break;
     }
     if (!t) return res.status(404).json({ error: 'Transcript not found on any connected account' });
     const lines = (t.sentences || []).map(s => `${s.speaker_name || 'Unknown'}: ${s.text}`);
@@ -7757,6 +12842,7 @@ app.get('/api/pipeline/:segment', async (req, res) => {
 
   const PIPELINE_MAP = {
     'growth-partners': GP_PIPELINE_ID,
+    'signal-engine': 'Ngdx8GTMlQ1lxiBWTr7d', // Signal Engine pipeline (10 stages: New Lead → Won/Lost)
     // add more segments → pipeline IDs here as needed
   };
 
@@ -7977,7 +13063,7 @@ async function scrapeShopifyProducts(context) {
 }
 
 // ─── AI Proposal generator ────────────────────────────────────────────────────
-// ── Step 1: Extract metrics from transcript + Shopify ─────────────────────────
+// ── Step 1: Extract metrics from transcript + Shopify ───────���─────────────────
 app.post('/api/ai/extract-metrics', async (req, res) => {
   try {
     const { context } = req.body;
@@ -8614,6 +13700,44 @@ async function createLarkResourceHub(formData) {
   }
 }
 
+// Create a public Lark group chat for a brand's creator community
+async function createLarkCreatorGroup(brandName) {
+  try {
+    const larkToken = await getLarkTenantToken();
+    if (!larkToken) { console.error('[lark] No Lark tenant token for createLarkCreatorGroup'); return null; }
+
+    // Step 1 — Create the group chat
+    const createRes = await axios.post(
+      'https://open.larksuite.com/open-apis/im/v1/chats',
+      {
+        name: `${brandName} — Creator Community`,
+        description: `TikTok Shop creator affiliate community for ${brandName}`,
+        chat_mode: 'group',
+        chat_type: 'public',
+      },
+      { headers: { Authorization: `Bearer ${larkToken}`, 'Content-Type': 'application/json' } }
+    );
+    console.log(`[lark] createLarkCreatorGroup create response: ${JSON.stringify(createRes.data)}`);
+    const chatId = createRes.data?.data?.chat_id;
+    if (!chatId) { console.error('[lark] createLarkCreatorGroup: no chat_id in response:', JSON.stringify(createRes.data)); return null; }
+
+    // Step 2 — Generate a permanent join link
+    const linkRes = await axios.post(
+      `https://open.larksuite.com/open-apis/im/v1/chats/${chatId}/link`,
+      { validity_period: 'permanently' },
+      { headers: { Authorization: `Bearer ${larkToken}`, 'Content-Type': 'application/json' } }
+    );
+    console.log(`[lark] createLarkCreatorGroup link response: ${JSON.stringify(linkRes.data)}`);
+    const shareLink = linkRes.data?.data?.share_link;
+    if (!shareLink) { console.error('[lark] createLarkCreatorGroup: no share_link in response:', JSON.stringify(linkRes.data)); return null; }
+
+    return { chatId, shareLink };
+  } catch(e) {
+    console.error(`[lark] createLarkCreatorGroup error: ${JSON.stringify(e.response?.data) || e.message}`);
+    return null;
+  }
+}
+
 // Send comprehensive Lark alert via Railway /command
 async function sendLarkOnboardingAlert(formData, shopifyData, aiContent, larkDoc, creatorPage) {
   try {
@@ -8750,7 +13874,9 @@ async function runOnboardingPipeline(formData) {
       brandsData.clients.push(brand);
     }
     brand.contactName = `${formData.firstName} ${formData.lastName}`;
+    if (formData.email && !brand.loginEmail) brand.loginEmail = formData.email.toLowerCase().trim();
     brand.website     = formData.website;
+    if (formData.logoUrl) brand.logoUrl = formData.logoUrl;
     brand.creatorPage = {
       slug, tagName: `creator-interested-${slug}`, active: true,
       headline: `Partner with ${brandName}`,
@@ -8854,6 +13980,28 @@ async function runOnboardingPipeline(formData) {
   // 7. Send comprehensive Lark alert
   await sendLarkOnboardingAlert(formData, shopifyData, aiContent, larkDoc, creatorPage);
 
+  // 8. Sync to Ops Engine (fire-and-forget)
+  try {
+    const { syncClientToOpsEngine } = require('./lib/ops-engine-sync');
+    await syncClientToOpsEngine(formData, {
+      brandSlug: (formData.brandName||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''),
+      ghlContactId: typeof ghlContactId !== 'undefined' ? ghlContactId : null,
+      larkDocUrl: typeof larkDoc !== 'undefined' ? (larkDoc?.url||larkDoc||null) : null,
+      creatorPageUrl: typeof creatorPage !== 'undefined' ? (creatorPage?.url||null) : null
+    });
+  } catch (e) { console.error('[ops-engine] sync error:', e.message); }
+
+  // 9. Create per-client Lark group chat (fire-and-forget)
+  try {
+    const { syncClientChat } = require('./lib/client-chat-sync');
+    await syncClientChat(formData, {
+      brandSlug: (formData.brandName||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''),
+      larkDocUrl: typeof larkDoc !== 'undefined' ? (larkDoc?.url||larkDoc||null) : null,
+      creatorPageUrl: typeof creatorPage !== 'undefined' ? (creatorPage?.url||null) : null,
+      affiliateLink: formData.affiliateLink || null
+    });
+  } catch (e) { console.error('[client-chat] sync error:', e.message); }
+
   console.log(`[onboard] Pipeline complete: ${brandName} (id: ${entryId})`);
 }
 
@@ -8920,7 +14068,7 @@ function extractTikTokVideoId(url) {
 
 function renderOpportunitiesPage() {
   const brands = loadBrands();
-  const opportunities = (brands.clients || []).filter(b => b.creatorPage?.slug && b.creatorPage?.active !== false);
+  const opportunities = (brands.clients || []).filter(b => b.creatorPage?.slug && b.creatorPage?.active !== false && b.creatorPage?.listed !== false);
 
   const cards = opportunities.map(brand => {
     const cp         = brand.creatorPage;
@@ -8974,6 +14122,7 @@ function renderOpportunitiesPage() {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Manifest Abundance — TikTok Creator Opportunities</title>
+<link rel="icon" type="image/png" href="/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -8990,15 +14139,27 @@ h1{font-family:'Montserrat',sans-serif;font-size:clamp(36px,6vw,68px);font-weigh
 .opp-card:hover{border-color:rgba(255,255,255,.18)!important;transform:translateY(-3px);box-shadow:0 16px 40px rgba(0,0,0,.35);}
 footer{border-top:1px solid rgba(255,255,255,.05);padding:24px;text-align:center;font-size:11px;color:rgba(255,255,255,.18);}
 footer a{color:#00f2ea;text-decoration:none;}
+.site-nav{display:flex;align-items:center;padding:16px 24px;border-bottom:1px solid rgba(255,255,255,.05);}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.nav-logo img{width:36px;height:36px;border-radius:8px;object-fit:cover;}
+.nav-logo-text{font-size:.9rem;font-weight:800;color:#00f2ea;letter-spacing:-.01em;}
 </style>
 </head>
 <body>
+
+<nav class="site-nav">
+  <a class="nav-logo" href="https://cultcontent.cc" target="_blank">
+    <img src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/68529ceff63e1913ceb4e2e0.png" alt="Cult Content">
+    <span class="nav-logo-text">Cult Content</span>
+  </a>
+</nav>
 
 <div class="hero">
   <div class="eyebrow">✦ TikTok Shop Creator Program</div>
   <h1>Manifest Abundance</h1>
   <p class="hero-sub">Find the opportunity that is most aligned with who you are — and start earning.</p>
   <div class="count-badge">${opportunities.length} brand${opportunities.length !== 1 ? 's' : ''} currently partnering</div>
+  <p style="margin-top:20px;font-size:12px;color:rgba(255,255,255,.25);">Select a brand below to connect your TikTok account and join their creator program.</p>
 </div>
 
 <div class="grid-wrap">
@@ -9007,8 +14168,9 @@ footer a{color:#00f2ea;text-decoration:none;}
   </div>
 </div>
 
-<footer>Powered by <a href="https://cultcontent.cc" target="_blank">Cult Content</a> — TikTok Shop Creator Agency</footer>
+<footer>Powered by <a href="https://cultcontent.cc" target="_blank">Cult Content</a> — TikTok Shop Creator Agency &nbsp;·&nbsp; <a href="/terms" target="_blank">Terms of Service</a> &nbsp;·&nbsp; <a href="/privacy" target="_blank">Privacy Policy</a></footer>
 
+<script src="/ic-nav.js" defer></script>
 </body>
 </html>`;
 }
@@ -9018,6 +14180,67 @@ function renderCreatorPage(brand, cp) {
   const ar       = hexToRgb(accent);
   const name     = brand.name || 'Brand';
   const inc      = cp.incentives || {};
+
+  // Brand video embed (data-driven). Supports YouTube, Vimeo, or direct video file.
+  let videoEmbedHtml = '';
+  if (cp.videoUrl) {
+    const vurl = String(cp.videoUrl).trim();
+    const yt = vurl.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/))([\w-]{11})/);
+    const gdrive = vurl.match(/drive\.google\.com\/file\/d\/([\w-]+)/);
+    const tiktok = vurl.match(/tiktok\.com\/.*\/video\/(\d+)/) || vurl.match(/tiktok\.com\/(?:v|t)\/(\w+)/);
+    const vimeo = vurl.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+    let inner = '';
+    if (yt) {
+      inner = `<iframe src="https://www.youtube.com/embed/${yt[1]}?rel=0&modestbranding=1&playsinline=1" title="${name} creator video" frameborder="0" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`;
+    } else if (vimeo) {
+      inner = `<iframe src="https://player.vimeo.com/video/${vimeo[1]}" title="${name} creator video" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+    } else if (/\.(mp4|webm|mov)(\?.*)?$/i.test(vurl)) {
+      inner = `<video src="${vurl}" controls playsinline preload="metadata"></video>`;
+    } else if (gdrive) {
+      inner = `<iframe src="https://drive.google.com/file/d/${gdrive[1]}/preview" title="${name} creator video" frameborder="0" allow="autoplay" allowfullscreen></iframe>`;
+    } else if (tiktok) {
+      inner = `<iframe src="https://www.tiktok.com/embed/v2/${tiktok[1]}" title="${name} creator video" frameborder="0" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>`;
+    }
+    if (inner) {
+      const vTitle = cp.videoTitle || 'Watch this first';
+      const vSub   = cp.videoSub   || `See how creators are winning with ${name}.`;
+      videoEmbedHtml = `
+<hr class="divider">
+<div class="section">
+  <div class="section-inner">
+    <div class="section-label">Watch</div>
+    <div class="section-title">${vTitle}</div>
+    <div class="section-sub">${vSub}</div>
+    <div class="video-embed">${inner}</div>
+  </div>
+</div>`;
+    }
+  }
+
+  // Reference images — "Use These Pictures" (data-driven). Supports static images + gifs.
+  let imagesEmbedHtml = '';
+  {
+    const imgs = Array.isArray(cp.referenceImages) ? cp.referenceImages.filter(i => i && i.url) : [];
+    if (imgs.length) {
+      const cards = imgs.map(i => {
+        const u = String(i.url).trim().replace(/"/g, '&quot;');
+        const cap = i.caption ? '<div class="refimg-cap">' + String(i.caption).replace(/</g, '&lt;') + '</div>' : '';
+        return '<div class="refimg-item"><img src="' + u + '" alt="' + name + ' reference" loading="lazy">' + cap + '</div>';
+      }).join('');
+      const iTitle = cp.imagesTitle || 'Use these pictures';
+      const iSub   = cp.imagesSub   || ('The exact visuals winning creators are using for ' + name + ' — drop them straight into your videos.');
+      imagesEmbedHtml = `
+<hr class="divider">
+<div class="section">
+  <div class="section-inner">
+    <div class="section-label">Assets</div>
+    <div class="section-title">${iTitle}</div>
+    <div class="section-sub">${iSub}</div>
+    <div class="refimg-grid">${cards}</div>
+  </div>
+</div>`;
+    }
+  }
 
   // Auto-generate reward copy lines
   const rewardLines = [];
@@ -9034,7 +14257,16 @@ function renderCreatorPage(brand, cp) {
   if (inc.leaderboard?.enabled) {
     const places = inc.leaderboard.places || inc.leaderboard.prizes || [];
     const topPrize = places[0];
-    if (topPrize) rewardLines.push({ val: `$${topPrize} top prize`, desc: `monthly leaderboard${inc.leaderboard.threshold ? ` — $${Number(inc.leaderboard.threshold).toLocaleString()} min GMV` : ''}` });
+    if (topPrize) {
+      const ordinals = ['1st', '2nd', '3rd'];
+      const extraTiers = places.length > 1
+        ? places.slice(1).map((p, i) => `${ordinals[i + 1] || `${i+2}nd`} $${p}`).join(', ')
+        : '';
+      const descParts = [`monthly leaderboard`];
+      if (inc.leaderboard.threshold) descParts.push(`$${Number(inc.leaderboard.threshold).toLocaleString()} min GMV`);
+      if (extraTiers) descParts.push(extraTiers);
+      rewardLines.push({ val: `$${topPrize} top prize`, desc: descParts.join(' — ') });
+    }
   }
 
   return `<!DOCTYPE html>
@@ -9042,6 +14274,7 @@ function renderCreatorPage(brand, cp) {
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Partner with ${name} — Creator Program</title>
+<link rel="icon" type="image/png" href="/favicon.png">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
@@ -9058,11 +14291,17 @@ h1{font-size:clamp(26px,5vw,50px);font-weight:900;line-height:1.06;letter-spacin
 .section-title{font-size:clamp(18px,3vw,28px);font-weight:900;margin-bottom:8px;letter-spacing:-.01em}
 .section-sub{font-size:13px;color:rgba(255,255,255,.4);line-height:1.6;margin-bottom:32px}
 .divider{border:none;border-top:1px solid rgba(255,255,255,.06);margin:0}
+.refimg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px}
+.refimg-item{position:relative;border-radius:12px;overflow:hidden;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07)}
+.refimg-item img{display:block;width:100%;height:auto;object-fit:cover}
+.refimg-cap{font-size:12px;color:rgba(255,255,255,.55);padding:8px 10px;line-height:1.4}
 /* rewards */
 .rewards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
 .reward-card{background:rgba(${ar},.08);border:1.5px solid rgba(${ar},.22);border-radius:14px;padding:20px 18px;display:flex;flex-direction:column;gap:6px}
 .reward-val{font-size:22px;font-weight:900;color:${accent};line-height:1.1}
 .reward-desc{font-size:13px;color:rgba(255,255,255,.5);line-height:1.45}
+.video-embed{position:relative;width:100%;max-width:860px;margin:0 auto;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.08);background:#000;aspect-ratio:16/9}
+.video-embed iframe,.video-embed video{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
 /* form */
 .form-card{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:40px;max-width:560px;margin:0 auto}
 .form-head{font-size:22px;font-weight:900;margin-bottom:6px}
@@ -9085,6 +14324,7 @@ footer a{color:${accent};text-decoration:none}
 <body>
 
 <div class="hero">
+  ${brand.logoUrl ? `<img src="${brand.logoUrl}" alt="${name}" style="max-height:60px;max-width:160px;object-fit:contain;margin-bottom:14px;border-radius:8px">` : ''}
   <div class="brand-badge"><span class="live-dot"></span>&nbsp;${name} Creator Program</div>
   <h1>${cp.headline || `Partner with ${name} on TikTok Shop`}</h1>
   <div class="hero-sub">Join our affiliate creator program and start earning. Sign up below to get access to all campaigns and your Discord role.</div>
@@ -9100,6 +14340,8 @@ ${rewardLines.length ? `
     <div class="rewards-grid">${rewardLines.map(r => `<div class="reward-card"><div class="reward-val">${r.val}</div><div class="reward-desc">${r.desc}</div></div>`).join('')}</div>
   </div>
 </div>` : ''}
+${videoEmbedHtml}
+${imagesEmbedHtml}
 
 <hr class="divider">
 <div class="section" id="signup">
@@ -9117,6 +14359,7 @@ ${rewardLines.length ? `
           <input name="discordUsername" placeholder="yourname">
           <div class="f-hint">Needed to unlock your Verified Creator role.</div>
         </div>
+        <input type="hidden" name="tiktokOpenId" id="tiktokOpenIdField">
         <div class="f-err" id="cpErr"></div>
         <button type="submit" class="btn-submit" id="cpBtn">Join Now</button>
       </form>
@@ -9124,9 +14367,77 @@ ${rewardLines.length ? `
   </div>
 </div>
 
-<footer>Powered by <a href="https://cultcontent.cc" target="_blank">Cult Content</a> — TikTok Shop Creator Agency</footer>
+<footer>Powered by <a href="https://cultcontent.cc" target="_blank">Cult Content</a> — TikTok Shop Creator Agency &nbsp;·&nbsp; <a href="/terms" target="_blank">Terms of Service</a> &nbsp;·&nbsp; <a href="/privacy" target="_blank">Privacy Policy</a></footer>
 
 <script>
+var _ttOpenId = '';
+var FORM_KEY = 'creator_form_${cp.slug}';
+
+function saveForm() {
+  var data = {};
+  document.querySelectorAll('#cpForm input, #cpForm textarea, #cpForm select').forEach(function(el) {
+    if (el.name && el.type !== 'hidden') data[el.name] = el.value;
+  });
+  sessionStorage.setItem(FORM_KEY, JSON.stringify(data));
+}
+
+function restoreForm() {
+  try {
+    var saved = JSON.parse(sessionStorage.getItem(FORM_KEY) || '{}');
+    Object.keys(saved).forEach(function(k) {
+      var el = document.querySelector('#cpForm [name="' + k + '"]');
+      if (el && saved[k]) el.value = saved[k];
+    });
+  } catch(_) {}
+}
+
+function showConnected(openId, handle) {
+  _ttOpenId = openId;
+  document.getElementById('tiktokOpenIdField').value = openId;
+  document.getElementById('ttConnectedBadge').style.display = 'flex';
+  document.getElementById('ttConnectBtn').style.display = 'none';
+  if (handle) {
+    document.getElementById('ttHandleDisplay').textContent = '@' + handle + ' connected ✓';
+    var hField = document.querySelector('input[name="tiktokHandle"]');
+    if (hField && !hField.value) hField.value = '@' + handle;
+  }
+  // Enable the Join Now button now that TikTok is connected
+  var btn = document.getElementById('cpBtn');
+  btn.disabled = false;
+  btn.style.opacity = '1';
+}
+
+function connectTikTok() {
+  // Save form state so we can restore it after the redirect
+  saveForm();
+  // Full-page redirect to TikTok OAuth (works on mobile, no popup needed)
+  window.location.href = '/api/creator/connect/auth?slug=${cp.slug}';
+}
+
+// On page load: check for OAuth return params or error
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  var oid    = params.get('tt_oid');
+  var handle = params.get('tt_handle');
+  var ttErr  = params.get('tt_error');
+
+  if (oid) {
+    // Restore form, then show connected state
+    restoreForm();
+    showConnected(oid, handle || '');
+    sessionStorage.removeItem(FORM_KEY);
+    // Clean URL so refreshing doesn't re-trigger
+    history.replaceState({}, '', window.location.pathname);
+  } else if (ttErr) {
+    var err = document.getElementById('cpErr');
+    err.textContent = 'TikTok connection failed: ' + ttErr + ' — please try again.';
+    err.style.display = 'block';
+    restoreForm();
+    history.replaceState({}, '', window.location.pathname);
+  }
+
+})();
+
 document.getElementById('cpForm').addEventListener('submit', async function(e) {
   e.preventDefault();
   var btn = document.getElementById('cpBtn');
@@ -9137,25 +14448,22 @@ document.getElementById('cpForm').addEventListener('submit', async function(e) {
   try {
     var r = await fetch('/api/creator-pages/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
     var d = await r.json();
-    if (d.ok && d.welcomeUrl) {
-      window.location.href = d.welcomeUrl;
-    } else if (d.ok) {
-      btn.textContent = 'Done!';
-    } else {
-      throw new Error(d.error || 'Unknown error');
-    }
+    if (d.ok && d.welcomeUrl) { window.location.href = d.welcomeUrl; }
+    else if (d.ok) { btn.textContent = 'Done!'; }
+    else { throw new Error(d.error || 'Unknown error'); }
   } catch(ex) {
     btn.disabled = false; btn.textContent = 'Join Now';
-    err.textContent = ex.message || 'Something went wrong - please try again.';
+    err.textContent = ex.message || 'Something went wrong — please try again.';
     err.style.display = 'block';
   }
 });
 </script>
+<script src="/ic-nav.js" defer></script>
 </body>
 </html>`;
 }
 
-function renderWelcomePage(brand, cp) {
+function renderWelcomePage(brand, cp, creatorHandle = '') {
   const accent   = cp.accentColor || '#00f2ea';
   const ar       = hexToRgb(accent);
   const name     = brand.name || 'Brand';
@@ -9169,9 +14477,12 @@ function renderWelcomePage(brand, cp) {
   const brief    = cp.brief || null;
 
   const campaignBtns = [];
+  if (campaigns.blitzUrl)         campaignBtns.push({ label: campaigns.blitzLabel || '🚀 Blitz Launch Campaign', sub: campaigns.blitzSub || 'Post your videos on launch day — bonus for first-15-day GMV', url: campaigns.blitzUrl });
   if (campaigns.cashbackUrl)      campaignBtns.push({ label: 'Cashback Campaign',        sub: 'Earn cashback on every sale you drive',       url: campaigns.cashbackUrl });
   if (campaigns.quantityVideoUrl) campaignBtns.push({ label: 'Video Quantity Challenge', sub: 'Post 10 videos and earn a cash bonus',        url: campaigns.quantityVideoUrl });
+  if (campaigns.sprintUrl)        campaignBtns.push({ label: 'Freedom Sprint Challenge', sub: 'Hit your GMV target and earn a cash bonus',   url: campaigns.sprintUrl });
   if (campaigns.leaderboardUrl)   campaignBtns.push({ label: 'Leaderboard Challenge',    sub: 'Compete for top GMV and win monthly prizes',  url: campaigns.leaderboardUrl });
+  if (campaigns.reimbursementUrl) campaignBtns.push({ label: 'Sample Reimbursement Form', sub: 'Bought your own sample? Submit your order for a full refund.', url: campaigns.reimbursementUrl });
 
   const btnsHtml = campaignBtns.map(c => `
     <a href="${c.url}" target="_blank" rel="noopener" class="camp-btn">
@@ -9182,7 +14493,32 @@ function renderWelcomePage(brand, cp) {
       <div class="camp-btn-arrow">&#8594;</div>
     </a>`).join('');
 
-  // ── Brief sections ──────────────────────────────────────────────────────────
+  // Inline incentive cards — shown when incentives are configured (with or without external URLs)
+  const inc = cp.incentives || {};
+  const incentiveCards = [];
+  if (inc.cashback?.enabled && inc.cashback.amount) {
+    const url = campaigns.cashbackUrl || null;
+    const target = inc.cashback.target ? `Hit $${Number(inc.cashback.target).toLocaleString()} GMV and earn it back as cash` : 'Earn cashback on every sale you drive';
+    incentiveCards.push({ emoji: '💵', label: `$${Number(inc.cashback.amount).toLocaleString()} Cashback`, sub: target, url });
+  }
+  if (inc.volumeBonus?.enabled && inc.volumeBonus.bonus) {
+    const url = campaigns.quantityVideoUrl || null;
+    incentiveCards.push({ emoji: '🎬', label: `$${Number(inc.volumeBonus.bonus).toLocaleString()} Video Bonus`, sub: `Post ${inc.volumeBonus.quantity || 10} videos and earn a one-time cash bonus`, url });
+  }
+  if (inc.leaderboard?.enabled && (inc.leaderboard.places || []).length) {
+    const url = campaigns.leaderboardUrl || null;
+    const top = inc.leaderboard.places[0];
+    const threshold = inc.leaderboard.threshold;
+    const placesStr = (inc.leaderboard.places || []).map((p, i) => `${['1st','2nd','3rd'][i]||`${i+1}th`}: $${Number(p).toLocaleString()}`).join(' · ');
+    incentiveCards.push({ emoji: '🏆', label: `$${Number(top).toLocaleString()} Top Prize`, sub: `Monthly leaderboard${threshold ? ` — $${Number(threshold).toLocaleString()} min GMV` : ''} — ${placesStr}`, url });
+  }
+
+  const incentiveCardsHtml = incentiveCards.length ? incentiveCards.map(c => c.url
+    ? `<a href="${c.url}" target="_blank" rel="noopener" class="inc-card inc-card-link"><span class="inc-emoji">${c.emoji}</span><div class="inc-text"><div class="inc-label">${c.label}</div><div class="inc-sub">${c.sub}</div></div><div class="camp-btn-arrow">&#8594;</div></a>`
+    : `<div class="inc-card"><span class="inc-emoji">${c.emoji}</span><div class="inc-text"><div class="inc-label">${c.label}</div><div class="inc-sub">${c.sub}</div></div></div>`
+  ).join('') : '';
+
+  // ── Brief sections ────────────────────────────────────────��─────────────────
   const typeLabel = { curiosity:'Curiosity', 'pain-point':'Pain Point', transformation:'Transformation', 'social-proof':'Social Proof', controversy:'Controversy', 'myth-bust':'Myth Bust' };
 
   const hooksHtml = brief?.hooks?.length ? `
@@ -9306,6 +14642,7 @@ function renderWelcomePage(brand, cp) {
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Welcome — ${name} Creator Program</title>
+<link rel="icon" type="image/png" href="/favicon.png">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a0a0f;color:#fff;min-height:100vh;padding:48px 20px}
@@ -9313,6 +14650,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .card{width:100%;max-width:520px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.08);border-radius:24px;padding:48px 40px;margin:0 auto}
 @media(max-width:560px){.card{padding:36px 24px}}
 .success-icon{font-size:52px;margin-bottom:22px}
+.brand-logo{max-height:64px;max-width:180px;object-fit:contain;margin-bottom:16px;border-radius:8px}
 h1{font-size:clamp(22px,4vw,30px);font-weight:900;letter-spacing:-.02em;margin-bottom:10px}
 .welcome-sub{font-size:14px;color:rgba(255,255,255,.42);line-height:1.7;margin-bottom:0;max-width:380px}
 .section-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:${accent};margin-bottom:14px;text-align:left}
@@ -9322,9 +14660,19 @@ h1{font-size:clamp(22px,4vw,30px);font-weight:900;letter-spacing:-.02em;margin-b
 .camp-btn-label{font-size:14px;font-weight:900;margin-bottom:3px}
 .camp-btn-sub{font-size:12px;color:rgba(255,255,255,.42);line-height:1.4}
 .camp-btn-arrow{font-size:18px;color:${accent};opacity:.7;flex-shrink:0}
+.inc-card{display:flex;align-items:center;gap:14px;background:rgba(${ar},.06);border:1.5px solid rgba(${ar},.18);border-radius:14px;padding:16px 20px;margin-bottom:10px;color:#fff}
+.inc-card-link{text-decoration:none;transition:background .18s,transform .1s,border-color .18s;cursor:pointer}
+.inc-card-link:hover{background:rgba(${ar},.14);border-color:rgba(${ar},.45);transform:translateY(-1px)}
+.inc-emoji{font-size:26px;flex-shrink:0;width:36px;text-align:center}
+.inc-text{flex:1}
+.inc-label{font-size:15px;font-weight:900;color:${accent};margin-bottom:3px}
+.inc-sub{font-size:12px;color:rgba(255,255,255,.45);line-height:1.45}
 .discord-btn{display:flex;align-items:center;justify-content:center;gap:10px;background:#5865F2;color:#fff;text-decoration:none;border-radius:14px;padding:16px 24px;font-size:14px;font-weight:900;letter-spacing:.03em;margin-top:24px;transition:transform .15s,box-shadow .15s}
 .discord-btn:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(88,101,242,.35)}
 .discord-icon{width:20px;height:20px;fill:#fff;flex-shrink:0}
+.lark-btn{display:flex;align-items:center;justify-content:center;gap:10px;background:rgba(${ar},.12);border:1.5px solid rgba(${ar},.3);color:#fff;text-decoration:none;border-radius:14px;padding:16px 24px;font-size:14px;font-weight:900;letter-spacing:.03em;margin-top:12px;transition:transform .15s,box-shadow .15s,background .15s}
+.lark-btn:hover{background:rgba(${ar},.22);border-color:rgba(${ar},.55);transform:translateY(-1px);box-shadow:0 6px 24px rgba(${ar},.2)}
+.lark-icon{width:20px;height:20px;flex-shrink:0}
 .divider{border:none;border-top:1px solid rgba(255,255,255,.06);margin:28px 0}
 /* products */
 .section{padding:48px 20px}
@@ -9401,20 +14749,52 @@ h1{font-size:clamp(22px,4vw,30px);font-weight:900;letter-spacing:-.02em;margin-b
 .bm-label{font-size:11px;font-weight:700;color:rgba(255,255,255,.4);letter-spacing:.05em;text-transform:uppercase}
 footer{border-top:1px solid rgba(255,255,255,.06);padding:24px 20px;text-align:center;font-size:11px;color:rgba(255,255,255,.18)}
 footer a{color:${accent};text-decoration:none}
+/* earn pill */
+.earn-pill{display:inline-flex;align-items:center;gap:8px;background:rgba(${ar},.12);border:1px solid rgba(${ar},.3);border-radius:100px;padding:8px 20px;font-size:13px;font-weight:700;color:${accent};margin-top:16px}
+/* next steps */
+.steps-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:20px 24px;margin-top:20px;text-align:left;width:100%;max-width:520px}
+.steps-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:${accent};margin-bottom:14px}
+.steps-list{list-style:none;display:flex;flex-direction:column;gap:10px}
+.step-item{display:flex;align-items:flex-start;gap:12px;font-size:14px;color:rgba(255,255,255,.8);line-height:1.4}
+.step-num{flex-shrink:0;width:22px;height:22px;border-radius:50%;background:rgba(${ar},.15);color:${accent};font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;margin-top:1px}
+/* blitz tiers */
+.blitz-tiers{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.blitz-tier{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(${ar},.06);border:1px solid rgba(${ar},.15);border-radius:10px;font-size:13px}
+.blitz-tier-gmv{font-weight:700;color:rgba(255,255,255,.7)}
+.blitz-tier-bonus{font-weight:900;color:${accent}}
 </style>
 </head>
 <body>
 
 <div class="top">
-  <div class="success-icon">&#127881;</div>
-  <h1>You're in the ${name} program!</h1>
-  <div class="welcome-sub">Check your texts for your creator hub link. Now sign up for the campaigns below and join the community.</div>
+  ${brand.logoUrl ? `<img src="${brand.logoUrl}" alt="${name} logo" class="brand-logo">` : '<div class="success-icon">&#127881;</div>'}
+  <h1>Welcome to the ${name} Creator Program</h1>
+  <div class="welcome-sub">${cp.welcomeMessage || 'You\'re officially in. Sign up for the campaigns below and join the creator community.'}</div>
+  ${cp.earnPotential ? `<div class="earn-pill">💰 Up to $${Number(cp.earnPotential).toLocaleString()} in bonuses${cp.tcCommission ? ` + ${cp.tcCommission}% commission` : ''}</div>` : ''}
+  ${(cp.welcomeSteps || []).length ? `
+  <div class="steps-card">
+    <div class="steps-label">Your next steps</div>
+    <ol class="steps-list">${(cp.welcomeSteps || []).map((s, i) => `
+      <li class="step-item"><span class="step-num">${i + 1}</span><span>${s}</span></li>`).join('')}
+    </ol>
+  </div>` : ''}
 </div>
 
 <div class="card">
   ${btnsHtml ? `
   <div class="section-label">Sign Up for Campaigns</div>
+  <div style="font-size:13px;color:rgba(255,255,255,.55);margin:-4px 0 14px">Click the buttons below to join.</div>
   ${btnsHtml}
+  ${(cp.blitzTiers || []).length ? `
+  <div style="margin-top:4px;margin-bottom:16px">
+    <div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:8px">Blitz Bonus Tiers — First 15 Days</div>
+    <div class="blitz-tiers">${(cp.blitzTiers || []).map(t => `
+      <div class="blitz-tier">
+        <span class="blitz-tier-gmv">$${Number(t.gmv).toLocaleString()}+ GMV</span>
+        <span class="blitz-tier-bonus">+$${Number(t.bonus).toLocaleString()} cash</span>
+      </div>`).join('')}
+    </div>
+  </div>` : ''}
   <div class="divider"></div>` : ''}
 
   <div class="section-label">Join the Community</div>
@@ -9422,6 +14802,11 @@ footer a{color:${accent};text-decoration:none}
     <svg class="discord-icon" viewBox="0 0 127.14 96.36" xmlns="http://www.w3.org/2000/svg"><path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/></svg>
     Join the Discord
   </a>
+  ${cp.larkGroupUrl ? `
+  <a href="${cp.larkGroupUrl}" target="_blank" rel="noopener" class="lark-btn">
+    <svg class="lark-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="${accent}"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.5 14.5l-5-3V7h1.5v5.75l4.25 2.5-.75 1.25z"/></svg>
+    Join the ${name} Creator Community on Lark
+  </a>` : ''}
 </div>
 
 ${hooksHtml}
@@ -9475,19 +14860,176 @@ ${talkingHtml ? `
   </div>
 </div>` : ''}
 
-<footer>Powered by <a href="https://cultcontent.cc" target="_blank">Cult Content</a></footer>
+${(() => { const guideUrl = cp.guideUrl || (brief && brief.guideUrl) || ''; if (!guideUrl) return ''; return `
+<hr class="page-divider">
+<div class="section">
+  <div class="section-inner">
+    <div class="section-label" style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:${accent};margin-bottom:10px">The Full Playbook</div>
+    <div class="section-title">Go deeper</div>
+    <div class="section-sub">The complete creator guide — hooks, scripts, FAQs, do\u0027s and don\u0027ts, and how to use the product on camera.</div>
+    <a href="${guideUrl}" target="_blank" rel="noopener" class="camp-btn" style="margin-top:16px">
+      <div class="camp-btn-text">
+        <div class="camp-btn-label">\ud83d\udcd6 Read the full ${name} playbook</div>
+        <div class="camp-btn-sub">Everything you need to make content that converts</div>
+      </div>
+      <div class="camp-btn-arrow">\u2192</div>
+    </a>
+  </div>
+</div>`; })()}
+
+${cp.productRequestEnabled ? `
+<hr class="page-divider">
+<div class="section">
+  <div class="section-inner" style="max-width:600px">
+    <div class="section-label" style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:${accent};margin-bottom:10px">Product Requests</div>
+    <div class="section-title">Want to try something specific?</div>
+    <div class="section-sub">Select a product below or tell us what you'd like from the catalog. We'll get it sorted.</div>
+    <form id="product-req-form" style="margin-top:20px">
+      ${creatorHandle ? `<input type="hidden" id="pr-handle" value="${creatorHandle.replace(/"/g,'&quot;')}">` : `
+      <div style="margin-bottom:14px">
+        <label style="display:block;font-size:12px;font-weight:700;color:rgba(255,255,255,.5);margin-bottom:6px;letter-spacing:.04em;text-transform:uppercase">Your TikTok Handle</label>
+        <input id="pr-handle" type="text" placeholder="@yourhandle" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:12px 14px;color:#fff;font-size:14px;outline:none" required>
+      </div>`}
+      ${(cp.catalogProducts || []).length ? `
+      <div style="margin-bottom:14px">
+        <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.5);margin-bottom:10px;letter-spacing:.04em;text-transform:uppercase">Available Products</div>
+        <div id="pr-products" style="display:flex;flex-direction:column;gap:8px">
+          ${(cp.catalogProducts || []).map((p, i) => `
+          <label style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.03);border:1.5px solid rgba(255,255,255,.08);border-radius:12px;padding:14px 16px;cursor:pointer;transition:border-color .15s" class="pr-product-label" data-i="${i}">
+            <input type="checkbox" name="product" value="${p.name.replace(/"/g,'&quot;')}" style="width:16px;height:16px;accent-color:${accent};flex-shrink:0">
+            <div>
+              <div style="font-size:14px;font-weight:700">${p.name}</div>
+              ${p.description ? `<div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:2px;line-height:1.4">${p.description}</div>` : ''}
+            </div>
+          </label>`).join('')}
+        </div>
+      </div>` : ''}
+      <div style="margin-bottom:14px">
+        <label style="display:block;font-size:12px;font-weight:700;color:rgba(255,255,255,.5);margin-bottom:6px;letter-spacing:.04em;text-transform:uppercase">Other products from the catalog?</label>
+        <input id="pr-other" type="text" placeholder="e.g. Collagen, Keto supplement…" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:12px 14px;color:#fff;font-size:14px;outline:none">
+      </div>
+      <div style="margin-bottom:20px">
+        <label style="display:block;font-size:12px;font-weight:700;color:rgba(255,255,255,.5);margin-bottom:6px;letter-spacing:.04em;text-transform:uppercase">Anything else to add?</label>
+        <textarea id="pr-note" rows="3" placeholder="Content angles you're planning, audience info, special requests…" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:12px 14px;color:#fff;font-size:14px;outline:none;resize:vertical;line-height:1.5"></textarea>
+      </div>
+      <button type="submit" id="pr-submit" style="width:100%;background:${accent};color:#000;font-size:14px;font-weight:900;border:none;border-radius:12px;padding:16px;cursor:pointer;letter-spacing:.02em;transition:opacity .15s">
+        Send Request
+      </button>
+      <div id="pr-success" style="display:none;text-align:center;padding:20px;background:rgba(0,210,122,.08);border:1px solid rgba(0,210,122,.2);border-radius:12px;margin-top:4px">
+        <div style="font-size:22px;margin-bottom:8px">✅</div>
+        <div style="font-size:15px;font-weight:700;color:#00d27a">Request sent!</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.5);margin-top:4px">We'll follow up within 24 hours.</div>
+      </div>
+    </form>
+  </div>
+</div>` : ''}
+
+<footer>Powered by <a href="https://cultcontent.cc" target="_blank">Cult Content</a> &nbsp;·&nbsp; <a href="/terms" target="_blank">Terms of Service</a> &nbsp;·&nbsp; <a href="/privacy" target="_blank">Privacy Policy</a></footer>
 
 <script>
 function toggleScript(i){
   var c=document.getElementById('sc'+i);
   if(c)c.classList.toggle('open');
 }
+// Product request form
+(function(){
+  var form=document.getElementById('product-req-form');
+  if(!form)return;
+  // Highlight selected product cards
+  document.querySelectorAll('.pr-product-label').forEach(function(lbl){
+    var cb=lbl.querySelector('input[type=checkbox]');
+    if(cb)cb.addEventListener('change',function(){
+      lbl.style.borderColor=cb.checked?'rgba(${ar},.5)':'rgba(255,255,255,.08)';
+    });
+  });
+  form.addEventListener('submit',async function(e){
+    e.preventDefault();
+    var btn=document.getElementById('pr-submit');
+    var handleEl=document.getElementById('pr-handle');
+    var handle=(handleEl?handleEl.value:'').replace(/^@/,'').trim();
+    if(!handle){handleEl&&(handleEl.style.borderColor='rgba(255,80,80,.6)');return;}
+    var products=Array.from(document.querySelectorAll('#pr-products input:checked')).map(function(c){return c.value;});
+    var other=(document.getElementById('pr-other')||{}).value||'';
+    var note=(document.getElementById('pr-note')||{}).value||'';
+    btn.disabled=true;btn.textContent='Sending…';
+    try{
+      var r=await fetch('/api/creator-pages/${cp.slug || ''}/product-request',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({handle,products,otherProducts:other,note}),
+      });
+      if(r.ok){
+        form.style.display='none';
+        document.getElementById('pr-success').style.display='block';
+      }else{btn.disabled=false;btn.textContent='Send Request';}
+    }catch(_){btn.disabled=false;btn.textContent='Send Request';}
+  });
+})();
 </script>
+<script src="/ic-nav.js" defer></script>
 </body>
 </html>`;
 }
 
 // (Public /creators/:brandSlug and /api/creator-pages/submit are registered before requireAuth above)
+
+// POST /api/creator-pages/:slug/product-request — creator requests a product from the catalog
+// Pings the Cult Content ops Lark channel with the request details
+app.post('/api/creator-pages/:slug/product-request', async (req, res) => {
+  const { slug } = req.params;
+  const { handle = '', products = [], otherProducts = '', note = '' } = req.body || {};
+  const cleanHandle = handle.replace(/^@/, '').trim();
+  if (!cleanHandle) return res.status(400).json({ ok: false, error: 'handle required' });
+
+  const brands = loadBrands();
+  const brand  = (brands.clients || []).find(b => b.creatorPage?.slug === slug);
+  if (!brand) return res.status(404).json({ ok: false, error: 'Brand not found' });
+
+  const lines = [
+    `📦 Product Request — ${brand.name}`,
+    `Creator: @${cleanHandle}`,
+  ];
+  if (products.length)  lines.push(`Products: ${products.join(', ')}`);
+  if (otherProducts)    lines.push(`Other: ${otherProducts}`);
+  if (note)             lines.push(`Note: ${note}`);
+
+  try {
+    await axios.post(`${CFG.railwayUrl}/command`, {
+      text:    lines.join('\n'),
+      context: 'Product Request',
+      source:  'Creator Welcome Page',
+    }, { timeout: 10000 });
+    console.log(`[product-request] ${brand.name} — @${cleanHandle}: ${[...products, otherProducts].filter(Boolean).join(', ')}`);
+    // Also persist to a Lark Bitable sheet (non-blocking, env-gated)
+    try {
+      const APP_TOKEN = process.env.CREATOR_REQUEST_BITABLE_APP_TOKEN;
+      const TABLE_ID  = process.env.CREATOR_REQUEST_BITABLE_TABLE_ID;
+      const L_ID = process.env.LARK_APP_ID, L_SECRET = process.env.LARK_APP_SECRET;
+      if (APP_TOKEN && TABLE_ID && L_ID && L_SECRET) {
+        const { data: authData } = await axios.post('https://open.larksuite.com/open-apis/auth/v3/tenant_access_token/internal', { app_id: L_ID, app_secret: L_SECRET });
+        const ltoken = authData.tenant_access_token;
+        if (ltoken) {
+          await axios.post(
+            `https://open.larksuite.com/open-apis/bitable/v1/apps/${APP_TOKEN}/tables/${TABLE_ID}/records`,
+            { fields: {
+                'Brand':    brand.name,
+                'Creator':  `@${cleanHandle}`,
+                'Products': [...products, otherProducts].filter(Boolean).join(', '),
+                'Note':     note || '',
+                'Submitted': Date.now(),
+            } },
+            { headers: { Authorization: `Bearer ${ltoken}`, 'Content-Type': 'application/json' }, timeout: 10000 }
+          );
+          console.log(`[product-request] saved to Bitable for ${brand.name}`);
+        }
+      }
+    } catch (be) { console.error('[product-request] Bitable save failed (non-fatal):', be.response?.data?.msg || be.message); }
+    res.json({ ok: true });
+  } catch(e) {
+    console.error('[product-request] Lark error:', e.message);
+    res.status(500).json({ ok: false, error: 'Failed to send request' });
+  }
+});
 
 // GET /api/creator-pages/:slug/brief — public, returns the generated creator brief for a brand
 app.get('/api/creator-pages/:slug/brief', (req, res) => {
@@ -9535,6 +15077,23 @@ app.post('/api/creator-pages/:brandId/setup', requireAuth, (req, res) => {
   saveBrands(data);
   const publicUrl = `${CREATOR_BASE_URL}/creators/${slug}`;
   console.log(`[creator-pages] Setup page for ${brand.name}: ${publicUrl}`);
+
+  // Create Lark creator community group (fire-and-forget, don't block response)
+  const setupBrandId = req.params.brandId;
+  const setupBrandName = brand.name;
+  createLarkCreatorGroup(setupBrandName).then(group => {
+    if (group?.shareLink) {
+      const d = loadBrands();
+      const i = d.clients.findIndex(b => b.id === setupBrandId);
+      if (i !== -1) {
+        d.clients[i].creatorPage.larkGroupUrl = group.shareLink;
+        d.clients[i].creatorPage.larkChatId  = group.chatId;
+        saveBrands(d);
+        console.log(`[lark] Creator group created for ${setupBrandName}: ${group.shareLink}`);
+      }
+    }
+  }).catch(e => console.error('[lark] creator group error:', e.message));
+
   res.json({ ok: true, brand: data.clients[idx], publicUrl });
 });
 
@@ -9563,10 +15122,12 @@ app.patch('/api/brands/:brandId/campaign-links', requireAuth, express.json(), (r
   if (!brands.clients[idx].creatorPage) brands.clients[idx].creatorPage = {};
   const cp = brands.clients[idx].creatorPage;
   if (!cp.campaigns) cp.campaigns = {};
-  const { cashbackUrl, quantityVideoUrl, leaderboardUrl, competitorVideos } = req.body;
+  const { cashbackUrl, quantityVideoUrl, leaderboardUrl, sprintUrl, reimbursementUrl, competitorVideos } = req.body;
   if (cashbackUrl     !== undefined) cp.campaigns.cashbackUrl     = cashbackUrl     || null;
   if (quantityVideoUrl !== undefined) cp.campaigns.quantityVideoUrl = quantityVideoUrl || null;
   if (leaderboardUrl  !== undefined) cp.campaigns.leaderboardUrl  = leaderboardUrl  || null;
+  if (sprintUrl       !== undefined) cp.campaigns.sprintUrl       = sprintUrl       || null;
+  if (reimbursementUrl !== undefined) cp.campaigns.reimbursementUrl = reimbursementUrl || null;
   if (competitorVideos !== undefined) cp.competitorVideos = (Array.isArray(competitorVideos) ? competitorVideos : []).slice(0, 8).filter(Boolean);
   cp.updatedAt = new Date().toISOString();
   saveBrands(brands);
@@ -9617,10 +15178,140 @@ app.put('/api/creator-pages/:brandId/competitor-videos', requireAuth, express.js
   res.json({ ok: true });
 });
 
+// ─── Brand Logo Upload ─────────────────────────��───────────────────────────────
+
+// Multer instance for images (jpg/png/gif/webp/svg)
+const imageUpload = multer({
+  storage: multer.diskStorage({
+    destination: (_, __, cb) => cb(null, UPLOAD_DIR),
+    filename: (_, file, cb) => {
+      const ext  = path.extname(file.originalname) || '.jpg';
+      const base = path.basename(file.originalname, ext).replace(/[^a-z0-9_-]/gi, '_').slice(0, 60);
+      cb(null, `${Date.now()}_${base}${ext}`);
+    },
+  }),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+  fileFilter: (_, file, cb) => {
+    const ok = /image\//i.test(file.mimetype) || /\.(jpe?g|png|gif|webp|svg|avif)$/i.test(file.originalname);
+    cb(null, ok);
+  },
+});
+
+// Multer instance for product media (images + videos, up to 20 files)
+const mediaUpload = multer({
+  storage: multer.diskStorage({
+    destination: (_, __, cb) => cb(null, UPLOAD_DIR),
+    filename: (_, file, cb) => {
+      const ext  = path.extname(file.originalname) || '.jpg';
+      const base = path.basename(file.originalname, ext).replace(/[^a-z0-9_-]/gi, '_').slice(0, 60);
+      cb(null, `${Date.now()}_${base}${ext}`);
+    },
+  }),
+  limits: { fileSize: 500 * 1024 * 1024 },
+  fileFilter: (_, file, cb) => {
+    const ok = /image\//i.test(file.mimetype)
+            || /video\//i.test(file.mimetype)
+            || /\.(jpe?g|png|gif|webp|svg|avif|mp4|mov|avi|webm|mkv)$/i.test(file.originalname)
+            || file.mimetype === 'application/octet-stream';
+    cb(null, ok);
+  },
+});
+
+// POST /api/brands/:brandId/logo — upload or replace brand logo
+app.post('/api/brands/:brandId/logo', requireAuth, imageUpload.single('logo'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No image file received' });
+  const brands = loadBrands();
+  const idx = (brands.clients || []).findIndex(b => b.id === req.params.brandId);
+  if (idx === -1) return res.status(404).json({ error: 'Brand not found' });
+
+  // Delete old logo file if it exists
+  const oldLogoUrl = brands.clients[idx].logoUrl;
+  if (oldLogoUrl) {
+    const oldFilename = path.basename(oldLogoUrl.split('?')[0]);
+    const oldPath = path.join(UPLOAD_DIR, oldFilename);
+    if (oldPath.startsWith(UPLOAD_DIR)) fs.unlink(oldPath, () => {});
+  }
+
+  const logoUrl = `${PUBLIC_BASE_URL}/uploads/${req.file.filename}`;
+  brands.clients[idx].logoUrl = logoUrl;
+  saveBrands(brands);
+  res.json({ ok: true, logoUrl });
+});
+
+// DELETE /api/brands/:brandId/logo — remove brand logo
+app.delete('/api/brands/:brandId/logo', requireAuth, (req, res) => {
+  const brands = loadBrands();
+  const idx = (brands.clients || []).findIndex(b => b.id === req.params.brandId);
+  if (idx === -1) return res.status(404).json({ error: 'Brand not found' });
+
+  const logoUrl = brands.clients[idx].logoUrl;
+  if (logoUrl) {
+    const filename = path.basename(logoUrl.split('?')[0]);
+    const filePath = path.join(UPLOAD_DIR, filename);
+    if (filePath.startsWith(UPLOAD_DIR)) fs.unlink(filePath, () => {});
+  }
+  delete brands.clients[idx].logoUrl;
+  saveBrands(brands);
+  res.json({ ok: true });
+});
+
+// NOTE: POST/DELETE /api/client/logo moved BEFORE app.use(requireAuth) — see ~L5010.
+// They were unreachable here: requireAuth (Cloudflare Access) 401d client sessions first.
+
+// ─── Product Media Upload ───────────────────────────────────────────────────────
+
+// POST /api/brands/:brandId/product-media — upload up to 20 images/videos
+app.post('/api/brands/:brandId/product-media', requireAuth, mediaUpload.array('media', 20), (req, res) => {
+  if (!req.files || req.files.length === 0) return res.status(400).json({ error: 'No files received' });
+  const brands = loadBrands();
+  const idx = (brands.clients || []).findIndex(b => b.id === req.params.brandId);
+  if (idx === -1) return res.status(404).json({ error: 'Brand not found' });
+
+  if (!brands.clients[idx].productMedia) brands.clients[idx].productMedia = [];
+
+  const newFiles = req.files.map(f => {
+    const isVideo = /video\//i.test(f.mimetype) || /\.(mp4|mov|avi|webm|mkv)$/i.test(f.originalname);
+    return {
+      url: `${PUBLIC_BASE_URL}/uploads/${f.filename}`,
+      filename: f.filename,
+      originalName: f.originalname,
+      type: isVideo ? 'video' : 'image',
+      uploadedAt: new Date().toISOString(),
+    };
+  });
+
+  brands.clients[idx].productMedia.push(...newFiles);
+  saveBrands(brands);
+  res.json({ ok: true, media: newFiles });
+});
+
+// GET /api/brands/:brandId/product-media — list all product media
+app.get('/api/brands/:brandId/product-media', requireAuth, (req, res) => {
+  const brands = loadBrands();
+  const brand = (brands.clients || []).find(b => b.id === req.params.brandId);
+  if (!brand) return res.status(404).json({ error: 'Brand not found' });
+  res.json({ ok: true, media: brand.productMedia || [] });
+});
+
+// DELETE /api/brands/:brandId/product-media/:filename — remove one item
+app.delete('/api/brands/:brandId/product-media/:filename', requireAuth, (req, res) => {
+  const brands = loadBrands();
+  const idx = (brands.clients || []).findIndex(b => b.id === req.params.brandId);
+  if (idx === -1) return res.status(404).json({ error: 'Brand not found' });
+
+  const filename = req.params.filename;
+  const filePath = path.join(UPLOAD_DIR, filename);
+  if (filePath.startsWith(UPLOAD_DIR)) fs.unlink(filePath, () => {});
+
+  brands.clients[idx].productMedia = (brands.clients[idx].productMedia || []).filter(m => m.filename !== filename);
+  saveBrands(brands);
+  res.json({ ok: true });
+});
+
 // ─── Health ────────────────────────────────────────────────────────────────────
 app.get('/health', (_, res) => res.json({ status: 'ok', service: 'dashboard' }));
 
-// ── Startup: ensure known contact names are set on manually-added brands ───────
+// ── Startup: ensure known contact names are set on manually-added brands ──────���
 (function migrateContactNames() {
   try {
     const data = loadBrands();
@@ -9733,6 +15424,127 @@ app.post('/api/ai/generate-image', async (req, res) => {
   } catch(e) { console.error('[migrate] creator pages:', e.message); }
 })();
 
+// ─── Brand Call Schedules (Inner Circle weekly calls) ────────────
+// Admin-only CRUD for per-brand weekly creator call schedules. Drives automated
+// SMS reminders + recording association. Backed by the inner_circle.db SQLite
+// volume (shared handle from ./db/inner-circle). Registered BEFORE app.listen().
+let icDb;
+try { ({ db: icDb } = require('./db/inner-circle')); }
+catch (e) {
+  console.error('[db/inner-circle] load failed:', e.message);
+  const _noOp = { all: () => [], get: () => null, run: () => ({}) };
+  icDb = { prepare: () => _noOp };
+}
+
+// Allowed day values (lowercase). NULL = TBD is permitted.
+const VALID_DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+
+// GET /api/inner-circle/brand-schedules — all rows (admin only)
+app.get('/api/inner-circle/brand-schedules', requirePortalAdmin, (req, res) => {
+  try {
+    const rows = icDb.prepare(
+      `SELECT id, shop_id, brand_id, brand_name, call_day, call_time, timezone,
+              duration_minutes, meeting_url, active, created_at, updated_at
+       FROM brand_call_schedules
+       ORDER BY active DESC, brand_name ASC`
+    ).all();
+    res.json({ schedules: rows });
+  } catch (e) {
+    console.error('[brand-schedules] list failed:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// PUT /api/inner-circle/brand-schedules/:id — update mutable fields (admin only)
+app.put('/api/inner-circle/brand-schedules/:id', requirePortalAdmin, express.json(), (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (!Number.isInteger(id)) return res.status(400).json({ error: 'Invalid id' });
+
+    const existing = icDb.prepare(`SELECT * FROM brand_call_schedules WHERE id = ?`).get(id);
+    if (!existing) return res.status(404).json({ error: 'Schedule not found' });
+
+    const b = req.body || {};
+
+    // Validate call_day (allow null/empty to clear)
+    let call_day = existing.call_day;
+    if ('call_day' in b) {
+      if (b.call_day === null || b.call_day === '') {
+        call_day = null;
+      } else if (typeof b.call_day === 'string' && VALID_DAYS.includes(b.call_day.toLowerCase())) {
+        call_day = b.call_day.toLowerCase();
+      } else {
+        return res.status(400).json({ error: `call_day must be one of ${VALID_DAYS.join(', ')} or null` });
+      }
+    }
+
+    // Validate call_time HH:MM 24h (allow null/empty to clear)
+    let call_time = existing.call_time;
+    if ('call_time' in b) {
+      if (b.call_time === null || b.call_time === '') {
+        call_time = null;
+      } else if (typeof b.call_time === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(b.call_time)) {
+        call_time = b.call_time;
+      } else {
+        return res.status(400).json({ error: 'call_time must be HH:MM (24h) or null' });
+      }
+    }
+
+    // timezone (non-empty string)
+    let timezone = existing.timezone;
+    if ('timezone' in b) {
+      if (typeof b.timezone === 'string' && b.timezone.trim()) {
+        timezone = b.timezone.trim();
+      } else {
+        return res.status(400).json({ error: 'timezone must be a non-empty string' });
+      }
+    }
+
+    // duration_minutes (positive integer)
+    let duration_minutes = existing.duration_minutes;
+    if ('duration_minutes' in b) {
+      const d = parseInt(b.duration_minutes, 10);
+      if (Number.isInteger(d) && d > 0 && d <= 600) {
+        duration_minutes = d;
+      } else {
+        return res.status(400).json({ error: 'duration_minutes must be a positive integer (<=600)' });
+      }
+    }
+
+    // meeting_url (allow null/empty to clear)
+    let meeting_url = existing.meeting_url;
+    if ('meeting_url' in b) {
+      meeting_url = (b.meeting_url === null || b.meeting_url === '') ? null : String(b.meeting_url).trim();
+    }
+
+    // active (coerce truthy/0/1/string → 1/0)
+    let active = existing.active;
+    if ('active' in b) {
+      if (b.active === true || b.active === 1 || b.active === '1' || b.active === 'true') active = 1;
+      else if (b.active === false || b.active === 0 || b.active === '0' || b.active === 'false') active = 0;
+      else return res.status(400).json({ error: 'active must be boolean (0/1)' });
+    }
+
+    icDb.prepare(
+      `UPDATE brand_call_schedules
+         SET call_day = ?, call_time = ?, timezone = ?, duration_minutes = ?,
+             meeting_url = ?, active = ?, updated_at = CURRENT_TIMESTAMP
+       WHERE id = ?`
+    ).run(call_day, call_time, timezone, duration_minutes, meeting_url, active, id);
+
+    const updated = icDb.prepare(
+      `SELECT id, shop_id, brand_id, brand_name, call_day, call_time, timezone,
+              duration_minutes, meeting_url, active, created_at, updated_at
+       FROM brand_call_schedules WHERE id = ?`
+    ).get(id);
+
+    res.json({ ok: true, schedule: updated });
+  } catch (e) {
+    console.error('[brand-schedules] update failed:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.listen(CFG.port, () => {
   console.log(`\n⚡ Cult Content Command Center`);
   console.log(`   http://localhost:${CFG.port}\n`);
@@ -9759,17 +15571,734 @@ app.listen(CFG.port, () => {
     if (poDirty) { savePendingOnboards(po); console.log('[startup] Fixed Lode WTR cashback in pending onboards'); }
   } catch(e) { console.error('[startup] Lode WTR cashback fix error:', e.message); }
 
-  // One-time cleanup — remove test/placeholder brands
+  // One-time fix — AS Inner Circle July Freedom leaderboard: update stale places/threshold
   try {
-    const testNames = ['test brand', 'test', 'organic social marketing'];
+    const bd = loadBrands();
+    const as = (bd.clients || []).find(b => (b.brandSlug || b.name || '').toLowerCase().includes('approved-science') || (b.name || '').toLowerCase().includes('approved science'));
+    const lb = as?.creatorPage?.incentives?.leaderboard;
+    if (lb && (JSON.stringify(lb.places) !== JSON.stringify([1500,1000,500]) || lb.threshold !== 2000)) {
+      lb.places = [1500, 1000, 500];
+      lb.threshold = 2000;
+      saveBrands(bd);
+      console.log('[startup] Fixed AS Inner Circle leaderboard: places=[1500,1000,500] threshold=2000');
+    }
+  } catch(e) { console.error('[startup] AS leaderboard fix error:', e.message); }
+
+  // One-time cleanup — remove stale placeholder brands and internal test brands
+  try {
+    const testNames = ['test brand', 'test'];
+    const internalIds = new Set(['orgsocsmarketing001', 'dnoor001']);
     const bd = loadBrands();
     const before = (bd.clients || []).length;
-    bd.clients = (bd.clients || []).filter(b => !testNames.includes((b.name || '').toLowerCase().trim()));
+    bd.clients = (bd.clients || []).filter(b =>
+      !testNames.includes((b.name || '').toLowerCase().trim()) &&
+      !internalIds.has(b.id)
+    );
     if (bd.clients.length < before) {
       saveBrands(bd);
-      console.log(`[startup] Removed ${before - bd.clients.length} test brand(s)`);
+      console.log(`[startup] Removed ${before - bd.clients.length} test/internal brand(s)`);
     }
   } catch(e) { console.error('[startup] test brand cleanup error:', e.message); }
+
+
+  // Backfill Reacher shopIds, TC config, and billing defaults for known brands (idempotent — skips if already set)
+  try {
+    const BRAND_DEFAULTS = {
+      'diamandia':            { shopId: 8595, contractValue: 1500, commissionRate: 0.1, tc: { commission: 25, heroProductId: '1729491556857975130' } },
+      'trusted rituals':      { shopId: 8974, contractValue: 1500, commissionRate: 0.1, tc: { commission: 25, heroProductId: '1732230831415267648' } },
+      'approved science':     { shopId: 8913, contractValue: 1500, commissionRate: 0.1, tc: { commission: 20, heroProductId: '1731392689812508843' } },
+      'lode wtr':             { contractValue: 1500, commissionRate: 0.1 },
+      'the perfect haircare': { contractValue: 1500, commissionRate: 0.1 },
+      'yuglo':                { contractValue: 1500, commissionRate: 0.1, billingEmail: 'evaaadee1@gmail.com', proratedFirstRetainer: 1150 },
+      'roots by ga':          { contractValue: 1500, commissionRate: 0.1, billingEmail: 'carla@rootsbyga.com', proratedFirstRetainer: 950 },
+    };
+    const bd = loadBrands(); let dirty = false;
+    for (const client of (bd.clients || [])) {
+      const key = (client.name || '').toLowerCase().trim();
+      const defaults = BRAND_DEFAULTS[key];
+      if (!defaults) continue;
+      if (defaults.shopId && !client.shopId) {
+        client.shopId = defaults.shopId;
+        dirty = true;
+        console.log(`[startup] Set shopId=${defaults.shopId} for ${client.name}`);
+      }
+      if (defaults.contractValue != null && client.contractValue == null && client.retainer == null) {
+        client.contractValue = defaults.contractValue;
+        dirty = true;
+        console.log(`[startup] Set contractValue=${defaults.contractValue} for ${client.name}`);
+      }
+      if (defaults.commissionRate != null && client.commissionRate == null) {
+        client.commissionRate = defaults.commissionRate;
+        dirty = true;
+        console.log(`[startup] Set commissionRate=${defaults.commissionRate} for ${client.name}`);
+      }
+      if (defaults.tc) {
+        const cp = client.creatorPage || {};
+        if (!cp.tcCommission || !cp.tcHeroProductId) {
+          client.creatorPage = {
+            ...cp,
+            tcCommission:    cp.tcCommission    ?? defaults.tc.commission,
+            tcHeroProductId: cp.tcHeroProductId ?? defaults.tc.heroProductId,
+          };
+          dirty = true;
+          console.log(`[startup] Set TC config for ${client.name}: ${defaults.tc.commission}% commission, hero=${defaults.tc.heroProductId}`);
+        }
+      }
+    }
+    // Backfill billingEmail + proratedFirstRetainer for Yuglo if it exists
+    for (const client of (bd.clients || [])) {
+      if ((client.name || '').toLowerCase().trim() !== 'yuglo') continue;
+      if (!client.billingEmail) { client.billingEmail = 'evaaadee1@gmail.com'; dirty = true; }
+      if (client.proratedFirstRetainer == null && !client.lastInvoicedAt) { client.proratedFirstRetainer = 1150; dirty = true; }
+    }
+    if (dirty) saveBrands(bd);
+  } catch(e) { console.error('[startup] brand defaults backfill error:', e.message); }
+
+
+  // Add Roots by GA if not yet in brands.json
+  try {
+    const bd = loadBrands();
+    const exists = (bd.clients || []).some(b => (b.name || '').toLowerCase().trim() === 'roots by ga');
+    if (!exists) {
+      bd.clients = bd.clients || [];
+      bd.clients.push({
+        id:                    'rootsbyga001',
+        createdAt:             '2026-06-12T00:00:00.000Z',
+        name:                  'Roots by GA',
+        billingEmail:          'carla@rootsbyga.com',
+        contractValue:         1500,
+        commissionRate:        0.10,
+        proratedFirstRetainer: 950,
+        pipelineStage:         'Contract Signed',
+        startDate:             '2026-06-12',
+        contacts:              'Carla Brenner (carla@rootsbyga.com)',
+        industry:              'TBD — to be completed during onboarding',
+        products:              'TBD',
+        audience:              'TBD',
+        voice:                 'TBD',
+        contentPillars:        'TBD',
+        tiktokHandle:          'TBD',
+        cta:                   'TBD',
+      });
+      saveBrands(bd);
+      console.log('[startup] Added Roots by GA to brands.json');
+    }
+  } catch(e) { console.error('[startup] Roots by GA setup error:', e.message); }
+
+  // Roots by GA — campaign links (video posting challenge + sample reimbursement form)
+  // Preserves any existing creatorPage/campaigns fields; only fills these two if unset.
+  try {
+    const bd = loadBrands();
+    const roots = (bd.clients || []).find(b => (b.name || '').toLowerCase().trim() === 'roots by ga');
+    if (roots) {
+      if (!roots.creatorPage) roots.creatorPage = {};
+      if (!roots.creatorPage.campaigns) roots.creatorPage.campaigns = {};
+      const cam = roots.creatorPage.campaigns;
+      let dirty = false;
+      if (!cam.quantityVideoUrl) { cam.quantityVideoUrl = 'https://creator.reacherapp.com/campaigns/10091/2500-7bfb78'; dirty = true; }
+      if (!cam.reimbursementUrl) { cam.reimbursementUrl = 'https://cedw5xj2shl.usttp.larksuite.com/share/base/form/shrutTGz9ks0kgrAXSXF2tTsGad'; dirty = true; }
+      if (dirty) {
+        saveBrands(bd);
+        console.log('[startup] Set Roots by GA campaign links (video challenge + reimbursement form)');
+      }
+    }
+  } catch(e) { console.error('[startup] Roots by GA campaign links error:', e.message); }
+
+  // Roots by GA — fix: prior deploy mislabeled the Reacher link as a leaderboard challenge
+  // (it's actually a video-posting challenge) and the bonus copy was wrong ($730 vs $2,600).
+  try {
+    const bd = loadBrands();
+    const roots = (bd.clients || []).find(b => (b.name || '').toLowerCase().trim() === 'roots by ga');
+    if (roots?.creatorPage) {
+      const cp = roots.creatorPage;
+      if (!cp.campaigns) cp.campaigns = {};
+      let dirty = false;
+      const reacherUrl = 'https://creator.reacherapp.com/campaigns/10091/2500-7bfb78';
+      if (cp.campaigns.leaderboardUrl === reacherUrl) {
+        cp.campaigns.leaderboardUrl = null;
+        if (!cp.campaigns.quantityVideoUrl) cp.campaigns.quantityVideoUrl = reacherUrl;
+        dirty = true;
+      }
+      if (cp.earnPotential === 730) {
+        cp.earnPotential = 2600;
+        dirty = true;
+      }
+      if (dirty) {
+        saveBrands(bd);
+        console.log('[startup] Fixed Roots by GA: video challenge link + $2,600 bonus copy');
+      }
+    }
+  } catch(e) { console.error('[startup] Roots by GA link/copy fix error:', e.message); }
+
+  // Roots by GA — full creator page + Peptide Longevity Stack brief
+  try {
+    const bd = loadBrands();
+    const roots = (bd.clients || []).find(b => (b.name || '').toLowerCase().trim() === 'roots by ga');
+    if (roots && !roots.creatorPage?.brief) {
+      const existingCp = roots.creatorPage || {};
+      roots.creatorPage = {
+        ...existingCp,
+        slug:            existingCp.slug || 'roots-by-ga',
+        active:          true,
+        listed:          true,
+        accentColor:     '#C8975A',
+        headline:        'Earn Commission + Up to $2,600 in Bonuses',
+        subheadline:     'Join the Roots by GA TikTok Shop Creator Program',
+        tcCommission:    20,
+        earnPotential:   existingCp.earnPotential || 2600,
+        welcomeMessage:  'You\'re officially in the Roots by GA Creator Program. Your sample ships soon — explore the brief below to understand the two-step system and start planning your content.',
+        welcomeSteps: [
+          'Apply for the campaigns below to unlock your cash bonuses',
+          'Look out for your free sample — Peptide Longevity Stack (shampoo + serum)',
+          'Read the brief: the GHK-Cu skincare crossover is your strongest hook',
+          'Post your first video and start earning 20% on every sale',
+          'Track shedding and density on camera — 8–12 week progress content converts',
+        ],
+        incentives: {
+          cashback:    { enabled: false, amount: 0 },
+          volumeBonus: { enabled: true, bonus: 500, videoCount: 10 },
+          leaderboard: { enabled: false },
+        },
+        campaigns: {
+          quantityVideoUrl: existingCp.campaigns?.quantityVideoUrl || '',
+          reimbursementUrl: existingCp.campaigns?.reimbursementUrl || '',
+        },
+        products: [
+          {
+            name:        'Peptide Longevity Stack',
+            description: 'Two-step hair growth system: Conditioning Shampoo with Copper Peptides (wash days) + Multi-Peptide Hair Serum (daily). GHK-Cu in both products — follicle repair on wash day and every day.',
+            minPrice:    125,
+            url:         existingCp.products?.[0]?.url || 'https://rootsbyga.shop/products/peptide-shampoo-and-serum-stack',
+          },
+          {
+            name:        'Multi-Peptide Hair Serum',
+            description: '28+ clinically active ingredients: 5 peptide complexes, 7 growth factors (EGF, KGF-2, VEGF), longevity molecules NMN, PDRN, ergothioneine. Daily treatment.',
+            minPrice:    76,
+            url:         existingCp.products?.[1]?.url || 'https://rootsbyga.shop/products/peptide-shampoo-and-serum-stack',
+          },
+          {
+            name:        'Conditioning Shampoo with Copper Peptides',
+            description: 'Treatment-first shampoo: GHK-Cu, saw palmetto, red clover, rosemary oil, biotin, Panthenol. Non-stripping, sulfate-free. Signature blue tint from the copper peptides.',
+            minPrice:    49,
+            url:         existingCp.products?.[2]?.url || 'https://rootsbyga.shop/products/peptide-shampoo-and-serum-stack',
+          },
+        ],
+        usps: [
+          'GHK-Cu in both products — the skincare-famous copper peptide, now formulated for your scalp',
+          'Two-step system: shampoo preps on wash days, serum treats every day',
+          '5 peptide complexes + 7 medical-grade growth factors in the serum',
+          'Longevity molecules NMN, PDRN, ergothioneine — targeting follicle signaling and cellular energy',
+          '46% improvement in anagen-to-telogen ratio in ingredient-level clinical study*',
+          'Sulfate-free, paraben-free, silicone-free — safe alongside Rx topicals, microneedling, PRP',
+          'Signature blue tint = visible proof of the copper peptide (great on camera)',
+        ],
+        talkingPoints: 'GHK-Cu is one of the most talked-about peptides in premium anti-aging skincare — and your scalp is skin\nDHT, inflammation, and nutrient deprivation are the three compounding threats to follicles — one product can\'t cover all three\nThe shampoo isn\'t just a cleanse — it\'s follicle support: GHK-Cu signals repair, saw palmetto + red clover defend DHT-vulnerable follicles\nA serum can\'t do its job on a stripped, inflamed scalp — wash-day prep is the missing step\n28+ clinically active ingredients in the serum: peptide complexes, growth factors, longevity molecules\nNMN and PDRN in the serum are the same longevity molecules people take for aging — formulated for follicles\nThe blue tint in the shampoo is actual copper peptides — not dye (great on-camera proof point)\nExpect visible improvement in 8–12 weeks of consistency — set that expectation honestly',
+        brief: {
+          niche:          'Hair Growth & Scalp Health',
+          targetAudience: 'Women and men 25–45 experiencing thinning, postpartum shedding, stress-related hair loss, or androgenetic alopecia. Skincare-educated consumers who already know peptides and are ready to apply that knowledge to their scalp.',
+          mainProblem:    'Follicles don\'t stop producing hair overnight — they miniaturize slowly under DHT, inflammation, and nutrient deprivation. One product can\'t address all three. The Stack works as a system: shampoo defends and preps on wash days, serum rebuilds and reactivates every day.',
+          hooks: [
+            { text: 'You\'ve heard of GHK-Cu for your face. Your scalp is skin too — it\'s been aging the same way', type: 'curiosity' },
+            { text: 'I used a growth serum for months before I found out what I was doing wrong on wash day', type: 'pain-point' },
+            { text: 'The peptide your esthetician charges $300 for in a facial? It belongs on your scalp too', type: 'myth-bust' },
+            { text: 'This is longevity science for your scalp — the same molecules people take for aging, formulated for your follicles', type: 'curiosity' },
+            { text: 'Most shampoos stop at clean. This one is a treatment. Here\'s the difference', type: 'myth-bust' },
+            { text: 'The blue tint? That\'s actual copper peptides — not dye. Let me explain what that means for your hair', type: 'curiosity' },
+            { text: 'Skincare taught us peptides rebuild collagen. Your follicles sit in collagen. Connect the dots', type: 'curiosity' },
+            { text: 'POV: you finally found a two-step hair routine that\'s actually doing something', type: 'transformation' },
+          ],
+          frameworks: [
+            {
+              name:    'The Skincare Crossover',
+              why:     'Most of your audience already trusts peptides from skincare — especially GHK-Cu from facial serums and microneedling. The bridge ("your scalp is skin too") is the most credible, highest-converting angle for this product because it transfers existing trust to a new application.',
+              outline: [
+                'Hook: "You already know GHK-Cu from your skincare routine — collagen, elastin, repair, anti-aging." (Show a face serum or mention an esthetician treatment)',
+                'Bridge: "Your scalp is skin. It\'s an extension of your face. Same biology, same collagen, same follicle scaffolding that thins over time."',
+                'Product reveal: "Roots by GA put GHK-Cu in both the shampoo AND the serum — so you\'re getting that repair signal on wash day AND every day."',
+                'Blue tint moment: "And see this? That blue tint in the shampoo is the copper peptide. Not dye — the actual ingredient."',
+                'CTA: "Link in bio — the Stack comes with both so you\'re not leaving either step out."',
+              ],
+            },
+            {
+              name:    'The Missing Step',
+              why:     'Creators who\'ve already tried growth serums are a huge segment. The "missing step" angle validates their existing behavior while adding the shampoo as the gap they never knew about — makes the purchase feel like completion, not replacement.',
+              outline: [
+                'Hook: "I was using a hair growth serum every day for months. But I was doing it wrong."',
+                'The problem: "My scalp was stripped and inflamed on wash days — the serum was trying to treat a compromised surface."',
+                'The solution: "The shampoo preps your scalp — GHK-Cu, saw palmetto, rosemary oil. Non-stripping so your scalp is actually ready for treatment."',
+                'The system: "Wash day: shampoo. Every day: serum. Two steps, two products, one system. They\'re designed to work together."',
+                'CTA: "Link in bio — $125 for both or grab them separately."',
+              ],
+            },
+            {
+              name:    'Two-Step Routine Demo',
+              why:     'Visual routine content converts for haircare. Show the actual textures — blue-tinted lather + dropper serum — the "how to use" beats drive the purchase decision more than any product claim.',
+              outline: [
+                'Wash day: massage shampoo into scalp 1–2 min — "leave it on another 1–2 minutes before rinsing — this is when the copper peptides actually absorb"',
+                'Show the blue lather: "See the blue? That\'s the GHK-Cu. Not a dye."',
+                'Serum step: "Every morning or night — 1–2 dropperfuls, massage into thinning areas."',
+                'Name the ingredients briefly: "GHK-Cu for repair, Biotinoyl for anchoring, Acetyl Tetrapeptides for thickness, Zinc Thymulin to wake follicles back up."',
+                'CTA: "8–12 weeks of consistency — I\'m tracking mine. Link in bio."',
+              ],
+            },
+            {
+              name:    'Science Explainer: Peptide Breakdown',
+              why:     'Educational content performs strongly on TikTok for haircare — viewers bookmark ingredient explainers. Breaking down each peptide as a different "message to the follicle" makes complex science feel actionable and memorable.',
+              outline: [
+                'Setup: "The serum has 5 different peptide complexes. Each one is a different message to the follicle."',
+                'GHK-Cu: "Repair signal — same one from skincare, supports collagen around the follicle and blood flow to the root."',
+                'Biotinoyl Tripeptide-1: "Hold on signal — strengthens the anchor at the root so hair sheds less."',
+                'Acetyl Tetrapeptides: "Grow thicker signal — supports follicle density and shaft thickness."',
+                'Zinc Thymulin: "Wake up signal — helps reactivate follicles sitting in the resting phase."',
+                'CTA: "That\'s the Stack — shampoo preps, serum delivers all four messages. Link in bio."',
+              ],
+            },
+          ],
+          sampleScripts: [
+            {
+              framework: 'Skincare Crossover',
+              title:     'The GHK-Cu Bridge',
+              duration:  '~40 seconds',
+              script:    '[HOOK] You\'ve probably seen GHK-Cu on every premium face serum and anti-aging cream for the last few years. It\'s the peptide that signals collagen production, wound healing, tissue repair. Estheticians use it. Microneedling serums are full of it.\n\n[BRIDGE] But here\'s what nobody told you — your scalp is skin. It\'s literally an extension of your face. Same collagen. Same repair biology. Same scaffolding that thins as you age and your GHK-Cu levels drop.\n\n[PRODUCT] Roots by GA put copper peptides in both the shampoo AND the serum. So you\'re getting that repair signal every wash day when the shampoo sits on your scalp for two minutes — you can literally see the blue tint, that\'s the copper peptide, not dye — and then again every single day with the serum.\n\n[CTA] It\'s a two-step system, $125 for the Stack. Link in bio. If you already believe in peptides for your face, it\'s time to give your scalp the same treatment.',
+            },
+            {
+              framework: 'PAS',
+              title:     'The Missing Step',
+              duration:  '~35 seconds',
+              script:    '[HOOK] I used a hair growth serum every single day for three months and barely saw a difference. Turns out I was missing the most important step.\n\n[PROBLEM] On wash days I was stripping my scalp with a regular sulfate shampoo — drying it out, inflaming it, then immediately trying to treat it with an active serum. That doesn\'t work. A serum can\'t do its job on a compromised scalp.\n\n[SOLUTION] The Roots by GA shampoo has GHK-Cu, saw palmetto, rosemary oil — it defends and preps on wash days so your scalp is actually ready to absorb treatment. Then the serum every day: 5 peptide complexes, 7 growth factors, longevity molecules NMN and PDRN. Two steps, designed to work together.\n\n[CTA] This is the two-step system I wish I had from the start. Link in bio — $125 for the Stack or grab them separately.',
+            },
+          ],
+          talkingPoints: {
+            benefits: [
+              'GHK-Cu in both products — the repair signal on wash day AND daily, not just once',
+              'Two-step system addresses all three follicle threats: DHT defense (shampoo), inflammation reduction, nutrient delivery (serum)',
+              '5 peptide complexes in the serum: repair, anchor, thickness, growth-phase activation',
+              '7 medical-grade growth factors: EGF, IGF-2, VEGF, bFGF, KGF-2, aFGF, SCF',
+              'Longevity molecules NMN (NAD+ support), PDRN (microcirculation), ergothioneine (follicle stem cell protection)',
+              'Ingredient study: 46% improvement in anagen-to-telogen ratio and ~29% reduction in telogen hair vs placebo*',
+              'Sulfate-free shampoo primes the scalp — not strips it — so the serum can actually absorb',
+              'Safe alongside prescription topicals, microneedling, PRP — won\'t interfere with what you\'re already using',
+            ],
+            powerPhrases: [
+              '"Your scalp is an extension of your face — start treating it like it"',
+              '"GHK-Cu on wash day and every day"',
+              '"Shampoo preps. Serum treats. That\'s the system."',
+              '"The blue tint is the copper peptide — not dye"',
+              '"This is longevity science for your scalp"',
+            ],
+          },
+          doAndDont: {
+            dos: [
+              'Lead with GHK-Cu — if your audience is skincare-literate, this is your fastest trust bridge',
+              'Show the blue tint in the shampoo on camera — it\'s the most memorable visual proof point',
+              'Demonstrate the massage-and-wait technique (1–2 min leave-on) — this is how the copper peptides absorb',
+              'Use supportive language: "supports," "helps," "improves the appearance of density," "designed to"',
+              'Disclose the partnership (#ad or paid-partnership label) on every post — FTC requirement',
+              'Attribute the clinical stat to the ingredient study, not to the product or your own results',
+              'Set an honest timeline: visible improvement in 8–12 weeks of consistency',
+            ],
+            donts: [
+              'Don\'t claim the products cure or reverse hair loss, guarantee regrowth, or replace prescription treatment',
+              'Don\'t use the "+17% hair density" or "78% more hairs" stats — these can\'t be sourced and are removed from creator use',
+              'Don\'t attach a growth percentage to sunflower sprout extract — pending supplier documentation',
+              'Don\'t skip the shampoo story — it\'s not just a cleanse, and treating it like one misses the whole system angle',
+            ],
+          },
+          benchmarks: {
+            hookRate: '>30%',
+            holdRate: '>10%',
+            ctr:      '>1%',
+          },
+        },
+      };
+      saveBrands(bd);
+      console.log('[startup] Roots by GA — full creator page + Peptide Longevity Stack brief configured');
+    }
+  } catch(e) { console.error('[startup] Roots by GA creator page error:', e.message); }
+
+  // Add Yuglo if not yet in brands.json
+  try {
+    const bd = loadBrands();
+    const exists = (bd.clients || []).some(b => (b.name || '').toLowerCase().trim() === 'yuglo');
+    if (!exists) {
+      bd.clients = bd.clients || [];
+      bd.clients.push({
+        id:                   'yuglo001',
+        createdAt:            '2026-06-08T00:00:00.000Z',
+        name:                 'Yuglo',
+        billingEmail:         'evaaadee1@gmail.com',
+        contractValue:        1500,
+        commissionRate:       0.10,
+        proratedFirstRetainer: 1150,
+        pipelineStage:        'Contract Signed',
+        startDate:            '2026-06-08',
+        contacts:             'Eva Dee (evaaadee1@gmail.com)',
+        industry:             'TBD — to be completed during onboarding',
+        products:             'TBD',
+        audience:             'TBD',
+        voice:                'TBD',
+        contentPillars:       'TBD',
+        tiktokHandle:         'TBD',
+        cta:                  'TBD',
+      });
+      saveBrands(bd);
+      console.log('[startup] Added Yuglo to brands.json');
+    }
+  } catch(e) { console.error('[startup] Yuglo setup error:', e.message); }
+
+  // Trusted Rituals — full brand config + creator page setup (runs if brief not yet set)
+  try {
+    const bd = loadBrands();
+    const tr = (bd.clients || []).find(b => (b.name || '').toLowerCase().trim() === 'trusted rituals');
+    if (tr && (!tr.creatorPage?.brief || tr.creatorPage?.incentives?.cashback?.target === 6)) {
+      // Brand-level fields
+      Object.assign(tr, {
+        industry:       'Wellness supplements — respiratory health & lung support',
+        products:       'Hero product: Mullein Honey Sticks — 30 individually packed honey sticks with 2,000mg Himalayan mullein + pure honey in ginger lemon flavor. Supports respiratory health, lung detox, seasonal allergy relief, and throat soothing. First-ever mullein honey stick on market (no direct competition). Additional wellness products available.',
+        audience:       'Adults 20–45 with seasonal allergies, pollen sensitivity, or who smoke/vape and want natural lung support. Health-conscious consumers who\'ve tried mullein but found tinctures, pills, or tea bags too inconvenient to stick with. Also resonates with general respiratory wellness seekers.',
+        voice:          'Science-backed but accessible and founder-led. Conversational, mission-driven, transparent. Yash (founder) draws on his own experience as a smoker. Confident and disruptive — proud to be first-to-market. Inclusive "we\'re in this together" energy.',
+        contentPillars: 'Allergy season & pollen relief, Smoking/vaping cessation & lung recovery, Respiratory health education, Product demos & unboxing, Before/after breathing improvement stories',
+        proofPoints:    'VC-backed with 3-year funding runway. Amazon bestseller. First-ever mullein honey stick — zero direct competition on TikTok Shop. 2,000mg per stick (full therapeutic dose). Premium Himalayan high-altitude sourcing, rosette-stage leaves (first-year harvest = max potency). Pure honey, no added sugar. 60M Americans have seasonal allergies. 50M+ smoke or vape.',
+        cta:            'Link in bio — grab yours',
+      });
+      // Creator page — preserves any existing slug + campaign URLs already set
+      const existingCp = tr.creatorPage || {};
+      tr.creatorPage = {
+        ...existingCp,
+        slug:            existingCp.slug || 'trusted-rituals',
+        active:          true,
+        listed:          true,
+        accentColor:     '#F5A623',
+        headline:        'Earn 25% Commission + Up to $2,850 in Bonuses',
+        subheadline:     'Join the Trusted Rituals TikTok Shop Creator Program',
+        tcCommission:    25,
+        tcHeroProductId: '1732230831415267648', // Mullein Honey Sticks
+        earnPotential:   2850,
+        welcomeMessage:  'You\'re officially in the Trusted Rituals Creator Program. Your sample ships May 29 — use the hooks and scripts below to make content that converts.',
+        welcomeSteps:    [
+          'Apply for all 4 campaigns using the links below',
+          'Look for your free sample on or around May 29',
+          'Prep your 3 blitz videos before launch day',
+          'Post on launch day for the algorithmic push (and the $650 tier)',
+          'Keep posting through June 30 for the video volume bonus + leaderboard',
+        ],
+        blitzTiers:      [{ gmv: 1000, bonus: 650 }, { gmv: 750, bonus: 500 }, { gmv: 375, bonus: 250 }],
+        incentives: {
+          cashback:    { enabled: true,  amount: 100, unitsRequired: 6 },
+          volumeBonus: { enabled: true,  bonus: 100,  videoCount: 10 },
+          leaderboard: { enabled: true,  places: [2000], threshold: 5000 },
+        },
+        campaigns: {
+          blitzUrl:         existingCp.campaigns?.blitzUrl         || '',
+          blitzLabel:       '🚀 Blitz Launch Campaign',
+          blitzSub:         'Post 3 videos on launch day — earn up to $650 in the first 15 days',
+          cashbackUrl:      existingCp.campaigns?.cashbackUrl      || '',
+          quantityVideoUrl: existingCp.campaigns?.quantityVideoUrl || '',
+          leaderboardUrl:   existingCp.campaigns?.leaderboardUrl   || '',
+        },
+        products: [
+          {
+            name:        'Mullein Honey Sticks (30 Pack)',
+            description: '2,000mg premium Himalayan mullein + pure honey in ginger lemon flavor. Supports respiratory health, clears mucus, soothes throat. First-ever mullein honey stick — nothing else like it on the market.',
+            minPrice:    null,
+            url:         existingCp.products?.[0]?.url || '',
+          },
+        ],
+        usps: [
+          '2,000mg of mullein per stick — a full therapeutic dose every time',
+          'First-ever mullein honey stick — zero direct competition on TikTok Shop',
+          'Premium Himalayan sourcing: rosette-stage, first-year harvest (max potency)',
+          'Pure honey masks bitterness naturally — it actually tastes good',
+          'Portable & mess-free — tear, sip, done. No dropper, no brewing, no prep',
+          'VC-backed brand with 3-year runway — reliable payouts, long-term opportunity',
+        ],
+        talkingPoints: '60M Americans deal with seasonal allergies every year\n50M+ people in the US smoke or vape\nMullein is a 2,000-year-old proven herb for respiratory health\nExisting formats are terrible — bitter tinctures, hard pills, 25-min tea bags\nHoney naturally soothes throat + masks mullein bitterness\nGinger lemon flavor with warm herbal finish — you\'ll actually take it daily\n30 sticks per box, individually packed, carry anywhere\nAmazon bestseller with proven product-market fit',
+        brief: {
+          niche:          'Health',
+          targetAudience: 'Adults 20–45 dealing with seasonal allergies, pollen sensitivity, or looking to support their lungs after smoking/vaping. Health-conscious buyers who\'ve heard of mullein but find tinctures, pills, and tea bags too bitter, messy, or inconvenient to stick with.',
+          mainProblem:    'Mullein is one of the most proven natural herbs for respiratory health — but every existing format is bitter, messy, and hard to turn into a daily habit.',
+          hooks: [
+            { text: 'Seasonal allergies were ruining my spring — then I found this and everything changed', type: 'transformation' },
+            { text: '60 million Americans suffer from seasonal allergies and nobody is talking about this natural fix', type: 'curiosity' },
+            { text: 'I quit vaping 3 months ago and these honey sticks are the reason my lungs feel clean again', type: 'social-proof' },
+            { text: 'Everything you know about mullein supplements is wrong — and that\'s why nothing has worked for you', type: 'myth-bust' },
+            { text: 'Why are you still brewing mullein tea for 25 minutes when you can literally just do this?', type: 'pain-point' },
+            { text: 'POV: You finally found the thing that actually works during pollen season', type: 'transformation' },
+            { text: 'This herb has been used for 2,000 years for lung health — and someone finally made it taste like honey', type: 'curiosity' },
+            { text: 'Stop wasting money on gross mullein tinctures — there is a way better option and it\'s finally here', type: 'pain-point' },
+          ],
+          frameworks: [
+            {
+              name: 'Problem → Solution',
+              why:  'The gap between mullein\'s proven benefits and every existing format\'s awful UX is the entire pitch — make viewers feel the frustration before you reveal the honey stick as the obvious fix',
+              outline: [
+                'Hook: Lead with the pain — allergy season, can\'t breathe, or physically show a gross tincture dropper',
+                'Agitate: "I tried pills (forgot to take them), tinctures (disgusting), tea bags (who has 25 minutes?)"',
+                'Introduce: "Then I found Trusted Rituals Mullein Honey Sticks — 2,000mg per stick, ginger lemon honey, just tear and sip"',
+                'CTA: "They have a launch promo with free samples right now — link in bio"',
+              ],
+            },
+            {
+              name: 'Why I Switched',
+              why:  'Personal switch stories convert at the highest rate for wellness products — a genuine comparison makes the product feel like a discovery, not an ad',
+              outline: [
+                'What I was using before: tinctures, pills, or just suffering through allergy season with no solution',
+                'Why I switched: too bitter, too inconvenient, too easy to forget',
+                'The discovery: show the honey stick — "tear it open and just sip it. It tastes like warm honey with a herbal finish"',
+                'The result: "This is my morning ritual now and I\'m genuinely never going back"',
+              ],
+            },
+            {
+              name: 'Unboxing + Demo',
+              why:  'The visual of tearing open a honey stick and sipping it is this product\'s best asset �� novel, satisfying, and immediately communicates the convenience advantage over messy tinctures',
+              outline: [
+                'Show the box — 30 sticks, clean individual packaging',
+                'Tear one stick open on camera — contrast it with a dropper (no mess, no measuring)',
+                'Mix into coffee or tea, or sip directly — let the viewer see how effortless it is',
+                'State the dose: "2,000mg of Himalayan mullein in literally one honey stick"',
+              ],
+            },
+          ],
+          sampleScripts: [
+            {
+              framework: 'PAS',
+              title:     'The Allergy Season Script',
+              duration:  '~35 seconds',
+              script:    '[HOOK] Pollen season almost broke me this year. I was sneezing constantly, congested all day, just couldn\'t breathe properly no matter what I tried.\n\n[PROBLEM] I heard mullein was a natural herb that could actually help with respiratory health so I went looking for supplements. But everything was awful — tinctures that taste disgusting, pills I kept forgetting to take, tea bags that take 20 minutes to brew. I gave up.\n\n[SOLUTION] Then I found Trusted Rituals Mullein Honey Sticks. 2,000mg of mullein sourced from the Himalayas — in a single honey stick. I just tear it open and sip it directly or mix it into my morning coffee. Ginger lemon flavor. It actually tastes good. It\'s my morning ritual now.\n\n[CTA] They\'re running a launch promotion with free samples right now — link is in my bio before they run out.',
+            },
+            {
+              framework: 'BAB',
+              title:     'The Lung Recovery Script',
+              duration:  '~30 seconds',
+              script:    '[BEFORE] Six months ago I was vaping almost every day. My lungs felt wrecked — tight, congested, just not right.\n\n[AFTER] Today I wake up and I can actually breathe clearly. Three months vape-free and my respiratory health genuinely feels different.\n\n[BRIDGE] The thing that kept me consistent? Trusted Rituals Mullein Honey Sticks. Mullein has been used for centuries to support lung health and clear mucus. 2,000mg per stick, pure honey, no bitterness — it became the daily ritual that kept me on track.\n\n[CTA] If you\'re trying to quit or just want to breathe better this pollen season — grab it through my link.',
+            },
+          ],
+          talkingPoints: {
+            benefits: [
+              '2,000mg of mullein per stick — a full clinical therapeutic dose in every single use',
+              'First-ever mullein honey stick on the market — zero direct competition on TikTok Shop',
+              'Premium Himalayan sourcing: rosette-stage, first-year harvest mullein at maximum potency',
+              'Pure honey soothes throat irritation naturally — no added sugar, no fillers',
+              'Ginger lemon flavor eliminates the bitterness — you\'ll actually want to take it every day',
+              'One stick = complete convenience — carry anywhere, no dropper, no measuring, no brewing',
+            ],
+            objections: [
+              '"Is this just a gimmick?" — Mullein has been used since Greek times, 2,000mg is a real therapeutic dose, and there is literally no other product like this on the market. Address it head-on.',
+              '"Does it actually taste good?" — Yes. The honey completely masks mullein\'s natural bitterness. Taste it on camera and let your genuine reaction do the selling.',
+              '"Why pay more than pills?" — Convenience and habit-formation premium. Same dose, but pills are easy to skip. The honey stick ritual is what makes people actually stick with it.',
+            ],
+            powerPhrases: [
+              '"The only mullein supplement you\'ll actually remember to take"',
+              '"2,000mg. Pure honey. Zero competition."',
+              '"Respiratory health that tastes like honey"',
+            ],
+          },
+          doAndDont: {
+            dos: [
+              'Lead with the pain — allergy season, pollen, smoking/vaping recovery. Hook the viewer\'s problem before showing the product',
+              'Show the product in use — tear the stick open on camera, sip directly or stir into a hot drink',
+              'Call out 2,000mg + Himalayan sourcing — these are the premium proof points that justify the price',
+              'Use the "first-ever" angle — there is literally nothing else like this on TikTok Shop right now',
+              'Lean into ritual language — this is a daily wellness practice, not a one-off supplement',
+            ],
+            donts: [
+              'Don\'t make medical claims about treating or curing conditions — use "supports respiratory health" and "seasonal wellness"',
+              'Don\'t skip the taste reveal — it actually tastes like honey, and that\'s the #1 objection handler',
+              'Don\'t only target smokers — seasonal allergy sufferers are a much larger audience and just as receptive',
+              'Don\'t rush past the unboxing — the stick format is visually novel, let viewers appreciate the convenience',
+            ],
+          },
+          benchmarks: {
+            hookRate: '>30% (impressions ÷ 3-second plays)',
+            holdRate: '>10-15% (thruplays ÷ 3-second plays)',
+            ctr:      '>1-1.5% (clicks ÷ impressions)',
+          },
+        },
+      };
+      saveBrands(bd);
+      console.log('[startup] Trusted Rituals full creator page configured');
+    }
+  } catch(e) { console.error('[startup] Trusted Rituals setup error:', e.message); }
+
+  // Ensure TikTok TC test brand exists (hidden from /creators index via listed:false)
+  // Approved Science — full creator page setup
+  try {
+    const bd = loadBrands();
+    const as = (bd.clients || []).find(b => (b.name || '').toLowerCase().trim() === 'approved science');
+    const asNeedsUpdate = !as?.creatorPage?.productRequestEnabled
+      || (as?.creatorPage?.catalogProducts || []).some(p => /shilajit|parastrin/i.test(p.name))
+      || as?.creatorPage?.earnPotential !== 1700;
+    if (as && asNeedsUpdate) {
+      const existingCp = as.creatorPage || {};
+      Object.assign(as, {
+        industry:       'Health supplements — 10-year-old brand, Amazon-first, expanding to TikTok Shop',
+        products:       'Hero: Parastrin (science-backed parasite cleanse, 60 capsules). 100+ samples/month budget. Additional catalog products available on request.',
+        audience:       'Health-conscious adults 25–45 interested in gut health, detox, energy, and weight management. Predominantly Amazon buyers already familiar with the brand.',
+        voice:          'Science-backed, credibility-forward. Lab-coat confidence without being cold — Approved Science has 10 years of proof points. Accessible and educational.',
+        contentPillars: 'Parasite cleanse awareness & gut health education, Digestive health & detox, Supplement unboxing & demos, Before/after transformation stories, Gut health myth-busting',
+        proofPoints:    '10+ years in market. Strong Amazon presence with thousands of verified reviews. Science-backed formulas. Manufactured in the USA. Multiple supplement categories with proven product-market fit.',
+        cta:            'Link in bio to shop',
+      });
+      as.shopId = as.shopId || 8913;
+      as.creatorPage = {
+        ...existingCp,
+        slug:            existingCp.slug || 'approved-science',
+        active:          true,
+        listed:          true,
+        accentColor:     '#2E7EFB',
+        headline:        'Earn $1,700+ in Bonuses + 20% Commission on the July Freedom Challenge',
+        subheadline:     'Join the Approved Science TikTok Shop Creator Program',
+        tcCommission:    20,
+        tcHeroProductId: '1731392689812508843', // Parastrin
+        earnPotential:   1700,
+        welcomeMessage:  'You\'re in the Approved Science Creator Program. Your sample is on its way — explore the full catalog and request any products you want to feature.',
+        welcomeSteps: [
+          'Apply for the campaigns below to unlock your cash bonuses',
+          'Your sample will ship within 3–5 business days',
+          'Request any additional products from the catalog using the form below',
+          'Post your first video and start earning 20% commission on every sale',
+        ],
+        incentives: {
+          cashback:    { enabled: false, amount: 0, unitsRequired: 0, description: '' },
+          volumeBonus: { enabled: true, bonus: 200, videoCount: 10, description: 'Post 10 videos and earn a one-time $200 cash bonus' },
+          leaderboard: { enabled: true, places: [1500, 1000, 500], threshold: 2000, description: 'Monthly leaderboard — $2,000 min GMV to qualify' },
+        },
+        campaigns: {
+          cashbackUrl:      existingCp.campaigns?.cashbackUrl      || '',
+          quantityVideoUrl: existingCp.campaigns?.quantityVideoUrl || '',
+          sprintUrl:        existingCp.campaigns?.sprintUrl        || 'https://creator.reacherapp.com/campaigns/8913/2128-70b915',
+          leaderboardUrl:   existingCp.campaigns?.leaderboardUrl   || 'https://creator.reacherapp.com/campaigns/8913/2129-5d80bb',
+        },
+        productRequestEnabled: true,
+        catalogProducts: [], // Parastrin is the default for all creators — this form is for requesting other catalog products
+        products: [
+          { name: 'Parastrin (60 Capsules)', description: 'Science-backed parasite cleanse and digestive support formula', url: existingCp.products?.[0]?.url || '' },
+        ],
+        usps: [
+          '10+ years of proven Amazon sales — thousands of verified reviews',
+          '20% commission on every sale you drive',
+          'Free Parastrin sample shipped directly to you',
+          'Science-backed formula manufactured in the USA',
+          'Request other products from the full catalog',
+          'Monthly cash bonuses for top performers',
+        ],
+        talkingPoints: 'Parasites affect up to 1 in 3 people globally — most don\'t know they have one\nGut health is the #1 health trend on TikTok — parasite cleanse content goes viral\nParastrin uses science-backed ingredients in clinical doses\n10+ years of real customer reviews on Amazon backing every product\nMade in the USA to strict supplement manufacturing standards\nBloating, fatigue, brain fog — all potential signs of gut imbalance\n60 capsules — a full 30-day cleanse protocol',
+        brief: {
+          niche:          'Health & Wellness Supplements',
+          targetAudience: 'Health-conscious adults 25–45 interested in gut health, energy, and weight management. Amazon shoppers who trust established supplement brands.',
+          mainProblem:    'Most people don\'t associate their bloating, fatigue, brain fog, or digestive issues with parasites — yet it\'s one of the most overlooked root causes. Parastrin makes the parasite cleanse conversation approachable and science-backed.',
+          hooks: [
+            { text: 'Doctors won\'t tell you this but 1 in 3 people have a parasite and don\'t know it', type: 'curiosity' },
+            { text: 'I did a parasite cleanse for 30 days and the results shocked me', type: 'transformation' },
+            { text: 'If you have constant bloating, fatigue, or brain fog — watch this', type: 'pain-point' },
+            { text: 'The gut health trend everyone is talking about and the science behind it', type: 'curiosity' },
+            { text: 'Why I switched from random gut supplements to a proper parasite cleanse protocol', type: 'transformation' },
+            { text: 'This is what Approved Science Parastrin actually does to your digestive system', type: 'curiosity' },
+            { text: 'POV: you finally figured out why your stomach has been off for months', type: 'social-proof' },
+            { text: 'The supplement brand with 10 years of Amazon reviews that most TikTok creators haven\'t found yet', type: 'myth-bust' },
+          ],
+          frameworks: [
+            {
+              name:    'Symptom → Root Cause → Solution',
+              why:     'Parasite cleanse content converts best when the viewer recognizes their own symptoms first — make them think "that\'s literally me" before you introduce the product',
+              outline: [
+                'Hook: List 3–5 symptoms (bloating, fatigue, brain fog, skin issues, cravings) — "if you have any of these you need to hear this"',
+                'Root cause reveal: "Most of the time it\'s gut health. And one of the most overlooked causes is parasites — 1 in 3 people have them"',
+                'Introduce Parastrin: "Approved Science has a science-backed cleanse formula. 10 years on Amazon, thousands of reviews, and it\'s now on TikTok Shop"',
+                'Social proof: "I\'ve been using it for 30 days and here\'s what I noticed…"',
+                'CTA: "Link in bio — they offer free samples right now"',
+              ],
+            },
+            {
+              name:    'Trust Bridge (Amazon → TikTok Shop)',
+              why:     'Approved Science has massive Amazon credibility that most TikTok viewers don\'t know about — this bridge makes the product feel established rather than trendy',
+              outline: [
+                'Open with Amazon proof: "This brand has been on Amazon for over 10 years with thousands of verified reviews"',
+                '"They just launched on TikTok Shop and creators can get free samples right now"',
+                'Show the product: unbox it, explain what it does simply',
+                '"20% commission — I genuinely recommend this to everyone asking me about gut health"',
+                'CTA with urgency: "Free samples are limited — grab yours through my link"',
+              ],
+            },
+            {
+              name:    '30-Day Results Check-In',
+              why:     'Supplement content that follows a creator\'s personal journey over 30 days builds trust and drives consistent engagement — viewers tune back in to see the update',
+              outline: [
+                'Hook: "I\'ve been doing a parasite cleanse for 30 days — here\'s my honest update"',
+                'Context: "I picked Parastrin by Approved Science — 10+ years on Amazon, thousands of reviews, science-backed formula"',
+                'Timeline: briefly walk through days 1, 2, and week 4 — what changed, what you noticed',
+                'Honest take: "I\'m not going to oversell this. Here\'s exactly what I experienced…"',
+                'CTA: "Free samples available through my link — worth trying if you\'ve been dealing with gut issues"',
+              ],
+            },
+          ],
+          sampleScripts: [
+            {
+              framework: 'PAS',
+              title:     'The Parasite Cleanse Reveal',
+              duration:  '~35 seconds',
+              script:    '[HOOK] If you have unexplained bloating, constant fatigue, brain fog, or weird skin stuff — I need you to hear this.\n\n[PROBLEM] Most people write these off as stress or diet. But one of the most overlooked root causes is parasites. Up to 1 in 3 people have them and genuinely don\'t know.\n\n[SOLUTION] I\'ve been using Approved Science Parastrin for 30 days. It\'s a science-backed parasite cleanse formula that\'s been on Amazon for over 10 years �� thousands of real reviews. And it just launched on TikTok Shop with free samples.\n\n[CTA] Link in my bio before the free samples run out. Your gut health is worth the 30 seconds it takes to grab it.',
+            },
+            {
+              framework: 'Trust Bridge',
+              title:     'The Amazon-to-TikTok Discovery',
+              duration:  '~30 seconds',
+              script:    '[HOOK] This supplement brand has been on Amazon for over 10 years and most TikTok creators have no idea it exists.\n\n[BRIDGE] Approved Science just launched on TikTok Shop and they\'re offering free samples to creators right now. Their Parastrin is a proper science-backed parasite cleanse — 60 capsules, clinical doses, manufactured in the USA.\n\n[CREDIBILITY] Thousands of verified Amazon reviews over a decade. This isn\'t a random drop-shipped supplement. It\'s a brand with a real track record.\n\n[CTA] Free samples and 20% commission through my link. If you\'ve been dealing with gut issues — this is worth a look.',
+            },
+          ],
+          talkingPoints: {
+            benefits: [
+              'Parastrin: science-backed parasite cleanse for digestive & intestinal support',
+              '60 capsules — a complete 30-day cleanse protocol',
+              'Clinical doses of science-backed ingredients — not underdosed fillers',
+              '10+ years of Amazon sales — real verified reviews at scale',
+              'Made in the USA to strict supplement manufacturing standards',
+              '20% commission + free samples for all creators',
+            ],
+            objections: [
+              '"Is this a real brand?" — Yes. 10+ years on Amazon, thousands of verified reviews, proven product-market fit before TikTok existed.',
+              '"Do I need a parasite cleanse?" — Frame it as gut health optimization, not something scary. The content angle is curiosity and self-care.',
+              '"Why not just buy a cheaper supplement?" — Approved Science uses quality ingredients at clinical doses. The Amazon reviews prove it delivers.',
+            ],
+            powerPhrases: [
+              '10 years of Amazon proof',
+              'Science-backed, not trendy',
+              '1 in 3 people have a parasite and don\'t know it',
+            ],
+          },
+          doAndDont: {
+            dos: [
+              'Lead with relatable symptoms — make viewers self-identify before introducing the product',
+              'Use your personal results as the credibility anchor — "I\'ve been taking this for X days and here\'s what I noticed" outperforms any brand claim',
+              'Show the capsules on camera — the physical product on screen increases purchase intent',
+              'Be honest about your timeline — gradual, real progress is more convincing than overnight transformations',
+              'Drive to the shop link with urgency — limited stock, a discount, or a time-bound offer converts better than a generic "link in bio"',
+            ],
+            donts: [
+              'Don\'t make direct disease or cure claims — stick to "supports", "promotes", "may help"',
+              'Don\'t sensationalize parasites in a fear-based way — keep it educational and empowering',
+              'Don\'t skip the credibility hook — the 10-year Amazon history is what separates this from random supplements',
+              'Don\'t rush the content — supplement trust videos need at least 30 seconds to build credibility',
+            ],
+          },
+          benchmarks: { hookRate: '>30%', holdRate: '>10-15%', ctr: '>1-1.5%' },
+        },
+      };
+      saveBrands(bd);
+      console.log('[startup] Approved Science creator page configured');
+    }
+  } catch(e) { console.error('[startup] Approved Science setup error:', e.message); }
+
+  // Remove TC Test Brand (no longer needed)
+  try {
+    const bd = loadBrands();
+    const before = (bd.clients || []).length;
+    bd.clients = (bd.clients || []).filter(b => b.id !== 'tctestbrand001' && b.name !== 'TC Test Brand');
+    if (bd.clients.length < before) {
+      saveBrands(bd);
+      console.log('[startup] Removed TC Test Brand');
+    }
+  } catch(e) { console.error('[startup] TC test brand removal error:', e.message); }
 
   // Startup diagnostics — log data file sizes so we can verify persistence
   try {
@@ -9804,4 +16333,49 @@ app.listen(CFG.port, () => {
   } catch(e) {
     console.error('[startup] resume pipelines error:', e.message);
   }
+
+  // ─── Ensure Stripe billing products exist (idempotent) ─────────────────────
+  if (stripe) {
+    (async () => {
+      try {
+        const STRIPE_META_FILE = path.join(DATA_DIR, 'stripe-products.json');
+        let meta = {};
+        if (fs.existsSync(STRIPE_META_FILE)) {
+          try { meta = JSON.parse(fs.readFileSync(STRIPE_META_FILE, 'utf8')); } catch(_) {}
+        }
+
+        const ensureProduct = async (key, name, description) => {
+          if (meta[key]) return meta[key]; // already created
+          // Search for existing product by metadata key
+          const list = await stripe.products.search({ query: `metadata['cc_product_key']:'${key}'`, limit: 1 });
+          if (list.data.length > 0) {
+            meta[key] = list.data[0].id;
+            return meta[key];
+          }
+          const prod = await stripe.products.create({ name, description, metadata: { cc_product_key: key, source: 'cult-content-billing' } });
+          meta[key] = prod.id;
+          console.log(`[stripe] Created product: ${name} (${prod.id})`);
+          return prod.id;
+        };
+
+        await ensureProduct('retainer',  'Monthly Retainer',   'Cult Content monthly management retainer fee');
+        await ensureProduct('gmv_share', 'GMV Revenue Share',  'Cult Content performance-based TikTok Shop GMV share');
+
+        // Create a Stripe product for each billing tier
+        for (const tier of BILLING_TIERS) {
+          const tierKey = `tier_${tier.retainer}_${Math.round(tier.commRate * 100)}pct`;
+          const tierName = `Cult Content — $${tier.retainer.toLocaleString()}/mo + ${Math.round(tier.commRate * 100)}% GMV`;
+          const tierDesc = `Monthly retainer: $${tier.retainer.toLocaleString()} | GMV revenue share: ${Math.round(tier.commRate * 100)}%`;
+          await ensureProduct(tierKey, tierName, tierDesc);
+        }
+
+        fs.writeFileSync(STRIPE_META_FILE, JSON.stringify(meta, null, 2));
+        console.log('[stripe] Billing products verified ✓');
+      } catch(e) {
+        console.error('[stripe] Product setup error:', e.message);
+      }
+    })();
+  }
 });
+
+// ============================================

@@ -975,8 +975,7 @@
 
   <!-- ── GET A BOOTH ── -->
   <div style="background:#FF0050;color:#fff;text-align:center;padding:18px 24px;">
-    <span style="font-weight:900;font-size:17px;letter-spacing:.06em;text-transform:uppercase;font-family:'Montserrat',sans-serif;">Pricing increases on August 21st.</span>
-    <span style="display:block;font-size:13px;font-weight:600;margin-top:5px;opacity:.88;letter-spacing:.03em;font-family:'Montserrat',sans-serif;">Final deadline is August 28th.</span>
+    <span style="font-weight:900;font-size:17px;letter-spacing:.06em;text-transform:uppercase;font-family:'Montserrat',sans-serif;">Final deadline is August 28th.</span>
   </div>
   <div class="booth-band" style="padding-top:60px;">
     <div class="wrap">
@@ -988,7 +987,7 @@
         <div class="booth-card">
           <div class="booth-tag">Culture &amp; Lifestyle</div>
           <div class="booth-name">Capitol Canopy Booth</div>
-          <div class="booth-price">$400</div>
+          <div class="booth-price">$500</div>
           <div class="booth-count" id="count-capitol">30 available</div>
           <ul>
             <li>Booth space under the Capitol Canopy</li>
@@ -1001,7 +1000,7 @@
         <div class="booth-card">
           <div class="booth-tag">Commerce</div>
           <div class="booth-name">American Way Booth</div>
-          <div class="booth-price">$300</div>
+          <div class="booth-price">$400</div>
           <div class="booth-count" id="count-freedom">40 available</div>
           <ul>
             <li>Booth space on American Way &mdash; the commerce corridor</li>
@@ -1478,8 +1477,8 @@
     const d = await fetch('https://cultcontent-server-production.up.railway.app/ccc-booth-availability').then(r => r.json());
     const cc = d['capitol-canopy'];
     const aw = d['american-way'];
-    if (cc) { const shown = Math.max(0, Math.floor(cc.available / 2)); document.getElementById('count-capitol').textContent = shown > 0 ? `${shown} of ${cc.total} available` : 'Sold out'; }
-    if (aw) { const shown = Math.max(0, Math.floor(aw.available / 2)); document.getElementById('count-freedom').textContent = shown > 0 ? `${shown} of ${aw.total} available` : 'Sold out'; }
+    if (cc) { const shown = Math.max(0, Math.floor(cc.available / 3)); document.getElementById('count-capitol').textContent = shown > 0 ? `${shown} of ${cc.total} available` : 'Sold out'; }
+    if (aw) { const shown = Math.max(0, Math.floor(aw.available / 3)); document.getElementById('count-freedom').textContent = shown > 0 ? `${shown} of ${aw.total} available` : 'Sold out'; }
   } catch(_) {}
 })();
 </script>

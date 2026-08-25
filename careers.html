@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Careers — Cult Content</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    min-height: 100%;
+    background: #111111;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    color: #f0f0f0;
+  }
+
+  #page-bg {
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 56px 20px 80px;
+  }
+
+  .wrap { width: 100%; max-width: 720px; }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 36px;
+    text-decoration: none;
+  }
+  .brand img { height: 28px; }
+  .brand-name {
+    font-size: .74rem;
+    font-weight: 800;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,.4);
+  }
+
+  .pill {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: #00F2EA;
+    background: rgba(0,242,234,.08);
+    border: 1px solid rgba(0,242,234,.2);
+    border-radius: 20px;
+    padding: 4px 14px;
+    margin-bottom: 18px;
+  }
+
+  h1 {
+    font-size: clamp(28px, 6vw, 40px);
+    font-weight: 900;
+    line-height: 1.07;
+    letter-spacing: -.025em;
+    color: #fff;
+    margin-bottom: 14px;
+  }
+  h1 .cyan { color: #00F2EA; }
+
+  .sub {
+    font-size: 14px;
+    color: #999;
+    line-height: 1.8;
+    margin-bottom: 40px;
+    max-width: 560px;
+  }
+
+  .roles { display: flex; flex-direction: column; gap: 14px; }
+
+  .role-card {
+    display: block;
+    background: #161616;
+    border: 1px solid #222;
+    border-radius: 16px;
+    padding: 26px 26px;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color .15s, transform .15s;
+  }
+  .role-card:hover { border-color: rgba(0,242,234,.35); transform: translateY(-1px); }
+
+  .role-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 10px;
+  }
+
+  .role-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -.01em;
+  }
+
+  .role-cta {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #00F2EA;
+    white-space: nowrap;
+    margin-top: 2px;
+  }
+
+  .role-tagline {
+    font-size: 14px;
+    color: #999;
+    line-height: 1.6;
+    margin-bottom: 14px;
+  }
+
+  .role-comp {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #ccc;
+    background: rgba(0,242,234,.05);
+    border: 1px solid rgba(0,242,234,.15);
+    border-radius: 8px;
+    padding: 6px 12px;
+  }
+  .role-comp strong { color: #00F2EA; font-weight: 800; }
+
+  .empty-state {
+    background: #161616;
+    border: 1px solid #222;
+    border-radius: 16px;
+    padding: 40px 26px;
+    text-align: center;
+    color: #777;
+    font-size: 14px;
+  }
+
+  .fine { font-size: 11px; color: #444; text-align: center; line-height: 1.65; margin-top: 40px; }
+
+  /* Checkerboard wormhole — subtle, dreamlike motif living behind the hero.
+     Anchored to the top of the page (not the viewport) so it scrolls away
+     naturally once you're past the hero, instead of fighting the cards below. */
+  .wormhole-bg {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 700px;
+    overflow: hidden;
+    z-index: 0;
+    pointer-events: none;
+    mask-image: linear-gradient(to bottom, black 0%, black 40%, transparent 92%);
+    -webkit-mask-image: linear-gradient(to bottom, black 0%, black 40%, transparent 92%);
+  }
+  .wormhole-bg::before {
+    content: '';
+    position: absolute;
+    top: -40px; left: 50%;
+    width: 1700px; height: 1700px;
+    margin-left: -850px;
+    background-image:
+      repeating-conic-gradient(from 0deg at 50% 50%, rgba(0,242,234,.05) 0deg 4deg, transparent 4deg 16deg),
+      repeating-radial-gradient(circle at 50% 50%, rgba(255,0,80,.035) 0px 1px, transparent 1px 34px);
+    border-radius: 50%;
+    animation: wormhole-spin 150s linear infinite;
+  }
+  @keyframes wormhole-spin {
+    from { transform: rotate(0deg) scale(1); }
+    50%  { transform: rotate(180deg) scale(1.05); }
+    to   { transform: rotate(360deg) scale(1); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .wormhole-bg::before { animation: none; }
+  }
+  #page-bg { position: relative; z-index: 1; }
+</style>
+</head>
+<body>
+<div class="wormhole-bg" aria-hidden="true"></div>
+<div id="page-bg">
+<div class="wrap">
+
+  <a href="https://cultcontent.cc" class="brand">
+    <img src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/68529ceff63e1913ceb4e2e0.png" alt="Cult Content" />
+    <span class="brand-name">Cult Content</span>
+  </a>
+
+  <div class="pill">Careers</div>
+  <h1>Build the machine<br><span class="cyan">with us.</span></h1>
+  <p class="sub">We're a small, fast-moving team turning audiences into revenue on TikTok Shop. Here's what we're hiring for right now.</p>
+
+  <div class="roles" id="roles"></div>
+
+  <p class="fine">Don't see the right fit? Reach out anyway — <a href="mailto:Tommy@cultcontent.cc" style="color:#555;">Tommy@cultcontent.cc</a></p>
+
+</div>
+</div>
+
+<script>
+  // Add a new role by appending an entry here — no other markup changes needed.
+  const ROLES = [
+    {
+      title: 'Creator Leader',
+      tagline: "Own our creator community — recruit, onboard, and activate the TikTok Shop affiliates who drive revenue for every brand we run.",
+      comp: '$2,750/mo base + 1% of community GMV',
+      url: '/apply/creator-lead',
+    },
+  ];
+
+  function x(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  function renderRoles() {
+    const wrap = document.getElementById('roles');
+    if (!ROLES.length) {
+      wrap.innerHTML = '<div class="empty-state">No open roles right now — check back soon.</div>';
+      return;
+    }
+    wrap.innerHTML = ROLES.map(r => `
+      <a class="role-card" href="${x(r.url)}">
+        <div class="role-top">
+          <div class="role-title">${x(r.title)}</div>
+          <div class="role-cta">Apply <i class="fa-solid fa-arrow-right"></i></div>
+        </div>
+        <div class="role-tagline">${x(r.tagline)}</div>
+        <div class="role-comp"><i class="fa-solid fa-sack-dollar"></i> <strong>${x(r.comp)}</strong></div>
+      </a>
+    `).join('');
+  }
+  renderRoles();
+</script>
+
+</body>
+</html>
