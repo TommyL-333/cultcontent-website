@@ -848,6 +848,7 @@ footer{margin-top:60px;padding-top:24px;border-top:1px solid rgba(255,255,255,.0
 
 // GET /creators — creator network signup page
 app.get('/creators', (req, res) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.sendFile(path.join(__dirname, 'creators.html'));
 });
 
