@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400..700&family=Public+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 @import "@heroui/styles";
 
@@ -52,9 +52,13 @@
 }
 
 @theme inline {
-  /* Fonts */
+  /* Fonts — one family, pushed to its heaviest weight for headlines
+     instead of pairing in a second display face. Matches how the actual
+     event marketing page (culture-commerce-carnival.html) gets its
+     punch: font-weight 900 + tight tracking + big clamp() sizing, on a
+     plain sans, not an unusual typeface. See DESIGN.md. */
   --font-sans: 'Public Sans', ui-sans-serif, system-ui, sans-serif;
-  --font-display: 'Source Serif 4', ui-serif, Georgia, 'Times New Roman', serif;
+  --font-display: 'Public Sans', ui-sans-serif, system-ui, sans-serif;
 
   /* shadcn-style names this app's components are written against —
      see the note above about HeroUI's own token names. */
@@ -98,5 +102,97 @@ body {
     var(--border) 6px,
     transparent 6px,
     transparent 12px
+  );
+}
+
+/*
+ * Glowing pill badge — lifted directly from culture-commerce-carnival.html's
+ * `.label`/`.pill` treatment: a tinted translucent fill + tinted border in
+ * one accent color, not a flat chip. Use one of the three accent variants;
+ * don't invent a fourth color.
+ */
+.pill-glow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 5px 14px;
+  border-radius: 999px;
+}
+.pill-glow-cyan { color: var(--color-accent-2); background: color-mix(in oklab, var(--color-accent-2) 10%, transparent); border: 1px solid color-mix(in oklab, var(--color-accent-2) 25%, transparent); }
+.pill-glow-red  { color: var(--color-primary);  background: color-mix(in oklab, var(--color-primary) 10%, transparent);  border: 1px solid color-mix(in oklab, var(--color-primary) 25%, transparent); }
+.pill-glow-gold { color: var(--color-gold);      background: color-mix(in oklab, var(--color-gold) 10%, transparent);      border: 1px solid color-mix(in oklab, var(--color-gold) 25%, transparent); }
+
+/*
+ * Diagonal gradient wash — the landing page's `.ticket-card.featured`
+ * treatment for the one card per section that should read as the
+ * highlighted/urgent option. A corner glow, not a full-card tint.
+ */
+.card-glow-cyan { background-image: linear-gradient(160deg, color-mix(in oklab, var(--color-accent-2) 8%, transparent) 0%, transparent 60%); }
+.card-glow-red  { background-image: linear-gradient(160deg, color-mix(in oklab, var(--color-primary) 8%, transparent) 0%, transparent 60%); }
+.card-glow-gold { background-image: linear-gradient(160deg, color-mix(in oklab, var(--color-gold) 8%, transparent) 0%, transparent 60%); }
+
+/*
+ * Marquee bulb lights — an actual carnival-sign detail, not just a
+ * colored strip. A row of small glowing bulbs that gently twinkle out
+ * of phase with each other (each bulb gets its own animation-delay so
+ * they don't all pulse in unison, which would read mechanical instead
+ * of like real incandescent bulbs). Use once, at the top of the one
+ * "hero" card on a screen — this is a loud signature, not a utility.
+ */
+.marquee-lights {
+  height: 7px;
+  background-image: repeating-radial-gradient(
+    circle at 5px 3.5px,
+    var(--color-gold) 0 2px,
+    transparent 2.5px 16px
+  );
+  background-size: 16px 7px;
+  background-repeat: repeat-x;
+  animation: marquee-twinkle 1.8s ease-in-out infinite;
+}
+@keyframes marquee-twinkle {
+  0%, 100% { opacity: 1; filter: brightness(1); }
+  50% { opacity: 0.55; filter: brightness(1.4); }
+}
+
+/*
+ * Ticket die-cut notches — the semicircle bites punched into a real
+ * ticket stub where it tears. Pair with `.ticket-perf` on the same
+ * line: wrap both in a `relative` element with natural (not zero)
+ * height, so `top: 50%` on the notches lands exactly on the divider.
+ * The card that holds them needs `overflow-hidden` for the outer half
+ * of each circle to actually get clipped off — that clipping is what
+ * sells the illusion, not the circle itself.
+ */
+.ticket-notch {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--background);
+  z-index: 1;
+}
+.ticket-notch-left { left: -9px; }
+.ticket-notch-right { right: -9px; }
+
+/*
+ * Candy-stripe bar — a barber-pole/tent-awning diagonal stripe, the one
+ * pattern almost never seen in AI-scaffolded UI (which defaults to flat
+ * fills or soft gradients, never a repeating angled pattern). Use as a
+ * thin decorative divider, not a background fill.
+ */
+.candy-stripe {
+  height: 6px;
+  border-radius: 3px;
+  background-image: repeating-linear-gradient(
+    45deg,
+    var(--color-accent-2) 0 10px,
+    var(--color-primary) 10px 20px
   );
 }

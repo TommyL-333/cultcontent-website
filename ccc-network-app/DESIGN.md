@@ -20,35 +20,42 @@ Metaphor for the whole app: **a physical event pass / ticket stub**, not a
 festival ticket — condensed numerals, a perforated tear line, ink-stamp
 accent marks — rather than rounded cards in a grid.
 
+**Second source of truth, added later and now the tie-breaker on tone:**
+the actual event marketing page, live at `culture-commerce-carnival.html`
+(and mirrored at `ccc.cultcontent.cc/culture-commerce-carnival`). Earlier
+revisions of this doc picked a *restrained, institutional* register
+(serif headlines, one accent leading at a time) reasoning abstractly from
+"what does an AI scaffold never do." That's a reasonable heuristic in a
+vacuum, but it invented a tone unrelated to the brand that already
+exists. The marketing page is the real Creator Carnival identity: full
+black, all three accents used together, huge black-weight sans
+headlines, glowing pill badges, gradient-washed feature cards, emoji used
+as icons. Festival/event energy, not fintech-trust energy. Match *that*,
+not an abstract "looks less like AI" heuristic — a real existing brand
+beats an invented one every time they conflict.
+
 ## Typography
 
-Two fonts, never Inter — and never a bold display grotesk either (Space
-Grotesk / Bricolage Grotesque / Sora have become their own AI-scaffold
-tell; nearly every vibecoded landing page reaches for one now):
+One font, never Inter, never a second serif/display face paired in:
 
-- **Display / numerals / headlines** — `Source Serif 4`, a serif. Used
-  for every screen's `h1`/`h2`, the countdown digits, and any large
-  standalone number — app-wide, not just one screen. Serif headlines are
-  a register almost no AI-generated app uses (they default to
-  sans-everything), and a serif is the classic trust signal — it's what
-  news mastheads, financial institutions, and credential/ID documents use
-  to read as authoritative rather than "startup demo." Chose Source
-  Serif over a more decorative serif (e.g. Fraunces) deliberately: its
-  terminals are straight and restrained rather than soft/bubbly — reads
-  professional/institutional, not boutique-editorial. Use `font-bold`,
-  not `font-normal`/`font-extrabold` — serifs need more weight than sans
-  at display sizes to hold up, but Source Serif's own bold is already
-  assertive enough without going heavier. Don't pair it with
-  `tracking-tight` — that's a sans/grotesk convention that fights a
-  serif's natural proportions.
-- **Body / UI text** — `Public Sans`. Used for paragraphs, labels,
-  buttons, nav. Not a random pick: it's the official typeface of the
-  U.S. federal government's web design system (USWDS), built explicitly
-  for institutional trust and accessibility — and it's outside the
-  standard AI-tool font rotation (Inter/Roboto/Poppins/Manrope/DM Sans).
+- **`Public Sans`, at its heaviest weight, is both the body and the
+  display face.** Headlines, the countdown digits, and any large
+  standalone number use `font-black` (900) or `font-extrabold` (800)
+  with `tracking-tight` and big `text-4xl`+ sizing — never a separate
+  typeface. This is deliberately how the marketing page gets its punch
+  (`font-weight: 900`, `letter-spacing: -.02em` to `-.03em`, `clamp(42px,
+  7vw, 76px)` headline sizing) on a plain system sans, not an unusual
+  font choice — the excitement comes from scale + weight + contrast, not
+  from typeface personality. (This reverses an earlier version of this
+  doc that used `Source Serif 4` for headlines — see the note above.)
+- Body copy, labels, nav stay at normal/medium Public Sans weights —
+  the contrast between a 400-weight paragraph and a 900-weight headline
+  is what makes the headline read as loud, not the headline alone.
 
-Tailwind utilities: `font-display` (Bricolage Grotesque) and `font-sans`
-(Public Sans, the default — no class needed for body text).
+Tailwind utilities: `font-display` and `font-sans` currently resolve to
+the same family (Public Sans) — `font-display` exists as a token so a
+real second face could be swapped in later without touching every
+screen, not because one is in use today.
 
 Type scale (use these, not arbitrary `text-[Npx]` values, except for the
 countdown digits which are intentionally huge):
@@ -85,13 +92,22 @@ tokens (`bg-background`, `text-foreground`, `bg-accent`, etc.).
 | `--gold` | `#F5A623` | tertiary accent — badges, stamps, dividers |
 
 Rules:
-- One accent leads per screen/component. Don't rainbow every element —
-  red for the primary action, cyan for a secondary highlight or link,
-  gold used sparingly as a detail (a stamp, a dot, a divider), never as a
-  large fill.
-- No purple/indigo, no gradient-on-white-card default. The one permitted
-  gradient is a tight radial "spotlight" behind a focal element, using an
-  actual brand color, not a generic violet blob.
+- **All three accents can appear together on one screen** — the
+  marketing page does this constantly (a cyan pill badge next to a red
+  featured-card glow next to a gold sponsor tag, all in one viewport).
+  An earlier version of this doc said "one accent leads per screen";
+  that was too conservative once the actual brand reference showed
+  otherwise. Keep each accent's *meaning* consistent though: cyan =
+  primary/default action, red = featured/urgent/VIP, gold = premium/
+  sponsor/detail. Don't reassign what a color means screen to screen.
+- Two reusable patterns, both lifted directly from the marketing page —
+  see `index.css`:
+  - `.pill-glow-{cyan,red,gold}` — a tinted translucent fill + tinted
+    border in one accent, for labels/badges/chips. Not a flat solid chip.
+  - `.card-glow-{cyan,red,gold}` — a diagonal corner gradient wash on a
+    card, for the one option per section that should read as
+    highlighted (a featured ticket tier, a live/urgent state).
+- No purple/indigo, no gradient-on-white-card default.
 - Existing `text-zinc-400`/`text-zinc-500` utility classes are legacy from
   the scaffold — replace with `text-muted-foreground` as each screen is
   touched, don't leave both systems mixed within one file.
@@ -135,12 +151,16 @@ Keep using `motion` (Framer Motion), but:
 
 ## Status
 
-Typography (fonts + `font-display` on every screen headline) is applied
-app-wide. The rest of the system — ticket/pass shape language, offset
-shadows, brand color usage, layout patterns — is only applied to
-`HomeScreen.jsx` (pilot) so far. Remaining screens (`LoginScreen`,
-`SignupScreen`, `DirectoryScreen`, `ConnectionsScreen`,
-`PersonProfileScreen`, `InboxScreen`, `ProfileScreen`, `SettingsScreen`,
-`Topbar`, `PersonDetailCard`) still use the old teal/`rounded-xl`/
-`shadow-sm` look for everything but headline type and should be brought
-in line with the rest of this doc next.
+Two rounds so far. Round 1 (restrained/institutional: Source Serif 4,
+one-accent-leads) got applied app-wide for typography, but only piloted
+on `HomeScreen.jsx` for the rest. Round 2 (this version — festival
+energy matched to the actual marketing page: heavy-weight Public Sans,
+layered accents, `.pill-glow`/`.card-glow`) has only been applied to
+`HomeScreen.jsx` so far, replacing round 1's treatment there. Every other
+screen (`LoginScreen`, `SignupScreen`, `DirectoryScreen`,
+`ConnectionsScreen`, `PersonProfileScreen`, `InboxScreen`,
+`ProfileScreen`, `SettingsScreen`, `Topbar`, `PersonDetailCard`) is still
+on round 1's typography (`font-display` headlines, now silently
+resolving to Public Sans instead of the removed serif — so they didn't
+break, but they don't have the new weight/pill/glow treatment either)
+and should be brought in line with this version next.

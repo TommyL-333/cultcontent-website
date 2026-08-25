@@ -34,7 +34,7 @@ function TimeBlock({ value, label }) {
         against the inherited body font, not the actual displayed digits,
         and clipped them once the display font got bigger/bolder.
       */}
-      <div className="relative h-11 sm:h-14 w-[2.2ch] font-display text-4xl sm:text-5xl font-bold">
+      <div className="relative h-12 sm:h-16 w-[2.2ch] font-display text-5xl sm:text-6xl font-black tracking-tight">
         <AnimatePresence mode="popLayout">
           <motion.div
             key={value}
@@ -85,11 +85,14 @@ const DETAIL_FACTS = [
   { label: 'Broadcast', value: 'Live Streamed' },
 ];
 
+// Same emoji vocabulary as the "what happens" cards on the actual event
+// page (culture-commerce-carnival.html) — one visual language across
+// both surfaces, not a coincidence.
 const COVERAGE = [
-  '100+ booths from beauty, wellness, food, apparel, and tech brands — all commerce-enabled on TikTok Shop, Amazon, or Shopify',
-  'Branded photo booths, activations, and moments designed to be filmed',
-  'Creator matchmaking with brands, main stage panels & performances',
-  'Live from the floor — tag products, earn commission',
+  { emoji: '🎪', text: '100+ booths from beauty, wellness, food, apparel, and tech brands — all commerce-enabled on TikTok Shop, Amazon, or Shopify' },
+  { emoji: '📸', text: 'Branded photo booths, activations, and moments designed to be filmed' },
+  { emoji: '🎤', text: 'Creator matchmaking with brands, main stage panels & performances' },
+  { emoji: '💸', text: 'Live from the floor — tag products, earn commission' },
 ];
 
 const container = {
@@ -109,35 +112,30 @@ export default function HomeScreen({ person }) {
       <Topbar person={person} />
       <div className="max-w-3xl mx-auto px-5 pb-20">
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-          <div className="flex items-center gap-2 mb-2">
-            <span className="h-1.5 w-1.5 rounded-full" style={{ background: 'var(--color-accent-2)' }} />
-            <span className="text-xs font-bold uppercase tracking-[.14em] text-muted-foreground">Event Pass</span>
-          </div>
-          <h1 className="font-display text-3xl sm:text-4xl font-bold mb-2">Creator Carnival</h1>
-          <p className="text-sm text-muted-foreground mb-8 leading-relaxed">
-            National Harbor, MD — an outdoor carnival where creators meet brands, make connections, go live, and get paid.
+          <span className="pill-glow pill-glow-cyan mb-4 -rotate-2">National Harbor, MD — 2026</span>
+          <h1 className="font-display text-4xl sm:text-5xl font-black tracking-tight leading-[0.95] mb-3">
+            Creator Carnival
+          </h1>
+          <p className="text-sm text-muted-foreground mb-5 leading-relaxed max-w-md">
+            An outdoor carnival where creators meet brands, make connections, go live, and get paid.
           </p>
+          <div className="candy-stripe w-24 mb-8" aria-hidden />
         </motion.div>
 
-        {/* Ticket card — countdown on top, perforated tear line, ticket-stub facts below */}
+        {/* Ticket card — marquee lights, countdown, die-cut perforated tear line, ticket-stub facts below */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45, delay: 0.1, ease: 'easeOut' }}
-          className="relative rounded-md border border-border bg-card mb-4 overflow-hidden"
+          className="card-glow-red relative rounded-md border border-border bg-card mb-4 overflow-hidden"
           style={{ boxShadow: '4px 4px 0 0 var(--color-accent-2)' }}
         >
+          <div className="marquee-lights" aria-hidden />
           <StampBadge />
-
-          <div
-            aria-hidden
-            className="pointer-events-none absolute -inset-16 opacity-[0.12]"
-            style={{ background: 'radial-gradient(circle at 30% 20%, var(--color-primary), transparent 55%)' }}
-          />
 
           <div className="relative px-6 sm:px-8 pt-7 pb-6 text-center">
             {t.isPast ? (
-              <div className="font-display text-xl font-bold text-primary">It&rsquo;s happening — see you on the floor.</div>
+              <div className="font-display text-xl font-black text-primary">It&rsquo;s happening — see you on the floor.</div>
             ) : (
               <>
                 <div className="text-[11px] font-bold uppercase tracking-[.14em] text-muted-foreground mb-4">
@@ -153,43 +151,46 @@ export default function HomeScreen({ person }) {
             )}
           </div>
 
-          <hr className="ticket-perf" />
+          <div className="relative">
+            <span className="ticket-notch ticket-notch-left" aria-hidden />
+            <span className="ticket-notch ticket-notch-right" aria-hidden />
+            <hr className="ticket-perf" />
+          </div>
 
           <div className="relative grid grid-cols-3 divide-x divide-border">
             {PRIMARY_FACTS.map((f) => (
               <div key={f.label} className="px-3 py-4 text-center">
                 <div className="text-[9px] font-bold uppercase tracking-[.1em] text-muted-foreground mb-1">{f.label}</div>
-                <div className="text-sm font-bold">{f.value}</div>
+                <div className="text-sm font-black">{f.value}</div>
               </div>
             ))}
           </div>
         </motion.div>
 
-        {/* Detail facts — small chips, deliberately not the same shape as the ticket-stub row above */}
-        <motion.div variants={container} initial="hidden" animate="show" className="flex flex-wrap gap-2 mb-8">
-          {DETAIL_FACTS.map((f) => (
+        {/* Detail facts — small chips, deliberately not the same shape as the ticket-stub row above.
+            Alternating tilts on purpose — a perfectly level row of identical pills is exactly
+            the too-tidy grid look that reads as machine-generated. */}
+        <motion.div variants={container} initial="hidden" animate="show" className="flex flex-wrap gap-3 mb-8">
+          {DETAIL_FACTS.map((f, i) => (
             <motion.div
               key={f.label}
               variants={item}
-              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5"
+              className={`pill-glow pill-glow-gold ${i % 2 === 0 ? 'rotate-1' : '-rotate-1'}`}
             >
-              <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: 'var(--color-gold)' }} />
-              <span className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">{f.label}</span>
-              <span className="text-xs font-bold">{f.value}</span>
+              <span className="opacity-70">{f.label}</span>
+              <span>{f.value}</span>
             </motion.div>
           ))}
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.5 }}>
-          <Card variant="default" className="rounded-md p-6">
+          <Card variant="default" className="card-glow-cyan rounded-md p-6">
             <div className="text-xs font-bold uppercase tracking-[.14em] text-muted-foreground mb-4">What the day covers</div>
-            <ul className="space-y-3">
-              {COVERAGE.map((line, i) => (
-                <li key={line} className="flex gap-3 text-sm text-foreground/90 leading-relaxed">
-                  <span className="font-display shrink-0 text-xs font-semibold" style={{ color: 'var(--color-accent-2)' }}>
-                    {String(i + 1).padStart(2, '0')}
-                  </span>
-                  <span>{line}</span>
+            <ul className="space-y-3.5">
+              {COVERAGE.map((line) => (
+                <li key={line.text} className="flex gap-3 text-sm text-foreground/90 leading-relaxed">
+                  <span className="shrink-0 text-lg leading-none" aria-hidden>{line.emoji}</span>
+                  <span>{line.text}</span>
                 </li>
               ))}
             </ul>
@@ -197,8 +198,8 @@ export default function HomeScreen({ person }) {
               href="/culture-commerce-carnival"
               target="_blank"
               rel="noreferrer"
-              className="inline-block mt-5 text-sm font-semibold hover:underline"
-              style={{ color: 'var(--color-accent-2)' }}
+              className="inline-flex items-center gap-2 mt-6 rounded-lg px-5 py-2.5 text-sm font-extrabold tracking-tight"
+              style={{ background: 'var(--color-accent-2)', color: 'var(--color-accent-2-foreground)' }}
             >
               Full event details &rarr;
             </a>
