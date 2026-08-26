@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Book a Call with Jina &mdash; Cult Content</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <style>
+    :root {
+      --teal: #00f2ea;
+      --pink: #ff0050;
+      --dark0: #080710;
+      --dark1: #0d0b18;
+      --ease: 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Lato', sans-serif; background: var(--dark0); color: #fff; overflow-x: hidden; }
+    h1,h2,h3,h4 { font-family: 'Montserrat', sans-serif; font-weight: 900; line-height: 1.1; }
+    p { line-height: 1.7; }
+    .gt {
+      background: linear-gradient(90deg, var(--teal), var(--pink));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+
+    /* NAV */
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; flex-shrink: 0; }
+    .logo-img { height: 34px; width: auto; display: block; }
+    .logo-name { font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 0.8rem; letter-spacing: 0.13em; text-transform: uppercase; color: #fff; }
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 40px; height: 64px;
+      background: rgba(8,13,26,0.88);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .nav-links { display: flex; align-items: center; gap: 26px; list-style: none; margin: 0; padding: 0; }
+    .nav-links a { color: rgba(255,255,255,0.55); text-decoration: none; font-size: 0.875rem; font-weight: 700; letter-spacing: 0.04em; transition: color 0.2s; }
+    .nav-links a:hover { color: #fff; }
+    .nav-right { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+    .nav-social { display: flex; align-items: center; gap: 5px; }
+    .nav-social a {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: rgba(255,255,255,0.07);
+      display: flex; align-items: center; justify-content: center;
+      text-decoration: none; color: rgba(255,255,255,0.5); font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+    .nav-social a:hover { background: rgba(255,255,255,0.14); color: #fff; }
+    .nav-cta {
+      display: inline-flex; align-items: center;
+      background: linear-gradient(90deg, #00f2ea, #ff0050);
+      color: #000; font-family: 'Montserrat', sans-serif;
+      font-weight: 900; font-size: 0.75rem; letter-spacing: 0.07em;
+      text-transform: uppercase; padding: 9px 20px;
+      border-radius: 100px; text-decoration: none; white-space: nowrap;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .nav-cta:hover { opacity: 0.85; transform: translateY(-1px); }
+    .nav-mobile-btn { display: none; background: none; border: none; cursor: pointer; color: #fff; font-size: 1.3rem; padding: 4px; line-height: 1; }
+    .mobile-drawer {
+      display: none; position: fixed; top: 64px; left: 0; right: 0;
+      background: rgba(8,13,26,0.97); backdrop-filter: blur(16px);
+      z-index: 99; flex-direction: column;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .mobile-drawer.open { display: flex; }
+    .mobile-drawer a {
+      color: rgba(255,255,255,0.8); text-decoration: none;
+      font-family: 'Montserrat', sans-serif; font-weight: 700;
+      font-size: 0.9rem; letter-spacing: 0.05em; text-transform: uppercase;
+      padding: 16px 24px; border-bottom: 1px solid rgba(255,255,255,0.06);
+      display: flex; align-items: center; justify-content: space-between;
+      transition: background 0.2s;
+    }
+    .mobile-drawer a:hover { background: rgba(255,255,255,0.04); }
+    .mobile-drawer .mobile-cta {
+      background: linear-gradient(90deg, #00f2ea, #ff0050);
+      color: #000; margin: 16px 24px 20px; border-radius: 100px;
+      text-align: center; justify-content: center; border-bottom: none;
+    }
+    @media (max-width: 860px) {
+      nav { padding: 0 20px; }
+      .nav-links, .nav-social { display: none; }
+      .nav-mobile-btn { display: flex; }
+    }
+
+    /* HERO */
+    .book-hero {
+      min-height: 100vh;
+      padding: 100px 32px 60px;
+      display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(0,242,234,0.06) 0%, transparent 70%),
+                  radial-gradient(ellipse 60% 40% at 80% 80%, rgba(255,0,80,0.05) 0%, transparent 70%),
+                  var(--dark0);
+    }
+    .hero-orb { position: absolute; pointer-events: none; border-radius: 50%; filter: blur(80px); }
+    .orb-1 {
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(0,242,234,0.07) 0%, transparent 70%);
+      top: -100px; right: -100px;
+      animation: orbFloat 20s ease-in-out infinite;
+    }
+    .orb-2 {
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(255,0,80,0.06) 0%, transparent 70%);
+      bottom: 0; left: -80px;
+      animation: orbFloat 25s ease-in-out infinite reverse;
+    }
+    @keyframes orbFloat {
+      0%,100% { transform: translate(0,0); }
+      33%      { transform: translate(30px,-20px); }
+      66%      { transform: translate(-20px,15px); }
+    }
+
+    .hero-inner {
+      max-width: 1100px; width: 100%;
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 64px; align-items: center;
+      position: relative; z-index: 1;
+    }
+
+    .hero-left .eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.18em;
+      text-transform: uppercase; color: var(--teal); margin-bottom: 20px;
+    }
+    .eyebrow-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--teal); box-shadow: 0 0 8px var(--teal); }
+    .hero-left h1 { font-size: clamp(2.4rem, 5vw, 3.8rem); margin-bottom: 20px; }
+    .hero-left p.lead { font-size: 1.05rem; color: rgba(255,255,255,0.7); margin-bottom: 36px; max-width: 480px; }
+
+    .trust-row { display: flex; flex-direction: column; gap: 12px; }
+    .trust-item { display: flex; align-items: center; gap: 12px; font-size: 0.88rem; color: rgba(255,255,255,0.65); }
+    .trust-item i { color: var(--teal); font-size: 0.9rem; width: 16px; }
+
+    .person-card {
+      background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px; overflow: hidden; position: relative;
+    }
+    .person-card::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(0,242,234,0.04) 0%, rgba(255,0,80,0.03) 100%);
+      pointer-events: none;
+    }
+    .person-photo { width: 100%; aspect-ratio: 3/4; object-fit: cover; object-position: top center; display: block; }
+    .person-info { padding: 24px; border-top: 1px solid rgba(255,255,255,0.06); }
+    .person-info .name { font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 1.25rem; margin-bottom: 4px; }
+    .person-info .title { font-size: 0.82rem; color: rgba(255,255,255,0.5); letter-spacing: 0.04em; margin-bottom: 14px; }
+    .person-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(0,242,234,0.1); border: 1px solid rgba(0,242,234,0.2);
+      border-radius: 20px; padding: 5px 12px;
+      font-size: 0.75rem; color: var(--teal); font-weight: 700; letter-spacing: 0.06em;
+    }
+
+    /* CALENDAR */
+    .calendar-section { background: var(--dark1); padding: 80px 32px; border-top: 1px solid rgba(255,255,255,0.05); }
+    .calendar-inner { max-width: 1000px; margin: 0 auto; }
+    .section-label { text-align: center; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--teal); margin-bottom: 14px; }
+    .calendar-inner h2 { text-align: center; font-size: clamp(1.8rem, 4vw, 2.6rem); margin-bottom: 12px; }
+    .calendar-inner .sub { text-align: center; color: rgba(255,255,255,0.5); font-size: 0.95rem; margin-bottom: 48px; }
+    .cal-embed-wrapper {
+      border-radius: 16px; overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.07);
+      background: #fff; min-height: 700px;
+    }
+    .cal-embed-wrapper iframe { width: 100%; min-height: 700px; border: none; display: block; }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid rgba(255,255,255,0.05);
+      padding: 28px 52px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 14px; position: relative; z-index: 1;
+    }
+    .footer-copy { font-size: 0.75rem; color: rgba(255,255,255,0.2); }
+    .footer-links { display: flex; gap: 24px; }
+    .footer-links a { font-size: 0.75rem; color: rgba(255,255,255,0.28); text-decoration: none; transition: color var(--ease); }
+    .footer-links a:hover { color: rgba(255,255,255,0.7); }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      .hero-inner { grid-template-columns: 1fr; gap: 40px; }
+      .hero-left { order: 1; }
+      .hero-right { order: 0; max-width: 320px; margin: 0 auto; width: 100%; }
+      .book-hero { padding: 90px 20px 48px; }
+      .calendar-section { padding: 60px 20px; }
+      footer { padding: 24px; flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="/" class="logo">
+      <img src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/68529ceff63e1913ceb4e2e0.png" alt="Cult Content" class="logo-img">
+      <span class="logo-name">Cult Content</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/">Home</a></li>
+      <li><a href="/founders-story">My Story</a></li>
+      <li><a href="/consulting">Consulting</a></li>
+      <li><a href="/partners">Partners</a></li>
+      <li><a href="/creators">Community</a></li>
+    </ul>
+    <div class="nav-right">
+      <div class="nav-social">
+        <a href="https://www.tiktok.com/@cultcontent.cc" title="TikTok" target="_blank" rel="noopener"><i class="fa-brands fa-tiktok"></i></a>
+        <a href="https://www.instagram.com/cultcontent.cc/" title="Instagram" target="_blank" rel="noopener"><i class="fa-brands fa-instagram"></i></a>
+        <a href="https://www.youtube.com/@Cult-Content-CC" title="YouTube" target="_blank" rel="noopener"><i class="fa-brands fa-youtube"></i></a>
+        <a href="https://www.linkedin.com/company/cultcontent" title="LinkedIn" target="_blank" rel="noopener"><i class="fa-brands fa-linkedin-in"></i></a>
+      </div>
+      <a href="/book-with-tommy" class="nav-cta">Book a Call</a>
+    </div>
+    <button class="nav-mobile-btn" id="mobileMenuBtn" aria-label="Open menu">&#9776;</button>
+  </nav>
+  <div class="mobile-drawer" id="mobileDrawer">
+    <a href="/">Home</a>
+    <a href="/founders-story">My Story</a>
+    <a href="/consulting">Consulting</a>
+    <a href="/partners">Partners</a>
+    <a href="/creators">Community</a>
+    <a href="/book-with-tommy" class="mobile-cta">Book a Call</a>
+  </div>
+
+  <section class="book-hero">
+    <div class="hero-orb orb-1"></div>
+    <div class="hero-orb orb-2"></div>
+    <div class="hero-inner">
+      <div class="hero-left">
+        <div class="eyebrow"><span class="eyebrow-dot"></span> Creator Community</div>
+        <h1>Book a call with <span class="gt">Jina</span></h1>
+        <p class="lead">
+          Jina is our Creator Lead — the person you talk to when you're ready to learn what being part of the Cult Content creator network actually looks like.
+        </p>
+        <div class="trust-row">
+          <div class="trust-item"><i class="fa-solid fa-circle-check"></i> Learn about brand opportunities available to you</div>
+          <div class="trust-item"><i class="fa-solid fa-circle-check"></i> Find out what commissions and retainers look like</div>
+          <div class="trust-item"><i class="fa-solid fa-circle-check"></i> See if the community is the right fit for your content</div>
+          <div class="trust-item"><i class="fa-solid fa-circle-check"></i> No pressure — just a real conversation</div>
+        </div>
+      </div>
+      <div class="hero-right">
+        <div class="person-card">
+          <img
+            src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/6a8ddf33c0d4f65d64675cc1.jpeg"
+            alt="Jina"
+            class="person-photo"
+          />
+          <div class="person-info">
+            <div class="name">Jina</div>
+            <div class="title">Creator Lead &mdash; Cult Content</div>
+            <span class="person-badge"><i class="fa-solid fa-star"></i> Creator Network</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="calendar-section" id="book">
+    <div class="calendar-inner">
+      <div class="section-label">Pick a time</div>
+      <h2>Find a slot that <span class="gt">works for you</span></h2>
+      <p class="sub">All calls are 30 minutes. Jina will walk you through everything.</p>
+      <div class="cal-embed-wrapper">
+        <iframe
+          src="https://api.leadconnectorhq.com/widget/bookings/jina-personal-booking"
+          title="Book a call with Jina"
+          frameborder="0"
+          allowfullscreen>
+        </iframe>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <span class="footer-copy">&copy; 2026 Cult Content</span>
+    <div class="footer-links">
+      <a href="/">Home</a>
+      <a href="/creators">Join the Network</a>
+      <a href="/book-with-tommy">Book with Tommy</a>
+      <a href="https://www.tiktok.com/@cultcontent.cc" target="_blank" rel="noopener">TikTok</a>
+    </div>
+  </footer>
+
+  <script>
+    const btn = document.getElementById('mobileMenuBtn');
+    const drawer = document.getElementById('mobileDrawer');
+    if (btn && drawer) {
+      btn.addEventListener('click', e => { e.stopPropagation(); drawer.classList.toggle('open'); });
+      document.addEventListener('click', e => { if (!drawer.contains(e.target) && e.target !== btn) drawer.classList.remove('open'); });
+    }
+  </script>
+</body>
+</html>

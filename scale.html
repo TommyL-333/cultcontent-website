@@ -202,10 +202,22 @@
       background:rgba(0,242,234,0.08); border:2px solid rgba(0,242,234,0.2);
       display:flex; align-items:center; justify-content:center;
       font-family:'Montserrat',sans-serif; font-weight:900; font-size:1rem; color:var(--teal);
+      overflow:hidden;
     }
+    .t-avatar img { width:100%; height:100%; object-fit:cover; border-radius:50%; display:block; }
+
+    /* Larger avatars in the dedicated team cards */
+    .team-card .t-avatar {
+      width:168px; height:168px; font-size:2.2rem;
+    }
+    .team-card .team-avatar-row {
+      flex-direction:column; align-items:flex-start; gap:16px; margin-bottom:24px;
+    }
+    .tp-avatar { overflow:hidden; }
+    .tp-avatar img { width:100%; height:100%; object-fit:cover; border-radius:50%; display:block; }
     .t-avatar.mystery-av {
       background:rgba(201,168,76,0.05); border:2px dashed rgba(201,168,76,0.3);
-      color:rgba(255,255,255,0.2); font-size:1.4rem;
+      color:rgba(255,255,255,0.2); font-size:2.8rem;
       animation:mysteryPulse 3s ease-in-out infinite;
     }
     .t-name-block h3 { font-size:1.3rem; margin-bottom:3px; }
@@ -423,6 +435,84 @@
       .tp-person + .tp-person::before { display:none; }
       .team-preview { flex-direction:column; gap:16px; }
     }
+
+    /* ── CREATOR BANNER ───────────────────────────────────────────── */
+    .creator-banner-section {
+      padding:72px 0 64px;
+      background:var(--dark1);
+      border-top:1px solid rgba(201,168,76,0.14);
+      overflow:hidden;
+    }
+    .creator-banner-header { text-align:center; margin-bottom:40px; padding:0 32px; }
+    .marquee-wrap {
+      overflow:hidden; width:100%;
+      -webkit-mask-image:linear-gradient(to right,transparent 0%,black 6%,black 94%,transparent 100%);
+      mask-image:linear-gradient(to right,transparent 0%,black 6%,black 94%,transparent 100%);
+    }
+    .marquee-track {
+      display:flex; gap:14px;
+      animation:marqueeScroll 50s linear infinite;
+      width:max-content;
+    }
+    .marquee-track:hover { animation-play-state:paused; }
+    @keyframes marqueeScroll { 0%{transform:translateX(0);} 100%{transform:translateX(-50%);} }
+    .creator-chip {
+      flex-shrink:0; display:flex; align-items:center; gap:13px;
+      padding:12px 20px 12px 12px;
+      background:rgba(255,255,255,0.025); border:1px solid rgba(255,255,255,0.07);
+      border-radius:100px; transition:border-color 0.3s; cursor:default;
+    }
+    .creator-chip:hover { border-color:rgba(0,242,234,0.28); }
+    .creator-chip-avatar {
+      width:44px; height:44px; border-radius:50%; flex-shrink:0; position:relative;
+      background:rgba(0,242,234,0.08); border:2px solid rgba(0,242,234,0.2);
+      display:flex; align-items:center; justify-content:center; overflow:hidden;
+      font-family:'Montserrat',sans-serif; font-weight:900; font-size:0.82rem; color:var(--teal);
+    }
+    .creator-chip-avatar img {
+      position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border-radius:50%;
+    }
+    .creator-chip-info { display:flex; flex-direction:column; gap:2px; }
+    .creator-chip-name {
+      font-family:'Montserrat',sans-serif; font-weight:700;
+      font-size:0.82rem; color:#fff; white-space:nowrap;
+    }
+    .creator-chip-handle { font-size:0.68rem; color:rgba(0,242,234,0.7); white-space:nowrap; }
+    .creator-chip-gmv { font-size:0.65rem; font-weight:700; color:var(--gold); white-space:nowrap; }
+
+    /* ── SERVICES SECTION ─────────────────────────────────────────── */
+    .services-section {
+      padding:100px 32px;
+      background:var(--dark2);
+      border-top:1px solid rgba(255,255,255,0.05);
+    }
+    .services-inner { max-width:1060px; margin:0 auto; }
+    .services-header { margin-bottom:56px; }
+    .services-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+    .svc-card {
+      background:rgba(255,255,255,0.025); border:1px solid rgba(255,255,255,0.07);
+      border-radius:16px; padding:30px 26px; position:relative; overflow:hidden;
+      transition:border-color 0.3s,transform 0.3s;
+    }
+    .svc-card:hover { border-color:rgba(0,242,234,0.2); transform:translateY(-2px); }
+    .svc-card.gold-card:hover { border-color:rgba(201,168,76,0.3); }
+    .svc-icon {
+      width:44px; height:44px; border-radius:10px;
+      background:rgba(0,242,234,0.07); border:1px solid rgba(0,242,234,0.15);
+      display:flex; align-items:center; justify-content:center;
+      font-size:1rem; color:var(--teal); margin-bottom:16px;
+    }
+    .svc-icon.gold { background:rgba(201,168,76,0.07); border-color:rgba(201,168,76,0.15); color:var(--gold); }
+    .svc-card h3 { font-size:0.95rem; margin-bottom:10px; }
+    .svc-card p { font-size:0.82rem; color:rgba(255,255,255,0.45); line-height:1.72; }
+    .svc-tag {
+      display:inline-flex; margin-top:12px;
+      background:rgba(201,168,76,0.07); border:1px solid rgba(201,168,76,0.14);
+      border-radius:100px; padding:3px 10px;
+      font-size:0.63rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--gold);
+    }
+    @media(max-width:860px){ .services-grid{grid-template-columns:1fr 1fr;} }
+    @media(max-width:560px){ .services-grid{grid-template-columns:1fr;} }
   </style>
 </head>
 <body>
@@ -472,10 +562,10 @@
         Full-Scale TikTok Shop &amp; Meta Package
       </div>
 
-      <h1>Three People<br>You Know.<br>One We <span class="gg">Find for You.</span></h1>
+      <h1>Built For Brands<br>That Want To<br><span class="gg">Grow Fast.</span></h1>
 
       <p class="lead">
-        Most agencies give you an account manager split across 15 clients. The Scale package is built differently &mdash; a dedicated four-person team, each owning a specific piece of your growth. Nobody else is offering this.
+        Most brands don&rsquo;t fail on TikTok Shop because their product doesn&rsquo;t work. They fail because the system behind it wasn&rsquo;t funded or staffed to perform. The Scale package is built around what winning actually requires &mdash; a dedicated four-person team, funded properly, running the full playbook.
       </p>
       <p class="hero-sub-note">Starting at $23,000/mo total investment &mdash; built around what winning actually requires</p>
 
@@ -493,17 +583,17 @@
       <!-- Team preview -->
       <div class="team-preview">
         <div class="tp-person">
-          <div class="tp-avatar">TL</div>
+          <div class="tp-avatar"><img src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/6a8e341ae25296bd1ba2aa9c.jpeg" alt="Tommy Lynch"></div>
           <div class="tp-name">Tommy</div>
           <div class="tp-role">Strategy &amp; Economics</div>
         </div>
         <div class="tp-person">
-          <div class="tp-avatar">J</div>
+          <div class="tp-avatar"><img src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/6a8ddf33c0d4f65d64675cc1.jpeg" alt="Jina"></div>
           <div class="tp-name">Jina</div>
           <div class="tp-role">Content &amp; Creators</div>
         </div>
         <div class="tp-person">
-          <div class="tp-avatar">B</div>
+          <div class="tp-avatar"><img src="https://consultants.cultcontent.cc/img-proxy?url=https%3A%2F%2Fdrive.google.com%2Fuc%3Fexport%3Dview%26id%3D1Z73sWUKeE_Y6dHXjg5GnmN7Hy-Y4rhd2" alt="Becca"></div>
           <div class="tp-name">Becca</div>
           <div class="tp-role">Live Strategy</div>
         </div>
@@ -539,26 +629,103 @@
     </div>
   </div>
 
+  <!-- CREATOR BANNER -->
+  <section class="creator-banner-section">
+    <div class="creator-banner-header">
+      <div class="section-label">The Creators You&rsquo;ll Be Working With</div>
+    </div>
+    <div class="marquee-wrap">
+      <div class="marquee-track" id="creatorTrack">
+        <!-- set 1 -->
+        <div class="creator-chip">
+          <div class="creator-chip-avatar">KM</div>
+          <div class="creator-chip-info"><div class="creator-chip-name">Kaylee Matthews</div><div class="creator-chip-handle">@kaylee.kayb.21</div><div class="creator-chip-gmv">$47K GMV</div></div>
+        </div>
+        <div class="creator-chip">
+          <div class="creator-chip-avatar">JC</div>
+          <div class="creator-chip-info"><div class="creator-chip-name">Julia Chaney</div><div class="creator-chip-handle">@juliacvlogs</div><div class="creator-chip-gmv">$110K GMV</div></div>
+        </div>
+        <div class="creator-chip">
+          <div class="creator-chip-avatar">CB<img src="https://drive.google.com/thumbnail?id=1Yx8Dk17MYOrteX4YFEF2ctRw6W1ptVqU&sz=w100-h100" onerror="this.remove()" alt=""></div>
+          <div class="creator-chip-info"><div class="creator-chip-name">Cassandra Bankson</div><div class="creator-chip-handle">@cassandrabankson</div><div class="creator-chip-gmv">$638K GMV</div></div>
+        </div>
+        <div class="creator-chip">
+          <div class="creator-chip-avatar">MR</div>
+          <div class="creator-chip-info"><div class="creator-chip-name">Miranda Ramirez</div><div class="creator-chip-handle">@mirandadramirez</div><div class="creator-chip-gmv">$50K GMV</div></div>
+        </div>
+        <div class="creator-chip">
+          <div class="creator-chip-avatar">KS<img src="https://drive.google.com/thumbnail?id=1SOAHOmz55cuANtcn74fVufecCMlsfhIv&sz=w100-h100" onerror="this.remove()" alt=""></div>
+          <div class="creator-chip-info"><div class="creator-chip-name">Kaley Solitro</div><div class="creator-chip-handle">@kaleysolitro</div><div class="creator-chip-gmv">$1.99M GMV</div></div>
+        </div>
+        <div class="creator-chip">
+          <div class="creator-chip-avatar">AB</div>
+          <div class="creator-chip-info"><div class="creator-chip-name">Ashy Bermudez</div><div class="creator-chip-handle">@ashybermudez</div><div class="creator-chip-gmv">$1.3M GMV</div></div>
+        </div>
+        <div class="creator-chip">
+          <div class="creator-chip-avatar">CH<img src="https://drive.google.com/thumbnail?id=1ucJMFG2gdD1mgc_PqJl4fTymHxuU8fAq&sz=w100-h100" onerror="this.remove()" alt=""></div>
+          <div class="creator-chip-info"><div class="creator-chip-name">Crystal Halamicek</div><div class="creator-chip-handle">@sunshinelyn_</div><div class="creator-chip-gmv">$172K GMV</div></div>
+        </div>
+        <div class="creator-chip">
+          <div class="creator-chip-avatar">AL<img src="https://drive.google.com/thumbnail?id=1wd9zkfSRD_4us3xY2wQ6AZnkPTzg7TL6&sz=w100-h100" onerror="this.remove()" alt=""></div>
+          <div class="creator-chip-info"><div class="creator-chip-name">Ashlee Kiesling</div><div class="creator-chip-handle">@thebeautycontrarian</div><div class="creator-chip-gmv">$25.7K GMV</div></div>
+        </div>
+        <!-- set 2 (duplicate for seamless loop) -->
+        <div class="creator-chip">
+          <div class="creator-chip-avatar">KM</div>
+          <div class="creator-chip-info"><div class="creator-chip-name">Kaylee Matthews</div><div class="creator-chip-handle">@kaylee.kayb.21</div><div class="creator-chip-gmv">$47K GMV</div></div>
+        </div>
+        <div class="creator-chip">
+          <div class="creator-chip-avatar">JC</div>
+          <div class="creator-chip-info"><div class="creator-chip-name">Julia Chaney</div><div class="creator-chip-handle">@juliacvlogs</div><div class="creator-chip-gmv">$110K GMV</div></div>
+        </div>
+        <div class="creator-chip">
+          <div class="creator-chip-avatar">CB<img src="https://drive.google.com/thumbnail?id=1Yx8Dk17MYOrteX4YFEF2ctRw6W1ptVqU&sz=w100-h100" onerror="this.remove()" alt=""></div>
+          <div class="creator-chip-info"><div class="creator-chip-name">Cassandra Bankson</div><div class="creator-chip-handle">@cassandrabankson</div><div class="creator-chip-gmv">$638K GMV</div></div>
+        </div>
+        <div class="creator-chip">
+          <div class="creator-chip-avatar">MR</div>
+          <div class="creator-chip-info"><div class="creator-chip-name">Miranda Ramirez</div><div class="creator-chip-handle">@mirandadramirez</div><div class="creator-chip-gmv">$50K GMV</div></div>
+        </div>
+        <div class="creator-chip">
+          <div class="creator-chip-avatar">KS<img src="https://drive.google.com/thumbnail?id=1SOAHOmz55cuANtcn74fVufecCMlsfhIv&sz=w100-h100" onerror="this.remove()" alt=""></div>
+          <div class="creator-chip-info"><div class="creator-chip-name">Kaley Solitro</div><div class="creator-chip-handle">@kaleysolitro</div><div class="creator-chip-gmv">$1.99M GMV</div></div>
+        </div>
+        <div class="creator-chip">
+          <div class="creator-chip-avatar">AB</div>
+          <div class="creator-chip-info"><div class="creator-chip-name">Ashy Bermudez</div><div class="creator-chip-handle">@ashybermudez</div><div class="creator-chip-gmv">$1.3M GMV</div></div>
+        </div>
+        <div class="creator-chip">
+          <div class="creator-chip-avatar">CH<img src="https://drive.google.com/thumbnail?id=1ucJMFG2gdD1mgc_PqJl4fTymHxuU8fAq&sz=w100-h100" onerror="this.remove()" alt=""></div>
+          <div class="creator-chip-info"><div class="creator-chip-name">Crystal Halamicek</div><div class="creator-chip-handle">@sunshinelyn_</div><div class="creator-chip-gmv">$172K GMV</div></div>
+        </div>
+        <div class="creator-chip">
+          <div class="creator-chip-avatar">AL<img src="https://drive.google.com/thumbnail?id=1wd9zkfSRD_4us3xY2wQ6AZnkPTzg7TL6&sz=w100-h100" onerror="this.remove()" alt=""></div>
+          <div class="creator-chip-info"><div class="creator-chip-name">Ashlee Kiesling</div><div class="creator-chip-handle">@thebeautycontrarian</div><div class="creator-chip-gmv">$25.7K GMV</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- THE STORY -->
   <section class="story-section" id="story">
     <div class="story-inner">
-      <div class="section-label gold" style="text-align:left;">The Honest Truth</div>
+      <div class="section-label gold" style="text-align:left;">The Track Record</div>
       <h2>TikTok Shop rewards<br>brands that <span class="gg">fund it properly.</span></h2>
 
       <p>
-        We were part of the team that helped build <strong>$30 million in TikTok Shop revenue in a single year.</strong> Not for one brand &mdash; across four brands, each taken from zero to five figures a month. The platform works. The question is whether you're running the playbook that actually makes it work, or a stripped-down version of it that looks right on paper and underdelivers in practice.
+        We were part of the team behind <strong>$30 million in TikTok Shop GMV in a single year</strong> &mdash; one account, one platform, twelve months. We&rsquo;ve also taken four separate brands from zero to consistent five-figure months. The platform works. The question is whether the system behind your brand is built to win, or just built to look like it is.
       </p>
 
       <p>
-        Here's what we've seen over and over: brands come in with a real product and real demand, and they hire an agency that knows the right words &mdash; affiliates, retainers, GMV Max, live strategy. The problem isn't the strategy. <strong>It's that none of the pieces are actually funded well enough to work, and there's no dedicated person running the day-to-day.</strong> 30 samples go out and nothing happens. An account manager who juggles 20 other clients "checks in" weekly. The ads go live before the organic flywheel is moving. Month three, the brand is frustrated and the agency has an excuse.
+        We see it constantly: real product, real demand, an agency that knows the vocabulary. The problem isn&rsquo;t the strategy. <strong>It&rsquo;s that none of the pieces are funded or staffed to actually perform.</strong> 30 samples go out and nothing happens. An account manager splits their time across 20 other clients. Ads go live before organic content is moving. Month three, the brand is frustrated and the agency has an excuse ready.
       </p>
 
       <div class="story-pull">
-        The Scale package exists because we know exactly what threshold each piece of this needs to cross before it starts compounding.
+        When every piece is funded to the right level, TikTok Shop compounds. That&rsquo;s what Scale is designed to make happen.
       </div>
 
       <p>
-        Creator retainers need to be real commitments, not $500 gifting deals. Sampling needs to move at 300+ per month, not 30. Live strategy needs to be an actual consultation service &mdash; flash sales, scripts, packages, training &mdash; not an improvised afterthought. And the person coordinating all of it needs to know your product catalog cold and talk to your creators every single week &mdash; not as a side responsibility, but as their entire job. <strong>That&rsquo;s what the Brand Concierge is.</strong> Your dedicated point of contact on our team, sourced from the creator community, embedded in your brand &mdash; not shared across a client roster.
+        Creator retainers need to be real commitments, not gifting deals. Sampling needs to move at 300+ per month. Live strategy needs to be a consultation &mdash; flash sales, scripts, packages, training &mdash; not an improvised afterthought. <strong>This is what the Scale package is built around: the actual inputs the system needs to work.</strong>
       </p>
     </div>
   </section>
@@ -580,10 +747,10 @@
         <div class="team-card">
           <div class="team-role-tag">Strategy &amp; Economics</div>
           <div class="team-avatar-row">
-            <div class="t-avatar">TL</div>
+            <div class="t-avatar"><img src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/6a8e341ae25296bd1ba2aa9c.jpeg" alt="Tommy Lynch"></div>
             <div class="t-name-block">
               <h3>Tommy Lynch</h3>
-              <div class="t-title">Founder &amp; CEO &mdash; TSP Certified</div>
+              <div class="t-title">Founder &mdash; Sets the Strategy &amp; Leads the Team</div>
             </div>
           </div>
           <div class="team-stats">
@@ -604,7 +771,7 @@
         <div class="team-card">
           <div class="team-role-tag">Content &amp; Creator Lead</div>
           <div class="team-avatar-row">
-            <div class="t-avatar">J</div>
+            <div class="t-avatar"><img src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/6a8ddf33c0d4f65d64675cc1.jpeg" alt="Jina"></div>
             <div class="t-name-block">
               <h3>Jina</h3>
               <div class="t-title">Creator turned operator &mdash; 300M+ views</div>
@@ -617,7 +784,7 @@
             <li><i class="fa-solid fa-diamond"></i> Leads content direction and creative strategy</li>
             <li><i class="fa-solid fa-diamond"></i> Identifies and onboards creator talent</li>
             <li><i class="fa-solid fa-diamond"></i> Oversees short video output across TikTok + Meta</li>
-            <li><i class="fa-solid fa-diamond"></i> Manages retainer creator relationships via Reacher</li>
+            <li><i class="fa-solid fa-diamond"></i> Manages retainer creator relationships end-to-end</li>
             <li><i class="fa-solid fa-diamond"></i> Knows what makes content move &mdash; from having done it</li>
           </ul>
         </div>
@@ -626,13 +793,16 @@
         <div class="team-card">
           <div class="team-role-tag">Live Strategy</div>
           <div class="team-avatar-row">
-            <div class="t-avatar">B</div>
+            <div class="t-avatar"><img src="https://consultants.cultcontent.cc/img-proxy?url=https%3A%2F%2Fdrive.google.com%2Fuc%3Fexport%3Dview%26id%3D1Z73sWUKeE_Y6dHXjg5GnmN7Hy-Y4rhd2" alt="Becca"></div>
             <div class="t-name-block">
               <h3>Becca</h3>
               <div class="t-title">TikTok LIVE Lead</div>
             </div>
           </div>
-          <ul class="team-duties" style="margin-top:8px;">
+          <div class="team-stats">
+            <div class="ts"><div class="ts-num gt">$1M+</div><div class="ts-lbl">GMV Generated</div></div>
+          </div>
+          <ul class="team-duties">
             <li><i class="fa-solid fa-diamond"></i> Consults with your brand on flash sales, bundles, giveaways &amp; scripts</li>
             <li><i class="fa-solid fa-diamond"></i> Builds and manages your full live promotional calendar</li>
             <li><i class="fa-solid fa-diamond"></i> Trains affiliate creators to go live &mdash; scripts, structure, hooks</li>
@@ -671,6 +841,59 @@
     </div>
   </section>
 
+  <!-- SERVICES BREAKDOWN -->
+  <section class="services-section" id="services">
+    <div class="services-inner">
+      <div class="services-header">
+        <div class="section-label gold">What You Get</div>
+        <h2 class="section-h2">Every Service.<br><span class="gg">In One Package.</span></h2>
+        <p class="section-sub" style="margin-top:16px;">
+          This isn&rsquo;t a la carte. Every Scale client gets the full operating system &mdash; shop operations, affiliate management, content, ads, and live strategy running together.
+        </p>
+      </div>
+      <div class="services-grid">
+
+        <div class="svc-card">
+          <div class="svc-icon"><i class="fa-solid fa-store"></i></div>
+          <h3>Shop Operations</h3>
+          <p>Product page optimization, bundle strategy, promotions, coupons &amp; flash sales, TikTok campaign management, smart promotions, shop design, rebate campaigns via Sellico, review management, and customer outreach.</p>
+        </div>
+
+        <div class="svc-card">
+          <div class="svc-icon"><i class="fa-solid fa-users"></i></div>
+          <h3>Affiliate Retainer Program</h3>
+          <p>10 screened retainer creators for $5,000/mo or 20 for $10,000/mo &mdash; every creator vetted for quality and GMV potential before earning a retainer. Floaters get samples and community access at no extra cost. Higher commissions organized via TAP links.</p>
+        </div>
+
+        <div class="svc-card">
+          <div class="svc-icon"><i class="fa-solid fa-chart-simple"></i></div>
+          <h3>Paid Media</h3>
+          <p>GMV Max ads plus Meta and TikTok paid media. Ads run against creator content that&rsquo;s already proven to convert &mdash; not cold creative. Spend scales to the ROAS targets we set together.</p>
+        </div>
+
+        <div class="svc-card">
+          <div class="svc-icon"><i class="fa-solid fa-video"></i></div>
+          <h3>Live Revenue Strategy</h3>
+          <p>Becca consults on flash sales, bundles, giveaways, and scripts. Builds and manages your full live promotional calendar. Trains affiliate creators to go live with structured hooks, scripts, and timing coordinated with your organic content calendar.</p>
+        </div>
+
+        <div class="svc-card">
+          <div class="svc-icon"><i class="fa-solid fa-chalkboard-user"></i></div>
+          <h3>Creator Training Calls</h3>
+          <p>General and brand-specific creator training sessions, 45&ndash;60 minutes, run on a structured cadence. Helps creators improve so they can earn retainers. Jina &times; Brand Concierge lead each brand call &mdash; weekly, on point, 30 minutes max.</p>
+        </div>
+
+        <div class="svc-card gold-card">
+          <div class="svc-icon gold"><i class="fa-solid fa-film"></i></div>
+          <h3>Brand Content</h3>
+          <p>60 short-form videos per month produced for TikTok and Meta. Professional, on-brand content built to convert &mdash; not just fill a calendar. Coordinated with your affiliate and live calendar so everything hits in the right sequence.</p>
+          <span class="svc-tag">Optional Add-On &mdash; $5,000/mo</span>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
   <!-- HOW THE SYSTEM RUNS -->
   <section class="system-section" id="system">
     <div class="system-inner">
@@ -697,7 +920,7 @@
               <div class="chain-bullet"><i class="fa-solid fa-diamond"></i> Shop audit, health check, and SKU prioritization</div>
               <div class="chain-bullet"><i class="fa-solid fa-diamond"></i> Unit economics and promo strategy locked</div>
               <div class="chain-bullet"><i class="fa-solid fa-diamond"></i> Brand Concierge identified and onboarded</div>
-              <div class="chain-bullet"><i class="fa-solid fa-diamond"></i> 300 samples/month pipeline set up through Reacher</div>
+              <div class="chain-bullet"><i class="fa-solid fa-diamond"></i> 300 samples/month pipeline set up and running</div>
             </div>
           </div>
         </div>
@@ -714,7 +937,7 @@
             <div class="chain-bullets">
               <div class="chain-bullet"><i class="fa-solid fa-diamond"></i> Rebate campaign live &mdash; initial order velocity generated</div>
               <div class="chain-bullet"><i class="fa-solid fa-diamond"></i> First creator wave sampled; Brand Concierge on calls with each one</div>
-              <div class="chain-bullet"><i class="fa-solid fa-diamond"></i> Retainer creators onboarded through Reacher (TikTok + Meta)</div>
+              <div class="chain-bullet"><i class="fa-solid fa-diamond"></i> Retainer creators onboarded across TikTok + Meta</div>
               <div class="chain-bullet"><i class="fa-solid fa-diamond"></i> Becca&rsquo;s live consultation begins &mdash; flash sale calendar &amp; creator training live</div>
             </div>
             <div class="chain-callout">
@@ -731,7 +954,7 @@
           <div class="chain-content">
             <div class="chain-phase">Month 2</div>
             <h3>Content Live. LIVE Running. Ads On.</h3>
-            <p>Retainer creators are posting consistently to TikTok and Meta via Reacher. Becca&rsquo;s live calendar is running &mdash; flash promos, trained creators, scripts in place. Paid media goes live against creator content that&rsquo;s already converting &mdash; not cold creative.</p>
+            <p>Retainer creators are posting consistently to TikTok and Meta. Becca&rsquo;s live calendar is running &mdash; flash promos, trained creators, scripts in place. Paid media goes live against creator content that&rsquo;s already converting &mdash; not cold creative.</p>
             <div class="chain-bullets">
               <div class="chain-bullet"><i class="fa-solid fa-diamond"></i> Retainer creators posting on a consistent weekly cadence</div>
               <div class="chain-bullet"><i class="fa-solid fa-diamond"></i> Live promotional calendar running &mdash; trained creators, flash promos coordinated</div>
@@ -779,9 +1002,8 @@
           <div class="budget-icon"><i class="fa-solid fa-users"></i></div>
           <h3>Creator Retainers</h3>
           <div class="budget-amount">$5,000<span>/mo min</span></div>
-          <p class="budget-note">Paid to retainer creators via Reacher. We screen every creator before they earn a retainer &mdash; only high-quality, high-converting talent. Floaters still get samples and community access at no cost to you.</p>
+          <p class="budget-note">Paid directly to retainer creators. We screen every creator before they earn a retainer &mdash; only high-quality, high-converting talent. Floaters still get samples and community access at no cost to you.</p>
           <div class="budget-tags">
-            <span class="budget-tag">Via Reacher</span>
             <span class="budget-tag">TikTok + Meta</span>
             <span class="budget-tag">Screened &amp; Qualified</span>
           </div>
@@ -801,7 +1023,7 @@
           <div class="budget-icon"><i class="fa-solid fa-chart-line"></i></div>
           <h3>Ad Spend</h3>
           <div class="budget-amount">$10,000<span>/mo min</span></div>
-          <p class="budget-note">Meta and TikTok paid media managed through Reacher. We run ads against creator content that&rsquo;s already proven &mdash; not cold creative.</p>
+          <p class="budget-note">Meta and TikTok paid media we manage directly. We run ads against creator content that&rsquo;s already proven &mdash; not cold creative.</p>
           <div class="budget-tags">
             <span class="budget-tag">Meta Ads</span>
             <span class="budget-tag">TikTok Ads</span>
@@ -810,19 +1032,11 @@
         </div>
       </div>
 
-      <div class="trybe-callout">
-        <div class="tc-icon">⚡</div>
-        <div>
-          <h4>Powered by Reacher</h4>
-          <p>We use <strong>Reacher</strong> to manage creator campaigns, track sample fulfillment, and coordinate affiliate outreach &mdash; all in one place. Every creator in the pipeline is visible to the team, so nothing gets dropped and the Brand Concierge always knows exactly where each relationship stands.</p>
-        </div>
-      </div>
-
       <div class="samples-bar">
         <div class="samples-num gg">300+</div>
         <div class="samples-text">
           <h4>Samples per month &mdash; the minimum to get real signal</h4>
-          <p>You need enough creators testing your product to find the ones who actually convert. 20 samples tells you almost nothing. 300 per month, managed through Reacher, is where you start building a real affiliate engine &mdash; the Brand Concierge is on calls with every creator in that pipeline.</p>
+          <p>You need enough creators testing your product to find the ones who actually convert. 20 samples tells you almost nothing. 300 per month is where you start building a real affiliate engine &mdash; the Brand Concierge is on calls with every creator in that pipeline.</p>
         </div>
       </div>
 
@@ -848,7 +1062,7 @@
             <div class="ep-label">Lower Retainer</div>
           </div>
           <div class="slider-ep right">
-            <div class="ep-retainer">$8,000<span>/mo</span></div>
+            <div class="ep-retainer">$5,000<span>/mo</span></div>
             <div class="ep-gmv">+ 3% GMV</div>
             <div class="ep-label">Higher Retainer</div>
           </div>
@@ -873,7 +1087,7 @@
               <div class="invest-row-val dyn" id="breakdownCC">$3,000</div>
             </div>
             <div class="invest-row">
-              <div class="invest-row-name"><i class="fa-solid fa-diamond"></i> Creator retainers <span class="invest-note">(via Reacher, paid to creators)</span></div>
+              <div class="invest-row-name"><i class="fa-solid fa-diamond"></i> Creator retainers <span class="invest-note">(paid directly to creators)</span></div>
               <div class="invest-row-val">$5,000+</div>
             </div>
             <div class="invest-row">
@@ -881,7 +1095,7 @@
               <div class="invest-row-val">$5,000</div>
             </div>
             <div class="invest-row">
-              <div class="invest-row-name"><i class="fa-solid fa-diamond"></i> Ad spend <span class="invest-note">(Meta + TikTok, via Reacher)</span></div>
+              <div class="invest-row-name"><i class="fa-solid fa-diamond"></i> Ad spend <span class="invest-note">(Meta + TikTok)</span></div>
               <div class="invest-row-val">$10,000+</div>
             </div>
           </div>
@@ -900,13 +1114,17 @@
         <div class="inc-grid">
           <div class="inc-row"><i class="fa-solid fa-check"></i> Dedicated four-person team for your brand</div>
           <div class="inc-row"><i class="fa-solid fa-check"></i> Dedicated Brand Concierge &mdash; your single point of contact</div>
-          <div class="inc-row"><i class="fa-solid fa-check"></i> Month 1 rebate campaign for order velocity</div>
-          <div class="inc-row"><i class="fa-solid fa-check"></i> 300+ samples/mo managed via Reacher</div>
-          <div class="inc-row"><i class="fa-solid fa-check"></i> Creator retainer program via Reacher</div>
+          <div class="inc-row"><i class="fa-solid fa-check"></i> Month 1 rebate campaign via Sellico for order velocity</div>
+          <div class="inc-row"><i class="fa-solid fa-check"></i> 300+ samples/mo managed by our team</div>
+          <div class="inc-row"><i class="fa-solid fa-check"></i> 10&ndash;20 screened retainer creators</div>
+          <div class="inc-row"><i class="fa-solid fa-check"></i> Higher TAP commissions organized for the community</div>
           <div class="inc-row"><i class="fa-solid fa-check"></i> Simultaneous posting to TikTok + Meta</div>
-          <div class="inc-row"><i class="fa-solid fa-check"></i> Live consultation &amp; creator training run by Becca</div>
-          <div class="inc-row"><i class="fa-solid fa-check"></i> Meta + TikTok paid media management</div>
-          <div class="inc-row"><i class="fa-solid fa-check"></i> Shop operations, promotions &amp; flash sales</div>
+          <div class="inc-row"><i class="fa-solid fa-check"></i> Live consultation, flash sales &amp; creator training by Becca</div>
+          <div class="inc-row"><i class="fa-solid fa-check"></i> GMV Max + Meta/TikTok paid media management</div>
+          <div class="inc-row"><i class="fa-solid fa-check"></i> Weekly creator training calls (45&ndash;60 min, structured)</div>
+          <div class="inc-row"><i class="fa-solid fa-check"></i> Full shop operations &mdash; pages, bundles, promos, campaigns</div>
+          <div class="inc-row"><i class="fa-solid fa-check"></i> Review management &amp; customer outreach</div>
+          <div class="inc-row"><i class="fa-solid fa-check"></i> Shop design, product strategy &amp; SKU prioritization</div>
           <div class="inc-row"><i class="fa-solid fa-check"></i> Weekly performance reports &mdash; numbers emailed, optional 15-min check-in</div>
         </div>
         <div class="inc-cta-row">
@@ -979,7 +1197,7 @@
     function scaleSlider(slider) {
       var pct  = +slider.value;
       var pos  = pct / 100;
-      var ret  = Math.round(3000 + pos * 5000);
+      var ret  = Math.round(3000 + pos * 2000);
       var gmv  = +(7 - pos * 4).toFixed(1);
       slider.style.background = 'linear-gradient(to right,#c9a84c '+pct+'%,rgba(255,255,255,0.1) '+pct+'%)';
       var r = document.getElementById('scaleRetainer');

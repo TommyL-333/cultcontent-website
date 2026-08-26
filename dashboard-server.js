@@ -876,6 +876,7 @@ footer{margin-top:60px;padding-top:24px;border-top:1px solid rgba(255,255,255,.0
 
 // GET /creators — creator network signup page
 app.get('/creators', (req, res) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.sendFile(path.join(__dirname, 'creators.html'));
 });
 
@@ -6355,6 +6356,7 @@ app.get('/strategy',                           _pub('strategy.html'));
 app.get('/consulting',                         _pub('consulting.html'));
 app.get('/book',                               _pub('book.html'));
 app.get('/book-with-tommy',                    _pub('book-with-tommy.html'));
+app.get('/book-with-jina',                     _pub('book-with-jina.html'));
 app.get('/book-now',                           _pub('book-now.html'));
 app.get('/book-consulting',                    _pub('book-consulting.html'));
 app.get('/partners',                           _pub('partners.html'));
