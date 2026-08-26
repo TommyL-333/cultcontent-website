@@ -423,6 +423,83 @@
       .tp-person + .tp-person::before { display:none; }
       .team-preview { flex-direction:column; gap:16px; }
     }
+
+    /* ── CREATOR BANNER ───────────────────────────────────────────── */
+    .creator-banner-section {
+      padding:72px 0 64px;
+      background:var(--dark1);
+      border-top:1px solid rgba(201,168,76,0.14);
+      overflow:hidden;
+    }
+    .creator-banner-header { text-align:center; margin-bottom:40px; padding:0 32px; }
+    .marquee-wrap {
+      overflow:hidden; width:100%;
+      -webkit-mask-image:linear-gradient(to right,transparent 0%,black 6%,black 94%,transparent 100%);
+      mask-image:linear-gradient(to right,transparent 0%,black 6%,black 94%,transparent 100%);
+    }
+    .marquee-track {
+      display:flex; gap:14px;
+      animation:marqueeScroll 50s linear infinite;
+      width:max-content;
+    }
+    .marquee-track:hover { animation-play-state:paused; }
+    @keyframes marqueeScroll { 0%{transform:translateX(0);} 100%{transform:translateX(-50%);} }
+    .creator-chip {
+      flex-shrink:0; display:flex; align-items:center; gap:13px;
+      padding:12px 20px 12px 12px;
+      background:rgba(255,255,255,0.025); border:1px solid rgba(255,255,255,0.07);
+      border-radius:100px; transition:border-color 0.3s; cursor:default;
+    }
+    .creator-chip:hover { border-color:rgba(0,242,234,0.28); }
+    .creator-chip-avatar {
+      width:44px; height:44px; border-radius:50%; flex-shrink:0; position:relative;
+      background:rgba(0,242,234,0.08); border:2px solid rgba(0,242,234,0.2);
+      display:flex; align-items:center; justify-content:center; overflow:hidden;
+      font-family:'Montserrat',sans-serif; font-weight:900; font-size:0.82rem; color:var(--teal);
+    }
+    .creator-chip-avatar img {
+      position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border-radius:50%;
+    }
+    .creator-chip-info { display:flex; flex-direction:column; gap:2px; }
+    .creator-chip-name {
+      font-family:'Montserrat',sans-serif; font-weight:700;
+      font-size:0.82rem; color:#fff; white-space:nowrap;
+    }
+    .creator-chip-handle { font-size:0.68rem; color:rgba(0,242,234,0.7); white-space:nowrap; }
+
+    /* ── SERVICES SECTION ─────────────────────────────────────────── */
+    .services-section {
+      padding:100px 32px;
+      background:var(--dark2);
+      border-top:1px solid rgba(255,255,255,0.05);
+    }
+    .services-inner { max-width:1060px; margin:0 auto; }
+    .services-header { margin-bottom:56px; }
+    .services-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+    .svc-card {
+      background:rgba(255,255,255,0.025); border:1px solid rgba(255,255,255,0.07);
+      border-radius:16px; padding:30px 26px; position:relative; overflow:hidden;
+      transition:border-color 0.3s,transform 0.3s;
+    }
+    .svc-card:hover { border-color:rgba(0,242,234,0.2); transform:translateY(-2px); }
+    .svc-card.gold-card:hover { border-color:rgba(201,168,76,0.3); }
+    .svc-icon {
+      width:44px; height:44px; border-radius:10px;
+      background:rgba(0,242,234,0.07); border:1px solid rgba(0,242,234,0.15);
+      display:flex; align-items:center; justify-content:center;
+      font-size:1rem; color:var(--teal); margin-bottom:16px;
+    }
+    .svc-icon.gold { background:rgba(201,168,76,0.07); border-color:rgba(201,168,76,0.15); color:var(--gold); }
+    .svc-card h3 { font-size:0.95rem; margin-bottom:10px; }
+    .svc-card p { font-size:0.82rem; color:rgba(255,255,255,0.45); line-height:1.72; }
+    .svc-tag {
+      display:inline-flex; margin-top:12px;
+      background:rgba(201,168,76,0.07); border:1px solid rgba(201,168,76,0.14);
+      border-radius:100px; padding:3px 10px;
+      font-size:0.63rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--gold);
+    }
+    @media(max-width:860px){ .services-grid{grid-template-columns:1fr 1fr;} }
+    @media(max-width:560px){ .services-grid{grid-template-columns:1fr;} }
   </style>
 </head>
 <body>
@@ -472,10 +549,10 @@
         Full-Scale TikTok Shop &amp; Meta Package
       </div>
 
-      <h1>Three People<br>You Know.<br>One We <span class="gg">Find for You.</span></h1>
+      <h1>Built For Brands<br>That Want To<br><span class="gg">Grow Fast.</span></h1>
 
       <p class="lead">
-        Most agencies give you an account manager split across 15 clients. The Scale package is built differently &mdash; a dedicated four-person team, each owning a specific piece of your growth. Nobody else is offering this.
+        Most brands don&rsquo;t fail on TikTok Shop because their product doesn&rsquo;t work. They fail because the system behind it wasn&rsquo;t funded or staffed to perform. The Scale package is built around what winning actually requires &mdash; a dedicated four-person team, funded properly, running the full playbook.
       </p>
       <p class="hero-sub-note">Starting at $23,000/mo total investment &mdash; built around what winning actually requires</p>
 
@@ -538,6 +615,83 @@
       </div>
     </div>
   </div>
+
+  <!-- CREATOR BANNER -->
+  <section class="creator-banner-section">
+    <div class="creator-banner-header">
+      <div class="section-label">The Creators You&rsquo;ll Be Working With</div>
+    </div>
+    <div class="marquee-wrap">
+      <div class="marquee-track" id="creatorTrack">
+        <!-- set 1 -->
+        <div class="creator-chip">
+          <div class="creator-chip-avatar">KM</div>
+          <div class="creator-chip-info"><div class="creator-chip-name">Kaylee Matthews</div><div class="creator-chip-handle">@kaylee.kayb.21</div></div>
+        </div>
+        <div class="creator-chip">
+          <div class="creator-chip-avatar">JC</div>
+          <div class="creator-chip-info"><div class="creator-chip-name">Julia Chaney</div><div class="creator-chip-handle">@juliacvlogs</div></div>
+        </div>
+        <div class="creator-chip">
+          <div class="creator-chip-avatar">CB<img src="https://drive.google.com/thumbnail?id=1Yx8Dk17MYOrteX4YFEF2ctRw6W1ptVqU&sz=w100-h100" onerror="this.remove()" alt=""></div>
+          <div class="creator-chip-info"><div class="creator-chip-name">Cassandra Bankson</div><div class="creator-chip-handle">@cassandrabankson</div></div>
+        </div>
+        <div class="creator-chip">
+          <div class="creator-chip-avatar">MR</div>
+          <div class="creator-chip-info"><div class="creator-chip-name">Miranda Ramirez</div><div class="creator-chip-handle">@mirandadramirez</div></div>
+        </div>
+        <div class="creator-chip">
+          <div class="creator-chip-avatar">KS<img src="https://drive.google.com/thumbnail?id=1SOAHOmz55cuANtcn74fVufecCMlsfhIv&sz=w100-h100" onerror="this.remove()" alt=""></div>
+          <div class="creator-chip-info"><div class="creator-chip-name">Kaley Solitro</div><div class="creator-chip-handle">@kaleysolitro</div></div>
+        </div>
+        <div class="creator-chip">
+          <div class="creator-chip-avatar">AB</div>
+          <div class="creator-chip-info"><div class="creator-chip-name">Ashy Bermudez</div><div class="creator-chip-handle">@ashybermudez</div></div>
+        </div>
+        <div class="creator-chip">
+          <div class="creator-chip-avatar">CH<img src="https://drive.google.com/thumbnail?id=1ucJMFG2gdD1mgc_PqJl4fTymHxuU8fAq&sz=w100-h100" onerror="this.remove()" alt=""></div>
+          <div class="creator-chip-info"><div class="creator-chip-name">Crystal Halamicek</div><div class="creator-chip-handle">@sunshinelyn_</div></div>
+        </div>
+        <div class="creator-chip">
+          <div class="creator-chip-avatar">AL<img src="https://drive.google.com/thumbnail?id=1wd9zkfSRD_4us3xY2wQ6AZnkPTzg7TL6&sz=w100-h100" onerror="this.remove()" alt=""></div>
+          <div class="creator-chip-info"><div class="creator-chip-name">Ashlee</div><div class="creator-chip-handle">@thebeautycontrarian</div></div>
+        </div>
+        <!-- set 2 (duplicate for seamless loop) -->
+        <div class="creator-chip">
+          <div class="creator-chip-avatar">KM</div>
+          <div class="creator-chip-info"><div class="creator-chip-name">Kaylee Matthews</div><div class="creator-chip-handle">@kaylee.kayb.21</div></div>
+        </div>
+        <div class="creator-chip">
+          <div class="creator-chip-avatar">JC</div>
+          <div class="creator-chip-info"><div class="creator-chip-name">Julia Chaney</div><div class="creator-chip-handle">@juliacvlogs</div></div>
+        </div>
+        <div class="creator-chip">
+          <div class="creator-chip-avatar">CB<img src="https://drive.google.com/thumbnail?id=1Yx8Dk17MYOrteX4YFEF2ctRw6W1ptVqU&sz=w100-h100" onerror="this.remove()" alt=""></div>
+          <div class="creator-chip-info"><div class="creator-chip-name">Cassandra Bankson</div><div class="creator-chip-handle">@cassandrabankson</div></div>
+        </div>
+        <div class="creator-chip">
+          <div class="creator-chip-avatar">MR</div>
+          <div class="creator-chip-info"><div class="creator-chip-name">Miranda Ramirez</div><div class="creator-chip-handle">@mirandadramirez</div></div>
+        </div>
+        <div class="creator-chip">
+          <div class="creator-chip-avatar">KS<img src="https://drive.google.com/thumbnail?id=1SOAHOmz55cuANtcn74fVufecCMlsfhIv&sz=w100-h100" onerror="this.remove()" alt=""></div>
+          <div class="creator-chip-info"><div class="creator-chip-name">Kaley Solitro</div><div class="creator-chip-handle">@kaleysolitro</div></div>
+        </div>
+        <div class="creator-chip">
+          <div class="creator-chip-avatar">AB</div>
+          <div class="creator-chip-info"><div class="creator-chip-name">Ashy Bermudez</div><div class="creator-chip-handle">@ashybermudez</div></div>
+        </div>
+        <div class="creator-chip">
+          <div class="creator-chip-avatar">CH<img src="https://drive.google.com/thumbnail?id=1ucJMFG2gdD1mgc_PqJl4fTymHxuU8fAq&sz=w100-h100" onerror="this.remove()" alt=""></div>
+          <div class="creator-chip-info"><div class="creator-chip-name">Crystal Halamicek</div><div class="creator-chip-handle">@sunshinelyn_</div></div>
+        </div>
+        <div class="creator-chip">
+          <div class="creator-chip-avatar">AL<img src="https://drive.google.com/thumbnail?id=1wd9zkfSRD_4us3xY2wQ6AZnkPTzg7TL6&sz=w100-h100" onerror="this.remove()" alt=""></div>
+          <div class="creator-chip-info"><div class="creator-chip-name">Ashlee</div><div class="creator-chip-handle">@thebeautycontrarian</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <!-- THE STORY -->
   <section class="story-section" id="story">
@@ -665,6 +819,59 @@
             <li><i class="fa-solid fa-diamond"></i> Runs brand creator meetings and keeps creators activated</li>
             <li><i class="fa-solid fa-diamond"></i> Orchestrates the day-to-day TikTok Shop strategy</li>
           </ul>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVICES BREAKDOWN -->
+  <section class="services-section" id="services">
+    <div class="services-inner">
+      <div class="services-header">
+        <div class="section-label gold">What You Get</div>
+        <h2 class="section-h2">Every Service.<br><span class="gg">In One Package.</span></h2>
+        <p class="section-sub" style="margin-top:16px;">
+          This isn&rsquo;t a la carte. Every Scale client gets the full operating system &mdash; shop operations, affiliate management, content, ads, and live strategy running together.
+        </p>
+      </div>
+      <div class="services-grid">
+
+        <div class="svc-card">
+          <div class="svc-icon"><i class="fa-solid fa-store"></i></div>
+          <h3>Shop Operations</h3>
+          <p>Product page optimization, bundle strategy, promotions, coupons &amp; flash sales, TikTok campaign management, smart promotions, shop design, rebate campaigns via Sellico, review management, and customer outreach.</p>
+        </div>
+
+        <div class="svc-card">
+          <div class="svc-icon"><i class="fa-solid fa-users"></i></div>
+          <h3>Affiliate Retainer Program</h3>
+          <p>10 screened retainer creators for $5,000/mo or 20 for $10,000/mo &mdash; every creator vetted for quality and GMV potential before earning a retainer. Floaters get samples and community access at no extra cost. Higher commissions organized via TAP links.</p>
+        </div>
+
+        <div class="svc-card">
+          <div class="svc-icon"><i class="fa-solid fa-chart-simple"></i></div>
+          <h3>Paid Media</h3>
+          <p>GMV Max ads plus Meta and TikTok paid media managed through Reacher. Ads run against creator content that&rsquo;s already proven to convert &mdash; not cold creative. Spend scales to the ROAS targets we set together.</p>
+        </div>
+
+        <div class="svc-card">
+          <div class="svc-icon"><i class="fa-solid fa-video"></i></div>
+          <h3>Live Revenue Strategy</h3>
+          <p>Becca consults on flash sales, bundles, giveaways, and scripts. Builds and manages your full live promotional calendar. Trains affiliate creators to go live with structured hooks, scripts, and timing coordinated with your organic content calendar.</p>
+        </div>
+
+        <div class="svc-card">
+          <div class="svc-icon"><i class="fa-solid fa-chalkboard-user"></i></div>
+          <h3>Creator Training Calls</h3>
+          <p>General and brand-specific creator training sessions, 45&ndash;60 minutes, run on a structured cadence. Helps creators improve so they can earn retainers. Jina &times; Brand Concierge lead each brand call &mdash; weekly, on point, 30 minutes max.</p>
+        </div>
+
+        <div class="svc-card gold-card">
+          <div class="svc-icon gold"><i class="fa-solid fa-film"></i></div>
+          <h3>Brand Content</h3>
+          <p>60 short-form videos per month produced for TikTok and Meta. Professional, on-brand content built to convert &mdash; not just fill a calendar. Coordinated with your affiliate and live calendar so everything hits in the right sequence.</p>
+          <span class="svc-tag">Optional Add-On &mdash; $5,000/mo</span>
         </div>
 
       </div>
@@ -900,13 +1107,17 @@
         <div class="inc-grid">
           <div class="inc-row"><i class="fa-solid fa-check"></i> Dedicated four-person team for your brand</div>
           <div class="inc-row"><i class="fa-solid fa-check"></i> Dedicated Brand Concierge &mdash; your single point of contact</div>
-          <div class="inc-row"><i class="fa-solid fa-check"></i> Month 1 rebate campaign for order velocity</div>
+          <div class="inc-row"><i class="fa-solid fa-check"></i> Month 1 rebate campaign via Sellico for order velocity</div>
           <div class="inc-row"><i class="fa-solid fa-check"></i> 300+ samples/mo managed via Reacher</div>
-          <div class="inc-row"><i class="fa-solid fa-check"></i> Creator retainer program via Reacher</div>
+          <div class="inc-row"><i class="fa-solid fa-check"></i> 10&ndash;20 screened retainer creators via Reacher</div>
+          <div class="inc-row"><i class="fa-solid fa-check"></i> Higher TAP commissions organized for the community</div>
           <div class="inc-row"><i class="fa-solid fa-check"></i> Simultaneous posting to TikTok + Meta</div>
-          <div class="inc-row"><i class="fa-solid fa-check"></i> Live consultation &amp; creator training run by Becca</div>
-          <div class="inc-row"><i class="fa-solid fa-check"></i> Meta + TikTok paid media management</div>
-          <div class="inc-row"><i class="fa-solid fa-check"></i> Shop operations, promotions &amp; flash sales</div>
+          <div class="inc-row"><i class="fa-solid fa-check"></i> Live consultation, flash sales &amp; creator training by Becca</div>
+          <div class="inc-row"><i class="fa-solid fa-check"></i> GMV Max + Meta/TikTok paid media management</div>
+          <div class="inc-row"><i class="fa-solid fa-check"></i> Weekly creator training calls (45&ndash;60 min, structured)</div>
+          <div class="inc-row"><i class="fa-solid fa-check"></i> Full shop operations &mdash; pages, bundles, promos, campaigns</div>
+          <div class="inc-row"><i class="fa-solid fa-check"></i> Review management &amp; customer outreach</div>
+          <div class="inc-row"><i class="fa-solid fa-check"></i> Shop design, product strategy &amp; SKU prioritization</div>
           <div class="inc-row"><i class="fa-solid fa-check"></i> Weekly performance reports &mdash; numbers emailed, optional 15-min check-in</div>
         </div>
         <div class="inc-cta-row">
