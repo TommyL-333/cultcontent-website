@@ -32,6 +32,26 @@ describe('signup', () => {
     assert.equal(r.ok, false);
     assert.equal(r.error, 'brand_name is required for brand signups');
   });
+  test('tiktok_handle and instagram_handle are separate fields, both persisted', () => {
+    const r = net.signup({
+      role: 'creator', first_name: 'Two', last_name: 'Handles', email: 'twohandles@example.com',
+      tiktok_handle: '@tiktokname', instagram_handle: '@instaname', looking_for: 'brands',
+    });
+    assert.equal(r.ok, true);
+    const p = net.getPerson(r.uuid);
+    assert.equal(p.tiktok_handle, '@tiktokname');
+    assert.equal(p.instagram_handle, '@instaname');
+  });
+  test('updateProfile updates tiktok_handle and instagram_handle independently', () => {
+    const r = makeCreator('handleupdate@example.com', { tiktok_handle: '@old' });
+    net.updateProfile(net.getPerson(r.uuid).id, {
+      first_name: 'Handle', last_name: 'Update', looking_for: 'brands',
+      tiktok_handle: '@new', instagram_handle: '@fresh',
+    });
+    const p = net.getPerson(r.uuid);
+    assert.equal(p.tiktok_handle, '@new');
+    assert.equal(p.instagram_handle, '@fresh');
+  });
   test('creates a creator, defaulting tier=general and status=pending', () => {
     const r = makeCreator('creator1@example.com');
     assert.equal(r.ok, true);

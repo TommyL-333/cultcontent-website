@@ -264,7 +264,7 @@ function filtered() {
   return people.filter(p => {
     if (activeTab && p.status !== activeTab) return false;
     if (!q) return true;
-    const hay = [p.first_name, p.last_name, p.email, p.brand_name, p.handle, p.category]
+    const hay = [p.first_name, p.last_name, p.email, p.brand_name, p.tiktok_handle, p.instagram_handle, p.category]
       .filter(Boolean).join(' ').toLowerCase();
     return hay.includes(q);
   });
@@ -302,6 +302,8 @@ function detailRow(p) {
         <div class="detail-box">
           <div><div class="field-label">Email</div>${esc(p.email) || '—'}</div>
           <div><div class="field-label">Phone</div>${esc(p.phone) || '—'}</div>
+          <div><div class="field-label">TikTok</div>${p.tiktok_handle ? '@' + esc(p.tiktok_handle) : '—'}</div>
+          <div><div class="field-label">Instagram</div>${p.instagram_handle ? '@' + esc(p.instagram_handle) : '—'}</div>
           <div><div class="field-label">Category</div>${esc(p.category) || '—'}</div>
           <div><div class="field-label">Looking for</div>${esc(p.looking_for) || '—'}</div>
           <div class="full"><div class="field-label">Bio</div>${esc(p.bio) || '—'}</div>
@@ -319,7 +321,9 @@ function render() {
 
   $rows.innerHTML = rows.map(p => {
     const displayName = [p.first_name, p.last_name].filter(Boolean).join(' ') || '(no name)';
-    const brandOrHandle = p.role === 'brand' ? (p.brand_name || '—') : (p.handle ? '@' + p.handle : '—');
+    const brandOrHandle = p.role === 'brand'
+      ? (p.brand_name || '—')
+      : [p.tiktok_handle && '@' + p.tiktok_handle + ' (TT)', p.instagram_handle && '@' + p.instagram_handle + ' (IG)'].filter(Boolean).join(' · ') || '—';
     const isBrand = p.role === 'brand';
     const tierSelect = isBrand ? `
       <select data-tier-for="${p.uuid}">

@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { Button, Card, Chip, Input } from '@heroui/react';
 import Topbar from '../components/Topbar';
 import { connect, getDirectory } from '../api';
+import { orgOf } from '../lib/avatar';
 
 // Connect is now a request, not an instant reveal — the button reflects
 // pending/accepted state (best-effort from this click; a fresh page load
@@ -14,7 +15,7 @@ function PersonCard({ person }) {
   const navigate = useNavigate();
   const [status, setStatus] = useState(null); // null | 'pending' | 'accepted'
   const [busy, setBusy] = useState(false);
-  const org = person.role === 'brand' ? person.brand_name : (person.handle ? `@${person.handle.replace(/^@/, '')}` : '');
+  const org = orgOf(person);
   const name = `${person.first_name} ${person.last_name || ''}`.trim();
 
   async function handleConnect() {
@@ -61,7 +62,7 @@ export default function DirectoryScreen({ person }) {
     const term = q.trim().toLowerCase();
     if (!term) return data.people;
     return data.people.filter((p) =>
-      [p.first_name, p.last_name, p.brand_name, p.handle, p.category, p.looking_for, p.bio].join(' ').toLowerCase().includes(term)
+      [p.first_name, p.last_name, p.brand_name, p.tiktok_handle, p.instagram_handle, p.category, p.looking_for, p.bio].join(' ').toLowerCase().includes(term)
     );
   }, [data, q]);
 

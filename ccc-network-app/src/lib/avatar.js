@@ -19,9 +19,20 @@ export function colorOf(person) {
 
 export function displayName(person) {
   const name = `${person?.first_name || ''} ${person?.last_name || ''}`.trim();
-  return name || (person?.role === 'brand' ? person?.brand_name : person?.handle) || 'Someone';
+  return name || (person?.role === 'brand' ? person?.brand_name : person?.tiktok_handle || person?.instagram_handle) || 'Someone';
 }
 
+function atHandle(h) {
+  return h ? `@${h.replace(/^@/, '')}` : '';
+}
+
+// A creator's "org" line used to be one handle; now there can be two.
+// Prefer TikTok (the event's primary platform) as the lead handle, with
+// Instagram appended only if it's actually different from TikTok's.
 export function orgOf(person) {
-  return person?.role === 'brand' ? person?.brand_name : (person?.handle ? `@${person.handle.replace(/^@/, '')}` : '');
+  if (person?.role === 'brand') return person?.brand_name || '';
+  const tiktok = atHandle(person?.tiktok_handle);
+  const instagram = atHandle(person?.instagram_handle);
+  if (tiktok && instagram) return `${tiktok} · ${instagram} (IG)`;
+  return tiktok || instagram;
 }

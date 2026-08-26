@@ -9,7 +9,7 @@ const BRAND_LOGO = 'https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media
 
 const initialForm = {
   first_name: '', last_name: '', email: '', phone: '',
-  handle: '', brand_name: '', category: '', bio: '', looking_for: '', links: '',
+  tiktok_handle: '', instagram_handle: '', brand_name: '', category: '', bio: '', looking_for: '', links: '',
 };
 
 export default function SignupScreen() {
@@ -42,7 +42,8 @@ export default function SignupScreen() {
       last_name: form.last_name,
       email: form.email,
       phone: form.phone,
-      handle: form.handle,
+      tiktok_handle: form.tiktok_handle,
+      instagram_handle: form.instagram_handle,
       brand_name: form.brand_name,
       category: form.category,
       bio: form.bio,
@@ -132,7 +133,10 @@ export default function SignupScreen() {
             <AnimatePresence mode="wait">
               <motion.div key={role} initial={{ opacity: 0, x: role === 'creator' ? -8 : 8 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.2 }}>
                 {role === 'creator' ? (
-                  <div><Label>TikTok / IG handle</Label><Input value={form.handle} onChange={set('handle')} placeholder="@yourhandle" fullWidth /></div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div><Label>TikTok handle</Label><Input value={form.tiktok_handle} onChange={set('tiktok_handle')} placeholder="@yourhandle" fullWidth /></div>
+                    <div><Label>Instagram handle (optional)</Label><Input value={form.instagram_handle} onChange={set('instagram_handle')} placeholder="@yourhandle" fullWidth /></div>
+                  </div>
                 ) : (
                   <div><Label>Brand name</Label><Input value={form.brand_name} onChange={set('brand_name')} placeholder="Your Brand" fullWidth /></div>
                 )}

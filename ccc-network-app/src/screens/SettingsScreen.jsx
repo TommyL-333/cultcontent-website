@@ -21,7 +21,7 @@ function NotifyRow({ label, hint, checked, onChange }) {
 export default function SettingsScreen({ person, onSaved }) {
   const [form, setForm] = useState({
     first_name: person.first_name || '', last_name: person.last_name || '', phone: person.phone || '',
-    handle: person.handle || '', brand_name: person.brand_name || '', category: person.category || '',
+    tiktok_handle: person.tiktok_handle || '', instagram_handle: person.instagram_handle || '', brand_name: person.brand_name || '', category: person.category || '',
     bio: person.bio || '', looking_for: person.looking_for || '',
     links: (person.links || []).map((l) => l.url).join('\n'),
   });
@@ -50,7 +50,7 @@ export default function SettingsScreen({ person, onSaved }) {
     const payload = {
       first_name: form.first_name, last_name: form.last_name, phone: form.phone,
       category: form.category, bio: form.bio, looking_for: form.looking_for,
-      ...(person.role === 'creator' ? { handle: form.handle } : { brand_name: form.brand_name }),
+      ...(person.role === 'creator' ? { tiktok_handle: form.tiktok_handle, instagram_handle: form.instagram_handle } : { brand_name: form.brand_name }),
       links: form.links.split('\n').map((s) => s.trim()).filter(Boolean).map((url) => ({ label: 'Link', url })),
     };
     const j = await saveProfile(payload);
@@ -115,7 +115,10 @@ export default function SettingsScreen({ person, onSaved }) {
             </div>
             <div><Label>Phone</Label><Input value={form.phone} onChange={set('phone')} fullWidth /></div>
             {person.role === 'creator' ? (
-              <div><Label>TikTok / IG handle</Label><Input value={form.handle} onChange={set('handle')} fullWidth /></div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><Label>TikTok handle</Label><Input value={form.tiktok_handle} onChange={set('tiktok_handle')} fullWidth /></div>
+                <div><Label>Instagram handle</Label><Input value={form.instagram_handle} onChange={set('instagram_handle')} fullWidth /></div>
+              </div>
             ) : (
               <div><Label>Brand name</Label><Input value={form.brand_name} onChange={set('brand_name')} fullWidth /></div>
             )}
