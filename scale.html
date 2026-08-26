@@ -202,7 +202,11 @@
       background:rgba(0,242,234,0.08); border:2px solid rgba(0,242,234,0.2);
       display:flex; align-items:center; justify-content:center;
       font-family:'Montserrat',sans-serif; font-weight:900; font-size:1rem; color:var(--teal);
+      overflow:hidden;
     }
+    .t-avatar img { width:100%; height:100%; object-fit:cover; border-radius:50%; display:block; }
+    .tp-avatar { overflow:hidden; }
+    .tp-avatar img { width:100%; height:100%; object-fit:cover; border-radius:50%; display:block; }
     .t-avatar.mystery-av {
       background:rgba(201,168,76,0.05); border:2px dashed rgba(201,168,76,0.3);
       color:rgba(255,255,255,0.2); font-size:1.4rem;
@@ -571,17 +575,17 @@
       <!-- Team preview -->
       <div class="team-preview">
         <div class="tp-person">
-          <div class="tp-avatar">TL</div>
+          <div class="tp-avatar"><img src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/6a8e341ae25296bd1ba2aa9c.jpeg" alt="Tommy Lynch"></div>
           <div class="tp-name">Tommy</div>
           <div class="tp-role">Strategy &amp; Economics</div>
         </div>
         <div class="tp-person">
-          <div class="tp-avatar">J</div>
+          <div class="tp-avatar"><img src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/6a8ddf33c0d4f65d64675cc1.jpeg" alt="Jina"></div>
           <div class="tp-name">Jina</div>
           <div class="tp-role">Content &amp; Creators</div>
         </div>
         <div class="tp-person">
-          <div class="tp-avatar">B</div>
+          <div class="tp-avatar"><img src="https://consultants.cultcontent.cc/img-proxy?url=https%3A%2F%2Fdrive.google.com%2Fuc%3Fexport%3Dview%26id%3D1Z73sWUKeE_Y6dHXjg5GnmN7Hy-Y4rhd2" alt="Becca"></div>
           <div class="tp-name">Becca</div>
           <div class="tp-role">Live Strategy</div>
         </div>
@@ -735,10 +739,10 @@
         <div class="team-card">
           <div class="team-role-tag">Strategy &amp; Economics</div>
           <div class="team-avatar-row">
-            <div class="t-avatar">TL</div>
+            <div class="t-avatar"><img src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/6a8e341ae25296bd1ba2aa9c.jpeg" alt="Tommy Lynch"></div>
             <div class="t-name-block">
               <h3>Tommy Lynch</h3>
-              <div class="t-title">Founder &amp; CEO &mdash; TSP Certified</div>
+              <div class="t-title">Founder &mdash; Sets the Strategy &amp; Leads the Team</div>
             </div>
           </div>
           <div class="team-stats">
@@ -759,7 +763,7 @@
         <div class="team-card">
           <div class="team-role-tag">Content &amp; Creator Lead</div>
           <div class="team-avatar-row">
-            <div class="t-avatar">J</div>
+            <div class="t-avatar"><img src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/6a8ddf33c0d4f65d64675cc1.jpeg" alt="Jina"></div>
             <div class="t-name-block">
               <h3>Jina</h3>
               <div class="t-title">Creator turned operator &mdash; 300M+ views</div>
@@ -781,7 +785,7 @@
         <div class="team-card">
           <div class="team-role-tag">Live Strategy</div>
           <div class="team-avatar-row">
-            <div class="t-avatar">B</div>
+            <div class="t-avatar"><img src="https://consultants.cultcontent.cc/img-proxy?url=https%3A%2F%2Fdrive.google.com%2Fuc%3Fexport%3Dview%26id%3D1Z73sWUKeE_Y6dHXjg5GnmN7Hy-Y4rhd2" alt="Becca"></div>
             <div class="t-name-block">
               <h3>Becca</h3>
               <div class="t-title">TikTok LIVE Lead</div>
