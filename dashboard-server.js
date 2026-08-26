@@ -272,6 +272,34 @@ app.use((req, res, next) => {
   }
 });
 
+// ─── Creator Carnival application form → networking-roster welcome email ──────
+// The "Apply to be a Carnival Creator" page (ccc-creator-apply.html) is a bare
+// embedded Google Form with no backend of its own — Google owns the response
+// data entirely. This endpoint is called by a Google Apps Script trigger
+// attached to that form (installed manually in Google's UI, not from this
+// repo), firing on every submission with whatever email/name the applicant
+// entered, and sends them a welcome email pointing at the Networking Roster
+// signup. Registered BEFORE requireAuth — Google's script has no Cloudflare
+// Access session, same reasoning as the GHL webhook below. Verified by the
+// same WEBHOOK_SECRET query param convention as every other webhook here.
+app.post('/api/webhooks/creator-form-submit', async (req, res) => {
+  const secret = process.env.WEBHOOK_SECRET;
+  if (secret && req.query.secret !== secret) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  const email = String(req.body?.email || '').trim().toLowerCase();
+  const name  = String(req.body?.name || '').trim();
+  if (!email || !email.includes('@')) {
+    return res.status(400).json({ ok: false, error: 'A valid email is required.' });
+  }
+  cccNetMail.sendCreatorFormWelcomeEmail(email, name)
+    .then((result) => res.json({ ok: true, sent: result.ok }))
+    .catch((e) => {
+      console.error('[creator-form-webhook] error:', e.message);
+      res.status(500).json({ ok: false, error: 'Failed to send welcome email.' });
+    });
+});
+
 // ─── GHL Webhook: client onboarding form → auto-add client ───────────────────
 // This route is intentionally registered BEFORE requireAuth so GHL can call it
 // without a Cloudflare Access session. Verified by WEBHOOK_SECRET query param.
@@ -6761,7 +6789,7 @@ app.post('/ccc-network/signup', express.json(), (req, res) => {
     fields: {
       'Submission Time': new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }),
       'First Name': p.first_name || '', 'Last Name': p.last_name || '', 'Email': p.email || '',
-      'Brand': p.role === 'brand' ? p.brand_name : (p.handle || ''),
+      'Brand': p.role === 'brand' ? p.brand_name : (p.tiktok_handle || p.instagram_handle || ''),
       'Product Type': `[Networking Roster — ${p.role}] ${p.category || ''}`,
       'Status': 'New signup (self-serve, pending email confirmation)',
     },
@@ -6895,7 +6923,7 @@ app.get('/ccc-network/contacts.csv', requireNetworkSession, (req, res) => {
     return res.status(403).send('Contact list export is available to Marketplace and Carnival sponsors.');
   }
   const rows = cccNet.listApprovedCreatorsForExport();
-  const cols = ['first_name','last_name','email','phone','handle','category','bio'];
+  const cols = ['first_name','last_name','email','phone','tiktok_handle','instagram_handle','category','bio'];
   const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
   const csv = [cols.join(','), ...rows.map(r => cols.map(c => esc(r[c])).join(','))].join('\n');
   res.set('Content-Type', 'text/csv').set('Content-Disposition', 'attachment; filename="creator-carnival-contacts.csv"').send(csv);
@@ -6934,7 +6962,7 @@ app.get('/api/admin/ccc-network/people', (req, res) => {
 app.get('/api/admin/ccc-network/people.csv', (req, res) => {
   const { role, status, tier } = req.query;
   const rows = cccNet.listAll({ role, status, tier });
-  const cols = ['id','uuid','role','tier','status','first_name','last_name','email','phone','brand_name','handle','category','looking_for','created_at','approved_at'];
+  const cols = ['id','uuid','role','tier','status','first_name','last_name','email','phone','brand_name','tiktok_handle','instagram_handle','category','looking_for','created_at','approved_at'];
   const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
   const csv = [cols.join(','), ...rows.map(r => cols.map(c => esc(r[c])).join(','))].join('\n');
   res.set('Content-Type', 'text/csv').set('Content-Disposition', 'attachment; filename="ccc-network-people.csv"').send(csv);
