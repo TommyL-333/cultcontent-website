@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Work With Us — Cult Content</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+
+  <style>
+    :root {
+      --teal:#00f2ea; --pink:#ff0050;
+      --gold:#c9a84c; --gold2:#f0d080;
+      --dark0:#080d1a; --dark1:#0c1220; --dark2:#0f1a2e;
+      --ease:0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+    *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+    html { scroll-behavior:smooth; }
+    body { font-family:'Lato',sans-serif; background:var(--dark0); color:#fff; overflow-x:hidden; min-height:100vh; }
+    h1,h2,h3,h4 { font-family:'Montserrat',sans-serif; font-weight:900; line-height:1.1; }
+    p { line-height:1.7; }
+    .gt { background:linear-gradient(90deg,var(--teal),var(--pink)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .gg { background:linear-gradient(90deg,var(--gold),var(--gold2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+
+    /* NAV */
+    .logo { display:flex; align-items:center; gap:10px; text-decoration:none; flex-shrink:0; }
+    .logo-img { height:34px; width:auto; display:block; }
+    .logo-name { font-family:'Montserrat',sans-serif; font-weight:900; font-size:0.8rem; letter-spacing:0.13em; text-transform:uppercase; color:#fff; }
+    nav { position:fixed; top:0; left:0; right:0; z-index:100; display:flex; align-items:center; justify-content:space-between; padding:0 40px; height:64px; background:rgba(8,13,26,0.92); backdrop-filter:blur(16px); border-bottom:1px solid rgba(255,255,255,0.06); }
+    .nav-links { display:flex; align-items:center; gap:26px; list-style:none; }
+    .nav-links a { color:rgba(255,255,255,0.55); text-decoration:none; font-size:0.875rem; font-weight:700; letter-spacing:0.04em; transition:color var(--ease); }
+    .nav-links a:hover { color:#fff; }
+    .nav-right { display:flex; align-items:center; gap:14px; flex-shrink:0; }
+    .nav-cta { display:inline-flex; align-items:center; background:linear-gradient(90deg,var(--teal),var(--pink)); color:#000; font-family:'Montserrat',sans-serif; font-weight:900; font-size:0.75rem; letter-spacing:0.07em; text-transform:uppercase; padding:9px 20px; border-radius:100px; text-decoration:none; white-space:nowrap; transition:opacity var(--ease),transform var(--ease); }
+    .nav-cta:hover { opacity:0.85; transform:translateY(-1px); }
+    .nav-mobile-btn { display:none; background:none; border:none; cursor:pointer; color:#fff; font-size:1.3rem; padding:4px; }
+    .mobile-drawer { display:none; position:fixed; top:64px; left:0; right:0; background:rgba(8,13,26,0.97); backdrop-filter:blur(16px); z-index:99; flex-direction:column; border-bottom:1px solid rgba(255,255,255,0.08); }
+    .mobile-drawer.open { display:flex; }
+    .mobile-drawer a { color:rgba(255,255,255,0.8); text-decoration:none; font-family:'Montserrat',sans-serif; font-weight:700; font-size:0.9rem; letter-spacing:0.05em; text-transform:uppercase; padding:16px 24px; border-bottom:1px solid rgba(255,255,255,0.06); transition:background var(--ease); }
+    .mobile-drawer a:hover { background:rgba(255,255,255,0.04); }
+    .mobile-drawer .mobile-cta { background:linear-gradient(90deg,var(--teal),var(--pink)); color:#000; margin:16px 24px 20px; border-radius:100px; text-align:center; border-bottom:none; }
+    @media(max-width:860px){ nav{padding:0 20px;} .nav-links{display:none;} .nav-mobile-btn{display:flex;} }
+
+    /* PAGE */
+    .page-wrap {
+      min-height:100vh;
+      padding:120px 32px 80px;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      background:
+        radial-gradient(ellipse 70% 50% at 50% -5%, rgba(0,242,234,0.06) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 40% at 10% 80%, rgba(201,168,76,0.04) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 40% at 90% 80%, rgba(255,0,80,0.04) 0%, transparent 70%),
+        var(--dark0);
+    }
+    .page-inner { max-width:800px; width:100%; text-align:center; }
+
+    .eyebrow {
+      font-size:0.7rem; font-weight:700; letter-spacing:0.2em; text-transform:uppercase;
+      color:var(--teal); margin-bottom:20px;
+    }
+    .page-inner h1 { font-size:clamp(2.2rem,5vw,3.6rem); margin-bottom:18px; letter-spacing:-0.02em; }
+    .page-inner .sub {
+      font-size:1rem; color:rgba(255,255,255,0.5); max-width:520px;
+      margin:0 auto 56px; line-height:1.8;
+    }
+
+    /* CHOICE CARDS */
+    .choice-grid {
+      display:grid; grid-template-columns:1fr 1fr; gap:20px;
+    }
+    .choice-card {
+      display:block; text-decoration:none;
+      background:rgba(255,255,255,0.025);
+      border:1px solid rgba(255,255,255,0.08);
+      border-radius:20px; padding:40px 36px;
+      position:relative; overflow:hidden;
+      transition:border-color var(--ease), transform var(--ease), box-shadow var(--ease);
+      text-align:left;
+    }
+    .choice-card:hover {
+      transform:translateY(-4px);
+      box-shadow:0 16px 48px rgba(0,0,0,0.35);
+    }
+    .choice-card::before {
+      content:''; position:absolute; top:0; left:0; right:0; height:2px;
+    }
+    .choice-card.teal-card { }
+    .choice-card.teal-card::before { background:linear-gradient(90deg,var(--teal),var(--pink)); }
+    .choice-card.teal-card:hover { border-color:rgba(0,242,234,0.3); }
+
+    .choice-card.gold-card::before { background:linear-gradient(90deg,var(--gold),var(--gold2)); }
+    .choice-card.gold-card:hover { border-color:rgba(201,168,76,0.35); box-shadow:0 16px 48px rgba(201,168,76,0.12); }
+
+    .card-icon {
+      width:52px; height:52px; border-radius:14px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:1.2rem; margin-bottom:22px;
+    }
+    .teal-card .card-icon { background:rgba(0,242,234,0.08); border:1px solid rgba(0,242,234,0.15); color:var(--teal); }
+    .gold-card .card-icon { background:rgba(201,168,76,0.08); border:1px solid rgba(201,168,76,0.15); color:var(--gold); }
+
+    .card-tag {
+      font-size:0.62rem; font-weight:700; letter-spacing:0.16em; text-transform:uppercase;
+      margin-bottom:10px;
+    }
+    .teal-card .card-tag { color:var(--teal); }
+    .gold-card .card-tag { color:var(--gold); }
+
+    .choice-card h2 { font-size:1.25rem; margin-bottom:12px; color:#fff; }
+    .choice-card p { font-size:0.875rem; color:rgba(255,255,255,0.45); line-height:1.75; margin-bottom:24px; }
+
+    .card-features { display:flex; flex-direction:column; gap:8px; margin-bottom:28px; }
+    .card-feature { display:flex; align-items:flex-start; gap:10px; font-size:0.82rem; color:rgba(255,255,255,0.55); line-height:1.5; }
+    .teal-card .card-feature i { color:var(--teal); flex-shrink:0; margin-top:3px; font-size:0.65rem; }
+    .gold-card .card-feature i { color:var(--gold); flex-shrink:0; margin-top:3px; font-size:0.65rem; }
+
+    .card-cta {
+      display:inline-flex; align-items:center; gap:8px;
+      font-family:'Montserrat',sans-serif; font-weight:900; font-size:0.78rem;
+      letter-spacing:0.08em; text-transform:uppercase;
+      padding:12px 24px; border-radius:8px;
+      transition:opacity var(--ease), transform var(--ease);
+    }
+    .card-cta:hover { opacity:0.85; transform:translateX(3px); }
+    .teal-card .card-cta { background:linear-gradient(90deg,var(--teal),var(--pink)); color:#000; }
+    .gold-card .card-cta { background:linear-gradient(90deg,var(--gold),var(--gold2)); color:#000; }
+
+    @media(max-width:640px) {
+      .choice-grid { grid-template-columns:1fr; }
+      .choice-card { padding:32px 28px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a href="/" class="logo">
+      <img src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/68529ceff63e1913ceb4e2e0.png" alt="Cult Content" class="logo-img">
+      <span class="logo-name">Cult Content</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/">Home</a></li>
+      <li><a href="/founders-story">My Story</a></li>
+      <li><a href="/consulting">Consulting</a></li>
+      <li><a href="/partners">Software</a></li>
+      <li><a href="/creators">Community</a></li>
+    </ul>
+    <div class="nav-right">
+      <a href="/book" class="nav-cta">Book a Call</a>
+    </div>
+    <button class="nav-mobile-btn" id="mobileMenuBtn" aria-label="Open menu">&#9776;</button>
+  </nav>
+  <div class="mobile-drawer" id="mobileDrawer">
+    <a href="/">Home</a>
+    <a href="/founders-story">My Story</a>
+    <a href="/consulting">Consulting</a>
+    <a href="/partners">Software</a>
+    <a href="/creators">Community</a>
+    <a href="/book" class="mobile-cta">Book a Call</a>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="page-wrap">
+    <div class="page-inner">
+      <div class="eyebrow">Work With Us</div>
+      <h1>Where do you<br>want to <span class="gt">take this?</span></h1>
+      <p class="sub">We work with brands at two different stages. Tell us where you are and we'll show you what's built for you.</p>
+
+      <div class="choice-grid">
+
+        <!-- Growth Partner -->
+        <a href="/growth-partner" class="choice-card teal-card">
+          <div class="card-icon"><i class="fa-solid fa-seedling"></i></div>
+          <div class="card-tag">Growth Partner</div>
+          <h2>I'm a brand looking to get started on TikTok Shop.</h2>
+          <p>You have a product and you want to build a real presence on TikTok Shop. You're not looking to go all-in yet — you want to test the platform with the right foundation in place.</p>
+          <div class="card-features">
+            <div class="card-feature"><i class="fa-solid fa-diamond"></i> Affiliate strategy + creator sourcing</div>
+            <div class="card-feature"><i class="fa-solid fa-diamond"></i> Content direction and TikTok setup</div>
+            <div class="card-feature"><i class="fa-solid fa-diamond"></i> Performance management</div>
+            <div class="card-feature"><i class="fa-solid fa-diamond"></i> Flexible engagement — no giant team required</div>
+          </div>
+          <span class="card-cta">See the Growth Partner Offer <i class="fa-solid fa-arrow-right"></i></span>
+        </a>
+
+        <!-- Scale -->
+        <a href="/scale" class="choice-card gold-card">
+          <div class="card-icon"><i class="fa-solid fa-bolt"></i></div>
+          <div class="card-tag">Scale Package</div>
+          <h2>I'm ready to go all-in and grow fast.</h2>
+          <p>You've validated the product, you have budget to deploy, and you want a dedicated team running the full playbook — affiliates, content, live strategy, and paid media, all at once.</p>
+          <div class="card-features">
+            <div class="card-feature"><i class="fa-solid fa-diamond"></i> Dedicated four-person team for your brand</div>
+            <div class="card-feature"><i class="fa-solid fa-diamond"></i> 10–20 screened retainer creators</div>
+            <div class="card-feature"><i class="fa-solid fa-diamond"></i> Live revenue strategy + paid media</div>
+            <div class="card-feature"><i class="fa-solid fa-diamond"></i> Full shop operations — day one</div>
+          </div>
+          <span class="card-cta">See the Scale Package <i class="fa-solid fa-arrow-right"></i></span>
+        </a>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const btn = document.getElementById('mobileMenuBtn');
+      const drawer = document.getElementById('mobileDrawer');
+      if (btn && drawer) {
+        btn.addEventListener('click', e => { e.stopPropagation(); drawer.classList.toggle('open'); });
+        document.addEventListener('click', e => { if (!drawer.contains(e.target) && e.target !== btn) drawer.classList.remove('open'); });
+      }
+    })();
+  </script>
+</body>
+</html>

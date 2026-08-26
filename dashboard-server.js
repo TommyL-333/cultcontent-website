@@ -6360,6 +6360,7 @@ app.get('/book-with-jina',                     _pub('book-with-jina.html'));
 app.get('/book-now',                           _pub('book-now.html'));
 app.get('/book-consulting',                    _pub('book-consulting.html'));
 app.get('/partners',                           _pub('partners.html'));
+app.get('/work-with-us',                       _pub('work-with-us.html'));
 app.get('/growth-partner',                     _pub('growth-partner.html'));
 app.get('/scale',                              _pub('scale.html'));
 app.get('/founders-story',                     _pub('founders-story.html'));
