@@ -1071,7 +1071,7 @@
             <div class="ep-label">Lower Retainer</div>
           </div>
           <div class="slider-ep right">
-            <div class="ep-retainer">$8,000<span>/mo</span></div>
+            <div class="ep-retainer">$5,000<span>/mo</span></div>
             <div class="ep-gmv">+ 3% GMV</div>
             <div class="ep-label">Higher Retainer</div>
           </div>
@@ -1206,7 +1206,7 @@
     function scaleSlider(slider) {
       var pct  = +slider.value;
       var pos  = pct / 100;
-      var ret  = Math.round(3000 + pos * 5000);
+      var ret  = Math.round(3000 + pos * 2000);
       var gmv  = +(7 - pos * 4).toFixed(1);
       slider.style.background = 'linear-gradient(to right,#c9a84c '+pct+'%,rgba(255,255,255,0.1) '+pct+'%)';
       var r = document.getElementById('scaleRetainer');
