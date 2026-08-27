@@ -6733,16 +6733,22 @@ app.post('/ccc-booth-signup', express.json(), (req, res) => {
   }
   res.json({ ok: true, paymentUrl: result.paymentUrl });
 
-  // Best-effort mirror to the existing Lark table — fire-and-forget, never blocks the
-  // response above. Skipped entirely (no wasted request) until CCC_BOOTH_LARK_TABLE_ID
-  // is set — set it to the "Booth Signups" table id (Lark URL: .../table/<this>) to enable.
-  const BOOTH_TABLE = process.env.CCC_BOOTH_LARK_TABLE_ID;
-  if (BOOTH_TABLE) {
-    const CCC_BASE = 'R6vxbuk23aN0MHsSS8KuPv3UtQd';
+  // Fire-and-forget Lark writes + IM notification — never blocks the response.
+  (async () => {
+    const CCC_BASE        = 'R6vxbuk23aN0MHsSS8KuPv3UtQd';
+    const BOOTH_TABLE     = process.env.CCC_BOOTH_LARK_TABLE_ID || 'tblSZ01LjsyEYhRG';
+    const FINANCES_TABLE  = 'tblgKlWUI3jufYuO';
+    const TOMMY_OPEN_ID   = 'ou_cd6157679f48e0cea557ebcb1995c462';
+
+    const boothLabel  = cccBooths.CCC_BOOTHS[booth_type]?.label || booth_type;
+    const boothAmount = booth_type === 'capitol-canopy' ? 500 : 400;
+    const stripeFee   = parseFloat((boothAmount * 0.029 + 0.30).toFixed(2));
+
+    // 1. Mirror to Booth Signups table
     larkApi('post', `/bitable/v1/apps/${CCC_BASE}/tables/${BOOTH_TABLE}/records`, {
       fields: {
         'Submission Time':  result.submissionTime,
-        'Booth Type':       cccBooths.CCC_BOOTHS[booth_type]?.label || booth_type,
+        'Booth Type':       boothLabel,
         'First Name':       first_name || '',
         'Last Name':        last_name || '',
         'Email':            email,
@@ -6753,8 +6759,38 @@ app.post('/ccc-booth-signup', express.json(), (req, res) => {
         'Payment URL':      result.paymentUrl,
         'Invited By':       invited_by || '',
       },
-    }).catch(e => console.warn('[CCC-BOOTH] Lark mirror write failed:', e.message));
-  }
+    }).catch(e => console.warn('[CCC-BOOTH] Lark booth signup write failed:', e.message));
+
+    // 2. Add to Carnival Finances
+    larkApi('post', `/bitable/v1/apps/${CCC_BASE}/tables/${FINANCES_TABLE}/records`, {
+      fields: {
+        'Date':             new Date().toISOString().slice(0, 10).replace(/-/g, '/'),
+        'Category':         'Booth Revenue',
+        'Type':             'Income',
+        'Status':           'Pending',
+        'Description':      `${boothLabel} — ${brand_name || `${first_name || ''} ${last_name || ''}`.trim()}`,
+        'Contact / Vendor': `${first_name || ''} ${last_name || ''}`.trim() + (email ? ` <${email}>` : ''),
+        'Amount':           boothAmount,
+        'Processing Fee':   stripeFee,
+        'Notes':            `Reservation ID: ${result.reservationId}`,
+      },
+    }).catch(e => console.warn('[CCC-BOOTH] Lark finances write failed:', e.message));
+
+    // 3. Lark IM notification to Tommy
+    const msg = [
+      `🎪 New booth signup`,
+      `*${boothLabel}* — $${boothAmount}`,
+      `${first_name || ''} ${last_name || ''}`.trim() + (brand_name ? ` / ${brand_name}` : ''),
+      email,
+      invited_by ? `Invited by: ${invited_by}` : '',
+    ].filter(Boolean).join('\n');
+
+    larkApi('post', '/im/v1/messages?receive_id_type=open_id', {
+      receive_id: TOMMY_OPEN_ID,
+      msg_type:   'text',
+      content:    JSON.stringify({ text: msg }),
+    }).catch(e => console.warn('[CCC-BOOTH] Lark IM notify failed:', e.message));
+  })();
 });
 
 // ── Creator Carnival Networking Hub ─────────────────────────────────────────────
