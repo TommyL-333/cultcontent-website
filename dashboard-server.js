@@ -639,6 +639,9 @@ app.get('/proposals/:slug', (req, res) => {
   res.sendFile(filePath);
 });
 
+// Public CCC comms plan — shareable with anyone
+app.get('/ccc-comms', (req, res) => res.sendFile(path.join(__dirname, 'ccc-comms.html')));
+
 // Catch missing /uploads/* files BEFORE the auth wall — prevents the 401 "sign in" page
 // showing for files that no longer exist on the volume (e.g. after a Railway redeploy).
 app.get('/uploads/*', (req, res) => {
