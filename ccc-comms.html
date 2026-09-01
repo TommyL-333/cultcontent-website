@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CCC Comms Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap">
+
+<style>
+  :root {
+    --bg:        #0C1A28;
+    --surface:   #152234;
+    --surface2:  #1C2E44;
+    --border:    #253B55;
+    --text:      #EAE6DF;
+    --muted:     #6B829A;
+    --tommy:     #E8432D;
+    --tommy-bg:  rgba(232,67,45,0.12);
+    --sade:      #1DB8A0;
+    --sade-bg:   rgba(29,184,160,0.12);
+    --team:      #8B6CF6;
+    --team-bg:   rgba(139,108,246,0.12);
+    --urgent:    #F5A624;
+    --urgent-bg: rgba(245,166,36,0.12);
+    --done:      #4CAF72;
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg:        #EEF2F7;
+      --surface:   #FFFFFF;
+      --surface2:  #F4F7FB;
+      --border:    #D6DEE9;
+      --text:      #0C1A28;
+      --muted:     #6B829A;
+      --tommy-bg:  rgba(232,67,45,0.08);
+      --sade-bg:   rgba(29,184,160,0.08);
+      --team-bg:   rgba(139,108,246,0.08);
+      --urgent-bg: rgba(245,166,36,0.08);
+    }
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+    padding: 40px 20px 80px;
+  }
+
+  .wrap { max-width: 860px; margin: 0 auto; }
+
+  .page-header {
+    margin-bottom: 40px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .page-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+  }
+  .page-sub {
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 4px;
+  }
+  .countdown {
+    background: var(--urgent-bg);
+    border: 1px solid var(--urgent);
+    border-radius: 8px;
+    padding: 12px 20px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .countdown-n {
+    font-family: 'Syne', sans-serif;
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--urgent);
+    line-height: 1;
+  }
+  .countdown-label {
+    font-size: 11px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--urgent);
+    opacity: 0.8;
+    margin-top: 3px;
+  }
+
+  .legend {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 36px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot-tommy { background: var(--tommy); }
+  .dot-sade  { background: var(--sade); }
+  .dot-team  { background: var(--team); }
+
+  .wave { margin-bottom: 48px; }
+  .wave-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+  .wave-date {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .wave-rule { flex: 1; height: 1px; background: var(--border); }
+  .wave-tag {
+    font-family: 'Syne', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 4px;
+    background: var(--surface2);
+    color: var(--muted);
+  }
+  .wave-tag.urgent { background: var(--urgent-bg); color: var(--urgent); }
+
+  .tasks { display: flex; flex-direction: column; gap: 10px; }
+
+  .task {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 14px;
+    align-items: start;
+  }
+  .task:hover { border-color: var(--muted); }
+
+  .task-owner {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 5px;
+    white-space: nowrap;
+    margin-top: 1px;
+  }
+  .owner-tommy { color: var(--tommy); background: var(--tommy-bg); }
+  .owner-sade  { color: var(--sade);  background: var(--sade-bg);  }
+  .owner-team  { color: var(--team);  background: var(--team-bg);  }
+
+  .task-body { min-width: 0; }
+
+  .task-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 13.5px;
+    margin-bottom: 4px;
+    line-height: 1.3;
+  }
+  .task-desc {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.55;
+  }
+  .task-desc strong { color: var(--text); font-weight: 600; }
+
+  .task-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    align-items: flex-end;
+    flex-shrink: 0;
+  }
+  .tag {
+    font-size: 10px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    background: var(--surface2);
+    color: var(--muted);
+  }
+  .tag.email   { background: rgba(100,160,255,0.1); color: #64A0FF; }
+  .tag.slack   { background: rgba(74,21,75,0.25);   color: #CF9FFF; }
+  .tag.dm      { background: rgba(255,255,100,0.08); color: #C8C85A; }
+  .tag.sms     { background: rgba(80,200,120,0.1);  color: #50C878; }
+
+  .sidebar-note {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--sade);
+    border-radius: 8px;
+    padding: 16px 18px;
+    margin-bottom: 32px;
+    font-size: 13px;
+  }
+  .sidebar-note h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--sade);
+    margin-bottom: 10px;
+  }
+  .sidebar-note ul { list-style: none; display: flex; flex-direction: column; gap: 5px; }
+  .sidebar-note li { color: var(--muted); }
+  .sidebar-note li strong { color: var(--text); }
+
+  @media (max-width: 600px) {
+    .task { grid-template-columns: 1fr; }
+    .task-meta { flex-direction: row; align-items: center; flex-wrap: wrap; }
+    .page-header { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="page-header">
+    <div>
+      <div class="page-title">Creator Carnival — Comms Plan</div>
+      <div class="page-sub">Aug 31 → Sep 12 · All outgoing communications mapped by owner, audience, and timing</div>
+    </div>
+    <div class="countdown">
+      <div class="countdown-n">12</div>
+      <div class="countdown-label">days to go</div>
+    </div>
+  </header>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot dot-tommy"></div>Tommy</div>
+    <div class="legend-item"><div class="legend-dot dot-sade"></div>Folasade</div>
+    <div class="legend-item"><div class="legend-dot dot-team"></div>Team</div>
+  </div>
+
+  <div class="sidebar-note">
+    <h3>Confirmed Booth Vendors</h3>
+    <ul>
+      <li><strong>Tsolmon Damba</strong> — Tsolmon-Art · tsolmonsart@gmail.com · Capitol Canopy · Invited by Tommy</li>
+      <li><strong>Justin Adams</strong> — Oceanblue LLC · justin.adams@oceanblueomega.com · Capitol Canopy · Invited by Damon</li>
+      <li><strong>Jessica Davis</strong> — Trust Merchant Service · jessica@trustmerchantservice.com · Capitol Canopy · Paid $500</li>
+    </ul>
+  </div>
+
+  <!-- WAVE 1 -->
+  <div class="wave">
+    <div class="wave-header">
+      <span class="wave-date">Today — Sep 1</span>
+      <div class="wave-rule"></div>
+      <span class="wave-tag urgent">Send now</span>
+    </div>
+    <div class="tasks">
+
+      <div class="task">
+        <span class="task-owner owner-tommy">Tommy</span>
+        <div class="task-body">
+          <div class="task-title">Reply to Arielle Hart — VIP upgrade</div>
+          <div class="task-desc">Grant <strong>1 VIP pass</strong> (not 2). Frame it as a win. Require a <strong>pre-event Reel</strong> explaining why she's excited — due within the next few days. Draft already written.</div>
+        </div>
+        <div class="task-meta"><span class="tag email">Email</span></div>
+      </div>
+
+      <div class="task">
+        <span class="task-owner owner-tommy">Tommy</span>
+        <div class="task-body">
+          <div class="task-title">Send Reacher partnership confirmation to Phylloxidae</div>
+          <div class="task-desc">Confirm $2,500 deal, credits, exclusivity, Goodie Bag flyer, big screen slot, post-event email blast. Share <strong>REACHER10</strong> and <strong>REACHER30</strong> codes + outreach templates. Priority target: Baskin Lather.</div>
+        </div>
+        <div class="task-meta"><span class="tag slack">Slack</span></div>
+      </div>
+
+      <div class="task">
+        <span class="task-owner owner-sade">Folasade</span>
+        <div class="task-body">
+          <div class="task-title">Creator FAQ blast — all confirmed creators</div>
+          <div class="task-desc">Answer the most common questions: <strong>Tickets</strong> (coming soon, rolling basis), <strong>Hotel</strong> (Gaylord National or Westin National Harbor — walkable), <strong>Parking</strong> (not included; National Harbor paid lots or Uber/Lyft recommended), <strong>What to bring</strong> (products, content ideas, camera). Include event date/time and early creator access window.</div>
+        </div>
+        <div class="task-meta"><span class="tag email">Email</span></div>
+      </div>
+
+      <div class="task">
+        <span class="task-owner owner-sade">Folasade</span>
+        <div class="task-body">
+          <div class="task-title">Confirmed vendor welcome — booth details</div>
+          <div class="task-desc">To <strong>Tsolmon, Justin, Jessica</strong>: Welcome + confirm booth tier (Capitol Canopy), setup window (TBD — morning of Sep 12), what to bring, day-of contact info, and event address. Ask if they have questions.</div>
+        </div>
+        <div class="task-meta"><span class="tag email">Email</span></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- WAVE 2 -->
+  <div class="wave">
+    <div class="wave-header">
+      <span class="wave-date">Sep 2 – 5</span>
+      <div class="wave-rule"></div>
+      <span class="wave-tag">This week</span>
+    </div>
+    <div class="tasks">
+
+      <div class="task">
+        <span class="task-owner owner-tommy">Tommy</span>
+        <div class="task-body">
+          <div class="task-title">Last-chance brand outreach — warm leads + Reacher network</div>
+          <div class="task-desc">Push the Reacher email templates out. Hit warm brand leads directly. Lead with <strong>$50M GMV</strong> credibility + creator access. Use <strong>REACHER10 / REACHER30</strong> for Reacher contacts, <strong>JOJO / PW26 / DMVCreates</strong> for other channels. 11 days left is the hook.</div>
+        </div>
+        <div class="task-meta"><span class="tag email">Email</span></div>
+      </div>
+
+      <div class="task">
+        <span class="task-owner owner-tommy">Tommy</span>
+        <div class="task-body">
+          <div class="task-title">Follow up with Baskin Lather</div>
+          <div class="task-desc">Coordinate with Reacher — this is their priority brand target. Check if outreach has gone out and whether a warm intro from Tommy accelerates the close. REACHER30 or direct deal, whichever fits.</div>
+        </div>
+        <div class="task-meta"><span class="tag dm">DM</span></div>
+      </div>
+
+      <div class="task">
+        <span class="task-owner owner-sade">Folasade</span>
+        <div class="task-body">
+          <div class="task-title">Ticket delivery — confirmed creators</div>
+          <div class="task-desc">Verify announcement posts are live and tagged. Issue tickets on a rolling basis. Send each creator their ticket with a personal note — <strong>make it feel like an event, not an admin email</strong>. Include arrival time (early creator access ~10am), check-in location, and event address.</div>
+        </div>
+        <div class="task-meta"><span class="tag email">Email</span></div>
+      </div>
+
+      <div class="task">
+        <span class="task-owner owner-sade">Folasade</span>
+        <div class="task-body">
+          <div class="task-title">Vendor booth assignment confirmation</div>
+          <div class="task-desc">Once floor plan is finalized, send each vendor their <strong>specific booth location</strong>, setup arrival window (7–9am recommended), load-in process, and what's included (table, signage, power if applicable). Ask them to confirm attendance.</div>
+        </div>
+        <div class="task-meta"><span class="tag email">Email</span></div>
+      </div>
+
+      <div class="task">
+        <span class="task-owner owner-team">Team</span>
+        <div class="task-body">
+          <div class="task-title">Internal staff briefing — roles + day-of schedule</div>
+          <div class="task-desc">Assign day-of roles: registration/check-in, creator liaison, brand/vendor support, content capture, Reacher activation POC. Share setup timeline (load-in, creator early access, public open, close). Confirm emergency contacts.</div>
+        </div>
+        <div class="task-meta"><span class="tag slack">Slack</span></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- WAVE 3 -->
+  <div class="wave">
+    <div class="wave-header">
+      <span class="wave-date">Sep 6 – 9</span>
+      <div class="wave-rule"></div>
+      <span class="wave-tag">One week out</span>
+    </div>
+    <div class="tasks">
+
+      <div class="task">
+        <span class="task-owner owner-sade">Folasade</span>
+        <div class="task-body">
+          <div class="task-title">"One week away" creator countdown</div>
+          <div class="task-desc">All confirmed creators. Hype-forward. Reinforce: date (Sep 12), location (National Harbor, MD), creator early access time, reminder to bring products/samples for the collab floor, nudge to keep promoting. Include last-chance ticket links for anyone not yet confirmed.</div>
+        </div>
+        <div class="task-meta"><span class="tag email">Email</span></div>
+      </div>
+
+      <div class="task">
+        <span class="task-owner owner-tommy">Tommy</span>
+        <div class="task-body">
+          <div class="task-title">Reacher check-in — brand signups + Baskin Lather status</div>
+          <div class="task-desc">Check in with Phylloxidae on conversions. Confirm Baskin Lather status. If they've hit credits, acknowledge and confirm final invoice. If not, encourage a last push.</div>
+        </div>
+        <div class="task-meta"><span class="tag slack">Slack</span></div>
+      </div>
+
+      <div class="task">
+        <span class="task-owner owner-tommy">Tommy</span>
+        <div class="task-body">
+          <div class="task-title">Final sales push — remaining warm leads</div>
+          <div class="task-desc">Hard cutoff framing. "3 days from closing booth sales." Use scarcity (American Way ~27, Capitol Canopy ~19). Last chance for JOJO/PW26/DMVCreates deals to close.</div>
+        </div>
+        <div class="task-meta"><span class="tag email">Email</span></div>
+      </div>
+
+      <div class="task">
+        <span class="task-owner owner-sade">Folasade</span>
+        <div class="task-body">
+          <div class="task-title">Vendor day-of logistics reminder</div>
+          <div class="task-desc">All confirmed booth vendors: final reminder of booth number, setup arrival window, vendor parking, what to bring, who to check in with on arrival, and team's day-of phone number.</div>
+        </div>
+        <div class="task-meta"><span class="tag email">Email</span></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- WAVE 4 -->
+  <div class="wave">
+    <div class="wave-header">
+      <span class="wave-date">Sep 10 – 11</span>
+      <div class="wave-rule"></div>
+      <span class="wave-tag urgent">48 hrs out</span>
+    </div>
+    <div class="tasks">
+
+      <div class="task">
+        <span class="task-owner owner-sade">Folasade</span>
+        <div class="task-body">
+          <div class="task-title">Final logistics blast — all confirmed creators</div>
+          <div class="task-desc"><strong>Everything they need to show up right.</strong> Address (National Harbor, MD), creator check-in time (10am), public open time, parking (closest paid lot, Uber drop-off), what the day looks like, social handles to tag (@cultcontent.cc, @unskryptedtv), team's day-of contact number.</div>
+        </div>
+        <div class="task-meta"><span class="tag email">Email</span><span class="tag sms">SMS</span></div>
+      </div>
+
+      <div class="task">
+        <span class="task-owner owner-tommy">Tommy</span>
+        <div class="task-body">
+          <div class="task-title">Personal check-in — VIPs + key sponsors</div>
+          <div class="task-desc">Personal note to Arielle (confirm VIP), Reacher/Phylloxidae, and any other high-value attendees. Make them feel seen, confirm their specific experience (VIP access, activation space), and share Tommy's personal number for day-of.</div>
+        </div>
+        <div class="task-meta"><span class="tag dm">DM</span></div>
+      </div>
+
+      <div class="task">
+        <span class="task-owner owner-team">Team</span>
+        <div class="task-body">
+          <div class="task-title">Team day-before sync</div>
+          <div class="task-desc">Final internal rundown: who's arriving when, who has what materials, Reacher activation confirmed, content capture plan locked, emergency contact chain set. Quick call or Slack thread.</div>
+        </div>
+        <div class="task-meta"><span class="tag slack">Slack</span></div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
