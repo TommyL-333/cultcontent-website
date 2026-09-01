@@ -104,8 +104,8 @@ function makeSession() {
 // ─── Booth signups ──────────────────────────────────────────────────────────────
 test('booth availability reflects the seeded historical data', async () => {
   const a = await (await fetch(`${BASE}/ccc-booth-availability`)).json();
-  assert.equal(a['freedom-way'].total, 40);
-  assert.equal(a['capitol-canopy'].total, 30);
+  assert.equal(a['freedom-way'].total, 81);
+  assert.equal(a['capitol-canopy'].total, 60);
 });
 
 test('booth signup reserves a slot and decrements availability', async () => {

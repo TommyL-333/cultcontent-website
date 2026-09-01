@@ -12,12 +12,12 @@ const booths = require('../../lib/ccc-booths');
 
 test('getAvailability tallies the 4 seeded historical rows correctly', () => {
   const a = booths.getAvailability();
-  // Seed data: freedom-way has 1 Expired (doesn't count) -> 40/40 available.
-  // capitol-canopy has 1 Expired + 2 Paid (count) -> 28/30 available.
-  assert.equal(a['freedom-way'].total, 40);
-  assert.equal(a['freedom-way'].available, 40);
-  assert.equal(a['capitol-canopy'].total, 30);
-  assert.equal(a['capitol-canopy'].available, 28);
+  // Seed data: freedom-way has 1 Expired (doesn't count) -> 81/81 available.
+  // capitol-canopy has 1 Expired + 2 Paid (count) -> 58/60 available.
+  assert.equal(a['freedom-way'].total, 81);
+  assert.equal(a['freedom-way'].available, 81);
+  assert.equal(a['capitol-canopy'].total, 60);
+  assert.equal(a['capitol-canopy'].available, 58);
 });
 
 test('createSignup rejects an unknown booth type', () => {
