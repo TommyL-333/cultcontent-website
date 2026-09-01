@@ -6822,7 +6822,14 @@ app.post('/ccc-network/signup', express.json(), (req, res) => {
   // shared with the login flow below) both proves the email is real and
   // activates the account in one step.
   const verifyLink = cccNet.createVerifyLink(result.uuid);
-  if (verifyLink) cccNetMail.sendVerifyEmail(verifyLink.person, verifyLink.token).catch(e => console.error('[ccc-network] verify email error:', e.message));
+  if (verifyLink) {
+    // TEMPORARY diagnostic — remove once the invalid-link issue is root-caused.
+    // If the pid logged here never matches the pid logged when the link is
+    // clicked (below), that's multiple replicas each with their own SQLite
+    // file, not a real expiry/reuse — the actual cause of "invalid" links.
+    console.log(`[ccc-network-auth-debug] CREATED token=${verifyLink.token.slice(0, 10)}... uuid=${result.uuid} pid=${process.pid} db=${cccNet.db.location?.() || '(unknown)'}`);
+    cccNetMail.sendVerifyEmail(verifyLink.person, verifyLink.token).catch(e => console.error('[ccc-network] verify email error:', e.message));
+  }
 
   // Notify Tommy — FYI only now, not a review gate. Fire-and-forget, same
   // shape as /ccc-community-apply.
@@ -6848,6 +6855,12 @@ app.post('/ccc-network/login', express.json(), async (req, res) => {
 
 app.get('/ccc-network/auth/:token', (req, res) => {
   const result = cccNet.consumeMagicLink(req.params.token);
+  // TEMPORARY diagnostic — pairs with the CREATED log in the signup route
+  // above. Compare pid/db between the two for a given token: a mismatch
+  // means separate processes/files, i.e. multiple replicas without shared
+  // storage — the real cause, not expiry or double-clicking. Remove once
+  // root-caused.
+  console.log(`[ccc-network-auth-debug] CONSUMED token=${req.params.token.slice(0, 10)}... ok=${result.ok} error=${result.error || ''} pid=${process.pid} db=${cccNet.db.location?.() || '(unknown)'}`);
   // Points back at signup, not login: login's magic link only sends for an
   // already-approved account (createMagicLink requires status='approved').
   // Most links that land here belong to a still-pending signup confirmation
