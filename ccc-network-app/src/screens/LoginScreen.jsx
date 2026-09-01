@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
 import { Button, Card, Input, Label } from '@heroui/react';
@@ -8,7 +8,11 @@ import { requestLogin } from '../api';
 const BRAND_LOGO = 'https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/68529ceff63e1913ceb4e2e0.png';
 
 export default function LoginScreen() {
-  const [email, setEmail] = useState('');
+  // Lets SignupScreen deep-link here with ?email=... when someone tries to
+  // sign up with an address that already has an approved account — saves
+  // retyping it.
+  const [searchParams] = useSearchParams();
+  const [email, setEmail] = useState(searchParams.get('email') || '');
   const [submitting, setSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
 

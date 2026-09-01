@@ -21,19 +21,48 @@ const initialForm = {
   tiktok_handle: '', instagram_handle: '', brand_name: '', category: '', bio: '', looking_for: '', links: '',
 };
 
+// Copy for every non-fresh-signup outcome of submitting an email that's
+// already in ccc_people. This app is passwordless (magic-link only) —
+// there's no "forgot password" to offer, so "log in" (send me a fresh
+// link) is the actual equivalent. rejected/deactivated have no self-serve
+// way back in at all: createMagicLink only ever issues a link for an
+// approved account, so pointing those two at /login would be its own
+// silent dead end — same class of bug just fixed on the confirmation-link
+// error page.
+const DUPLICATE_COPY = {
+  approved: {
+    title: 'You already have an account.',
+    body: "This app doesn't use passwords — just log in and we'll email you a one-click link.",
+    cta: 'login',
+  },
+  rejected: {
+    title: "This email's application wasn't approved.",
+    body: 'If you think that\'s a mistake, reach out to Tommy\'s team to sort it out.',
+    cta: null,
+  },
+  deactivated: {
+    title: 'This account has been deactivated.',
+    body: "To reactivate it, reach out to Tommy's team — there's no self-serve way to undo a deactivation.",
+    cta: null,
+  },
+};
+
 export default function SignupScreen() {
   const [role, setRole] = useState('creator');
   const [tier, setTier] = useState('general');
   const [form, setForm] = useState(initialForm);
   const [error, setError] = useState('');
+  const [duplicate, setDuplicate] = useState(null); // { status } | null — approved/rejected/deactivated email already exists
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
+  const [resent, setResent] = useState(false); // true when this "done" was a resend to an already-pending signup, not a first one
 
   const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
+    setDuplicate(null);
     if (!form.first_name || !form.email || !form.looking_for) {
       setError("First name, email, and what you're looking for are required.");
       return;
@@ -61,9 +90,14 @@ export default function SignupScreen() {
     };
     const j = await signup(payload);
     setSubmitting(false);
-    if (j.ok) { toast.success('Check your email to confirm and activate your account.'); setDone(true); return; }
+    if (j.ok) {
+      toast.success(j.resent ? 'Sent a fresh confirmation link to your email.' : 'Check your email to confirm and activate your account.');
+      setResent(!!j.resent);
+      setDone(true);
+      return;
+    }
     if (j.error === 'already_registered') {
-      setError(`That email is already on the roster (status: ${j.status}). Try logging in instead.`);
+      setDuplicate({ status: j.status });
     } else {
       setError(j.error || 'Something went wrong.');
       toast.error(j.error || 'Something went wrong.');
@@ -80,9 +114,12 @@ export default function SignupScreen() {
           className="w-full max-w-xl text-center"
         >
           <Card variant="default" className="p-8">
-            <h2 className="font-display text-xl font-bold mb-2">Almost there.</h2>
+            <h2 className="font-display text-xl font-bold mb-2">{resent ? 'Already had you down.' : 'Almost there.'}</h2>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              We&rsquo;ve sent a confirmation link to <span className="text-foreground font-semibold">{form.email}</span> — click it to activate your account and start connecting. No approval wait. Didn&rsquo;t get it? Check spam, or it expires in 30 minutes and you can sign up again.
+              {resent
+                ? <>Looks like you&rsquo;d started signing up with this email before but never confirmed it — we&rsquo;ve sent a fresh confirmation link to <span className="text-foreground font-semibold">{form.email}</span>, and updated your details to what you just entered.</>
+                : <>We&rsquo;ve sent a confirmation link to <span className="text-foreground font-semibold">{form.email}</span> — click it to activate your account and start connecting. No approval wait.</>
+              } Didn&rsquo;t get it? Check spam, or it expires in 30 minutes and you can sign up again.
             </p>
           </Card>
         </motion.div>
@@ -127,6 +164,23 @@ export default function SignupScreen() {
           {error && (
             <Alert status="danger" className="mb-4">
               <Alert.Description>{error}</Alert.Description>
+            </Alert>
+          )}
+
+          {duplicate && (
+            <Alert status="danger" className="mb-4">
+              <Alert.Title>{DUPLICATE_COPY[duplicate.status]?.title || 'That email is already on the roster.'}</Alert.Title>
+              <Alert.Description>
+                {DUPLICATE_COPY[duplicate.status]?.body || `Current status: ${duplicate.status}.`}
+                {DUPLICATE_COPY[duplicate.status]?.cta === 'login' && (
+                  <>
+                    {' '}
+                    <RouterLink to={`/login?email=${encodeURIComponent(form.email)}`} className="font-semibold underline">
+                      Log in &rarr;
+                    </RouterLink>
+                  </>
+                )}
+              </Alert.Description>
             </Alert>
           )}
 
