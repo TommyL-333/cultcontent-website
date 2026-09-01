@@ -6806,7 +6806,18 @@ app.post('/ccc-network/login', express.json(), async (req, res) => {
 
 app.get('/ccc-network/auth/:token', (req, res) => {
   const result = cccNet.consumeMagicLink(req.params.token);
-  if (!result.ok) return res.status(400).send(`<p style="font-family:sans-serif;text-align:center;padding:80px 20px;">Link ${result.error === 'expired' ? 'expired' : 'invalid'} — <a href="/ccc-network/login">request a new one</a>.</p>`);
+  // Points back at signup, not login: login's magic link only sends for an
+  // already-approved account (createMagicLink requires status='approved').
+  // Most links that land here belong to a still-pending signup confirmation
+  // whose token expired/got reused/never existed — sending those people to
+  // login was a silent dead end (createMagicLink returns null, the route
+  // still responds generically "ok", nothing ever arrives). Resubmitting
+  // the same email on signup, by contrast, works for both cases: a pending
+  // account gets a fresh confirmation link (see the resend-while-pending
+  // logic in cccNet.signup), and an already-approved account gets a clear
+  // "already_registered — try logging in instead" error pointing them the
+  // rest of the way, rather than no feedback at all.
+  if (!result.ok) return res.status(400).send(`<p style="font-family:sans-serif;text-align:center;padding:80px 20px;">Link ${result.error === 'expired' ? 'expired' : 'invalid'} — <a href="/ccc-network">enter your email again</a> to get a new one.</p>`);
 
   // A link consumed while still 'pending' is the self-serve signup
   // confirmation (see createVerifyLink) — clicking it both verifies the
