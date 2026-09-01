@@ -7,6 +7,15 @@ import { signup } from '../api';
 
 const BRAND_LOGO = 'https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/68529ceff63e1913ceb4e2e0.png';
 
+// Matches the actual required-field check in handleSubmit below — first
+// name, email, looking_for always; brand_name only for role === 'brand'.
+// Without this, clicking submit with any of those blank just shows a
+// small inline error and nothing else happens, which reads as "the
+// button doesn't work" if you don't know which fields are mandatory.
+function Req() {
+  return <span className="text-primary" aria-hidden="true"> *</span>;
+}
+
 const initialForm = {
   first_name: '', last_name: '', email: '', phone: '',
   tiktok_handle: '', instagram_handle: '', brand_name: '', category: '', bio: '', looking_for: '', links: '',
@@ -121,13 +130,17 @@ export default function SignupScreen() {
             </Alert>
           )}
 
+          <p className="text-[11px] text-muted-foreground mb-4">
+            <span className="text-primary">*</span> Required
+          </p>
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
-              <div><Label>First name</Label><Input value={form.first_name} onChange={set('first_name')} placeholder="Jane" fullWidth /></div>
+              <div><Label>First name<Req /></Label><Input value={form.first_name} onChange={set('first_name')} placeholder="Jane" fullWidth /></div>
               <div><Label>Last name</Label><Input value={form.last_name} onChange={set('last_name')} placeholder="Smith" fullWidth /></div>
             </div>
 
-            <div><Label>Email</Label><Input type="email" value={form.email} onChange={set('email')} placeholder="you@example.com" fullWidth /></div>
+            <div><Label>Email<Req /></Label><Input type="email" value={form.email} onChange={set('email')} placeholder="you@example.com" fullWidth /></div>
             <div><Label>Phone (optional)</Label><Input value={form.phone} onChange={set('phone')} placeholder="(555) 555-5555" fullWidth /></div>
 
             <AnimatePresence mode="wait">
@@ -138,7 +151,7 @@ export default function SignupScreen() {
                     <div><Label>Instagram handle (optional)</Label><Input value={form.instagram_handle} onChange={set('instagram_handle')} placeholder="@yourhandle" fullWidth /></div>
                   </div>
                 ) : (
-                  <div><Label>Brand name</Label><Input value={form.brand_name} onChange={set('brand_name')} placeholder="Your Brand" fullWidth /></div>
+                  <div><Label>Brand name<Req /></Label><Input value={form.brand_name} onChange={set('brand_name')} placeholder="Your Brand" fullWidth /></div>
                 )}
               </motion.div>
             </AnimatePresence>
@@ -170,7 +183,7 @@ export default function SignupScreen() {
 
             <div><Label>{role === 'creator' ? 'Short bio' : 'About the brand'}</Label><TextArea value={form.bio} onChange={set('bio')} placeholder="A couple sentences" fullWidth /></div>
             <div>
-              <Label>{role === 'creator' ? 'What brands are you looking to work with?' : 'What kind of creators are you looking for?'}</Label>
+              <Label>{role === 'creator' ? 'What brands are you looking to work with?' : 'What kind of creators are you looking for?'}<Req /></Label>
               <TextArea value={form.looking_for} onChange={set('looking_for')} placeholder="e.g. Brands to collab with in the wellness space" fullWidth />
             </div>
             <div><Label>Links (one per line — portfolio, website, socials)</Label><TextArea value={form.links} onChange={set('links')} placeholder="https://..." fullWidth /></div>
