@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Get Your Free Creator Pass — Creator Carnival</title>
+  <meta name="description" content="Claim your free creator pass to Creator Carnival at National Harbor on September 12th. Free samples, brand collabs, and creator networking."/>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    html,body{min-height:100%;background:#0e0e0e;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;color:#f0f0f0;}
+
+    #page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:56px 20px 72px;}
+    .wrap{width:100%;max-width:440px;}
+
+    /* Brand */
+    .brand{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:40px;text-decoration:none;}
+    .brand img{height:26px;}
+    .brand-name{font-size:.72rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.35);}
+
+    /* Pill */
+    .pill{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#00F2EA;background:rgba(0,242,234,.08);border:1px solid rgba(0,242,234,.2);border-radius:20px;padding:4px 14px;margin-bottom:18px;}
+
+    h1{font-size:clamp(30px,7vw,44px);font-weight:900;line-height:1.06;letter-spacing:-.025em;color:#fff;margin-bottom:10px;}
+    h1 em{font-style:normal;color:#00F2EA;}
+
+    .sub{font-size:14px;color:#888;line-height:1.75;margin-bottom:28px;}
+    .sub strong{color:#bbb;}
+
+    /* Perks strip */
+    .perks{display:flex;flex-direction:column;gap:9px;margin-bottom:32px;}
+    .perk{display:flex;align-items:flex-start;gap:11px;font-size:13px;color:#888;line-height:1.5;}
+    .perk-dot{width:6px;height:6px;border-radius:50%;background:#00F2EA;flex-shrink:0;margin-top:6px;}
+
+    /* Card */
+    .card{background:#141414;border:1px solid #1f1f1f;border-radius:16px;padding:28px 24px;margin-bottom:14px;}
+    .card-label{font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#444;margin-bottom:22px;}
+
+    /* Fields */
+    .field{margin-bottom:16px;}
+    .field:last-of-type{margin-bottom:0;}
+    label{display:block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#666;margin-bottom:8px;}
+    label .req{color:#00F2EA;margin-left:2px;}
+    input[type="text"],input[type="email"],input[type="tel"]{
+      width:100%;background:#0a0a0a;border:1px solid #252525;border-radius:9px;
+      color:#f0f0f0;font-size:15px;font-family:inherit;padding:13px 14px;outline:none;
+      transition:border-color .15s;-webkit-appearance:none;
+    }
+    input:focus{border-color:#00F2EA;}
+    input::placeholder{color:#2e2e2e;}
+
+    .handle-wrap{position:relative;}
+    .handle-at{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:#383838;font-size:15px;pointer-events:none;}
+    .handle-wrap input{padding-left:26px;}
+
+    .field-hint{font-size:11px;color:#444;margin-top:6px;line-height:1.5;}
+
+    /* Consent */
+    .consent-field{display:flex;align-items:flex-start;gap:12px;padding:14px 0 10px;cursor:pointer;}
+    .consent-field input[type="checkbox"]{width:18px;height:18px;min-width:18px;accent-color:#00F2EA;margin-top:1px;cursor:pointer;flex-shrink:0;}
+    .consent-text{font-size:12px;color:#888;line-height:1.6;cursor:pointer;}
+    .consent-text a{color:#555;text-decoration:underline;}
+
+    /* Error */
+    .error-msg{display:none;background:rgba(255,0,80,.07);border:1px solid rgba(255,0,80,.2);color:#ff6688;font-size:13px;border-radius:8px;padding:11px 14px;margin-bottom:14px;}
+    .error-msg.show{display:block;}
+
+    /* Submit */
+    .btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;background:#00F2EA;color:#000;font-size:15px;font-weight:800;letter-spacing:.03em;border:none;border-radius:10px;padding:15px 20px;cursor:pointer;transition:opacity .15s;font-family:inherit;margin-top:22px;}
+    .btn:hover{opacity:.87;}
+    .btn:disabled{opacity:.3;cursor:not-allowed;}
+    .spinner{width:17px;height:17px;border:2px solid rgba(0,0,0,.25);border-top-color:#000;border-radius:50%;animation:spin .55s linear infinite;flex-shrink:0;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+
+    .fine{font-size:11px;color:#383838;text-align:center;line-height:1.65;margin-top:12px;}
+
+    /* ── Success view ── */
+    #view-success{display:none;}
+    .check-ring{width:68px;height:68px;border-radius:50%;border:2px solid #00F2EA;background:rgba(0,242,234,.07);display:flex;align-items:center;justify-content:center;margin:0 auto 24px;font-size:26px;}
+    .success-card{background:#141414;border:1px solid #1f1f1f;border-radius:16px;padding:36px 24px;text-align:center;margin-bottom:14px;}
+    .success-card h2{font-size:24px;font-weight:900;color:#fff;margin-bottom:10px;}
+    .success-card p{font-size:14px;color:#888;line-height:1.75;}
+    .success-card p strong{color:#ccc;}
+
+    .vip-card{background:rgba(0,242,234,.05);border:1px solid rgba(0,242,234,.15);border-radius:14px;padding:22px 22px;margin-bottom:14px;}
+    .vip-card h3{font-size:15px;font-weight:800;color:#00F2EA;margin-bottom:8px;}
+    .vip-card p{font-size:13px;color:#888;line-height:1.65;}
+    .vip-card p strong{color:#ccc;}
+
+    .details-card{background:#141414;border:1px solid #1f1f1f;border-radius:14px;padding:22px 22px;}
+    .details-card h3{font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#444;margin-bottom:14px;}
+    .detail-row{display:flex;align-items:center;gap:12px;font-size:13px;color:#888;margin-bottom:10px;line-height:1.4;}
+    .detail-row:last-child{margin-bottom:0;}
+    .detail-row span:first-child{font-size:16px;flex-shrink:0;width:22px;text-align:center;}
+    .detail-row strong{color:#bbb;}
+
+    @media(max-width:380px){
+      .card{padding:22px 18px;}
+    }
+  </style>
+</head>
+<body>
+<div id="page">
+<div class="wrap">
+
+  <!-- ── Form view ── -->
+  <div id="view-form">
+
+    <a href="https://events.cultcontent.cc" class="brand">
+      <img src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/68529ceff63e1913ceb4e2e0.png" alt="Cult Content"/>
+      <span class="brand-name">Cult Content</span>
+    </a>
+
+    <div class="pill">Free Creator Access</div>
+    <h1>Claim your<br><em>Creator Pass.</em></h1>
+    <p class="sub">Free entry to Creator Carnival at National Harbor on <strong>September 12th</strong>. Free samples, brand collabs, creator networking, and more.</p>
+
+    <div class="perks">
+      <div class="perk"><div class="perk-dot"></div><span>Free entry + creator wristband</span></div>
+      <div class="perk"><div class="perk-dot"></div><span>Access to all brand booths — collect samples directly from brands</span></div>
+      <div class="perk"><div class="perk-dot"></div><span>Creator networking, main stage panels &amp; performances</span></div>
+      <div class="perk"><div class="perk-dot"></div><span>Priority treatment from brand sponsors on the floor</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Your Info</div>
+
+      <div class="error-msg" id="error-msg">Something went wrong — please try again.</div>
+
+      <div class="field">
+        <label>Full Name <span class="req">*</span></label>
+        <input type="text" id="f-name" placeholder="Jane Smith" autocomplete="name" inputmode="text"/>
+      </div>
+
+      <div class="field">
+        <label>Email <span class="req">*</span></label>
+        <input type="email" id="f-email" placeholder="jane@email.com" autocomplete="email" inputmode="email"/>
+      </div>
+
+      <div class="field">
+        <label>Phone Number <span class="req">*</span></label>
+        <input type="tel" id="f-phone" placeholder="(555) 000-0000" autocomplete="tel" inputmode="tel"/>
+      </div>
+
+      <div class="field">
+        <label>TikTok Handle</label>
+        <div class="handle-wrap">
+          <span class="handle-at">@</span>
+          <input type="text" id="f-tiktok" placeholder="yourhandle" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"/>
+        </div>
+        <div class="field-hint">Optional — helps us promote your content at the event</div>
+      </div>
+
+      <div class="field">
+        <label>Instagram Handle</label>
+        <div class="handle-wrap">
+          <span class="handle-at">@</span>
+          <input type="text" id="f-instagram" placeholder="yourhandle" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"/>
+        </div>
+        <div class="field-hint">Optional</div>
+      </div>
+
+      <label class="consent-field" for="f-consent">
+        <input type="checkbox" id="f-consent"/>
+        <span class="consent-text">I agree to receive text messages from Cult Content about Creator Carnival — including event updates, logistics, and day-of info. Message &amp; data rates may apply. Text STOP to opt out. <a href="https://cultcontent.cc/privacy" target="_blank">Privacy Policy</a>.</span>
+      </label>
+
+      <button class="btn" id="btn-submit" onclick="submit()">
+        <span id="btn-label">Claim My Free Pass</span>
+      </button>
+
+      <p class="fine">By claiming your pass you agree to the event terms. No spam, ever.</p>
+    </div>
+
+  </div>
+
+  <!-- ── Success view ── -->
+  <div id="view-success">
+
+    <a href="https://events.cultcontent.cc" class="brand">
+      <img src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/68529ceff63e1913ceb4e2e0.png" alt="Cult Content"/>
+      <span class="brand-name">Cult Content</span>
+    </a>
+
+    <div class="success-card">
+      <div class="check-ring">🎪</div>
+      <h2>You're in!</h2>
+      <p>Your creator pass is confirmed. Check your email for details — we'll text you with logistics closer to the event.</p>
+    </div>
+
+    <div class="vip-card">
+      <h3>Want a free VIP upgrade? 👑</h3>
+      <p>Post about Creator Carnival on TikTok or Instagram using <strong>#CreatorCarnival</strong> and email us the link at <strong>Tommy@cultcontent.cc</strong>. We're giving free VIP passes to our top promoters before Sept 12.</p>
+    </div>
+
+    <div class="details-card">
+      <h3>Event Details</h3>
+      <div class="detail-row"><span>📅</span><div><strong>Saturday, September 12, 2026</strong></div></div>
+      <div class="detail-row"><span>📍</span><div><strong>National Harbor, MD</strong></div></div>
+      <div class="detail-row"><span>🎨</span><div>Creator early access: <strong>10:00 AM</strong></div></div>
+      <div class="detail-row"><span>🚪</span><div>Doors open: <strong>11:00 AM</strong></div></div>
+      <div class="detail-row"><span>🎟</span><div>Free for creators — bring your confirmation email</div></div>
+    </div>
+
+  </div>
+
+</div>
+</div>
+
+<script>
+async function submit() {
+  const name      = document.getElementById('f-name').value.trim();
+  const email     = document.getElementById('f-email').value.trim();
+  const phone     = document.getElementById('f-phone').value.trim();
+  const tiktok    = document.getElementById('f-tiktok').value.trim();
+  const instagram = document.getElementById('f-instagram').value.trim();
+  const consent   = document.getElementById('f-consent').checked;
+  const err       = document.getElementById('error-msg');
+  const btn       = document.getElementById('btn-submit');
+  const lbl       = document.getElementById('btn-label');
+
+  err.className = 'error-msg';
+
+  if (!name) { showErr('Please enter your name.'); return; }
+  if (!email || !email.includes('@')) { showErr('Please enter a valid email address.'); return; }
+  if (!phone || phone.replace(/\D/g,'').length < 10) { showErr('Please enter a valid phone number.'); return; }
+  if (!consent) { showErr('Please agree to receive text messages to claim your pass.'); return; }
+
+  btn.disabled = true;
+  lbl.innerHTML = '';
+  btn.insertAdjacentHTML('beforeend', '<div class="spinner"></div><span>Claiming your pass…</span>');
+
+  try {
+    const res = await fetch('/api/ccc/creator-apply', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, phone, tiktok, instagram, sms_consent: true }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      document.getElementById('view-form').style.display = 'none';
+      document.getElementById('view-success').style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      showErr(data.error || 'Something went wrong. Please try again.');
+      btn.disabled = false;
+      btn.innerHTML = '<span id="btn-label">Claim My Free Pass</span>';
+    }
+  } catch(e) {
+    showErr('Network error — please check your connection and try again.');
+    btn.disabled = false;
+    btn.innerHTML = '<span id="btn-label">Claim My Free Pass</span>';
+  }
+}
+
+function showErr(msg) {
+  const el = document.getElementById('error-msg');
+  el.textContent = msg;
+  el.className = 'error-msg show';
+  el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// Allow Enter key to submit
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('view-form').style.display !== 'none') {
+    const active = document.activeElement;
+    if (active && ['INPUT'].includes(active.tagName)) submit();
+  }
+});
+</script>
+</body>
+</html>
