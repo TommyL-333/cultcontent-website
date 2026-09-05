@@ -18,10 +18,11 @@ const rateLimit    = require('express-rate-limit');
 const ffmpeg       = require('fluent-ffmpeg');
 const ffmpegPath   = require('@ffmpeg-installer/ffmpeg').path;
 ffmpeg.setFfmpegPath(ffmpegPath);
-const cccBooths     = require('./lib/ccc-booths');
-const cccNet        = require('./lib/ccc-network');
-const cccNetMail    = require('./lib/ccc-network-mail');
-const cccNetMsg     = require('./lib/ccc-network-messages');
+const cccBooths          = require('./lib/ccc-booths');
+const cccNet             = require('./lib/ccc-network');
+const cccNetMail         = require('./lib/ccc-network-mail');
+const cccNetMsg          = require('./lib/ccc-network-messages');
+const cccCreatorSignups  = require('./lib/ccc-creator-signups');
 const CCC_NETWORK_APP_DIST = path.join(__dirname, 'ccc-network-app', 'dist');
 
 // ─── Stripe (client billing) ──────────────────────────────────────────────────
@@ -298,6 +299,105 @@ app.post('/api/webhooks/creator-form-submit', async (req, res) => {
       console.error('[creator-form-webhook] error:', e.message);
       res.status(500).json({ ok: false, error: 'Failed to send welcome email.' });
     });
+});
+
+// ─── Creator Carnival fast-apply (new native form, replaces Google Form embed) ─
+// Registered BEFORE requireAuth — this page is public and linked from SMS/email.
+app.get('/ccc-apply', (req, res) => res.sendFile(path.join(__dirname, 'ccc-apply.html')));
+
+app.post('/api/ccc/creator-apply', async (req, res) => {
+  const name      = String(req.body?.name      || '').trim();
+  const email     = String(req.body?.email     || '').trim().toLowerCase();
+  const phone     = String(req.body?.phone     || '').trim();
+  const tiktok    = String(req.body?.tiktok    || '').trim().replace(/^@/, '');
+  const instagram = String(req.body?.instagram || '').trim().replace(/^@/, '');
+  const consent   = !!req.body?.sms_consent;
+
+  if (!name || !email || !email.includes('@') || !phone || !consent) {
+    return res.status(400).json({ ok: false, error: 'Name, email, phone, and SMS consent are required.' });
+  }
+
+  if (cccCreatorSignups.isDuplicate(email)) {
+    return res.json({ ok: true, duplicate: true });
+  }
+
+  cccCreatorSignups.insert({ name, email, phone, tiktok, instagram, sms_consent: true });
+
+  // Non-blocking async side effects
+  const firstName = name.split(' ')[0];
+  const CCC_BASE  = 'R6vxbuk23aN0MHsSS8KuPv3UtQd';
+  const TOMMY_ID  = 'ou_cd6157679f48e0cea557ebcb1995c462';
+  const total     = cccCreatorSignups.count();
+
+  (async () => {
+    // 1a. Lark Base — Creator Signups table
+    const CREATOR_TABLE = 'tblt9CxRyl84MrAY';
+    larkApi('post', `/bitable/v1/apps/${CCC_BASE}/tables/${CREATOR_TABLE}/records`, {
+      fields: {
+        Name:          name,
+        Email:         email,
+        Phone:         phone || '',
+        TikTok:        tiktok ? `@${tiktok}` : '',
+        Instagram:     instagram ? `@${instagram}` : '',
+        'Signed Up At': new Date().toISOString().replace('T', ' ').slice(0, 19),
+        'SMS Consent': true,
+      },
+    }).catch(e => console.error('[ccc-apply] Lark table error:', e.message));
+
+    // 1b. Lark DM to Tommy
+    const dmText = `🎪 New creator signup!\n👤 ${name}\n📧 ${email}\n📱 ${phone}${tiktok ? `\n🎵 @${tiktok}` : ''}${instagram ? `\n📸 @${instagram}` : ''}\n\nTotal signups: ${total}`;
+    larkApi('post', '/im/v1/messages?receive_id_type=open_id', {
+      receive_id: TOMMY_ID, msg_type: 'text', content: JSON.stringify({ text: dmText }),
+    }).catch(e => console.error('[ccc-apply] Lark DM error:', e.message));
+
+    // 2. Resend confirmation email
+    const RESEND_KEY = process.env.RESEND_API_KEY;
+    if (RESEND_KEY) {
+      const { Resend } = require('resend');
+      const resend = new Resend(RESEND_KEY);
+      await resend.emails.send({
+        from: process.env.RESEND_FROM_ADDRESS || 'Creator Carnival <noreply@mail.cultcontent.cc>',
+        to: email,
+        subject: `You're in, ${firstName}! 🎪 Creator Carnival — Sept 12`,
+        html: `
+          <div style="background:#111;color:#f0f0f0;font-family:system-ui,sans-serif;padding:40px 24px;max-width:520px;margin:0 auto;border-radius:12px;">
+            <div style="font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#00F2EA;margin-bottom:16px;">Creator Carnival</div>
+            <h1 style="font-size:28px;font-weight:900;line-height:1.1;color:#fff;margin:0 0 16px;">You're officially in, ${firstName}. 🎪</h1>
+            <p style="color:#999;font-size:14px;line-height:1.7;margin:0 0 24px;">Your spot at Creator Carnival is confirmed. We'll send your creator wristband details closer to the event — just show up to National Harbor on <strong style="color:#ccc;">September 12th</strong> and check in at the creator entrance.</p>
+            <div style="background:#161616;border:1px solid #222;border-radius:10px;padding:20px 20px;margin:0 0 24px;">
+              <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#555;margin-bottom:12px;">Event Details</div>
+              <div style="font-size:14px;color:#bbb;line-height:2;">
+                📅 <strong style="color:#ddd;">Saturday, September 12, 2026</strong><br>
+                📍 <strong style="color:#ddd;">National Harbor, MD</strong><br>
+                🎨 <strong style="color:#ddd;">Creator early access: 10:00 AM</strong><br>
+                🚀 <strong style="color:#ddd;">Doors open: 11:00 AM</strong>
+              </div>
+            </div>
+            <div style="background:rgba(0,242,234,.06);border:1px solid rgba(0,242,234,.15);border-radius:10px;padding:18px 20px;margin:0 0 24px;">
+              <div style="font-size:13px;font-weight:700;color:#00F2EA;margin-bottom:8px;">Want a VIP upgrade? 👑</div>
+              <p style="font-size:13px;color:#888;line-height:1.6;margin:0;">Post about Creator Carnival on TikTok or Instagram using <strong style="color:#ccc;">#CreatorCarnival</strong> and reply to this email with the link. We're giving free VIP passes to our top promoters.</p>
+            </div>
+            <p style="font-size:12px;color:#555;line-height:1.6;margin:0;">Questions? Reply to this email or reach out to <a href="mailto:Tommy@cultcontent.cc" style="color:#00F2EA;text-decoration:none;">Tommy@cultcontent.cc</a>. See you on Sept 12!</p>
+          </div>`,
+      }).catch(e => console.error('[ccc-apply] Resend error:', e.message));
+    } else {
+      console.log(`[ccc-apply] No RESEND_API_KEY — would have emailed ${email}`);
+    }
+
+    // 3. GHL contact (best-effort)
+    if (process.env.GHL_API_KEY) {
+      const nameParts = name.split(' ');
+      axios.post('https://services.leadconnectorhq.com/contacts/', {
+        firstName: nameParts[0], lastName: nameParts.slice(1).join(' ') || '',
+        email, phone,
+        tags: ['ccc-creator-signup', 'creator-carnival-2026', 'carnival-creator', 'ccc-creator-applicant'],
+        locationId: process.env.GHL_LOC_ID,
+      }, { headers: { Authorization: `Bearer ${process.env.GHL_API_KEY}`, Version: '2021-04-15', 'Content-Type': 'application/json' } })
+        .catch(e => console.error('[ccc-apply] GHL error:', e.response?.data || e.message));
+    }
+  })();
+
+  res.json({ ok: true });
 });
 
 // ─── GHL Webhook: client onboarding form → auto-add client ───────────────────
