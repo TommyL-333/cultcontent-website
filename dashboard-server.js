@@ -330,7 +330,21 @@ app.post('/api/ccc/creator-apply', async (req, res) => {
   const total     = cccCreatorSignups.count();
 
   (async () => {
-    // 1. Lark DM to Tommy
+    // 1a. Lark Base — Creator Signups table
+    const CREATOR_TABLE = 'tblt9CxRyl84MrAY';
+    larkApi('post', `/bitable/v1/apps/${CCC_BASE}/tables/${CREATOR_TABLE}/records`, {
+      fields: {
+        Name:          name,
+        Email:         email,
+        Phone:         phone || '',
+        TikTok:        tiktok ? `@${tiktok}` : '',
+        Instagram:     instagram ? `@${instagram}` : '',
+        'Signed Up At': new Date().toISOString().replace('T', ' ').slice(0, 19),
+        'SMS Consent': true,
+      },
+    }).catch(e => console.error('[ccc-apply] Lark table error:', e.message));
+
+    // 1b. Lark DM to Tommy
     const dmText = `🎪 New creator signup!\n👤 ${name}\n📧 ${email}\n📱 ${phone}${tiktok ? `\n🎵 @${tiktok}` : ''}${instagram ? `\n📸 @${instagram}` : ''}\n\nTotal signups: ${total}`;
     larkApi('post', '/im/v1/messages?receive_id_type=open_id', {
       receive_id: TOMMY_ID, msg_type: 'text', content: JSON.stringify({ text: dmText }),
@@ -376,7 +390,7 @@ app.post('/api/ccc/creator-apply', async (req, res) => {
       axios.post('https://services.leadconnectorhq.com/contacts/', {
         firstName: nameParts[0], lastName: nameParts.slice(1).join(' ') || '',
         email, phone,
-        tags: ['ccc-creator-signup', 'creator-carnival-2026'],
+        tags: ['ccc-creator-signup', 'creator-carnival-2026', 'carnival-creator'],
         locationId: process.env.GHL_LOC_ID,
       }, { headers: { Authorization: `Bearer ${process.env.GHL_API_KEY}`, Version: '2021-04-15', 'Content-Type': 'application/json' } })
         .catch(e => console.error('[ccc-apply] GHL error:', e.response?.data || e.message));
