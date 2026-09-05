@@ -179,7 +179,17 @@
     .radio-card .rc-tag::before { content: ''; width: 8px; height: 8px; border-radius: 50%; border: 2px solid var(--teal); display: block; transition: all var(--ease); }
     .radio-card.selected .rc-tag::before { background: var(--teal); box-shadow: 0 0 8px rgba(0,242,234,0.4); }
     .radio-card h3 { font-size: 1.05rem; margin-bottom: 8px; }
-    .radio-card p { font-size: 0.84rem; color: rgba(255,255,255,0.5); line-height: 1.65; }
+    .radio-card p { font-size: 0.84rem; color: rgba(255,255,255,0.5); line-height: 1.65; margin-bottom: 16px; }
+    .rc-pricing { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+    .rc-price-item {
+      font-size: 0.72rem; font-weight: 700; font-family: 'Montserrat', sans-serif;
+      letter-spacing: 0.04em; padding: 5px 10px; border-radius: 6px;
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.7);
+    }
+    .rc-price-item.highlight { background: rgba(0,242,234,0.08); border-color: rgba(0,242,234,0.2); color: var(--teal); }
+    .rc-price-item.gold { background: rgba(201,168,76,0.1); border-color: rgba(201,168,76,0.25); color: var(--gold2); }
+    .rc-price-note { font-size: 0.7rem; color: rgba(255,255,255,0.28); margin-top: 8px; line-height: 1.5; }
 
     /* BUDGET RADIOS */
     .budget-radios { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -504,12 +514,24 @@
             <div class="rc-tag">Growth Partner</div>
             <h3>Full-service TikTok Shop management.</h3>
             <p>We handle strategy, creator outreach, affiliate management, content direction, and optimization. You stay focused on your product. We build the machine.</p>
+            <div class="rc-pricing">
+              <span class="rc-price-item highlight">From $2,000/mo</span>
+              <span class="rc-price-item highlight">+ 9% of net sales</span>
+            </div>
+            <div class="rc-price-note">Additional spend (creators, content, ads) is highly recommended but not required.</div>
           </label>
           <label class="radio-card" onclick="selectOffer(this)">
             <input type="radio" name="offer" value="Scale" />
             <div class="rc-tag">Scale</div>
             <h3>A dedicated 4-person team, all-in.</h3>
             <p>Tommy on strategy, Jina on content and creators, Becca on content production, and a Brand Concierge embedded in your brand. 20 retainer creators guaranteed. Short video focus. Built for brands ready to go all-in.</p>
+            <div class="rc-pricing">
+              <span class="rc-price-item gold">From $3,000/mo</span>
+              <span class="rc-price-item gold">+ 7% of net sales</span>
+              <span class="rc-price-item">$10k/mo retainer spend</span>
+              <span class="rc-price-item">$10k/mo ad spend</span>
+            </div>
+            <div class="rc-price-note">Retainer and ad spend are required minimums. Total monthly commitment starts at $23,000+.</div>
           </label>
         </div>
         <div class="field-error" id="err-offer">Please select an offer.</div>
