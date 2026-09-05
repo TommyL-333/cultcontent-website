@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Apply to Work With Cult Content</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    :root {
+      --teal: #00f2ea;
+      --pink: #ff0050;
+      --gold: #c9a84c;
+      --gold2: #f0d080;
+      --dark0: #080710;
+      --dark1: #0d0b18;
+      --dark2: #131020;
+      --border: rgba(255,255,255,0.08);
+      --ease: 0.28s cubic-bezier(0.4,0,0.2,1);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Lato', sans-serif; background: var(--dark0); color: #fff; overflow-x: hidden; min-height: 100vh; }
+    h1,h2,h3,h4 { font-family: 'Montserrat', sans-serif; font-weight: 900; line-height: 1.1; }
+    p { line-height: 1.7; }
+    .gt { background: linear-gradient(90deg,var(--teal),var(--pink)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .gg { background: linear-gradient(90deg,var(--gold),var(--gold2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+    /* NAV */
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; flex-shrink: 0; }
+    .logo-img { height: 34px; width: auto; }
+    .logo-name { font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 0.8rem; letter-spacing: 0.13em; text-transform: uppercase; color: #fff; }
+    nav { position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 0 40px; height: 64px; background: rgba(8,7,16,0.92); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); }
+    .nav-right { display: flex; align-items: center; gap: 18px; }
+    .nav-link { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 0.875rem; font-weight: 700; letter-spacing: 0.04em; transition: color 0.2s; }
+    .nav-link:hover { color: #fff; }
+    @media (max-width: 600px) { nav { padding: 0 18px; } .nav-link { display: none; } }
+
+    /* PAGE SHELL */
+    .page-wrap { max-width: 760px; margin: 0 auto; padding: 60px 24px 100px; }
+
+    /* HEADER */
+    .apply-header { text-align: center; margin-bottom: 52px; }
+    .apply-eyebrow { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--teal); margin-bottom: 16px; }
+    .apply-header h1 { font-size: clamp(2rem, 5vw, 3.2rem); margin-bottom: 16px; letter-spacing: -0.02em; }
+    .apply-header p { font-size: 1rem; color: rgba(255,255,255,0.5); max-width: 520px; margin: 0 auto; line-height: 1.8; }
+
+    /* PROGRESS BAR */
+    .progress-wrap { margin-bottom: 48px; }
+    .progress-steps { display: flex; align-items: center; justify-content: space-between; position: relative; margin-bottom: 12px; }
+    .progress-steps::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: var(--border);
+      transform: translateY(-50%);
+      z-index: 0;
+    }
+    .progress-line {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      height: 1px;
+      background: linear-gradient(90deg, var(--teal), var(--pink));
+      transform: translateY(-50%);
+      z-index: 1;
+      transition: width 0.5s var(--ease);
+    }
+    .step-dot {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--dark0);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Montserrat', sans-serif; font-weight: 900;
+      font-size: 0.7rem; color: rgba(255,255,255,0.3);
+      position: relative; z-index: 2;
+      transition: all var(--ease);
+      flex-shrink: 0;
+    }
+    .step-dot.active { border-color: var(--teal); color: var(--teal); box-shadow: 0 0 12px rgba(0,242,234,0.3); }
+    .step-dot.done { background: linear-gradient(135deg,var(--teal),var(--pink)); border-color: transparent; color: #000; }
+    .step-dot.done::after { content: '✓'; font-size: 0.75rem; }
+    .step-dot:not(.done) .dot-num { display: block; }
+    .step-dot.done .dot-num { display: none; }
+    .progress-labels { display: flex; justify-content: space-between; }
+    .progress-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.25); text-align: center; flex: 1; transition: color var(--ease); }
+    .progress-label.active { color: var(--teal); }
+    .progress-label.done { color: rgba(255,255,255,0.5); }
+
+    /* FORM CARD */
+    .form-card {
+      background: rgba(255,255,255,0.025);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 44px 48px;
+      position: relative;
+      overflow: hidden;
+    }
+    .form-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--teal), var(--pink));
+    }
+    @media (max-width: 600px) { .form-card { padding: 28px 20px; } }
+
+    /* STEPS */
+    .form-step { display: none; animation: stepIn 0.3s var(--ease) both; }
+    .form-step.active { display: block; }
+    @keyframes stepIn { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: translateX(0); } }
+
+    .step-title { font-size: 1.45rem; margin-bottom: 6px; }
+    .step-sub { font-size: 0.88rem; color: rgba(255,255,255,0.45); margin-bottom: 32px; }
+
+    /* FORM FIELDS */
+    .field-group { margin-bottom: 22px; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .field-row.triple { grid-template-columns: 1fr 1fr 1fr; }
+    @media (max-width: 600px) { .field-row, .field-row.triple { grid-template-columns: 1fr; } }
+
+    label { display: block; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.55); margin-bottom: 8px; }
+    label .req { color: var(--teal); margin-left: 2px; }
+    label .opt { color: rgba(255,255,255,0.25); font-weight: 400; text-transform: none; letter-spacing: 0; font-size: 0.72rem; }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="url"],
+    select,
+    textarea {
+      width: 100%;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      color: #fff;
+      font-family: 'Lato', sans-serif;
+      font-size: 0.94rem;
+      padding: 12px 16px;
+      outline: none;
+      transition: border-color var(--ease), box-shadow var(--ease);
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: rgba(0,242,234,0.5);
+      box-shadow: 0 0 0 3px rgba(0,242,234,0.08);
+    }
+    input.error, select.error, textarea.error {
+      border-color: rgba(255,0,80,0.6);
+      box-shadow: 0 0 0 3px rgba(255,0,80,0.08);
+    }
+    input::placeholder, textarea::placeholder { color: rgba(255,255,255,0.2); }
+    textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
+    select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,0.4)' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 38px; }
+    select option { background: #1a1530; color: #fff; }
+
+    .field-hint { font-size: 0.72rem; color: rgba(255,255,255,0.28); margin-top: 6px; line-height: 1.5; }
+    .field-error { font-size: 0.72rem; color: #ff4d6d; margin-top: 6px; display: none; }
+    .field-error.visible { display: block; }
+
+    /* RADIO CARDS */
+    .radio-cards { display: grid; gap: 14px; }
+    .radio-card {
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 14px;
+      padding: 22px 24px;
+      cursor: pointer;
+      transition: border-color var(--ease), background var(--ease);
+      position: relative;
+    }
+    .radio-card:hover { background: rgba(255,255,255,0.03); }
+    .radio-card input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
+    .radio-card.selected { border-color: var(--teal); background: rgba(0,242,234,0.04); }
+    .radio-card .rc-tag { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--teal); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+    .radio-card .rc-tag::before { content: ''; width: 8px; height: 8px; border-radius: 50%; border: 2px solid var(--teal); display: block; transition: all var(--ease); }
+    .radio-card.selected .rc-tag::before { background: var(--teal); box-shadow: 0 0 8px rgba(0,242,234,0.4); }
+    .radio-card h3 { font-size: 1.05rem; margin-bottom: 8px; }
+    .radio-card p { font-size: 0.84rem; color: rgba(255,255,255,0.5); line-height: 1.65; }
+
+    /* BUDGET RADIOS */
+    .budget-radios { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    @media (max-width: 600px) { .budget-radios { grid-template-columns: 1fr; } }
+    .budget-radio {
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      padding: 14px 18px;
+      cursor: pointer;
+      transition: border-color var(--ease), background var(--ease);
+      position: relative;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .budget-radio input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
+    .budget-radio:hover { background: rgba(255,255,255,0.03); }
+    .budget-radio.selected { border-color: var(--teal); background: rgba(0,242,234,0.04); }
+    .budget-radio .br-dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.25); flex-shrink: 0; transition: all var(--ease); }
+    .budget-radio.selected .br-dot { border-color: var(--teal); background: var(--teal); box-shadow: 0 0 6px rgba(0,242,234,0.3); }
+    .budget-radio .br-label { font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 0.82rem; color: rgba(255,255,255,0.7); }
+    .budget-radio.selected .br-label { color: #fff; }
+
+    /* RISK CALLOUT */
+    .risk-callout {
+      background: linear-gradient(135deg, rgba(255,0,80,0.06) 0%, rgba(0,0,0,0.2) 100%);
+      border: 1px solid rgba(255,0,80,0.15);
+      border-radius: 14px;
+      padding: 28px 30px;
+      margin-bottom: 24px;
+    }
+    .risk-callout .risk-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--pink); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+    .risk-callout .risk-label::before { content: '⚡'; }
+    .risk-callout blockquote {
+      font-size: 0.92rem;
+      color: rgba(255,255,255,0.72);
+      line-height: 1.8;
+      border-left: 3px solid rgba(255,0,80,0.3);
+      padding-left: 18px;
+      margin: 0;
+      font-style: italic;
+    }
+    .risk-callout blockquote p + p { margin-top: 14px; }
+
+    /* CHECKBOXES */
+    .check-group { display: flex; align-items: flex-start; gap: 14px; cursor: pointer; }
+    .check-group input[type="checkbox"] { display: none; }
+    .custom-check {
+      width: 20px; height: 20px; border-radius: 6px;
+      border: 1.5px solid rgba(255,255,255,0.2);
+      flex-shrink: 0; margin-top: 2px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all var(--ease); background: transparent;
+    }
+    .check-group input:checked + .custom-check {
+      background: linear-gradient(135deg, var(--teal), var(--pink));
+      border-color: transparent;
+    }
+    .custom-check::after { content: '✓'; font-size: 0.75rem; color: #000; display: none; font-weight: 900; }
+    .check-group input:checked + .custom-check::after { display: block; }
+    .check-label { font-size: 0.88rem; color: rgba(255,255,255,0.65); line-height: 1.65; }
+    .check-label strong { color: rgba(255,255,255,0.9); }
+    .check-group.error-check .custom-check { border-color: rgba(255,0,80,0.5); }
+
+    /* ADDITIONAL CONTACTS */
+    .add-contact-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: none; border: 1px solid rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.5); font-family: 'Lato', sans-serif;
+      font-size: 0.82rem; font-weight: 700; padding: 10px 18px;
+      border-radius: 8px; cursor: pointer;
+      transition: all var(--ease);
+    }
+    .add-contact-btn:hover { border-color: rgba(0,242,234,0.3); color: var(--teal); }
+    .extra-contact { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); display: none; }
+    .extra-contact.visible { display: block; }
+    .contact-heading { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.35); margin-bottom: 14px; }
+
+    /* DIVIDER */
+    .section-divider { margin: 28px 0; border: none; border-top: 1px solid var(--border); }
+
+    /* NAVIGATION BUTTONS */
+    .form-nav { display: flex; align-items: center; justify-content: space-between; margin-top: 36px; }
+    .btn-prev {
+      background: none; border: 1px solid rgba(255,255,255,0.12); color: rgba(255,255,255,0.5);
+      font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 0.78rem;
+      letter-spacing: 0.07em; text-transform: uppercase; padding: 12px 24px;
+      border-radius: 8px; cursor: pointer; transition: all var(--ease);
+    }
+    .btn-prev:hover { border-color: rgba(255,255,255,0.25); color: rgba(255,255,255,0.8); }
+    .btn-prev:disabled { opacity: 0.3; pointer-events: none; }
+    .btn-next, .btn-submit {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: linear-gradient(90deg, var(--teal), var(--pink));
+      color: #000; font-family: 'Montserrat', sans-serif; font-weight: 900;
+      font-size: 0.82rem; letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 13px 28px; border-radius: 8px; border: none; cursor: pointer;
+      transition: opacity var(--ease), transform var(--ease);
+    }
+    .btn-next:hover, .btn-submit:hover { opacity: 0.85; transform: translateY(-1px); }
+    .btn-submit { background: linear-gradient(90deg, var(--gold), var(--gold2)); }
+    .btn-submit:disabled { opacity: 0.5; pointer-events: none; }
+
+    /* SUCCESS STATE */
+    .success-state {
+      display: none; text-align: center; padding: 60px 24px;
+      animation: stepIn 0.4s var(--ease) both;
+    }
+    .success-state.visible { display: block; }
+    .success-icon { font-size: 3.5rem; margin-bottom: 24px; }
+    .success-state h2 { font-size: 2rem; margin-bottom: 16px; }
+    .success-state p { font-size: 1rem; color: rgba(255,255,255,0.5); max-width: 480px; margin: 0 auto 32px; line-height: 1.8; }
+    .success-links { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+    .success-link { text-decoration: none; font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 0.78rem; letter-spacing: 0.07em; text-transform: uppercase; padding: 12px 22px; border-radius: 8px; transition: all var(--ease); }
+    .success-link.primary { background: linear-gradient(90deg,var(--teal),var(--pink)); color: #000; }
+    .success-link.secondary { border: 1px solid var(--border); color: rgba(255,255,255,0.55); }
+    .success-link.secondary:hover { border-color: rgba(255,255,255,0.25); color: #fff; }
+
+    /* SUBMIT ERROR */
+    .submit-error { margin-top: 16px; text-align: center; font-size: 0.84rem; color: #ff4d6d; display: none; }
+    .submit-error.visible { display: block; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="logo">
+    <img src="https://assets.cdn.filesafe.space/c216j58Vx9XxYa7WYMiA/media/68529ceff63e1913ceb4e2e0.png" alt="Cult Content" class="logo-img">
+    <span class="logo-name">Cult Content</span>
+  </a>
+  <div class="nav-right">
+    <a href="/" class="nav-link">Home</a>
+    <a href="/scale" class="nav-link">Scale</a>
+    <a href="/growth-partner" class="nav-link">Growth Partner</a>
+  </div>
+</nav>
+
+<div class="page-wrap">
+
+  <div class="apply-header">
+    <div class="apply-eyebrow">Application — Application Only</div>
+    <h1>Tell us about<br>your <span class="gt">brand.</span></h1>
+    <p>We don't take every brand. This application helps us make sure the fit is right — for you and for us. Tommy reviews every application personally.</p>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-steps">
+      <div class="progress-line" id="progressLine"></div>
+      <div class="step-dot active" id="dot-1"><span class="dot-num">1</span></div>
+      <div class="step-dot" id="dot-2"><span class="dot-num">2</span></div>
+      <div class="step-dot" id="dot-3"><span class="dot-num">3</span></div>
+      <div class="step-dot" id="dot-4"><span class="dot-num">4</span></div>
+    </div>
+    <div class="progress-labels">
+      <span class="progress-label active" id="lbl-1">The Brand</span>
+      <span class="progress-label" id="lbl-2">The Numbers</span>
+      <span class="progress-label" id="lbl-3">The Offer</span>
+      <span class="progress-label" id="lbl-4">Contacts</span>
+    </div>
+  </div>
+
+  <!-- FORM CARD -->
+  <div class="form-card" id="formCard">
+
+    <!-- STEP 1: THE BRAND -->
+    <div class="form-step active" id="step-1">
+      <div class="step-title">The <span class="gt">Brand</span></div>
+      <div class="step-sub">Start with the basics. We want to understand your product before anything else.</div>
+
+      <div class="field-row">
+        <div class="field-group">
+          <label>Brand Name <span class="req">*</span></label>
+          <input type="text" id="brandName" placeholder="e.g. LMNT, Cirkul, Obvi" />
+          <div class="field-error" id="err-brandName">Brand name is required.</div>
+        </div>
+        <div class="field-group">
+          <label>Website URL <span class="req">*</span></label>
+          <input type="url" id="website" placeholder="https://yourbrand.com" />
+          <div class="field-error" id="err-website">Website URL is required.</div>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-group">
+          <label>TikTok Handle <span class="req">*</span></label>
+          <input type="text" id="tiktokHandle" placeholder="@yourbrand" />
+          <div class="field-error" id="err-tiktokHandle">TikTok handle is required.</div>
+        </div>
+        <div class="field-group">
+          <label>Instagram Handle <span class="opt">(optional)</span></label>
+          <input type="text" id="instagramHandle" placeholder="@yourbrand" />
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label>Other Socials <span class="opt">(optional)</span></label>
+        <input type="text" id="otherSocials" placeholder="YouTube, Facebook, Pinterest, etc." />
+      </div>
+
+      <hr class="section-divider">
+
+      <div class="field-row">
+        <div class="field-group">
+          <label>Product Name(s) <span class="req">*</span></label>
+          <input type="text" id="productNames" placeholder="e.g. Weighted Hoop, Protein Powder" />
+          <div class="field-error" id="err-productNames">Product name(s) are required.</div>
+        </div>
+        <div class="field-group">
+          <label>Product Category <span class="req">*</span></label>
+          <input type="text" id="productCategory" placeholder="e.g. Fitness, Beauty, Supplements" />
+          <div class="field-error" id="err-productCategory">Product category is required.</div>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label>Brand Mission and Story <span class="req">*</span></label>
+        <textarea id="brandMission" rows="4" placeholder="Who are you, why does this brand exist, and what's the story behind it?"></textarea>
+        <div class="field-error" id="err-brandMission">This field is required.</div>
+      </div>
+
+      <div class="field-group">
+        <label>The Problem Your Brand Solves <span class="req">*</span></label>
+        <textarea id="problemSolved" rows="3" placeholder="What specific problem does your product address?"></textarea>
+        <div class="field-error" id="err-problemSolved">This field is required.</div>
+      </div>
+
+      <div class="field-group">
+        <label>How a Specific Product Solves That Problem <span class="req">*</span></label>
+        <textarea id="productExample" rows="3" placeholder="Give us a concrete example — a real customer, a real result, or a specific use case."></textarea>
+        <div class="field-error" id="err-productExample">This field is required.</div>
+      </div>
+
+      <div class="form-nav">
+        <span></span>
+        <button class="btn-next" onclick="goNext(1)">The Numbers <i class="fa-solid fa-arrow-right"></i></button>
+      </div>
+    </div>
+
+    <!-- STEP 2: THE NUMBERS -->
+    <div class="form-step" id="step-2">
+      <div class="step-title">The <span class="gt">Numbers</span></div>
+      <div class="step-sub">We need to understand the economics before we can tell you if it makes sense.</div>
+
+      <div class="field-group">
+        <label>Current TikTok Shop Status <span class="req">*</span></label>
+        <select id="tiktokShopStatus">
+          <option value="">Select your current status…</option>
+          <option>Not yet on TikTok Shop</option>
+          <option>Live but under $10k/mo GMV</option>
+          <option>$10k–$50k/mo GMV</option>
+          <option>$50k–$100k/mo GMV</option>
+          <option>$100k+/mo GMV</option>
+        </select>
+        <div class="field-error" id="err-tiktokShopStatus">Please select your TikTok Shop status.</div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-group">
+          <label>Average COGS as % of Retail Price <span class="req">*</span></label>
+          <input type="text" id="cogsPercent" placeholder="e.g. 25%" />
+          <div class="field-hint">What does it cost to make + land the product, as a % of what you sell it for?</div>
+          <div class="field-error" id="err-cogsPercent">This field is required.</div>
+        </div>
+        <div class="field-group">
+          <label>Average Shipping Cost Per Order <span class="req">*</span></label>
+          <input type="text" id="shippingCost" placeholder="e.g. $4.50" />
+          <div class="field-hint">Fully landed cost to ship to the customer.</div>
+          <div class="field-error" id="err-shippingCost">This field is required.</div>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label>Fulfillment Services <span class="opt">(optional)</span></label>
+        <input type="text" id="fulfillment" placeholder="e.g. ShipBob, MCF, in-house 3PL, self-fulfillment" />
+        <div class="field-hint">What do you use to fulfill orders today?</div>
+      </div>
+
+      <hr class="section-divider">
+
+      <div class="field-group">
+        <label>Monthly Budget for TikTok Shop <span class="req">*</span></label>
+        <div class="budget-radios" id="budgetRadios">
+          <label class="budget-radio" onclick="selectBudget(this)">
+            <input type="radio" name="budget" value="$5,000–$10,000/mo" />
+            <span class="br-dot"></span>
+            <span class="br-label">$5,000–$10,000/mo</span>
+          </label>
+          <label class="budget-radio" onclick="selectBudget(this)">
+            <input type="radio" name="budget" value="$10,000–$20,000/mo" />
+            <span class="br-dot"></span>
+            <span class="br-label">$10,000–$20,000/mo</span>
+          </label>
+          <label class="budget-radio" onclick="selectBudget(this)">
+            <input type="radio" name="budget" value="$20,000–$50,000/mo" />
+            <span class="br-dot"></span>
+            <span class="br-label">$20,000–$50,000/mo</span>
+          </label>
+          <label class="budget-radio" onclick="selectBudget(this)">
+            <input type="radio" name="budget" value="$50,000+/mo" />
+            <span class="br-dot"></span>
+            <span class="br-label">$50,000+/mo</span>
+          </label>
+        </div>
+        <div class="field-error" id="err-budget">Please select a monthly budget range.</div>
+      </div>
+
+      <div class="form-nav">
+        <button class="btn-prev" onclick="goPrev(2)"><i class="fa-solid fa-arrow-left"></i> Back</button>
+        <button class="btn-next" onclick="goNext(2)">The Offer <i class="fa-solid fa-arrow-right"></i></button>
+      </div>
+    </div>
+
+    <!-- STEP 3: THE OFFER -->
+    <div class="form-step" id="step-3">
+      <div class="step-title">The <span class="gt">Offer</span></div>
+      <div class="step-sub">Choose the service you're applying for, and confirm you understand what this takes.</div>
+
+      <div class="field-group">
+        <label>Which offer are you applying for? <span class="req">*</span></label>
+        <div class="radio-cards" id="offerCards">
+          <label class="radio-card" onclick="selectOffer(this)">
+            <input type="radio" name="offer" value="Growth Partner" />
+            <div class="rc-tag">Growth Partner</div>
+            <h3>Full-service TikTok Shop management.</h3>
+            <p>We handle strategy, creator outreach, affiliate management, content direction, and optimization. You stay focused on your product. We build the machine.</p>
+          </label>
+          <label class="radio-card" onclick="selectOffer(this)">
+            <input type="radio" name="offer" value="Scale" />
+            <div class="rc-tag">Scale</div>
+            <h3>A dedicated 4-person team, all-in.</h3>
+            <p>Tommy on strategy, Jina on content and creators, Becca on content production, and a Brand Concierge embedded in your brand. 20 retainer creators guaranteed. Short video focus. Built for brands ready to go all-in.</p>
+          </label>
+        </div>
+        <div class="field-error" id="err-offer">Please select an offer.</div>
+      </div>
+
+      <hr class="section-divider">
+
+      <div class="field-group">
+        <div class="risk-callout">
+          <div class="risk-label">Read this before you check the box</div>
+          <blockquote>
+            <p>TikTok Shop is not a quick win. Brands that win biggest on this platform are the ones willing to spend aggressively and wait. To run a real affiliate program, produce consistent content, and scale to meaningful GMV, you could be spending $10,000–$50,000+ per month — and not seeing a positive return for 3 to 6 months. The brands that cut early leave the investment on the table. The brands that commit build channels that compound.</p>
+            <p>Cult Content only works with brands that understand this. We will not take your money if we don't believe in your product or your patience.</p>
+          </blockquote>
+        </div>
+
+        <label class="check-group" id="riskCheckGroup" onclick="toggleCheck('riskAck', 'riskCheckGroup')">
+          <input type="checkbox" id="riskAck" />
+          <span class="custom-check"></span>
+          <span class="check-label">
+            <strong>I understand that TikTok Shop requires significant upfront investment and a long-term commitment.</strong> I'm applying because I'm ready for both.
+          </span>
+        </label>
+        <div class="field-error" id="err-riskAck">You must acknowledge this before continuing.</div>
+      </div>
+
+      <div class="field-group">
+        <label class="check-group" id="larkCheckGroup" onclick="toggleCheck('larkAck', 'larkCheckGroup')">
+          <input type="checkbox" id="larkAck" />
+          <span class="custom-check"></span>
+          <span class="check-label">
+            <strong>I'm willing to use Lark</strong> (the collaboration platform used by TikTok teams, built by ByteDance) as our primary communication channel. I'll create an account and be active on it.
+          </span>
+        </label>
+        <div class="field-error" id="err-larkAck">This is required to work with us.</div>
+      </div>
+
+      <div class="form-nav">
+        <button class="btn-prev" onclick="goPrev(3)"><i class="fa-solid fa-arrow-left"></i> Back</button>
+        <button class="btn-next" onclick="goNext(3)">Contacts <i class="fa-solid fa-arrow-right"></i></button>
+      </div>
+    </div>
+
+    <!-- STEP 4: CONTACTS -->
+    <div class="form-step" id="step-4">
+      <div class="step-title">Brand <span class="gt">Contacts</span></div>
+      <div class="step-sub">Who should we be talking to? Add everyone who'll be involved in this relationship.</div>
+
+      <div class="contact-heading">Primary Contact <span style="color:var(--teal)">*</span></div>
+
+      <div class="field-row">
+        <div class="field-group">
+          <label>Full Name <span class="req">*</span></label>
+          <input type="text" id="primaryName" placeholder="Jane Smith" />
+          <div class="field-error" id="err-primaryName">Name is required.</div>
+        </div>
+        <div class="field-group">
+          <label>Title / Role <span class="req">*</span></label>
+          <input type="text" id="primaryTitle" placeholder="CEO, Founder, CMO…" />
+          <div class="field-error" id="err-primaryTitle">Title is required.</div>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label>Email <span class="req">*</span></label>
+          <input type="email" id="primaryEmail" placeholder="jane@yourbrand.com" />
+          <div class="field-error" id="err-primaryEmail">A valid email is required.</div>
+        </div>
+        <div class="field-group">
+          <label>Phone <span class="req">*</span></label>
+          <input type="tel" id="primaryPhone" placeholder="+1 555 000 0000" />
+          <div class="field-error" id="err-primaryPhone">Phone number is required.</div>
+        </div>
+      </div>
+
+      <!-- Extra contact 1 -->
+      <div class="extra-contact" id="extraContact1">
+        <div class="contact-heading">Additional Contact 1</div>
+        <div class="field-row">
+          <div class="field-group">
+            <label>Full Name</label>
+            <input type="text" id="ec1Name" placeholder="Alex Johnson" />
+          </div>
+          <div class="field-group">
+            <label>Title / Role</label>
+            <input type="text" id="ec1Title" placeholder="e.g. Brand Manager" />
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field-group">
+            <label>Email</label>
+            <input type="email" id="ec1Email" placeholder="alex@yourbrand.com" />
+          </div>
+          <div class="field-group">
+            <label>Phone</label>
+            <input type="tel" id="ec1Phone" placeholder="+1 555 000 0000" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Extra contact 2 -->
+      <div class="extra-contact" id="extraContact2">
+        <div class="contact-heading">Additional Contact 2</div>
+        <div class="field-row">
+          <div class="field-group">
+            <label>Full Name</label>
+            <input type="text" id="ec2Name" placeholder="Sam Rivera" />
+          </div>
+          <div class="field-group">
+            <label>Title / Role</label>
+            <input type="text" id="ec2Title" placeholder="e.g. Operations Lead" />
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field-group">
+            <label>Email</label>
+            <input type="email" id="ec2Email" placeholder="sam@yourbrand.com" />
+          </div>
+          <div class="field-group">
+            <label>Phone</label>
+            <input type="tel" id="ec2Phone" placeholder="+1 555 000 0000" />
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:8px" id="addContactsWrap">
+        <button class="add-contact-btn" id="addContact1Btn" onclick="addContact(1)">
+          <i class="fa-solid fa-plus"></i> Add another contact
+        </button>
+      </div>
+
+      <hr class="section-divider">
+
+      <div class="field-group">
+        <label>Anything else we should know about your brand? <span class="opt">(optional)</span></label>
+        <textarea id="anythingElse" rows="4" placeholder="Tell us what we haven't asked. Pending lawsuits, a major launch coming, a collab in the works, whatever."></textarea>
+      </div>
+
+      <div class="field-group">
+        <label>How did you hear about us? <span class="opt">(optional)</span></label>
+        <input type="text" id="howHeard" placeholder="TikTok, referral, podcast, etc." />
+      </div>
+
+      <div class="form-nav">
+        <button class="btn-prev" onclick="goPrev(4)"><i class="fa-solid fa-arrow-left"></i> Back</button>
+        <button class="btn-submit" id="submitBtn" onclick="submitApplication()">
+          Submit Application <i class="fa-solid fa-paper-plane"></i>
+        </button>
+      </div>
+      <div class="submit-error" id="submitError">Something went wrong. Please try again or email us at Tommy@cultcontent.cc.</div>
+    </div>
+
+    <!-- SUCCESS -->
+    <div class="success-state" id="successState">
+      <div class="success-icon">🎯</div>
+      <h2>Application <span class="gt">received.</span></h2>
+      <p>Tommy reviews every application personally. You'll hear back within 3–5 business days. Check your inbox for a confirmation — and thank you for the detail you put into this.</p>
+      <div class="success-links">
+        <a href="/" class="success-link primary">Back to Home</a>
+        <a href="/scale" class="success-link secondary">Learn about Scale</a>
+      </div>
+    </div>
+
+  </div><!-- /form-card -->
+
+</div><!-- /page-wrap -->
+
+<script>
+  const SUBMIT_URL = 'https://cultcontent-server-production.up.railway.app/brand-application';
+  let currentStep = 1;
+  const totalSteps = 4;
+  let contact1Added = false;
+  let contact2Added = false;
+
+  // ── Progress bar ──────────────────────────────────────────────────
+  function updateProgress(step) {
+    const pct = ((step - 1) / (totalSteps - 1)) * 100;
+    document.getElementById('progressLine').style.width = pct + '%';
+    for (let i = 1; i <= totalSteps; i++) {
+      const dot = document.getElementById(`dot-${i}`);
+      const lbl = document.getElementById(`lbl-${i}`);
+      dot.classList.remove('active', 'done');
+      lbl.classList.remove('active', 'done');
+      if (i < step) { dot.classList.add('done'); lbl.classList.add('done'); }
+      else if (i === step) { dot.classList.add('active'); lbl.classList.add('active'); }
+    }
+  }
+
+  function showStep(n) {
+    document.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
+    document.getElementById(`step-${n}`).classList.add('active');
+    currentStep = n;
+    updateProgress(n);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ── Radio helpers ─────────────────────────────────────────────────
+  function selectOffer(card) {
+    document.querySelectorAll('#offerCards .radio-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    card.querySelector('input[type="radio"]').checked = true;
+  }
+
+  function selectBudget(card) {
+    document.querySelectorAll('#budgetRadios .budget-radio').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    card.querySelector('input[type="radio"]').checked = true;
+  }
+
+  function toggleCheck(id, groupId) {
+    const cb = document.getElementById(id);
+    cb.checked = !cb.checked;
+    document.getElementById(groupId).classList.toggle('error-check', false);
+  }
+
+  // ── Add contacts ──────────────────────────────────────────────────
+  function addContact(n) {
+    if (n === 1 && !contact1Added) {
+      document.getElementById('extraContact1').classList.add('visible');
+      contact1Added = true;
+      document.getElementById('addContact1Btn').textContent = '';
+      document.getElementById('addContact1Btn').innerHTML = '<i class="fa-solid fa-plus"></i> Add a second contact';
+      document.getElementById('addContact1Btn').onclick = () => addContact(2);
+    } else if (n === 2 && !contact2Added) {
+      document.getElementById('extraContact2').classList.add('visible');
+      contact2Added = true;
+      document.getElementById('addContactsWrap').style.display = 'none';
+    }
+  }
+
+  // ── Validation helpers ────────────────────────────────────────────
+  function v(id, errId, condition) {
+    const el = document.getElementById(id);
+    const er = document.getElementById(errId);
+    if (!condition) {
+      el.classList.add('error');
+      er.classList.add('visible');
+      return false;
+    }
+    el.classList.remove('error');
+    er.classList.remove('visible');
+    return true;
+  }
+
+  function clearErrors(ids) {
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.classList.remove('error'); }
+    });
+  }
+
+  function validateStep(n) {
+    let ok = true;
+    if (n === 1) {
+      ok = v('brandName',     'err-brandName',     val('brandName').length > 0)      && ok;
+      ok = v('website',       'err-website',       val('website').length > 0)         && ok;
+      ok = v('tiktokHandle',  'err-tiktokHandle',  val('tiktokHandle').length > 0)   && ok;
+      ok = v('productNames',  'err-productNames',  val('productNames').length > 0)   && ok;
+      ok = v('productCategory','err-productCategory',val('productCategory').length > 0) && ok;
+      ok = v('brandMission',  'err-brandMission',  val('brandMission').length > 10)  && ok;
+      ok = v('problemSolved', 'err-problemSolved', val('problemSolved').length > 10) && ok;
+      ok = v('productExample','err-productExample',val('productExample').length > 10) && ok;
+    }
+    if (n === 2) {
+      ok = v('tiktokShopStatus','err-tiktokShopStatus', val('tiktokShopStatus').length > 0) && ok;
+      ok = v('cogsPercent',  'err-cogsPercent',  val('cogsPercent').length > 0)  && ok;
+      ok = v('shippingCost', 'err-shippingCost', val('shippingCost').length > 0) && ok;
+      const bEl = document.querySelector('#budgetRadios input:checked');
+      if (!bEl) {
+        document.getElementById('err-budget').classList.add('visible');
+        ok = false;
+      } else {
+        document.getElementById('err-budget').classList.remove('visible');
+      }
+    }
+    if (n === 3) {
+      const offerEl = document.querySelector('#offerCards input:checked');
+      if (!offerEl) {
+        document.getElementById('err-offer').classList.add('visible');
+        ok = false;
+      } else {
+        document.getElementById('err-offer').classList.remove('visible');
+      }
+      if (!document.getElementById('riskAck').checked) {
+        document.getElementById('err-riskAck').classList.add('visible');
+        document.getElementById('riskCheckGroup').classList.add('error-check');
+        ok = false;
+      } else {
+        document.getElementById('err-riskAck').classList.remove('visible');
+        document.getElementById('riskCheckGroup').classList.remove('error-check');
+      }
+      if (!document.getElementById('larkAck').checked) {
+        document.getElementById('err-larkAck').classList.add('visible');
+        document.getElementById('larkCheckGroup').classList.add('error-check');
+        ok = false;
+      } else {
+        document.getElementById('err-larkAck').classList.remove('visible');
+        document.getElementById('larkCheckGroup').classList.remove('error-check');
+      }
+    }
+    if (n === 4) {
+      ok = v('primaryName',  'err-primaryName',  val('primaryName').length > 0)   && ok;
+      ok = v('primaryTitle', 'err-primaryTitle', val('primaryTitle').length > 0)  && ok;
+      ok = v('primaryEmail', 'err-primaryEmail', /\S+@\S+\.\S+/.test(val('primaryEmail'))) && ok;
+      ok = v('primaryPhone', 'err-primaryPhone', val('primaryPhone').length > 6)  && ok;
+    }
+    return ok;
+  }
+
+  function val(id) {
+    return (document.getElementById(id)?.value || '').trim();
+  }
+
+  function goNext(from) {
+    if (!validateStep(from)) return;
+    showStep(from + 1);
+  }
+
+  function goPrev(from) {
+    showStep(from - 1);
+  }
+
+  // ── Build payload ─────────────────────────────────────────────────
+  function buildPayload() {
+    const additional = [];
+    if (contact1Added) {
+      additional.push({ name: val('ec1Name'), title: val('ec1Title'), email: val('ec1Email'), phone: val('ec1Phone') });
+    }
+    if (contact2Added) {
+      additional.push({ name: val('ec2Name'), title: val('ec2Title'), email: val('ec2Email'), phone: val('ec2Phone') });
+    }
+
+    return {
+      brandName:           val('brandName'),
+      website:             val('website'),
+      tiktokHandle:        val('tiktokHandle'),
+      instagramHandle:     val('instagramHandle'),
+      otherSocials:        val('otherSocials'),
+      productNames:        val('productNames'),
+      productCategory:     val('productCategory'),
+      brandMission:        val('brandMission'),
+      problemSolved:       val('problemSolved'),
+      productExample:      val('productExample'),
+      tiktokShopStatus:    val('tiktokShopStatus'),
+      cogsPercent:         val('cogsPercent'),
+      shippingCost:        val('shippingCost'),
+      fulfillment:         val('fulfillment'),
+      monthlyBudget:       document.querySelector('#budgetRadios input:checked')?.value || '',
+      offerSelected:       document.querySelector('#offerCards input:checked')?.value || '',
+      riskAppetiteAck:     document.getElementById('riskAck').checked,
+      larkAgreementAck:    document.getElementById('larkAck').checked,
+      primaryContactName:  val('primaryName'),
+      primaryContactTitle: val('primaryTitle'),
+      primaryContactEmail: val('primaryEmail'),
+      primaryContactPhone: val('primaryPhone'),
+      additionalContacts:  additional,
+      anythingElse:        val('anythingElse'),
+      howHeard:            val('howHeard'),
+    };
+  }
+
+  // ── Submit ────────────────────────────────────────────────────────
+  async function submitApplication() {
+    if (!validateStep(4)) return;
+
+    const btn = document.getElementById('submitBtn');
+    const errDiv = document.getElementById('submitError');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Submitting…';
+    errDiv.classList.remove('visible');
+
+    try {
+      const resp = await fetch(SUBMIT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(buildPayload()),
+      });
+
+      if (!resp.ok) throw new Error('Server error');
+
+      // Success
+      document.getElementById('progressWrap').style.display = 'none';
+      document.getElementById('formCard').style.background = 'none';
+      document.getElementById('formCard').style.border = 'none';
+      document.querySelectorAll('.form-step').forEach(s => s.style.display = 'none');
+      document.getElementById('successState').classList.add('visible');
+
+    } catch (e) {
+      errDiv.classList.add('visible');
+      btn.disabled = false;
+      btn.innerHTML = 'Submit Application <i class="fa-solid fa-paper-plane"></i>';
+    }
+  }
+
+  // Init
+  updateProgress(1);
+</script>
+</body>
+</html>
