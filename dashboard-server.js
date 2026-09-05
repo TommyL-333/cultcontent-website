@@ -390,7 +390,7 @@ app.post('/api/ccc/creator-apply', async (req, res) => {
       axios.post('https://services.leadconnectorhq.com/contacts/', {
         firstName: nameParts[0], lastName: nameParts.slice(1).join(' ') || '',
         email, phone,
-        tags: ['ccc-creator-signup', 'creator-carnival-2026', 'carnival-creator'],
+        tags: ['ccc-creator-signup', 'creator-carnival-2026', 'carnival-creator', 'ccc-creator-applicant'],
         locationId: process.env.GHL_LOC_ID,
       }, { headers: { Authorization: `Bearer ${process.env.GHL_API_KEY}`, Version: '2021-04-15', 'Content-Type': 'application/json' } })
         .catch(e => console.error('[ccc-apply] GHL error:', e.response?.data || e.message));
