@@ -9,11 +9,14 @@ after(() => cleanup());
 
 const net = require('../../lib/ccc-network');
 
+// terms_accepted defaults to true in these helpers so the existing tests keep
+// exercising what they were written for; the consent rules get their own
+// describe block below, which passes it explicitly either way.
 function makeCreator(email, overrides = {}) {
-  return net.signup({ role: 'creator', first_name: 'Test', last_name: 'Creator', email, looking_for: 'brands', ...overrides });
+  return net.signup({ role: 'creator', first_name: 'Test', last_name: 'Creator', email, looking_for: 'brands', terms_accepted: true, ...overrides });
 }
 function makeBrand(email, overrides = {}) {
-  return net.signup({ role: 'brand', first_name: 'Test', last_name: 'Brand', email, brand_name: 'Brand Co', looking_for: 'creators', ...overrides });
+  return net.signup({ role: 'brand', first_name: 'Test', last_name: 'Brand', email, brand_name: 'Brand Co', looking_for: 'creators', terms_accepted: true, ...overrides });
 }
 function approve(uuid, extra = {}) {
   return net.setStatus(uuid, { status: 'approved', ...extra }).person;
@@ -28,14 +31,14 @@ describe('signup', () => {
     assert.equal(net.signup({ role: 'creator', first_name: 'X' }).ok, false);
   });
   test('brand requires brand_name', () => {
-    const r = net.signup({ role: 'brand', first_name: 'X', email: 'brandnoname@example.com' });
+    const r = net.signup({ role: 'brand', first_name: 'X', email: 'brandnoname@example.com', terms_accepted: true });
     assert.equal(r.ok, false);
     assert.equal(r.error, 'brand_name is required for brand signups');
   });
   test('tiktok_handle and instagram_handle are separate fields, both persisted', () => {
     const r = net.signup({
       role: 'creator', first_name: 'Two', last_name: 'Handles', email: 'twohandles@example.com',
-      tiktok_handle: '@tiktokname', instagram_handle: '@instaname', looking_for: 'brands',
+      tiktok_handle: '@tiktokname', instagram_handle: '@instaname', looking_for: 'brands', terms_accepted: true,
     });
     assert.equal(r.ok, true);
     const p = net.getPerson(r.uuid);
@@ -321,5 +324,42 @@ describe('admin listing', () => {
   test('listApprovedCreatorsForExport returns only approved creators', () => {
     const rows = net.listApprovedCreatorsForExport();
     assert.ok(Array.isArray(rows));
+  });
+});
+
+describe('terms + contact sharing consent', () => {
+  test('signup is refused outright when the terms box was not ticked', () => {
+    const r = net.signup({ role: 'creator', first_name: 'No', email: 'noterms@example.com', looking_for: 'x' });
+    assert.equal(r.ok, false);
+    assert.equal(r.error, 'terms_not_accepted');
+    assert.equal(net.getPersonByEmail('noterms@example.com'), null, 'no row should be written');
+  });
+
+  test('accepting the terms records when, and contact sharing defaults to off', () => {
+    const r = makeCreator('defaultshare@example.com');
+    const p = net.getPerson(r.uuid);
+    assert.equal(p.share_contact, 0);
+    assert.ok(p.terms_accepted_at, 'expected an accepted-at timestamp');
+  });
+
+  test('the sponsor export only ever contains creators who opted in', () => {
+    const optedOut = makeCreator('optout@example.com');
+    const optedIn = makeCreator('optin@example.com', { share_contact: true });
+    net.setStatus(optedOut.uuid, { status: 'approved' });
+    net.setStatus(optedIn.uuid, { status: 'approved' });
+
+    const emails = net.listApprovedCreatorsForExport().map((r) => r.email);
+    assert.ok(emails.includes('optin@example.com'), 'opted-in creator should be exported');
+    assert.ok(!emails.includes('optout@example.com'), 'opted-out creator must never be exported');
+  });
+
+  test('turning sharing off removes someone from the export again', () => {
+    const c = makeCreator('togglesharing@example.com', { share_contact: true });
+    net.setStatus(c.uuid, { status: 'approved' });
+    const person = net.getPerson(c.uuid);
+    assert.ok(net.listApprovedCreatorsForExport().some((r) => r.email === 'togglesharing@example.com'));
+
+    net.setContactSharing(person.id, false);
+    assert.ok(!net.listApprovedCreatorsForExport().some((r) => r.email === 'togglesharing@example.com'));
   });
 });

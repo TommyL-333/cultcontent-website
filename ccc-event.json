@@ -1,0 +1,216 @@
+{
+  "_readme": "Single source of truth for the Creator Carnival schedule and site map. Edit this file and redeploy — no code changes needed. Times are 24h local (America/New_York). Booth pin positions are computed from each zone's `layout` strip, so moving a whole zone is a 4-number edit; individual booths can be nudged with an entry in `overrides`.",
+  "event": {
+    "name": "Creator Carnival",
+    "date": "2026-09-12",
+    "venue": "National Harbor, MD",
+    "timezone": "America/New_York",
+    "mapNote": "Schematic. Not to scale — for orientation only."
+  },
+  "schedule": [
+    {
+      "id": "creator-early-access",
+      "start": "10:00",
+      "end": "11:00",
+      "title": "Creator Early Access",
+      "location": "Marketplace Floor",
+      "track": "access",
+      "audience": [
+        "creator"
+      ],
+      "description": "Invited creators get first access to the marketplace floor. Sample collection begins — VIP ticket holders get guaranteed samples from every brand before general doors open."
+    },
+    {
+      "id": "general-admission",
+      "start": "11:00",
+      "end": null,
+      "title": "General Admission Opens",
+      "location": "All Zones",
+      "track": "access",
+      "audience": [
+        "creator",
+        "brand"
+      ],
+      "description": "Doors open to the public. The full marketplace, carnival activations, and stage programming are live for all ticket holders."
+    },
+    {
+      "id": "marketplace-open",
+      "start": "11:00",
+      "end": "19:00",
+      "title": "Brand Marketplace, Booths & Activations",
+      "location": "Freedom Way + Capitol Canopy",
+      "track": "marketplace",
+      "audience": [
+        "creator",
+        "brand"
+      ],
+      "description": "100+ brand booths, the Capital Wheel, caricature art, creator photo booths, branded activations, and live music running throughout the day. Walk, film, shop, connect."
+    },
+    {
+      "id": "main-stage",
+      "start": "12:00",
+      "end": "18:00",
+      "title": "Main Stage — Presentations, Demos & Performances",
+      "location": "Plaza Stage",
+      "track": "stage",
+      "audience": [
+        "creator",
+        "brand"
+      ],
+      "description": "Live-streamed stage programming throughout the day. Creator showcases, brand spotlights, live shopping demos, and performances broadcast well beyond the crowd on the ground."
+    },
+    {
+      "id": "vip-belvedere",
+      "start": "13:00",
+      "end": "16:00",
+      "title": "VIP on the Belvedere",
+      "location": "The Belvedere",
+      "track": "vip",
+      "audience": [
+        "creator",
+        "brand"
+      ],
+      "description": "Top creators and VIP guests get guaranteed access to the Belvedere — National Harbor's elevated waterfront space with views of the Potomac."
+    },
+    {
+      "id": "after-party",
+      "start": "21:00",
+      "end": null,
+      "title": "VIP After-Party — Felt Lounge at MGM National Harbor",
+      "location": "MGM National Harbor",
+      "track": "vip",
+      "audience": [
+        "creator",
+        "brand"
+      ],
+      "description": "The night continues at the Felt Lounge inside MGM National Harbor. Exclusive access for VIP ticket holders. The official Creator Carnival after-party."
+    }
+  ],
+  "landmarks": [
+    {
+      "id": "plaza-stage",
+      "label": "Plaza Stage",
+      "x": 436,
+      "y": 118,
+      "kind": "stage",
+      "labelSide": "left"
+    },
+    {
+      "id": "belvedere",
+      "label": "The Belvedere",
+      "x": 380,
+      "y": 214,
+      "kind": "vip",
+      "labelSide": "left"
+    },
+    {
+      "id": "ac-hotel",
+      "label": "AC Hotel",
+      "x": 762,
+      "y": 432,
+      "kind": "building",
+      "labelSide": "right"
+    }
+  ],
+  "streets": [
+    {
+      "id": "national-plaza",
+      "label": "National Plaza",
+      "from": [
+        498,
+        352
+      ],
+      "to": [
+        598,
+        8
+      ]
+    },
+    {
+      "id": "waterfront-st",
+      "label": "Waterfront St",
+      "from": [
+        648,
+        430
+      ],
+      "to": [
+        742,
+        92
+      ]
+    },
+    {
+      "id": "american-way",
+      "label": "American Way",
+      "from": [
+        672,
+        470
+      ],
+      "to": [
+        1128,
+        372
+      ]
+    },
+    {
+      "id": "potomac-passage",
+      "label": "Potomac Passage",
+      "from": [
+        742,
+        92
+      ],
+      "to": [
+        1000,
+        20
+      ]
+    }
+  ],
+  "zones": [
+    {
+      "id": "freedom-way",
+      "label": "Freedom Way",
+      "accent": "accent",
+      "note": "The block closest to the Belvedere.",
+      "layout": {
+        "from": [
+          440,
+          330
+        ],
+        "to": [
+          548,
+          40
+        ],
+        "rows": 3,
+        "rowGap": 25,
+        "count": 81
+      }
+    },
+    {
+      "id": "capitol-canopy",
+      "label": "Capitol Canopy",
+      "accent": "accent-2",
+      "note": "Between National Plaza and Waterfront St.",
+      "layout": {
+        "from": [
+          586,
+          400
+        ],
+        "to": [
+          670,
+          116
+        ],
+        "rows": 2,
+        "rowGap": 28,
+        "count": 60
+      }
+    }
+  ],
+  "overrides": {},
+  "vendors": {
+    "freedom-way-1": {
+      "name": "Oceanblue LLC",
+      "category": "Omega-3 Supplements"
+    },
+    "capitol-canopy-1": {
+      "name": "Tsolmon-Art",
+      "category": "Original Hand-Painted Art"
+    }
+  }
+}

@@ -56,6 +56,11 @@ export default function SignupScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [resent, setResent] = useState(false); // true when this "done" was a resend to an already-pending signup, not a first one
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  // Sharing contact details with sponsors is opt-in and starts off. The
+  // server defaults share_contact to 0 too — the checkbox is the only way it
+  // ever becomes 1, so an unchecked box and a skipped field behave the same.
+  const [shareContact, setShareContact] = useState(false);
 
   const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
@@ -69,6 +74,10 @@ export default function SignupScreen() {
     }
     if (role === 'brand' && !form.brand_name) {
       setError('Brand name is required.');
+      return;
+    }
+    if (!acceptedTerms) {
+      setError('Please accept the roster terms to continue.');
       return;
     }
 
@@ -87,6 +96,8 @@ export default function SignupScreen() {
       bio: form.bio,
       looking_for: form.looking_for,
       links: form.links.split('\n').map((s) => s.trim()).filter(Boolean).map((url) => ({ label: 'Link', url })),
+      terms_accepted: acceptedTerms,
+      share_contact: shareContact,
     };
     const j = await signup(payload);
     setSubmitting(false);
@@ -241,6 +252,39 @@ export default function SignupScreen() {
               <TextArea value={form.looking_for} onChange={set('looking_for')} placeholder="e.g. Brands to collab with in the wellness space" fullWidth />
             </div>
             <div><Label>Links (one per line — portfolio, website, socials)</Label><TextArea value={form.links} onChange={set('links')} placeholder="https://..." fullWidth /></div>
+
+            <div className="space-y-3 rounded-md border border-border bg-background/40 p-4">
+              <label className="flex gap-3 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={acceptedTerms}
+                  onChange={(e) => setAcceptedTerms(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--color-accent)]"
+                />
+                <span className="text-[13px] leading-relaxed">
+                  I agree to the{' '}
+                  <RouterLink to="/terms" target="_blank" className="underline font-semibold" style={{ color: 'var(--color-accent-2)' }}>
+                    roster terms
+                  </RouterLink>
+                  .<Req />
+                </span>
+              </label>
+
+              <label className="flex gap-3 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={shareContact}
+                  onChange={(e) => setShareContact(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--color-accent)]"
+                />
+                <span className="text-[13px] leading-relaxed">
+                  Sponsoring brands can include my email and phone in their contact export.
+                  <span className="block text-[11px] text-muted-foreground mt-0.5">
+                    Optional. Leave this off and only people whose connection request you accept ever get your contact details. You can change it later in Settings.
+                  </span>
+                </span>
+              </label>
+            </div>
 
             <Button type="submit" variant="primary" fullWidth isDisabled={submitting}>
               {submitting ? 'Submitting…' : 'Join the Roster →'}

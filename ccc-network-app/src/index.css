@@ -196,3 +196,9 @@ body {
     var(--color-primary) 10px 20px
   );
 }
+
+/* The topbar nav outgrew a phone's width once Schedule / Map / Challenges
+   were added. It scrolls horizontally rather than shrinking the labels;
+   the scrollbar itself would sit on top of the nav row, so hide it. */
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }

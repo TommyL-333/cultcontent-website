@@ -14,7 +14,7 @@ const net = require('../../lib/ccc-network');
 const mail = require('../../lib/ccc-network-mail');
 
 function approvedPerson(email) {
-  const r = net.signup({ role: 'creator', first_name: 'Mail', last_name: 'Test', email, looking_for: 'x' });
+  const r = net.signup({ role: 'creator', first_name: 'Mail', last_name: 'Test', email, looking_for: 'x' , terms_accepted: true });
   return net.setStatus(r.uuid, { status: 'approved' }).person;
 }
 

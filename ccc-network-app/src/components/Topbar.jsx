@@ -4,7 +4,7 @@ import { Avatar, Dropdown } from '@heroui/react';
 import { getInbox } from '../api';
 import { initialsOf, colorOf } from '../lib/avatar';
 
-const navLinkCls = ({ isActive }) => `text-[13px] font-medium transition-colors ${isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`;
+const navLinkCls = ({ isActive }) => `shrink-0 text-[13px] font-medium transition-colors ${isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`;
 
 export default function Topbar({ person }) {
   const navigate = useNavigate();
@@ -43,8 +43,11 @@ export default function Topbar({ person }) {
         </Dropdown.Popover>
       </Dropdown>
 
-      <div className="flex items-center gap-5">
+      <div className="flex items-center gap-4 sm:gap-5 overflow-x-auto no-scrollbar">
         <NavLink to="/home" className={navLinkCls}>Home</NavLink>
+        <NavLink to="/schedule" className={navLinkCls}>Schedule</NavLink>
+        <NavLink to="/map" className={navLinkCls}>Map</NavLink>
+        <NavLink to="/challenges" className={navLinkCls}>Challenges</NavLink>
         <NavLink to="/directory" className={navLinkCls}>Directory</NavLink>
         <NavLink to="/connections" className={navLinkCls}>Connections</NavLink>
         <NavLink to="/inbox" className={navLinkCls}>

@@ -11,11 +11,11 @@ const net = require('../../lib/ccc-network');
 const msg = require('../../lib/ccc-network-messages');
 
 function approvedCreator(email) {
-  const r = net.signup({ role: 'creator', first_name: 'M', last_name: 'Creator', email, looking_for: 'x' });
+  const r = net.signup({ role: 'creator', first_name: 'M', last_name: 'Creator', email, looking_for: 'x' , terms_accepted: true });
   return net.setStatus(r.uuid, { status: 'approved' }).person;
 }
 function approvedBrand(email) {
-  const r = net.signup({ role: 'brand', first_name: 'M', last_name: 'Brand', email, brand_name: 'B', looking_for: 'x' });
+  const r = net.signup({ role: 'brand', first_name: 'M', last_name: 'Brand', email, brand_name: 'B', looking_for: 'x' , terms_accepted: true });
   return net.setStatus(r.uuid, { status: 'approved' }).person;
 }
 

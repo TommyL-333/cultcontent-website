@@ -22,6 +22,7 @@ const cccBooths          = require('./lib/ccc-booths');
 const cccNet             = require('./lib/ccc-network');
 const cccNetMail         = require('./lib/ccc-network-mail');
 const cccNetMsg          = require('./lib/ccc-network-messages');
+const cccChallenges      = require('./lib/ccc-challenges');
 const cccCreatorSignups  = require('./lib/ccc-creator-signups');
 const CCC_NETWORK_APP_DIST = path.join(__dirname, 'ccc-network-app', 'dist');
 
@@ -7068,6 +7069,11 @@ app.post('/ccc-network/settings/tier', requireNetworkSession, express.json(), (r
   res.status(result.ok ? 200 : 400).json(result);
 });
 
+app.post('/ccc-network/settings/contact-sharing', requireNetworkSession, express.json(), (req, res) => {
+  const person = cccNet.setContactSharing(req.networkPerson.id, req.body?.share_contact);
+  res.json({ ok: true, person });
+});
+
 app.post('/ccc-network/settings/deactivate', requireNetworkSession, (req, res) => {
   cccNet.deactivate(req.networkPerson.id);
   delete req.session.networkPersonId;
@@ -7091,11 +7097,64 @@ app.get('/ccc-network/contacts.csv', requireNetworkSession, (req, res) => {
   if (req.networkPerson.role !== 'brand' || !cccNet.PRIORITY_TIERS.includes(req.networkPerson.tier)) {
     return res.status(403).send('Contact list export is available to Marketplace and Carnival sponsors.');
   }
+  // Opt-in only — see listApprovedCreatorsForExport. A sponsor downloading
+  // this gets the creators who agreed to be contacted, not the whole roster.
   const rows = cccNet.listApprovedCreatorsForExport();
   const cols = ['first_name','last_name','email','phone','tiktok_handle','instagram_handle','category','bio'];
   const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
   const csv = [cols.join(','), ...rows.map(r => cols.map(c => esc(r[c])).join(','))].join('\n');
   res.set('Content-Type', 'text/csv').set('Content-Disposition', 'attachment; filename="creator-carnival-contacts.csv"').send(csv);
+});
+
+// ── Event data: schedule + site map ───────────────────────────────────────────
+// Public on purpose — the itinerary and booth map are the two things someone
+// should be able to check on their phone at the gate without logging in.
+// Read from disk per request (not require()'d once at boot) so correcting a
+// stage time on the day is a file edit + redeploy, with no cache to reason
+// about. The file is small and this endpoint is not hot.
+app.get('/api/ccc-network/event.json', (req, res) => {
+  try {
+    const raw = fs.readFileSync(path.join(__dirname, 'ccc-event.json'), 'utf8');
+    res.set('Cache-Control', 'public, max-age=60').type('application/json').send(raw);
+  } catch (err) {
+    console.error('[ccc-event] could not read ccc-event.json:', err.message);
+    res.status(500).json({ ok: false, error: 'event_data_unavailable' });
+  }
+});
+
+// ── Brand challenges ──────────────────────────────────────────────────────────
+app.get('/api/ccc-network/challenges', requireNetworkSession, (req, res) => {
+  res.json({ ok: true, challenges: cccChallenges.listChallenges(req.networkPerson) });
+});
+
+app.get('/api/ccc-network/challenges/mine', requireNetworkSession, (req, res) => {
+  if (req.networkPerson.role !== 'brand') return res.json({ ok: true, challenges: [] });
+  res.json({ ok: true, challenges: cccChallenges.listMyChallenges(req.networkPerson) });
+});
+
+app.post('/ccc-network/challenges', requireNetworkSession, express.json(), (req, res) => {
+  const result = cccChallenges.createChallenge(req.networkPerson, req.body || {});
+  res.status(result.ok ? 200 : 400).json(result);
+});
+
+app.post('/ccc-network/challenges/:uuid/status', requireNetworkSession, express.json(), (req, res) => {
+  const result = cccChallenges.setChallengeStatus(req.networkPerson, req.params.uuid, req.body?.status);
+  res.status(result.ok ? 200 : 400).json(result);
+});
+
+app.post('/ccc-network/challenges/:uuid/enter', requireNetworkSession, express.json(), (req, res) => {
+  const result = cccChallenges.submitEntry(req.networkPerson, req.params.uuid, req.body || {});
+  res.status(result.ok ? 200 : 400).json(result);
+});
+
+app.post('/ccc-network/challenges/:uuid/withdraw', requireNetworkSession, (req, res) => {
+  const result = cccChallenges.withdrawEntry(req.networkPerson, req.params.uuid);
+  res.status(result.ok ? 200 : 400).json(result);
+});
+
+app.get('/api/ccc-network/challenges/:uuid/entries', requireNetworkSession, (req, res) => {
+  const result = cccChallenges.listEntries(req.networkPerson, req.params.uuid);
+  res.status(result.ok ? 200 : 403).json(result);
 });
 
 // ── Networking Hub UI — React + HeroUI mini-app (ccc-network-app/) ─────────────

@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { Alert, Button, Card, Input, Label, ListBox, ListBoxItem, Select, Switch, TextArea } from '@heroui/react';
 import Topbar from '../components/Topbar';
-import { deactivateAccount, requestEmailChange, saveProfile, updateNotifications, updateTier } from '../api';
+import { Link as RouterLink } from 'react-router-dom';
+import { deactivateAccount, requestEmailChange, saveProfile, updateContactSharing, updateNotifications, updateTier } from '../api';
 
 function NotifyRow({ label, hint, checked, onChange }) {
   return (
@@ -28,6 +29,8 @@ export default function SettingsScreen({ person, onSaved }) {
   const [saved, setSaved] = useState(false);
   const [profileErr, setProfileErr] = useState('');
 
+  const [shareContact, setShareContact] = useState(!!person.share_contact);
+  const [sharingSaved, setSharingSaved] = useState(false);
   const [notify, setNotify] = useState({
     notify_request: !!person.notify_request, notify_approval: !!person.notify_approval, notify_message: !!person.notify_message,
   });
@@ -59,6 +62,13 @@ export default function SettingsScreen({ person, onSaved }) {
     toast.success('Profile saved.');
     setTimeout(() => setSaved(false), 2500);
     onSaved?.();
+  }
+
+  async function handleSharingChange(value) {
+    setShareContact(value);
+    await updateContactSharing(value);
+    setSharingSaved(true);
+    setTimeout(() => setSharingSaved(false), 2000);
   }
 
   async function handleNotifyChange(key, value) {
@@ -159,6 +169,25 @@ export default function SettingsScreen({ person, onSaved }) {
           <NotifyRow label="Connection requests" hint="Email me when someone wants to connect" checked={notify.notify_request} onChange={(v) => handleNotifyChange('notify_request', v)} />
           <NotifyRow label="Approvals" hint="Email me when someone accepts my request" checked={notify.notify_approval} onChange={(v) => handleNotifyChange('notify_approval', v)} />
           <NotifyRow label="Messages" hint="Email me when I get a new message" checked={notify.notify_message} onChange={(v) => handleNotifyChange('notify_message', v)} />
+        </Card>
+
+        {/* Contact sharing — the switch that decides whether this person can
+            ever appear in a sponsor's contact export. Off by default. */}
+        <Card variant="default" className="p-6 sm:p-7 mb-5">
+          <div className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-4 flex items-center gap-2">
+            Contact sharing {sharingSaved && <span className="text-accent-2 normal-case font-normal">Saved ✓</span>}
+          </div>
+          <NotifyRow
+            label="Let sponsors export my contact details"
+            hint="Your email and phone can be included in sponsoring brands' contact exports"
+            checked={shareContact}
+            onChange={handleSharingChange}
+          />
+          <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+            Off by default. People whose connection request you accept always see your contact details — this
+            only controls the sponsor export. See the{' '}
+            <RouterLink to="/terms" className="underline">roster terms</RouterLink>.
+          </p>
         </Card>
 
         {/* Tier (brands only) */}

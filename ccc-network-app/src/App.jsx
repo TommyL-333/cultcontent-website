@@ -11,6 +11,10 @@ import DirectoryScreen from './screens/DirectoryScreen';
 import ConnectionsScreen from './screens/ConnectionsScreen';
 import PersonProfileScreen from './screens/PersonProfileScreen';
 import InboxScreen from './screens/InboxScreen';
+import ScheduleScreen from './screens/ScheduleScreen';
+import MapScreen from './screens/MapScreen';
+import ChallengesScreen from './screens/ChallengesScreen';
+import TermsScreen from './screens/TermsScreen';
 
 // Client-side routing only decides *which screen to show* — it is not the
 // security boundary. Every protected API call (directory.json, connect,
@@ -41,6 +45,11 @@ export default function App() {
         <Route path="/people/:uuid" element={person ? <PersonProfileScreen person={person} /> : <Navigate to="/login" replace />} />
         <Route path="/inbox" element={person ? <InboxScreen person={person} /> : <Navigate to="/login" replace />} />
         <Route path="/inbox/:uuid" element={person ? <InboxScreen person={person} /> : <Navigate to="/login" replace />} />
+        <Route path="/schedule" element={person ? <ScheduleScreen person={person} /> : <Navigate to="/login" replace />} />
+        <Route path="/map" element={person ? <MapScreen person={person} /> : <Navigate to="/login" replace />} />
+        <Route path="/challenges" element={person ? <ChallengesScreen person={person} /> : <Navigate to="/login" replace />} />
+        {/* Public — has to be readable before you agree to it on the signup form. */}
+        <Route path="/terms" element={<TermsScreen />} />
         <Route path="/profile" element={person ? <ProfileScreen person={person} /> : <Navigate to="/login" replace />} />
         <Route path="/settings" element={person ? <SettingsScreen person={person} onSaved={refresh} /> : <Navigate to="/login" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />

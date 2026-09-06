@@ -4,8 +4,49 @@
     {
       "name": "dashboard",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["dashboard-server.js"],
+      "runtimeArgs": [
+        "dashboard-server.js"
+      ],
       "port": 3457
+    },
+    {
+      "name": "proposals",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "3458",
+        "--directory",
+        "/Users/tommylynch/cult-command-center/proposals"
+      ],
+      "port": 3458
+    },
+    {
+      "name": "dashboard-cc",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-c",
+        "cd /Users/tommylynch/cult-command-center && DATA_DIR=/private/tmp/claude-501/-Users-tommylynch-claude-code/f1a2a786-dcee-4caf-8937-f5f37977f6bf/scratchpad/cc-local-data node dashboard-server.js"
+      ],
+      "port": 3457
+    },
+    {
+      "name": "ccc-review",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-c",
+        "cd /private/tmp/claude-501/-Users-tommylynch-claude-code/c3536090-7581-45c2-8e08-14cc997fb6c5/scratchpad/ccc-review && node dashboard-server.js"
+      ],
+      "port": 39281
+    },
+    {
+      "name": "ccc-events",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-c",
+        "DATA_DIR=/private/tmp/claude-501/-Users-tommylynch-claude-code/5bfbad6b-749d-46c3-af10-3ea10f26d456/scratchpad/ccc-local-data PUBLIC_BASE_URL=http://localhost:3459 PORT=3459 node dashboard-server.js"
+      ],
+      "port": 3459
     }
   ]
 }

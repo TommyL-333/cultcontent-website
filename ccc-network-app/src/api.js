@@ -88,3 +88,45 @@ export async function deactivateAccount() {
 export async function requestEmailChange(email) {
   return postJson('/ccc-network/settings/email', { email });
 }
+
+// ─── Event data (schedule + site map) ───────────────────────────────────────────
+// Public endpoint — served without a session so the itinerary and map still
+// load for someone checking their phone at the gate before they log in.
+export async function getEvent() {
+  const r = await fetch('/api/ccc-network/event.json');
+  if (!r.ok) throw new Error('event data unavailable');
+  return r.json();
+}
+
+// ─── Challenges ─────────────────────────────────────────────────────────────────
+export async function getChallenges() {
+  const r = await fetch('/api/ccc-network/challenges');
+  return r.json();
+}
+
+export async function createChallenge(payload) {
+  return postJson('/ccc-network/challenges', payload);
+}
+
+export async function setChallengeStatus(uuid, status) {
+  return postJson(`/ccc-network/challenges/${uuid}/status`, { status });
+}
+
+export async function enterChallenge(uuid, { url, note }) {
+  return postJson(`/ccc-network/challenges/${uuid}/enter`, { url, note });
+}
+
+export async function withdrawFromChallenge(uuid) {
+  const r = await fetch(`/ccc-network/challenges/${uuid}/withdraw`, { method: 'POST' });
+  return r.json();
+}
+
+export async function getChallengeEntries(uuid) {
+  const r = await fetch(`/api/ccc-network/challenges/${uuid}/entries`);
+  return r.json();
+}
+
+// ─── Contact sharing consent ────────────────────────────────────────────────────
+export async function updateContactSharing(shareContact) {
+  return postJson('/ccc-network/settings/contact-sharing', { share_contact: shareContact });
+}

@@ -127,14 +127,14 @@ let creatorUuid, brandUuid;
 test('networking signup: creator and brand', async () => {
   const c = await (await fetch(`${BASE}/ccc-network/signup`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ role: 'creator', first_name: 'HTTP', last_name: 'Creator', email: 'httpcreator@example.com', tiktok_handle: '@httpcreator', category: 'Testing', looking_for: 'test brands' }),
+    body: JSON.stringify({ role: 'creator', first_name: 'HTTP', last_name: 'Creator', email: 'httpcreator@example.com', tiktok_handle: '@httpcreator', category: 'Testing', looking_for: 'test brands' , terms_accepted: true }),
   })).json();
   assert.equal(c.ok, true);
   creatorUuid = c.uuid;
 
   const b = await (await fetch(`${BASE}/ccc-network/signup`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ role: 'brand', first_name: 'HTTP', last_name: 'Brand', email: 'httpbrand@example.com', brand_name: 'HTTP Brand Co', tier: 'priority', looking_for: 'test creators' }),
+    body: JSON.stringify({ role: 'brand', first_name: 'HTTP', last_name: 'Brand', email: 'httpbrand@example.com', brand_name: 'HTTP Brand Co', tier: 'priority', looking_for: 'test creators' , terms_accepted: true }),
   })).json();
   assert.equal(b.ok, true);
   brandUuid = b.uuid;
@@ -143,7 +143,7 @@ test('networking signup: creator and brand', async () => {
 test('self-serve: confirming the signup email activates the account with no admin step', async () => {
   const selfServe = await (await fetch(`${BASE}/ccc-network/signup`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ role: 'creator', first_name: 'SelfServe', last_name: 'Test', email: 'selfserve-http@example.com', tiktok_handle: '@selfservehttp', category: 'Testing', looking_for: 'test brands' }),
+    body: JSON.stringify({ role: 'creator', first_name: 'SelfServe', last_name: 'Test', email: 'selfserve-http@example.com', tiktok_handle: '@selfservehttp', category: 'Testing', looking_for: 'test brands' , terms_accepted: true }),
   })).json();
   assert.equal(selfServe.ok, true);
 
@@ -162,13 +162,13 @@ test('self-serve: confirming the signup email activates the account with no admi
 test('self-serve: resubmitting while still pending resends instead of rejecting', async () => {
   const first = await (await fetch(`${BASE}/ccc-network/signup`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ role: 'creator', first_name: 'Resend', last_name: 'Test', email: 'resend-http@example.com', tiktok_handle: '@resendhttp', category: 'Testing', looking_for: 'first draft' }),
+    body: JSON.stringify({ role: 'creator', first_name: 'Resend', last_name: 'Test', email: 'resend-http@example.com', tiktok_handle: '@resendhttp', category: 'Testing', looking_for: 'first draft' , terms_accepted: true }),
   })).json();
   assert.equal(first.ok, true);
 
   const second = await (await fetch(`${BASE}/ccc-network/signup`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ role: 'creator', first_name: 'Resend', last_name: 'Test', email: 'resend-http@example.com', tiktok_handle: '@resendhttp', category: 'Testing', looking_for: 'fixed draft' }),
+    body: JSON.stringify({ role: 'creator', first_name: 'Resend', last_name: 'Test', email: 'resend-http@example.com', tiktok_handle: '@resendhttp', category: 'Testing', looking_for: 'fixed draft' , terms_accepted: true }),
   })).json();
   assert.equal(second.ok, true);
   assert.equal(second.resent, true);
@@ -264,7 +264,7 @@ test('messaging works end to end and unread counts update correctly', async () =
 test('messaging is rejected for a non-connected person', async () => {
   const stranger = await (await fetch(`${BASE}/ccc-network/signup`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ role: 'creator', first_name: 'Stranger', email: 'stranger@example.com', looking_for: 'x' }),
+    body: JSON.stringify({ role: 'creator', first_name: 'Stranger', email: 'stranger@example.com', looking_for: 'x' , terms_accepted: true }),
   })).json();
   await fetch(`${BASE}/api/admin/ccc-network/people/${stranger.uuid}/status`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'approved' }),
@@ -291,7 +291,7 @@ test('settings: profile save, notifications, tier update', async () => {
 test('CSV export is tier-gated: general brands 403, priority brands succeed', async () => {
   const generalBrand = await (await fetch(`${BASE}/ccc-network/signup`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ role: 'brand', first_name: 'General', email: 'generalbrand@example.com', brand_name: 'General Co', tier: 'general', looking_for: 'x' }),
+    body: JSON.stringify({ role: 'brand', first_name: 'General', email: 'generalbrand@example.com', brand_name: 'General Co', tier: 'general', looking_for: 'x' , terms_accepted: true }),
   })).json();
   await fetch(`${BASE}/api/admin/ccc-network/people/${generalBrand.uuid}/status`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'approved', tier: 'general' }),
@@ -319,7 +319,7 @@ test('email change: request logs a verification link to the *new* address, confi
 test('deactivate kills the session', async () => {
   const throwaway = await (await fetch(`${BASE}/ccc-network/signup`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ role: 'creator', first_name: 'Throwaway', email: 'throwaway-http@example.com', looking_for: 'x' }),
+    body: JSON.stringify({ role: 'creator', first_name: 'Throwaway', email: 'throwaway-http@example.com', looking_for: 'x' , terms_accepted: true }),
   })).json();
   await fetch(`${BASE}/api/admin/ccc-network/people/${throwaway.uuid}/status`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'approved' }),
