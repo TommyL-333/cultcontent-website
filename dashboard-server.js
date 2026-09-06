@@ -17,6 +17,7 @@ const helmet       = require('helmet');
 const rateLimit    = require('express-rate-limit');
 const ffmpeg       = require('fluent-ffmpeg');
 const ffmpegPath   = require('@ffmpeg-installer/ffmpeg').path;
+const { SqliteSessionStore } = require('./lib/session-store');
 ffmpeg.setFfmpegPath(ffmpegPath);
 const cccBooths          = require('./lib/ccc-booths');
 const cccNet             = require('./lib/ccc-network');
@@ -78,8 +79,22 @@ const apiLimiter = rateLimit({
 app.use('/api/', apiLimiter);
 
 // ─── Session middleware — powers client portal (session-based auth, separate from CF Access) ──
+// The secret used to fall back to a hardcoded string committed to this repo.
+// Anyone who could read the source could forge a signed session cookie and be
+// served as any logged-in roster member, so in production a missing secret is
+// now a hard failure rather than a silent downgrade. Local dev keeps a fixed
+// throwaway so nobody has to set one up to run the server.
+const SESSION_SECRET = process.env.CLIENT_SESSION_SECRET;
+if (!SESSION_SECRET && process.env.NODE_ENV === 'production') {
+  throw new Error('CLIENT_SESSION_SECRET must be set in production — refusing to start with a default session secret.');
+}
+
 app.use(session({
-  secret: process.env.CLIENT_SESSION_SECRET || 'cc-client-portal-secret-change-in-prod',
+  secret: SESSION_SECRET || 'cc-local-dev-only-secret',
+  // Sessions live in SQLite on the DATA_DIR volume, not in the process heap.
+  // With the default MemoryStore every deploy signed out every user — on
+  // event day a single push would have logged out the whole floor at once.
+  store: new SqliteSessionStore({ dataDir: DATA_DIR }),
   resave: false,
   saveUninitialized: false,
   cookie: {
