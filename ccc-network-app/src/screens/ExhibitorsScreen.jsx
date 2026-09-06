@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link as RouterLink } from 'react-router-dom';
 import Topbar from '../components/Topbar';
+import AreaMap, { MAP_AREAS } from '../components/AreaMap';
 import { getExhibitors } from '../api';
 
 /**
@@ -9,10 +11,11 @@ import { getExhibitors } from '../api';
  * maintained list, so a vendor who reserves and pays appears here on their
  * own and the count tracks confirmations as they land through the week.
  *
- * There is deliberately no site map here. An earlier version drew a schematic
- * of the National Harbor footprint, but the real layout wasn't locked and a
- * wrong map in an attendee's hand is worse than no map — it sends people to
- * the wrong end of the site. Add one back when the footprint is final.
+ * The map above the list is area-level on purpose: booth_type is the finest
+ * grain the signup data records, so plotting individual booths would mean
+ * inventing and hand-maintaining an assignment nobody has. Tapping an area
+ * filters the list; the list is the authoritative answer, the map is
+ * orientation.
  */
 export default function ExhibitorsScreen({ person }) {
   const [data, setData] = useState(null);
@@ -33,6 +36,15 @@ export default function ExhibitorsScreen({ person }) {
       return `${e.brand_name} ${e.category}`.toLowerCase().includes(q);
     });
   }, [data, query, zoneFilter]);
+
+  // Drives the count badge on each area of the map.
+  const countsByZone = useMemo(() => {
+    const counts = {};
+    (data?.exhibitors ?? []).forEach((e) => { counts[e.zone] = (counts[e.zone] || 0) + 1; });
+    return counts;
+  }, [data]);
+
+  const selectedArea = MAP_AREAS.find((a) => a.id === zoneFilter);
 
   if (error) {
     return (
@@ -60,7 +72,27 @@ export default function ExhibitorsScreen({ person }) {
           <div className="space-y-3">{[0, 1, 2, 3].map((i) => <div key={i} className="h-16 rounded-md border border-border bg-card animate-pulse" />)}</div>
         ) : (
           <>
-            <div className="flex flex-wrap items-center gap-2 mb-5">
+            <AreaMap
+              selected={zoneFilter}
+              onSelect={(id) => setZoneFilter(id)}
+              counts={countsByZone}
+            />
+
+            {/* The stage has no exhibitors — send people to the schedule
+                instead of showing them an empty list. */}
+            {selectedArea?.kind === 'stage' && (
+              <div className="mt-4 rounded-md border border-border bg-card p-4">
+                <div className="text-sm font-bold mb-1">Main Stage</div>
+                <p className="text-[13px] text-foreground/80 leading-relaxed">
+                  All the day&rsquo;s programming happens here, 10am to 5pm.
+                </p>
+                <RouterLink to="/schedule" className="inline-block mt-2.5 text-xs font-bold underline" style={{ color: 'var(--color-accent-2)' }}>
+                  See the schedule &rarr;
+                </RouterLink>
+              </div>
+            )}
+
+            <div className="flex flex-wrap items-center gap-2 mb-5 mt-6">
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
