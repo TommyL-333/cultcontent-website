@@ -403,16 +403,37 @@ app.post('/api/ccc/creator-apply', async (req, res) => {
       console.log(`[ccc-apply] No RESEND_API_KEY — would have emailed ${email}`);
     }
 
-    // 3. GHL contact (best-effort)
-    if (process.env.GHL_API_KEY) {
-      const nameParts = name.split(' ');
-      axios.post('https://services.leadconnectorhq.com/contacts/', {
-        firstName: nameParts[0], lastName: nameParts.slice(1).join(' ') || '',
-        email, phone,
-        tags: ['ccc-creator-signup', 'creator-carnival-2026', 'carnival-creator', 'ccc-creator-applicant'],
-        locationId: process.env.GHL_LOC_ID,
-      }, { headers: { Authorization: `Bearer ${process.env.GHL_API_KEY}`, Version: '2021-04-15', 'Content-Type': 'application/json' } })
-        .catch(e => console.error('[ccc-apply] GHL error:', e.response?.data || e.message));
+    // 3. GHL contact upsert — create or tag existing
+    const GHL_KEY = process.env.GHL_API_KEY;
+    const GHL_LOC = process.env.GHL_LOC_ID;
+    if (GHL_KEY && GHL_LOC) {
+      const ghlHeaders = { Authorization: `Bearer ${GHL_KEY}`, Version: '2021-07-28', 'Content-Type': 'application/json' };
+      const nameParts  = name.split(' ');
+      const CCC_TAGS   = ['ccc-creator-signup', 'creator-carnival-2026', 'carnival-creator', 'ccc-creator-applicant'];
+      try {
+        await axios.post('https://services.leadconnectorhq.com/contacts/', {
+          firstName: nameParts[0], lastName: nameParts.slice(1).join(' ') || '',
+          email, phone, tags: CCC_TAGS, locationId: GHL_LOC,
+        }, { headers: ghlHeaders });
+      } catch (e) {
+        // Duplicate contact — find by email and add tags to existing record
+        try {
+          const search = await axios.get(
+            `https://services.leadconnectorhq.com/contacts/?locationId=${GHL_LOC}&email=${encodeURIComponent(email)}`,
+            { headers: ghlHeaders }
+          );
+          const existing = search.data?.contacts?.[0];
+          if (existing?.id) {
+            const merged = [...new Set([...(existing.tags || []), ...CCC_TAGS])];
+            await axios.put(`https://services.leadconnectorhq.com/contacts/${existing.id}`,
+              { tags: merged },
+              { headers: ghlHeaders }
+            );
+          }
+        } catch (e2) {
+          console.error('[ccc-apply] GHL upsert error:', e2.response?.data || e2.message);
+        }
+      }
     }
   })();
 
@@ -760,6 +781,16 @@ app.get('/proposals/:slug', (req, res) => {
 
 // Public CCC comms plan — shareable with anyone
 app.get('/ccc-comms', (req, res) => res.sendFile(path.join(__dirname, 'ccc-comms.html')));
+
+// Admin: list creator signups from SQLite (Cloudflare Access protected)
+app.get('/api/ccc/creator-signups', (req, res) => {
+  try {
+    const rows = cccCreatorSignups.list();
+    res.json({ ok: true, count: rows.length, signups: rows });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
 
 // Catch missing /uploads/* files BEFORE the auth wall — prevents the 401 "sign in" page
 // showing for files that no longer exist on the volume (e.g. after a Railway redeploy).
