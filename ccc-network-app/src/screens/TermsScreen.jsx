@@ -34,7 +34,8 @@ const SECTIONS = [
     ],
     list: [
       'To someone you have an accepted connection with. A connection request has to be accepted by both sides before either of you sees the other’s contact details — accepting a request is what releases them.',
-      'To sponsoring brands, in a contact export, but only if you have ticked the contact-sharing box. That box is off by default. If you never tick it, your details are never included in any export, no matter who asks.',
+      'If you’re a creator: to sponsoring brands, in a contact export, but only if you have ticked the contact-sharing box. That box is off by default. If you never tick it, your details are never included in any export, no matter who asks.',
+      'If you’re a brand: to creators browsing the roster, but only if you have ticked the box saying creators can contact you directly. That box is off by default, and it releases your details to creators only — other brands still have to send you a connection request.',
     ],
     after: [
       'You can turn contact sharing on or off at any time in Settings. Turning it off stops your details appearing in any future export. It cannot claw back an export a sponsor already downloaded.',

@@ -243,14 +243,16 @@ export default function SettingsScreen({ person, onSaved }) {
             Contact sharing {sharingSaved && <span className="text-accent-2 normal-case font-normal">Saved ✓</span>}
           </div>
           <NotifyRow
-            label="Let sponsors export my contact details"
-            hint="Your email and phone can be included in sponsoring brands' contact exports"
+            label={person.role === 'brand' ? 'Let creators contact me directly' : 'Let sponsors export my contact details'}
+            hint={person.role === 'brand'
+              ? 'Creators can see your email and phone without connecting first'
+              : "Your email and phone can be included in sponsoring brands' contact exports"}
             checked={shareContact}
             onChange={handleSharingChange}
           />
           <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
             Off by default. People whose connection request you accept always see your contact details — this
-            only controls the sponsor export. See the{' '}
+            controls {person.role === 'brand' ? 'whether creators can skip that step' : 'the sponsor export'}. See the{' '}
             <RouterLink to="/terms" className="underline">roster terms</RouterLink>.
           </p>
         </Card>

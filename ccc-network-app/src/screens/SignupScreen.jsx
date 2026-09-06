@@ -312,9 +312,13 @@ export default function SignupScreen() {
                   className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--color-accent)]"
                 />
                 <span className="text-[13px] leading-relaxed">
-                  Sponsoring brands can include my email and phone in their contact export.
+                  {role === 'brand'
+                    ? 'Creators can contact me directly by phone or email.'
+                    : 'Sponsoring brands can include my email and phone in their contact export.'}
                   <span className="block text-[11px] text-muted-foreground mt-0.5">
-                    Optional. Leave this off and only people whose connection request you accept ever get your contact details. You can change it later in Settings.
+                    {role === 'brand'
+                      ? 'Optional. Shows your email and phone to creators browsing the roster, so they can reach you without connecting first. Other brands still have to send a request. You can change it later in Settings.'
+                      : 'Optional. Leave this off and only people whose connection request you accept ever get your contact details. You can change it later in Settings.'}
                   </span>
                 </span>
               </label>

@@ -460,3 +460,70 @@ describe('photo, rates, and profile completion', () => {
     assert.equal(done.percent, 100, 'a brand with no rates should still be complete');
   });
 });
+
+describe('brand contact opt-in', () => {
+  test('a brand that has not opted in stays gated to creators', () => {
+    const brand = makeBrand('closedbrand@example.com');
+    const creator = makeCreator('viewer1@example.com');
+    const b = approve(brand.uuid);
+    const c = approve(creator.uuid);
+    net.updateProfile(b.id, { first_name: 'B', brand_name: 'Closed Co', phone: '555' });
+
+    const seen = net.getPersonProfile(c.id, brand.uuid);
+    assert.equal(seen.email, undefined);
+    assert.equal(seen.phone, undefined);
+    assert.equal(seen.contact_is_public, false);
+  });
+
+  test('a brand that opts in is contactable by creators without connecting', () => {
+    const brand = makeBrand('openbrand@example.com');
+    const creator = makeCreator('viewer2@example.com');
+    const b = approve(brand.uuid);
+    const c = approve(creator.uuid);
+    net.setContactSharing(b.id, true);
+
+    const seen = net.getPersonProfile(c.id, brand.uuid);
+    assert.equal(seen.email, 'openbrand@example.com');
+    assert.equal(seen.contact_is_public, true);
+  });
+
+  test('opting in exposes the brand to creators only — not to other brands', () => {
+    const brand = makeBrand('openbrand2@example.com');
+    const rival = makeBrand('rivalbrand@example.com');
+    const b = approve(brand.uuid);
+    const r = approve(rival.uuid);
+    net.setContactSharing(b.id, true);
+
+    // A competing brand harvesting exhibitor contacts is exactly what this
+    // must not enable — they still have to send a connection request.
+    const seen = net.getPersonProfile(r.id, brand.uuid);
+    assert.equal(seen.email, undefined, 'a rival brand must still be gated');
+    assert.equal(seen.contact_is_public, false);
+  });
+
+  test('a creator opting in does NOT publish their contact to brands browsing', () => {
+    const creator = makeCreator('optincreator@example.com');
+    const brand = makeBrand('browsingbrand@example.com');
+    const c = approve(creator.uuid);
+    const b = approve(brand.uuid);
+    net.setContactSharing(c.id, true);
+
+    // For a creator the flag governs the sponsor export, not direct browsing.
+    const seen = net.getPersonProfile(b.id, creator.uuid);
+    assert.equal(seen.email, undefined, 'creator contact stays behind a connection');
+    assert.equal(seen.contact_is_public, false);
+  });
+
+  test('an opted-in brand still never exposes rates or the CRM id', () => {
+    const brand = makeBrand('openbrand3@example.com');
+    const creator = makeCreator('viewer3@example.com');
+    const b = approve(brand.uuid);
+    const c = approve(creator.uuid);
+    net.setContactSharing(b.id, true);
+    net.updateProfile(b.id, { first_name: 'B', brand_name: 'Open Co', rate_price: 'should never show' });
+
+    const seen = net.getPersonProfile(c.id, brand.uuid);
+    assert.equal(seen.rate_price, undefined);
+    assert.equal(seen.ghl_contact_id, undefined);
+  });
+});

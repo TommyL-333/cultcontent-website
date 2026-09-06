@@ -93,6 +93,8 @@ export default function PersonProfileScreen({ person }) {
         <PersonDetailCard
           person={target}
           actions={actions}
+          contactLabel={target.contact_is_public ? 'This brand is open to being contacted directly' : undefined}
+          showCheckmark={!target.contact_is_public}
           extra={
             <>
               {briefs.length > 0 && (
