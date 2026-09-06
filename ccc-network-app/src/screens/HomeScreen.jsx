@@ -4,9 +4,9 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Card } from '@heroui/react';
 import Topbar from '../components/Topbar';
 
-// Noon ET on event day — matches the facts already live on the public
-// marketing page (culture-commerce-carnival.html).
-const EVENT_DATE = new Date('2026-09-12T12:00:00-04:00');
+// 10am ET — the confirmed run-of-show start (doors 10:00 AM – 5:00 PM).
+// Previously noon, taken from the marketing page before the run of show existed.
+const EVENT_DATE = new Date('2026-09-12T10:00:00-04:00');
 
 function useCountdown(target) {
   const [remaining, setRemaining] = useState(() => Math.max(0, target - Date.now()));

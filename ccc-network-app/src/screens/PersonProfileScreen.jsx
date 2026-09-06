@@ -120,7 +120,7 @@ export default function PersonProfileScreen({ person }) {
                       className="mt-2.5 text-xs font-bold underline"
                       style={{ color: 'var(--color-accent-2)' }}
                     >
-                      Enter a brief &rarr;
+                      Submit a video &rarr;
                     </button>
                   )}
                 </div>

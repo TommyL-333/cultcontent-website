@@ -1,88 +1,179 @@
 {
-  "_readme": "Schedule for the Creator Carnival. Edit this file and redeploy — no code changes needed. Times are 24h wall-clock at the venue (America/New_York). The exhibitor list is NOT here: it is generated from real booth signups in ccc_booth_signups.",
+  "_readme": "Attendee-facing schedule for the Creator Carnival, from the run of show. Edit this file and redeploy — no code changes needed. Times are 24h wall-clock at the venue (America/New_York). Deliberately excludes crew-only content (load-in, DJ cue map, mic plan, staffing) and unconfirmed panellists — set lineup_tbc true and leave `people` out until a name is locked. The exhibitor list is NOT here: it is generated from real booth signups in ccc_booth_signups.",
   "event": {
     "name": "Creator Carnival",
     "date": "2026-09-12",
     "venue": "National Harbor, MD",
-    "timezone": "America/New_York"
+    "timezone": "America/New_York",
+    "doors": "10:00 AM – 5:00 PM",
+    "host": "Khadijah Corrie",
+    "note": "Booths, vendors and activations run all day. The stage schedule is below."
   },
   "schedule": [
     {
-      "id": "creator-early-access",
+      "id": "dj-opening",
       "start": "10:00",
+      "end": "10:30",
+      "segment": "Move",
+      "title": "DJ Opening Set",
+      "location": "Main Stage",
+      "description": "The Carnival kicks off. Music builds the energy as people arrive, shop, explore and connect."
+    },
+    {
+      "id": "jump-dc",
+      "start": "10:30",
       "end": "11:00",
-      "title": "Creator Early Access",
-      "location": "Marketplace Floor",
-      "track": "access",
-      "audience": [
-        "creator"
+      "segment": "Move",
+      "title": "Jump DC — Double Dutch",
+      "location": "Main Stage",
+      "people": [
+        "Jump DC"
       ],
-      "description": "Invited creators get first access to the marketplace floor. Sample collection begins — VIP ticket holders get guaranteed samples from every brand before general doors open."
+      "description": "An interactive jump-rope experience to open the day. Come and get in the rope."
     },
     {
-      "id": "general-admission",
+      "id": "creator-connection",
       "start": "11:00",
-      "end": null,
-      "title": "General Admission Opens",
-      "location": "All Zones",
-      "track": "access",
-      "audience": [
-        "creator",
-        "brand"
-      ],
-      "description": "Doors open to the public. The full marketplace, carnival activations, and stage programming are live for all ticket holders."
+      "end": "11:30",
+      "segment": "Connect",
+      "title": "Creator Connection + Carnival Games",
+      "location": "Main Stage",
+      "description": "Best Dressed, a dance contest, and open creator mixing. This is the block built for meeting people — bring your roster connections into the room."
     },
     {
-      "id": "marketplace-open",
-      "start": "11:00",
-      "end": "19:00",
-      "title": "Brand Marketplace, Booths & Activations",
-      "location": "American Way + Capitol Canopy",
-      "track": "marketplace",
-      "audience": [
-        "creator",
-        "brand"
+      "id": "line-dancing",
+      "start": "11:30",
+      "end": "12:00",
+      "segment": "Culture",
+      "title": "Line Dancing with Tiara Felder",
+      "location": "Main Stage",
+      "people": [
+        "Tiara Felder — The Dancing Dentist"
       ],
-      "description": "100+ brand booths, the Capital Wheel, caricature art, creator photo booths, branded activations, and live music running throughout the day. Walk, film, shop, connect."
+      "description": "Led line dancing, open to everyone."
     },
     {
-      "id": "main-stage",
+      "id": "kickoff",
       "start": "12:00",
-      "end": "18:00",
-      "title": "Main Stage — Presentations, Demos & Performances",
-      "location": "Plaza Stage",
-      "track": "stage",
-      "audience": [
-        "creator",
-        "brand"
+      "end": "12:15",
+      "segment": "Kickoff",
+      "title": "Official Welcome",
+      "location": "Main Stage",
+      "people": [
+        "Folasade",
+        "Tommy Lynch"
       ],
-      "description": "Live-streamed stage programming throughout the day. Creator showcases, brand spotlights, live shopping demos, and performances broadcast well beyond the crowd on the ground."
+      "description": "What Creator Carnival is, what to expect, how to take part, and a walk through the day’s programming."
     },
     {
-      "id": "vip-belvedere",
-      "start": "13:00",
-      "end": "16:00",
-      "title": "VIP on the Belvedere",
-      "location": "The Belvedere",
-      "track": "vip",
-      "audience": [
-        "creator",
-        "brand"
+      "id": "bet-on-yourself",
+      "start": "12:15",
+      "end": "12:45",
+      "segment": "Believe",
+      "title": "Bet On Yourself",
+      "location": "Main Stage",
+      "subtitle": "What happens when you stop waiting for permission",
+      "people": [
+        "Sianni — moderator",
+        "Andy the Comedian",
+        "Sommer",
+        "Tommy Taylor"
       ],
-      "description": "Top creators and VIP guests get guaranteed access to the Belvedere — National Harbor's elevated waterfront space with views of the Potomac."
+      "lineup_tbc": true,
+      "description": "Before you build anything, you have to believe you’re capable of building it."
     },
     {
-      "id": "after-party",
-      "start": "21:00",
-      "end": null,
-      "title": "VIP After-Party — Felt Lounge at MGM National Harbor",
-      "location": "MGM National Harbor",
-      "track": "vip",
-      "audience": [
-        "creator",
-        "brand"
+      "id": "dj-break",
+      "start": "12:45",
+      "end": "12:55",
+      "segment": "Move",
+      "title": "DJ Break",
+      "location": "Main Stage",
+      "description": "A musical reset — stretch your legs, walk the booths, meet someone."
+    },
+    {
+      "id": "cult-content",
+      "start": "12:55",
+      "end": "13:05",
+      "segment": "Build",
+      "title": "Tommy Lynch + Cult Content",
+      "location": "Main Stage",
+      "people": [
+        "Tommy Lynch",
+        "David “The Oh” Oliver — interviewer"
       ],
-      "description": "The night continues at the Felt Lounge inside MGM National Harbor. Exclusive access for VIP ticket holders. The official Creator Carnival after-party."
+      "description": "A short conversation connecting the Carnival to Cult Content and the wider creative ecosystem."
+    },
+    {
+      "id": "build-the-brand",
+      "start": "13:05",
+      "end": "13:30",
+      "segment": "Build",
+      "title": "Build the Brand",
+      "location": "Main Stage",
+      "subtitle": "Turning creator community into culture + commerce",
+      "lineup_tbc": true,
+      "description": "“I believe in myself — now how do I build something?” Building brands and community, collaboration, and turning creativity into something sustainable."
+    },
+    {
+      "id": "roaming-carnival",
+      "start": "13:30",
+      "end": "14:00",
+      "segment": "Carnival",
+      "title": "Roaming Entertainment + DJ on Stilts",
+      "location": "All Zones",
+      "description": "A deliberate break from the stage. Magician, balloon artist, mime and roaming performers through the crowd, with a DJ on stilts. The most filmable half hour of the day — shoot it."
+    },
+    {
+      "id": "bomesi",
+      "start": "14:00",
+      "end": "14:35",
+      "segment": "Opportunity",
+      "title": "BOMESI",
+      "location": "Main Stage",
+      "people": [
+        "BOMESI"
+      ],
+      "description": "The accelerator, access and resources — and what creators can actually do next to position themselves for opportunities."
+    },
+    {
+      "id": "unskrypted",
+      "start": "14:35",
+      "end": "15:05",
+      "segment": "Unskrypted",
+      "title": "The Future of Brand Integration",
+      "location": "Main Stage",
+      "people": [
+        "Folasade",
+        "Poet — Midday Shenanigans"
+      ],
+      "lineup_tbc": true,
+      "description": "Creators and brands, shoppable content, and where media is going — why creators should be thinking well beyond posting."
+    },
+    {
+      "id": "whats-next",
+      "start": "15:15",
+      "end": "15:45",
+      "segment": "What’s Next",
+      "title": "From Creator to Bigger Opportunities",
+      "location": "Main Stage",
+      "people": [
+        "David “The Oh” Oliver — moderator"
+      ],
+      "lineup_tbc": true,
+      "description": "You’ve built something, found your voice, created the audience. Now what? Breaking into film and TV, casting, representation, and what the industry actually looks for."
+    },
+    {
+      "id": "tob-finale",
+      "start": "16:00",
+      "end": "17:00",
+      "segment": "Celebration",
+      "title": "TOB — Live Performance",
+      "location": "Main Stage",
+      "people": [
+        "TOB"
+      ],
+      "description": "The Carnival finale. Live performance, sponsor and vendor recognition, closing remarks, and one big final song."
     }
   ]
 }
