@@ -145,8 +145,21 @@ export default function SignupScreen() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-5 py-16">
-      <div className="w-full max-w-xl">
+    <div className="relative min-h-screen flex items-center justify-center px-5 py-16">
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[300px] sm:h-[360px] overflow-hidden">
+        <img
+          src="/ccc-network/carnival-hero.jpg"
+          alt=""
+          className="h-full w-full object-cover object-center opacity-60"
+        />
+        {/* Fades the photo into the page rather than ending on a hard edge. */}
+        <div
+          className="absolute inset-0"
+          style={{ background: 'linear-gradient(to bottom, rgba(12,10,9,.35) 0%, rgba(12,10,9,.75) 55%, var(--color-background, #0c0a09) 100%)' }}
+        />
+      </div>
+
+      <div className="relative w-full max-w-xl">
         <motion.a
           href="https://cultcontent.cc"
           initial={{ opacity: 0, y: -8 }}
@@ -159,9 +172,11 @@ export default function SignupScreen() {
         </motion.a>
 
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.05 }} className="text-center mb-8">
-          <h1 className="font-display text-4xl sm:text-[2.75rem] font-bold leading-[1.08] mb-4">Meet your collab era.</h1>
-          <p className="text-sm text-muted-foreground leading-relaxed max-w-md mx-auto">
-            1,000+ creators and 100+ brands, all in one roster. Sign up, confirm your email, and start connecting before you even set foot on the floor.
+          <h1 className="font-display text-4xl sm:text-[2.75rem] font-black tracking-tight leading-[1.05] mb-4">
+            Creator Carnival Marketplace
+          </h1>
+          <p className="text-sm text-foreground/75 leading-relaxed max-w-md mx-auto">
+            Use this application to get the most out of your carnival experience — view the map, see the itinerary, and connect with creators &amp; brands.
           </p>
         </motion.div>
 
