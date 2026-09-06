@@ -409,7 +409,7 @@ app.post('/api/ccc/creator-apply', async (req, res) => {
     if (GHL_KEY && GHL_LOC) {
       const ghlHeaders = { Authorization: `Bearer ${GHL_KEY}`, Version: '2021-07-28', 'Content-Type': 'application/json' };
       const nameParts  = name.split(' ');
-      const CCC_TAGS   = ['ccc-creator-signup', 'creator-carnival-2026', 'carnival-creator', 'ccc-creator-applicant'];
+      const CCC_TAGS   = ['ccc-creator-signup', 'creator-carnival-2026', 'carnival-creator', 'ccc-creator-applicant', 'affiliate'];
       try {
         await axios.post('https://services.leadconnectorhq.com/contacts/', {
           firstName: nameParts[0], lastName: nameParts.slice(1).join(' ') || '',
