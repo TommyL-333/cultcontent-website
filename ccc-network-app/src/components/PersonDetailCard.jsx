@@ -1,5 +1,6 @@
-import { Avatar, Card, Chip } from '@heroui/react';
-import { initialsOf, colorOf, displayName, orgOf } from '../lib/avatar';
+import { Card, Chip } from '@heroui/react';
+import ProfilePhoto from './ProfilePhoto';
+import { displayName, orgOf } from '../lib/avatar';
 
 // Shared full-profile presentation — used by both the read-only ProfileScreen
 // (viewing yourself) and PersonProfileScreen (viewing someone else via the
@@ -10,9 +11,7 @@ export default function PersonDetailCard({ person, actions, extra, contactLabel 
   return (
     <Card variant="default" className="p-6 sm:p-8">
       <div className="flex items-start gap-4 mb-5">
-        <Avatar color={colorOf(person)} size="lg">
-          <Avatar.Fallback>{initialsOf(person)}</Avatar.Fallback>
-        </Avatar>
+        <ProfilePhoto person={person} size="lg" />
         <div className="flex-1 min-w-0">
           <Chip color={person.role === 'brand' ? 'warning' : 'accent'} size="sm">{person.role === 'brand' ? 'Brand' : 'Creator'}</Chip>
           <div className="text-xl font-bold mt-2">{displayName(person)}</div>
@@ -43,6 +42,22 @@ export default function PersonDetailCard({ person, actions, extra, contactLabel 
               <a key={i} href={l.url} target="_blank" rel="noreferrer" className="text-sm text-primary hover:underline truncate">{l.url}</a>
             ))}
           </div>
+        </div>
+      )}
+
+      {(person.rate_price || person.rate_videos || person.rate_terms) && (
+        <div className="mb-4 rounded-md border border-border bg-background/40 px-4 py-3.5">
+          <div className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground mb-2">Rates &amp; terms</div>
+          {person.rate_price && (
+            <div className="text-sm text-foreground mb-1">Rate: <span className="font-semibold">{person.rate_price}</span></div>
+          )}
+          {person.rate_videos && (
+            <div className="text-sm text-foreground mb-1">Typical package: <span className="font-semibold">{person.rate_videos}</span></div>
+          )}
+          {person.rate_terms && (
+            <div className="text-sm text-foreground/85 leading-relaxed mt-1.5">{person.rate_terms}</div>
+          )}
+          <p className="text-[11px] text-muted-foreground mt-2.5">A starting point, not a quote — agree the details between yourselves.</p>
         </div>
       )}
 

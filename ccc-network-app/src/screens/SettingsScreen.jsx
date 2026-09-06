@@ -24,6 +24,8 @@ export default function SettingsScreen({ person, onSaved }) {
     first_name: person.first_name || '', last_name: person.last_name || '', phone: person.phone || '',
     tiktok_handle: person.tiktok_handle || '', instagram_handle: person.instagram_handle || '', brand_name: person.brand_name || '', category: person.category || '',
     bio: person.bio || '', looking_for: person.looking_for || '',
+    photo_url: person.photo_url || '',
+    rate_videos: person.rate_videos || '', rate_price: person.rate_price || '', rate_terms: person.rate_terms || '',
     links: (person.links || []).map((l) => l.url).join('\n'),
   });
   const [saved, setSaved] = useState(false);
@@ -52,8 +54,15 @@ export default function SettingsScreen({ person, onSaved }) {
     setProfileErr('');
     const payload = {
       first_name: form.first_name, last_name: form.last_name, phone: form.phone,
-      category: form.category, bio: form.bio, looking_for: form.looking_for,
-      ...(person.role === 'creator' ? { tiktok_handle: form.tiktok_handle, instagram_handle: form.instagram_handle } : { brand_name: form.brand_name }),
+      category: form.category, bio: form.bio, looking_for: form.looking_for, photo_url: form.photo_url,
+      // updateProfile writes every column it's given, so omitting these would
+      // blank a creator's saved rates on any unrelated profile save.
+      ...(person.role === 'creator'
+        ? {
+            tiktok_handle: form.tiktok_handle, instagram_handle: form.instagram_handle,
+            rate_videos: form.rate_videos, rate_price: form.rate_price, rate_terms: form.rate_terms,
+          }
+        : { brand_name: form.brand_name }),
       links: form.links.split('\n').map((s) => s.trim()).filter(Boolean).map((url) => ({ label: 'Link', url })),
     };
     const j = await saveProfile(payload);
@@ -132,9 +141,48 @@ export default function SettingsScreen({ person, onSaved }) {
             ) : (
               <div><Label>Brand name</Label><Input value={form.brand_name} onChange={set('brand_name')} fullWidth /></div>
             )}
+            <div>
+              <Label>{person.role === 'creator' ? 'Headshot / profile photo URL' : 'Logo or photo URL'}</Label>
+              <Input value={form.photo_url} onChange={set('photo_url')} placeholder="https://…" fullWidth />
+              <p className="text-xs text-muted-foreground mt-1.5">
+                Paste a link to an image — your TikTok or Instagram profile picture, a Drive or Dropbox share link, anything public.
+              </p>
+              {form.photo_url && (
+                <img
+                  src={form.photo_url}
+                  alt=""
+                  className="mt-2.5 h-16 w-16 rounded-full object-cover border border-border"
+                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  onLoad={(e) => { e.currentTarget.style.display = ''; }}
+                />
+              )}
+            </div>
             <div><Label>{person.role === 'creator' ? 'Content niche' : 'Product category'}</Label><Input value={form.category} onChange={set('category')} fullWidth /></div>
             <div><Label>Bio</Label><TextArea value={form.bio} onChange={set('bio')} fullWidth /></div>
             <div><Label>What are you looking for?</Label><TextArea value={form.looking_for} onChange={set('looking_for')} fullWidth /></div>
+            {person.role === 'creator' && (
+              <div className="rounded-md border border-border bg-background/40 p-4 space-y-3.5">
+                <div>
+                  <div className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Rates &amp; ideal terms</div>
+                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                    Only shown to brands whose connection request you&rsquo;ve accepted — never in the directory, and never in a
+                    sponsor export. Leave blank to discuss it live instead.
+                  </p>
+                </div>
+                <div>
+                  <Label>Typical package</Label>
+                  <Input value={form.rate_videos} onChange={set('rate_videos')} placeholder="e.g. 4 videos a month" fullWidth />
+                </div>
+                <div>
+                  <Label>Your rate</Label>
+                  <Input value={form.rate_price} onChange={set('rate_price')} placeholder="e.g. $500 per video, or $1,800 for 4" fullWidth />
+                </div>
+                <div>
+                  <Label>Ideal contract terms</Label>
+                  <TextArea value={form.rate_terms} onChange={set('rate_terms')} placeholder="Usage rights, exclusivity, turnaround, whitelisting — whatever matters to you" fullWidth />
+                </div>
+              </div>
+            )}
             <div><Label>Links (one per line)</Label><TextArea value={form.links} onChange={set('links')} fullWidth /></div>
             <div className="flex items-center gap-4 pt-1">
               <Button type="submit" variant="primary">Save Profile</Button>

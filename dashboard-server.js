@@ -7026,7 +7026,9 @@ app.get('/ccc-network/logout', (req, res) => {
 });
 
 app.get('/api/ccc-network/me', requireNetworkSession, (req, res) => {
-  res.json({ ok: true, person: req.networkPerson });
+  // Completion travels with the person so every screen agrees on what
+  // "finished" means, rather than each one re-deriving it from fields.
+  res.json({ ok: true, person: req.networkPerson, completion: cccNet.profileCompletion(req.networkPerson) });
 });
 
 app.post('/ccc-network/profile', requireNetworkSession, express.json(), (req, res) => {
@@ -7149,6 +7151,31 @@ app.get('/api/ccc-network/event.json', (req, res) => {
     console.error('[ccc-event] could not read ccc-event.json:', err.message);
     res.status(500).json({ ok: false, error: 'event_data_unavailable' });
   }
+});
+
+// ── Exhibitors ────────────────────────────────────────────────────────────────
+// Built from the booth signups themselves (ccc_booth_signups), not a
+// hand-maintained list: a vendor who reserves and pays through /ccc-booth-signup
+// appears here on their own, and the count moves as confirmations land through
+// the week. Only 'Paid' rows are shown — a Pending row is an unconfirmed hold
+// that auto-expires after 48h, and listing those would advertise exhibitors
+// who never actually completed checkout.
+//
+// Deliberately narrow projection: brand name, category, zone. The underlying
+// table also holds the reserver's name, email and Stripe payment URL, none of
+// which belongs in a roster-wide directory.
+app.get('/api/ccc-network/exhibitors', requireNetworkSession, (req, res) => {
+  const zones = Object.entries(cccBooths.CCC_BOOTHS).map(([id, cfg]) => ({ id, label: cfg.label, total: cfg.total }));
+  const exhibitors = cccBooths.listAll({ status: 'Paid' })
+    .map((row) => ({
+      brand_name: row.brand_name,
+      category: row.product_category || '',
+      zone: row.booth_type,
+      zone_label: cccBooths.CCC_BOOTHS[row.booth_type]?.label || row.booth_type,
+    }))
+    .sort((a, b) => a.brand_name.localeCompare(b.brand_name));
+
+  res.json({ ok: true, zones, exhibitors });
 });
 
 // ── Brand challenges ──────────────────────────────────────────────────────────

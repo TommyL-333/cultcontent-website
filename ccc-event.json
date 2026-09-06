@@ -1,11 +1,10 @@
 {
-  "_readme": "Single source of truth for the Creator Carnival schedule and site map. Edit this file and redeploy — no code changes needed. Times are 24h local (America/New_York). Booth pin positions are computed from each zone's `layout` strip, so moving a whole zone is a 4-number edit; individual booths can be nudged with an entry in `overrides`.",
+  "_readme": "Schedule for the Creator Carnival. Edit this file and redeploy — no code changes needed. Times are 24h wall-clock at the venue (America/New_York). The exhibitor list is NOT here: it is generated from real booth signups in ccc_booth_signups.",
   "event": {
     "name": "Creator Carnival",
     "date": "2026-09-12",
     "venue": "National Harbor, MD",
-    "timezone": "America/New_York",
-    "mapNote": "Schematic. Not to scale — for orientation only."
+    "timezone": "America/New_York"
   },
   "schedule": [
     {
@@ -85,132 +84,5 @@
       ],
       "description": "The night continues at the Felt Lounge inside MGM National Harbor. Exclusive access for VIP ticket holders. The official Creator Carnival after-party."
     }
-  ],
-  "landmarks": [
-    {
-      "id": "plaza-stage",
-      "label": "Plaza Stage",
-      "x": 436,
-      "y": 118,
-      "kind": "stage",
-      "labelSide": "left"
-    },
-    {
-      "id": "belvedere",
-      "label": "The Belvedere",
-      "x": 380,
-      "y": 214,
-      "kind": "vip",
-      "labelSide": "left"
-    },
-    {
-      "id": "ac-hotel",
-      "label": "AC Hotel",
-      "x": 762,
-      "y": 432,
-      "kind": "building",
-      "labelSide": "right"
-    }
-  ],
-  "streets": [
-    {
-      "id": "national-plaza",
-      "label": "National Plaza",
-      "from": [
-        498,
-        352
-      ],
-      "to": [
-        598,
-        8
-      ]
-    },
-    {
-      "id": "waterfront-st",
-      "label": "Waterfront St",
-      "from": [
-        648,
-        430
-      ],
-      "to": [
-        742,
-        92
-      ]
-    },
-    {
-      "id": "american-way",
-      "label": "American Way",
-      "from": [
-        672,
-        470
-      ],
-      "to": [
-        1128,
-        372
-      ]
-    },
-    {
-      "id": "potomac-passage",
-      "label": "Potomac Passage",
-      "from": [
-        742,
-        92
-      ],
-      "to": [
-        1000,
-        20
-      ]
-    }
-  ],
-  "zones": [
-    {
-      "id": "freedom-way",
-      "label": "Freedom Way",
-      "accent": "accent",
-      "note": "The block closest to the Belvedere.",
-      "layout": {
-        "from": [
-          440,
-          330
-        ],
-        "to": [
-          548,
-          40
-        ],
-        "rows": 3,
-        "rowGap": 25,
-        "count": 81
-      }
-    },
-    {
-      "id": "capitol-canopy",
-      "label": "Capitol Canopy",
-      "accent": "accent-2",
-      "note": "Between National Plaza and Waterfront St.",
-      "layout": {
-        "from": [
-          586,
-          400
-        ],
-        "to": [
-          670,
-          116
-        ],
-        "rows": 2,
-        "rowGap": 28,
-        "count": 60
-      }
-    }
-  ],
-  "overrides": {},
-  "vendors": {
-    "freedom-way-1": {
-      "name": "Oceanblue LLC",
-      "category": "Omega-3 Supplements"
-    },
-    "capitol-canopy-1": {
-      "name": "Tsolmon-Art",
-      "category": "Original Hand-Painted Art"
-    }
-  }
+  ]
 }

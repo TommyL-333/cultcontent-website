@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link as RouterLink } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Card } from '@heroui/react';
 import Topbar from '../components/Topbar';
@@ -111,6 +112,51 @@ export default function HomeScreen({ person }) {
     <div>
       <Topbar person={person} />
       <div className="max-w-3xl mx-auto px-5 pb-20">
+        {person.completion && person.completion.percent < 100 && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}
+            className="rounded-md border p-5 mb-7"
+            style={{ borderColor: 'var(--color-gold)', background: 'color-mix(in srgb, var(--color-gold) 8%, transparent)' }}
+          >
+            <div className="flex items-baseline justify-between gap-4 mb-2.5">
+              <h2 className="font-display text-lg font-black tracking-tight">Finish your profile</h2>
+              <span className="text-sm font-black tabular-nums shrink-0" style={{ color: 'var(--color-gold)' }}>
+                {person.completion.percent}%
+              </span>
+            </div>
+
+            <div className="h-1.5 w-full rounded-full bg-white/10 overflow-hidden mb-3.5" role="presentation">
+              <div
+                className="h-full rounded-full transition-[width] duration-500"
+                style={{ width: `${person.completion.percent}%`, background: 'var(--color-gold)' }}
+              />
+            </div>
+
+            <p className="text-[13px] text-foreground/80 leading-relaxed mb-3">
+              {person.role === 'creator'
+                ? 'Brands browse the roster before the event — a half-finished profile gets scrolled past.'
+                : 'Creators are looking for brands to work with. Tell them who you are and what you need.'}
+            </p>
+
+            <ul className="space-y-1.5 mb-4">
+              {person.completion.missing.map((m) => (
+                <li key={m} className="flex items-center gap-2.5 text-[13px] text-foreground/85">
+                  <span className="h-3.5 w-3.5 shrink-0 rounded-[3px] border border-white/25" aria-hidden />
+                  {m}
+                </li>
+              ))}
+            </ul>
+
+            <RouterLink
+              to="/settings"
+              className="inline-flex items-center rounded-lg px-4 py-2 text-sm font-extrabold"
+              style={{ background: 'var(--color-gold)', color: 'var(--color-gold-foreground)' }}
+            >
+              Complete it &rarr;
+            </RouterLink>
+          </motion.div>
+        )}
+
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
           <span className="pill-glow pill-glow-cyan mb-4 -rotate-2">National Harbor, MD — 2026</span>
           <h1 className="font-display text-4xl sm:text-5xl font-black tracking-tight leading-[0.95] mb-3">
@@ -194,15 +240,26 @@ export default function HomeScreen({ person }) {
                 </li>
               ))}
             </ul>
-            <a
-              href="/culture-commerce-carnival"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 mt-6 rounded-lg px-5 py-2.5 text-sm font-extrabold tracking-tight"
-              style={{ background: 'var(--color-accent-2)', color: 'var(--color-accent-2-foreground)' }}
-            >
-              Full event details &rarr;
-            </a>
+            <div className="flex flex-wrap items-center gap-3 mt-6">
+              <RouterLink
+                to="/challenges"
+                className="inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-extrabold tracking-tight"
+                style={{ background: 'var(--color-accent-2)', color: 'var(--color-accent-2-foreground)' }}
+              >
+                {person.role === 'brand' ? 'Post a brief →' : 'Brand briefs →'}
+              </RouterLink>
+              <RouterLink to="/guide" className="text-sm font-bold text-muted-foreground hover:text-foreground underline">
+                How this works
+              </RouterLink>
+              <a
+                href="/culture-commerce-carnival"
+                target="_blank"
+                rel="noreferrer"
+                className="text-sm font-bold text-muted-foreground hover:text-foreground underline"
+              >
+                Full event details
+              </a>
+            </div>
           </Card>
         </motion.div>
       </div>

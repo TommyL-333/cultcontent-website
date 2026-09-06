@@ -46,9 +46,8 @@ export default function Topbar({ person }) {
       <div className="flex items-center gap-4 sm:gap-5 overflow-x-auto no-scrollbar">
         <NavLink to="/home" className={navLinkCls}>Home</NavLink>
         <NavLink to="/schedule" className={navLinkCls}>Schedule</NavLink>
-        <NavLink to="/map" className={navLinkCls}>Map</NavLink>
-        <NavLink to="/challenges" className={navLinkCls}>Challenges</NavLink>
         <NavLink to="/directory" className={navLinkCls}>Directory</NavLink>
+        <NavLink to="/exhibitors" className={navLinkCls}>Exhibitors</NavLink>
         <NavLink to="/connections" className={navLinkCls}>Connections</NavLink>
         <NavLink to="/inbox" className={navLinkCls}>
           Inbox{unread > 0 && <span className="ml-1.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold">{unread}</span>}

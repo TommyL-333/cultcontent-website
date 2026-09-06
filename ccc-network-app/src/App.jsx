@@ -12,8 +12,9 @@ import ConnectionsScreen from './screens/ConnectionsScreen';
 import PersonProfileScreen from './screens/PersonProfileScreen';
 import InboxScreen from './screens/InboxScreen';
 import ScheduleScreen from './screens/ScheduleScreen';
-import MapScreen from './screens/MapScreen';
+import ExhibitorsScreen from './screens/ExhibitorsScreen';
 import ChallengesScreen from './screens/ChallengesScreen';
+import GuideScreen from './screens/GuideScreen';
 import TermsScreen from './screens/TermsScreen';
 
 // Client-side routing only decides *which screen to show* — it is not the
@@ -46,7 +47,10 @@ export default function App() {
         <Route path="/inbox" element={person ? <InboxScreen person={person} /> : <Navigate to="/login" replace />} />
         <Route path="/inbox/:uuid" element={person ? <InboxScreen person={person} /> : <Navigate to="/login" replace />} />
         <Route path="/schedule" element={person ? <ScheduleScreen person={person} /> : <Navigate to="/login" replace />} />
-        <Route path="/map" element={person ? <MapScreen person={person} /> : <Navigate to="/login" replace />} />
+        <Route path="/exhibitors" element={person ? <ExhibitorsScreen person={person} /> : <Navigate to="/login" replace />} />
+        {/* /map kept as a redirect — it was live and may be in someone's history. */}
+        <Route path="/map" element={<Navigate to="/exhibitors" replace />} />
+        <Route path="/guide" element={person ? <GuideScreen person={person} /> : <Navigate to="/login" replace />} />
         <Route path="/challenges" element={person ? <ChallengesScreen person={person} /> : <Navigate to="/login" replace />} />
         {/* Public — has to be readable before you agree to it on the signup form. */}
         <Route path="/terms" element={<TermsScreen />} />

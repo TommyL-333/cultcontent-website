@@ -11,7 +11,9 @@ export async function me() {
   const r = await fetch('/api/ccc-network/me');
   if (r.status === 401) return null;
   const j = await r.json();
-  return j.person;
+  // Completion is attached to the person object so screens that already take
+  // a `person` prop don't all need a second one threaded through them.
+  return j.person ? { ...j.person, completion: j.completion } : null;
 }
 
 export async function signup(payload) {
@@ -95,6 +97,11 @@ export async function requestEmailChange(email) {
 export async function getEvent() {
   const r = await fetch('/api/ccc-network/event.json');
   if (!r.ok) throw new Error('event data unavailable');
+  return r.json();
+}
+
+export async function getExhibitors() {
+  const r = await fetch('/api/ccc-network/exhibitors');
   return r.json();
 }
 

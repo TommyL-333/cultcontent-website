@@ -363,3 +363,90 @@ describe('terms + contact sharing consent', () => {
     assert.ok(!net.listApprovedCreatorsForExport().some((r) => r.email === 'togglesharing@example.com'));
   });
 });
+
+describe('photo, rates, and profile completion', () => {
+  test('a photo url is normalised, and a non-http one is dropped', () => {
+    const c = makeCreator('photo1@example.com');
+    const p = net.getPerson(c.uuid);
+    net.updateProfile(p.id, { first_name: 'P', photo_url: 'cdn.example.com/a.jpg' });
+    assert.equal(net.getPerson(c.uuid).photo_url, 'https://cdn.example.com/a.jpg');
+
+    // The value is rendered into an <img src> for every other member.
+    net.updateProfile(p.id, { first_name: 'P', photo_url: 'javascript:alert(1)' });
+    assert.equal(net.getPerson(c.uuid).photo_url, '');
+  });
+
+  test('rates are hidden from someone with no accepted connection', () => {
+    const creator = makeCreator('rates1@example.com');
+    const brand = makeBrand('ratesbrand1@example.com');
+    const c = approve(creator.uuid);
+    const b = approve(brand.uuid);
+    net.updateProfile(c.id, { first_name: 'R', rate_price: '$500 per video', rate_videos: '4 a month', rate_terms: '30 day usage' });
+
+    const seen = net.getPersonProfile(b.id, creator.uuid);
+    assert.equal(seen.rate_price, undefined, 'rate must not leak before connecting');
+    assert.equal(seen.rate_videos, undefined);
+    assert.equal(seen.rate_terms, undefined);
+    assert.equal(seen.email, undefined, 'contact still gated too');
+  });
+
+  test('rates appear once the connection is accepted, in both directions', () => {
+    const creator = makeCreator('rates2@example.com');
+    const brand = makeBrand('ratesbrand2@example.com');
+    const c = approve(creator.uuid);
+    const b = approve(brand.uuid);
+    net.updateProfile(c.id, { first_name: 'R', rate_price: '$800 per video' });
+
+    net.connect(b.id, creator.uuid);
+    net.respondToConnection(c.id, brand.uuid, true);
+
+    assert.equal(net.getPersonProfile(b.id, creator.uuid).rate_price, '$800 per video');
+  });
+
+  test('rates never appear in the directory listing, connected or not', () => {
+    const creator = makeCreator('rates3@example.com');
+    const brand = makeBrand('ratesbrand3@example.com');
+    const c = approve(creator.uuid);
+    const b = approve(brand.uuid);
+    net.updateProfile(c.id, { first_name: 'R', rate_price: '$999 per video', photo_url: 'https://cdn.example.com/x.jpg' });
+    net.connect(b.id, creator.uuid);
+    net.respondToConnection(c.id, brand.uuid, true);
+
+    const listed = net.listDirectory(b).people.find((p) => p.uuid === creator.uuid);
+    assert.ok(listed, 'creator should be listed');
+    // Browsing is not the same as connecting — the directory is a public
+    // surface even between connected people.
+    assert.equal(listed.rate_price, undefined, 'directory must never carry rates');
+    assert.equal(listed.email, undefined);
+    assert.equal(listed.photo_url, 'https://cdn.example.com/x.jpg', 'photo is public, unlike rates');
+  });
+
+  test('completion reports what is missing and reaches 100 when filled', () => {
+    const creator = makeCreator('completion@example.com');
+    const p = net.getPerson(creator.uuid);
+
+    const before = net.profileCompletion(p);
+    assert.ok(before.percent < 100);
+    assert.ok(before.missing.includes('A profile photo'));
+    assert.ok(before.missing.includes('Your rates'));
+
+    net.updateProfile(p.id, {
+      first_name: 'Full', photo_url: 'https://cdn.example.com/a.jpg', bio: 'hi',
+      looking_for: 'brands', tiktok_handle: '@x', category: 'beauty', rate_price: '$500',
+    });
+    const after = net.profileCompletion(net.getPerson(creator.uuid));
+    assert.equal(after.percent, 100);
+    assert.deepEqual(after.missing, []);
+  });
+
+  test('brands are not scored on rates, which they do not have', () => {
+    const brand = makeBrand('completionbrand@example.com');
+    const p = net.getPerson(brand.uuid);
+    net.updateProfile(p.id, {
+      first_name: 'B', brand_name: 'Brand Co', photo_url: 'https://cdn.example.com/b.jpg',
+      bio: 'we sell things', looking_for: 'creators', category: 'wellness',
+    });
+    const done = net.profileCompletion(net.getPerson(brand.uuid));
+    assert.equal(done.percent, 100, 'a brand with no rates should still be complete');
+  });
+});

@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { Button } from '@heroui/react';
 import Topbar from '../components/Topbar';
 import PersonDetailCard from '../components/PersonDetailCard';
-import { acceptConnection, connect, declineConnection, getPersonProfile } from '../api';
+import { acceptConnection, connect, declineConnection, getChallenges, getPersonProfile } from '../api';
 
 export default function PersonProfileScreen({ person }) {
   const { uuid } = useParams();
@@ -12,6 +12,7 @@ export default function PersonProfileScreen({ person }) {
   const [target, setTarget] = useState(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
+  const [briefs, setBriefs] = useState([]);
 
   function load() {
     getPersonProfile(uuid).then((j) => { if (j.ok) setTarget(j.person); else setErr(j.error || 'Not found'); });
@@ -21,6 +22,15 @@ export default function PersonProfileScreen({ person }) {
   useEffect(() => {
     if (target?.relationship === 'self') navigate('/profile', { replace: true });
   }, [target, navigate]);
+
+  // A brand's open briefs are the substance of their listing — "what are you
+  // actually looking for" answered concretely rather than as a bio line.
+  useEffect(() => {
+    if (target?.role !== 'brand') return;
+    getChallenges()
+      .then((j) => j.ok && setBriefs(j.challenges.filter((c) => c.brand_uuid === uuid && c.status === 'open')))
+      .catch(() => {});
+  }, [target, uuid]);
 
   const name = target ? `${target.first_name} ${target.last_name || ''}`.trim() : '';
 
@@ -83,7 +93,39 @@ export default function PersonProfileScreen({ person }) {
         <PersonDetailCard
           person={target}
           actions={actions}
-          extra={err && <p className="text-xs text-primary mb-3">{err}</p>}
+          extra={
+            <>
+              {briefs.length > 0 && (
+                <div className="mb-4">
+                  <div className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground mb-2">
+                    Open {briefs.length === 1 ? 'brief' : 'briefs'}
+                  </div>
+                  <div className="space-y-2.5">
+                    {briefs.map((b) => (
+                      <div key={b.uuid} className="rounded-md border border-border bg-background/40 px-4 py-3">
+                        <div className="text-sm font-bold">{b.title}</div>
+                        {b.description && <div className="text-[13px] text-foreground/80 leading-relaxed mt-1">{b.description}</div>}
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-[11px] text-muted-foreground">
+                          {b.reward && <span><span className="opacity-60">Reward</span> <span className="font-bold text-foreground">{b.reward}</span></span>}
+                          {b.deadline && <span><span className="opacity-60">By</span> <span className="font-bold text-foreground">{b.deadline}</span></span>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {person.role === 'creator' && (
+                    <button
+                      type="button" onClick={() => navigate('/challenges')}
+                      className="mt-2.5 text-xs font-bold underline"
+                      style={{ color: 'var(--color-accent-2)' }}
+                    >
+                      Enter a brief &rarr;
+                    </button>
+                  )}
+                </div>
+              )}
+              {err && <p className="text-xs text-primary mb-3">{err}</p>}
+            </>
+          }
         />
       </div>
     </div>
