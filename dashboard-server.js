@@ -346,9 +346,9 @@ app.post('/api/ccc/creator-apply', async (req, res) => {
   const total     = cccCreatorSignups.count();
 
   (async () => {
-    // 1a. Lark Base — Creator Signups table
+    // 1a. Lark Base — Creator Signups table (use user token — bot lacks Base permission)
     const CREATOR_TABLE = 'tblt9CxRyl84MrAY';
-    larkApi('post', `/bitable/v1/apps/${CCC_BASE}/tables/${CREATOR_TABLE}/records`, {
+    larkUserApi('post', `/bitable/v1/apps/${CCC_BASE}/tables/${CREATOR_TABLE}/records`, {
       fields: {
         Name:          name,
         Email:         email,
@@ -360,11 +360,14 @@ app.post('/api/ccc/creator-apply', async (req, res) => {
       },
     }).catch(e => console.error('[ccc-apply] Lark table error:', e.message));
 
-    // 1b. Lark DM to Tommy
+    // 1b. Lark alert to group chat
     const dmText = `🎪 New creator signup!\n👤 ${name}\n📧 ${email}\n📱 ${phone}${tiktok ? `\n🎵 @${tiktok}` : ''}${instagram ? `\n📸 @${instagram}` : ''}\n\nTotal signups: ${total}`;
-    larkApi('post', '/im/v1/messages?receive_id_type=open_id', {
-      receive_id: TOMMY_ID, msg_type: 'text', content: JSON.stringify({ text: dmText }),
-    }).catch(e => console.error('[ccc-apply] Lark DM error:', e.message));
+    const alertChatId = process.env.LARK_ALERT_CHAT_ID;
+    if (alertChatId) {
+      larkApi('post', '/im/v1/messages?receive_id_type=chat_id', {
+        receive_id: alertChatId, msg_type: 'text', content: JSON.stringify({ text: dmText }),
+      }).catch(e => console.error('[ccc-apply] Lark alert error:', e.message));
+    }
 
     // 2. Resend confirmation email
     const RESEND_KEY = process.env.RESEND_API_KEY;
