@@ -392,8 +392,13 @@ app.post('/api/ccc/creator-apply', async (req, res) => {
                 🚀 <strong style="color:#ddd;">Doors open: 11:00 AM</strong>
               </div>
             </div>
-            <div style="background:rgba(0,242,234,.06);border:1px solid rgba(0,242,234,.15);border-radius:10px;padding:18px 20px;margin:0 0 24px;">
-              <div style="font-size:13px;font-weight:700;color:#00F2EA;margin-bottom:8px;">Want a VIP upgrade? 👑</div>
+            <div style="background:rgba(0,242,234,.06);border:1px solid rgba(0,242,234,.15);border-radius:10px;padding:18px 20px;margin:0 0 16px;">
+              <div style="font-size:13px;font-weight:700;color:#00F2EA;margin-bottom:8px;">Join the Creator Network 🎨</div>
+              <p style="font-size:13px;color:#888;line-height:1.6;margin:0 0 12px;">Connect with other DMV creators, find collabs, and stay updated on everything Carnival in the creator community app.</p>
+              <a href="https://events.cultcontent.cc/ccc-network" style="display:inline-block;background:#00F2EA;color:#000;font-size:13px;font-weight:800;text-decoration:none;padding:10px 18px;border-radius:7px;">Join the Creator Network &rarr;</a>
+            </div>
+            <div style="background:rgba(0,242,234,.04);border:1px solid rgba(0,242,234,.1);border-radius:10px;padding:18px 20px;margin:0 0 24px;">
+              <div style="font-size:13px;font-weight:700;color:#00F2EA;margin-bottom:8px;">Want a free VIP upgrade? 👑</div>
               <p style="font-size:13px;color:#888;line-height:1.6;margin:0;">Post about Creator Carnival on TikTok or Instagram using <strong style="color:#ccc;">#CreatorCarnival</strong> and reply to this email with the link. We're giving free VIP passes to our top promoters.</p>
             </div>
             <p style="font-size:12px;color:#555;line-height:1.6;margin:0;">Questions? Reply to this email or reach out to <a href="mailto:Tommy@cultcontent.cc" style="color:#00F2EA;text-decoration:none;">Tommy@cultcontent.cc</a>. See you on Sept 12!</p>
