@@ -46,6 +46,17 @@ export default function LoginScreen() {
               <Card variant="default" className="p-8">
                 <h1 className="font-display text-lg font-bold mb-2">Check your inbox</h1>
                 <p className="text-sm text-muted-foreground leading-relaxed">If that email is on the roster, a login link is on its way — it expires in 30 minutes.</p>
+                {/* Login sends nothing at all for an address with no account, or
+                    one that never confirmed its email. Both are silent by design
+                    (we don't confirm whether an address is registered), so the
+                    only way out is to say what to do when nothing arrives. */}
+                <p className="text-[13px] text-muted-foreground leading-relaxed mt-4 pt-4 border-t border-border">
+                  Nothing after a minute? Check spam — then{' '}
+                  <RouterLink to="/" className="underline font-semibold" style={{ color: 'var(--color-accent-2)' }}>
+                    sign up with the same email
+                  </RouterLink>
+                  . That works whether you&rsquo;re brand new or just never confirmed your address, and it&rsquo;ll tell you which.
+                </p>
               </Card>
             </motion.div>
           ) : (

@@ -6950,9 +6950,23 @@ app.post('/ccc-network/signup', express.json(), (req, res) => {
 });
 
 app.post('/ccc-network/login', express.json(), async (req, res) => {
-  const link = cccNet.createMagicLink(req.body?.email || '');
+  const email = req.body?.email || '';
+  const link = cccNet.createMagicLink(email);
   res.json({ ok: true }); // always generic — don't leak whether the email exists
-  if (link) cccNetMail.sendMagicLinkEmail(link.person, link.token).catch(e => console.error('[ccc-network] magic link send error:', e.message));
+
+  // The response above is intentionally identical either way, so without this
+  // a login that sent nothing left no trace at all: "I never got the email"
+  // and "that account doesn't exist" looked the same from every angle. Log
+  // the reason server-side (never to the client) so it can actually be
+  // answered. Only the reason is logged, not a token.
+  if (!link) {
+    const existing = cccNet.getPersonByEmail(email);
+    console.log(`[ccc-network] login: no link sent for ${email || '(blank)'} — ${existing ? `account status='${existing.status}' (only 'approved' can be sent a login link)` : 'no account with that email'}`);
+    return;
+  }
+  cccNetMail.sendMagicLinkEmail(link.person, link.token)
+    .then(() => console.log(`[ccc-network] login: link sent to ${email}`))
+    .catch(e => console.error('[ccc-network] magic link send error:', e.message));
 });
 
 app.get('/ccc-network/auth/:token', (req, res) => {
