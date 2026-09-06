@@ -30,8 +30,12 @@ export default function ExhibitorsScreen({ person }) {
   const results = useMemo(() => {
     if (!data) return [];
     const q = query.trim().toLowerCase();
+    // An area id is no longer always a booth_type — the Belvedere, Drop TV
+    // and the stage are real places with no booth signups behind them.
+    const area = MAP_AREAS.find((a) => a.id === zoneFilter);
+    const boothZone = area ? area.boothZone : zoneFilter;
     return data.exhibitors.filter((e) => {
-      if (zoneFilter && e.zone !== zoneFilter) return false;
+      if (zoneFilter && e.zone !== boothZone) return false;
       if (!q) return true;
       return `${e.brand_name} ${e.category}`.toLowerCase().includes(q);
     });
@@ -78,17 +82,21 @@ export default function ExhibitorsScreen({ person }) {
               counts={countsByZone}
             />
 
-            {/* The stage has no exhibitors — send people to the schedule
-                instead of showing them an empty list. */}
-            {selectedArea?.kind === 'stage' && (
+            {/* Areas with no booth signups behind them would otherwise show
+                an empty list, which reads as "nothing here". */}
+            {selectedArea && !selectedArea.boothZone && (
               <div className="mt-4 rounded-md border border-border bg-card p-4">
-                <div className="text-sm font-bold mb-1">Main Stage</div>
+                <div className="text-sm font-bold mb-1">{selectedArea.label}</div>
                 <p className="text-[13px] text-foreground/80 leading-relaxed">
-                  All the day&rsquo;s programming happens here, 10am to 5pm.
+                  {selectedArea.kind === 'stage'
+                    ? 'All the day\u2019s programming happens here, 10am to 5pm.'
+                    : selectedArea.detail + '. An activation space rather than a booth run \u2014 nothing to browse, just come by.'}
                 </p>
-                <RouterLink to="/schedule" className="inline-block mt-2.5 text-xs font-bold underline" style={{ color: 'var(--color-accent-2)' }}>
-                  See the schedule &rarr;
-                </RouterLink>
+                {selectedArea.kind === 'stage' && (
+                  <RouterLink to="/schedule" className="inline-block mt-2.5 text-xs font-bold underline" style={{ color: 'var(--color-accent-2)' }}>
+                    See the schedule &rarr;
+                  </RouterLink>
+                )}
               </div>
             )}
 
@@ -105,15 +113,21 @@ export default function ExhibitorsScreen({ person }) {
               >
                 All
               </button>
-              {data.zones.map((z) => (
-                <button
-                  key={z.id} type="button"
-                  onClick={() => setZoneFilter(zoneFilter === z.id ? null : z.id)}
-                  className={`rounded-lg px-3 py-2 text-xs font-bold ${zoneFilter === z.id ? 'bg-foreground text-background' : 'border border-border text-muted-foreground hover:text-foreground'}`}
-                >
-                  {z.label}
-                </button>
-              ))}
+              {data.zones.map((z) => {
+                // Chips address booth zones; the map addresses areas. Resolve
+                // to the area id so both selections stay in sync.
+                const areaId = MAP_AREAS.find((a) => a.boothZone === z.id)?.id ?? z.id;
+                const active = zoneFilter === areaId;
+                return (
+                  <button
+                    key={z.id} type="button"
+                    onClick={() => setZoneFilter(active ? null : areaId)}
+                    className={`rounded-lg px-3 py-2 text-xs font-bold ${active ? 'bg-foreground text-background' : 'border border-border text-muted-foreground hover:text-foreground'}`}
+                  >
+                    {z.label}
+                  </button>
+                );
+              })}
             </div>
 
             <div className="text-[10px] font-bold uppercase tracking-[.14em] text-muted-foreground mb-3">
