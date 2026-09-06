@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { Alert, Button, Card, Input, Label, ListBox, ListBoxItem, Select, Switch, TextArea } from '@heroui/react';
 import Topbar from '../components/Topbar';
 import { BOOTH_ZONES } from '../lib/booth-zones';
+import PhotoUrlPreview from '../components/PhotoUrlPreview';
 import { Link as RouterLink } from 'react-router-dom';
 import { deactivateAccount, requestEmailChange, saveProfile, updateContactSharing, updateNotifications } from '../api';
 
@@ -132,18 +133,16 @@ export default function SettingsScreen({ person, onSaved }) {
             <div>
               <Label>{person.role === 'creator' ? 'Headshot / profile photo URL' : 'Logo or photo URL'}</Label>
               <Input value={form.photo_url} onChange={set('photo_url')} placeholder="https://…" fullWidth />
-              <p className="text-xs text-muted-foreground mt-1.5">
-                Paste a link to an image — your TikTok or Instagram profile picture, a Drive or Dropbox share link, anything public.
+              {/* The old hint recommended a Drive or Dropbox *share* link,
+                  which serves an HTML page rather than an image and so never
+                  displays. Drive and Dropbox links are now rewritten on save,
+                  but the advice should point at the thing that always works. */}
+              <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+                Paste a direct link to the image file — right-click a photo and choose
+                &ldquo;Copy image address&rdquo;. Google Drive and Dropbox share links are converted
+                automatically, as long as the file is shared publicly.
               </p>
-              {form.photo_url && (
-                <img
-                  src={form.photo_url}
-                  alt=""
-                  className="mt-2.5 h-16 w-16 rounded-full object-cover border border-border"
-                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                  onLoad={(e) => { e.currentTarget.style.display = ''; }}
-                />
-              )}
+              <PhotoUrlPreview url={form.photo_url} />
             </div>
             <div><Label>{person.role === 'creator' ? 'Content niche' : 'Product category'}</Label><Input value={form.category} onChange={set('category')} fullWidth /></div>
             <div><Label>Bio</Label><TextArea value={form.bio} onChange={set('bio')} fullWidth /></div>

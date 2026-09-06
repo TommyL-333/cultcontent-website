@@ -375,6 +375,28 @@ describe('terms + contact sharing consent', () => {
 });
 
 describe('photo, rates, and profile completion', () => {
+  test('Google Drive and Dropbox share links are rewritten to direct images', () => {
+    // People paste the link they have. A Drive /view URL and a Dropbox ?dl=0
+    // URL both serve an HTML page, so <img> never renders them.
+    const c = makeCreator('sharelinks@example.com');
+    const p = net.getPerson(c.uuid);
+
+    net.updateProfile(p.id, { first_name: 'P', photo_url: 'https://drive.google.com/file/d/1AbCdEf/view?usp=sharing' });
+    assert.equal(net.getPerson(c.uuid).photo_url, 'https://drive.google.com/thumbnail?id=1AbCdEf&sz=w600');
+
+    net.updateProfile(p.id, { first_name: 'P', photo_url: 'https://www.dropbox.com/s/abc/head.jpg?dl=0' });
+    assert.equal(net.getPerson(c.uuid).photo_url, 'https://www.dropbox.com/s/abc/head.jpg?raw=1');
+  });
+
+  test('rewriting is idempotent — an already-direct url is left alone', () => {
+    // The boot-time backfill re-runs this over every row on every start.
+    const direct = 'https://cultcontent.cc/headshot.jpg';
+    assert.equal(net.normalizePhotoUrl(direct), direct);
+
+    const drive = net.normalizePhotoUrl('https://drive.google.com/file/d/XYZ/view');
+    assert.equal(net.normalizePhotoUrl(drive), drive, 'second pass must not change it');
+  });
+
   test('a photo url is normalised, and a non-http one is dropped', () => {
     const c = makeCreator('photo1@example.com');
     const p = net.getPerson(c.uuid);
