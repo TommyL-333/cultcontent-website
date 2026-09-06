@@ -7094,10 +7094,12 @@ app.post('/ccc-network/settings/notifications', requireNetworkSession, express.j
   res.json({ ok: true, person });
 });
 
+// Tier decides who sees the roster early and who can download the creator
+// contact export, so it is staff-assigned in /ccc-network-admin — never by
+// the account itself. This used to write the value straight through, which
+// let any brand grant itself sponsor access.
 app.post('/ccc-network/settings/tier', requireNetworkSession, express.json(), (req, res) => {
-  if (req.networkPerson.role !== 'brand') return res.status(400).json({ ok: false, error: 'creators do not have a tier' });
-  const result = cccNet.setTierRequest(req.networkPerson.id, req.body?.tier);
-  res.status(result.ok ? 200 : 400).json(result);
+  res.status(403).json({ ok: false, error: 'tier_is_admin_assigned' });
 });
 
 app.post('/ccc-network/settings/contact-sharing', requireNetworkSession, express.json(), (req, res) => {

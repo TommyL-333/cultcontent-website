@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { BOOTH_ZONES } from '../lib/booth-zones';
 import { Link as RouterLink } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
@@ -49,7 +50,11 @@ const DUPLICATE_COPY = {
 
 export default function SignupScreen() {
   const [role, setRole] = useState('creator');
-  const [tier, setTier] = useState('general');
+  // Tier is no longer self-reported — it decides who gets early roster access
+  // and the contact export, so staff assign it in the admin. Brands now say
+  // where they are on site instead, which is what other members actually want.
+  const [boothZone, setBoothZone] = useState('capitol-canopy');
+  const [boothNote, setBoothNote] = useState('');
   const [form, setForm] = useState(initialForm);
   const [error, setError] = useState('');
   const [duplicate, setDuplicate] = useState(null); // { status } | null — approved/rejected/deactivated email already exists
@@ -84,7 +89,8 @@ export default function SignupScreen() {
     setSubmitting(true);
     const payload = {
       role,
-      tier,
+      booth_zone: role === 'brand' ? boothZone : '',
+      booth_note: role === 'brand' && boothZone === 'other' ? boothNote : '',
       first_name: form.first_name,
       last_name: form.last_name,
       email: form.email,
@@ -228,21 +234,34 @@ export default function SignupScreen() {
 
             {role === 'brand' && (
               <div>
-                <Label>Which sponsorship did you book?</Label>
-                <Select.Root selectedKey={tier} onSelectionChange={setTier} aria-label="Sponsorship tier" fullWidth>
+                <Label>Where will you be at the Carnival?</Label>
+                <Select.Root selectedKey={boothZone} onSelectionChange={setBoothZone} aria-label="Booth location" fullWidth>
                   <Select.Trigger>
                     <Select.Value />
                     <Select.Indicator />
                   </Select.Trigger>
                   <Select.Popover>
                     <ListBox>
-                      <ListBoxItem id="general">Booth / Community Vendor / Other</ListBoxItem>
-                      <ListBoxItem id="priority">Marketplace or Carnival Sponsor (priority access)</ListBoxItem>
-                      <ListBoxItem id="executive">Executive Experience</ListBoxItem>
+                      {BOOTH_ZONES.map((z) => <ListBoxItem key={z.id} id={z.id}>{z.label}</ListBoxItem>)}
                     </ListBox>
                   </Select.Popover>
                 </Select.Root>
-                <p className="text-[11px] text-muted-foreground mt-1.5 leading-relaxed">This is self-reported — Tommy's team can adjust it later if needed.</p>
+
+                {boothZone === 'other' && (
+                  <div className="mt-3">
+                    <Label>Tell us your situation</Label>
+                    <TextArea
+                      value={boothNote}
+                      onChange={(e) => setBoothNote(e.target.value)}
+                      placeholder="e.g. Marketplace Sponsor, activation partner, or attending to meet creators without a booth"
+                      fullWidth
+                    />
+                  </div>
+                )}
+
+                <p className="text-[11px] text-muted-foreground mt-1.5 leading-relaxed">
+                  Shown on your listing so creators can find you on the day. Sponsorship level is set by Tommy&rsquo;s team, not here.
+                </p>
               </div>
             )}
 

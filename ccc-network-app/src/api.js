@@ -79,9 +79,8 @@ export async function updateNotifications(prefs) {
   return postJson('/ccc-network/settings/notifications', prefs);
 }
 
-export async function updateTier(tier) {
-  return postJson('/ccc-network/settings/tier', { tier });
-}
+// Tier is staff-assigned in /ccc-network-admin — there is deliberately no
+// client function for it. The route it used now returns 403.
 
 export async function deactivateAccount() {
   return postJson('/ccc-network/settings/deactivate', {});

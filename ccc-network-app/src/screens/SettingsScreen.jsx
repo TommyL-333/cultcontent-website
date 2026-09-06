@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { Alert, Button, Card, Input, Label, ListBox, ListBoxItem, Select, Switch, TextArea } from '@heroui/react';
 import Topbar from '../components/Topbar';
+import { BOOTH_ZONES } from '../lib/booth-zones';
 import { Link as RouterLink } from 'react-router-dom';
-import { deactivateAccount, requestEmailChange, saveProfile, updateContactSharing, updateNotifications, updateTier } from '../api';
+import { deactivateAccount, requestEmailChange, saveProfile, updateContactSharing, updateNotifications } from '../api';
 
 function NotifyRow({ label, hint, checked, onChange }) {
   return (
@@ -25,6 +26,7 @@ export default function SettingsScreen({ person, onSaved }) {
     tiktok_handle: person.tiktok_handle || '', instagram_handle: person.instagram_handle || '', brand_name: person.brand_name || '', category: person.category || '',
     bio: person.bio || '', looking_for: person.looking_for || '',
     photo_url: person.photo_url || '',
+    booth_zone: person.booth_zone || 'capitol-canopy', booth_note: person.booth_note || '',
     rate_videos: person.rate_videos || '', rate_price: person.rate_price || '', rate_terms: person.rate_terms || '',
     links: (person.links || []).map((l) => l.url).join('\n'),
   });
@@ -38,8 +40,6 @@ export default function SettingsScreen({ person, onSaved }) {
   });
   const [notifySaved, setNotifySaved] = useState(false);
 
-  const [tier, setTier] = useState(person.tier || 'general');
-  const [tierSaved, setTierSaved] = useState(false);
 
   const [newEmail, setNewEmail] = useState('');
   const [emailSent, setEmailSent] = useState(false);
@@ -62,7 +62,7 @@ export default function SettingsScreen({ person, onSaved }) {
             tiktok_handle: form.tiktok_handle, instagram_handle: form.instagram_handle,
             rate_videos: form.rate_videos, rate_price: form.rate_price, rate_terms: form.rate_terms,
           }
-        : { brand_name: form.brand_name }),
+        : { brand_name: form.brand_name, booth_zone: form.booth_zone, booth_note: form.booth_zone === 'other' ? form.booth_note : '' }),
       links: form.links.split('\n').map((s) => s.trim()).filter(Boolean).map((url) => ({ label: 'Link', url })),
     };
     const j = await saveProfile(payload);
@@ -89,18 +89,6 @@ export default function SettingsScreen({ person, onSaved }) {
     setTimeout(() => setNotifySaved(false), 2000);
   }
 
-  async function handleTierChange(value) {
-    setTier(value);
-    const j = await updateTier(value);
-    if (j.ok) {
-      setTierSaved(true);
-      toast.success('Sponsorship tier updated.');
-      setTimeout(() => setTierSaved(false), 2000);
-      onSaved?.();
-    } else {
-      toast.error(j.error || 'Could not update tier.');
-    }
-  }
 
   async function handleEmailSubmit(e) {
     e.preventDefault();
@@ -183,6 +171,35 @@ export default function SettingsScreen({ person, onSaved }) {
                 </div>
               </div>
             )}
+            {person.role === 'brand' && (
+              <div>
+                <Label>Where will you be at the Carnival?</Label>
+                <Select.Root
+                  selectedKey={form.booth_zone || 'capitol-canopy'}
+                  onSelectionChange={(v) => setForm((f) => ({ ...f, booth_zone: v }))}
+                  aria-label="Booth location"
+                  fullWidth
+                >
+                  <Select.Trigger><Select.Value /><Select.Indicator /></Select.Trigger>
+                  <Select.Popover>
+                    <ListBox>
+                      {BOOTH_ZONES.map((z) => <ListBoxItem key={z.id} id={z.id}>{z.label}</ListBoxItem>)}
+                    </ListBox>
+                  </Select.Popover>
+                </Select.Root>
+                {form.booth_zone === 'other' && (
+                  <div className="mt-3">
+                    <Label>Tell us your situation</Label>
+                    <TextArea
+                      value={form.booth_note}
+                      onChange={set('booth_note')}
+                      placeholder="e.g. Marketplace Sponsor, activation partner, or attending to meet creators without a booth"
+                      fullWidth
+                    />
+                  </div>
+                )}
+              </div>
+            )}
             <div><Label>Links (one per line)</Label><TextArea value={form.links} onChange={set('links')} fullWidth /></div>
             <div className="flex items-center gap-4 pt-1">
               <Button type="submit" variant="primary">Save Profile</Button>
@@ -238,23 +255,16 @@ export default function SettingsScreen({ person, onSaved }) {
           </p>
         </Card>
 
-        {/* Tier (brands only) */}
+        {/* Sponsorship level is read-only here — it controls early roster
+            access and the contact export, so it's staff-assigned. */}
         {person.role === 'brand' && (
           <Card variant="default" className="p-6 sm:p-7 mb-5">
-            <div className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-4 flex items-center gap-2">
-              Sponsorship tier {tierSaved && <span className="text-accent-2 normal-case font-normal">Saved ✓</span>}
-            </div>
-            <Select.Root selectedKey={tier} onSelectionChange={handleTierChange} aria-label="Sponsorship tier" fullWidth>
-              <Select.Trigger><Select.Value /><Select.Indicator /></Select.Trigger>
-              <Select.Popover>
-                <ListBox>
-                  <ListBoxItem id="general">Booth / Community Vendor / Other</ListBoxItem>
-                  <ListBoxItem id="priority">Marketplace or Carnival Sponsor (priority access)</ListBoxItem>
-                  <ListBoxItem id="executive">Executive Experience</ListBoxItem>
-                </ListBox>
-              </Select.Popover>
-            </Select.Root>
-            <p className="text-[11px] text-muted-foreground mt-1.5">Self-reported — Tommy's team can still correct this at review.</p>
+            <div className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-3">Sponsorship level</div>
+            <p className="text-sm text-foreground font-medium capitalize mb-1.5">{person.tier || 'general'}</p>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              Set by Tommy&rsquo;s team based on what you booked. If this looks wrong, email{' '}
+              <a href="mailto:tommy@cultcontent.cc" className="underline">tommy@cultcontent.cc</a>.
+            </p>
           </Card>
         )}
 

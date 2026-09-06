@@ -284,8 +284,27 @@ test('settings: profile save, notifications, tier update', async () => {
   assert.equal(notif.person.notify_request, 0);
 
   const tier = await brandSession.postJson('/ccc-network/settings/tier', { tier: 'executive' });
-  assert.equal(tier.ok, true);
-  assert.equal(tier.person.tier, 'executive');
+  assert.equal(tier.ok, false, 'tier is staff-assigned, not self-serve');
+  assert.equal(tier.error, 'tier_is_admin_assigned');
+});
+
+test('a general brand cannot self-promote to unlock the contact export', async () => {
+  const brand = await (await fetch(`${BASE}/ccc-network/signup`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ role: 'brand', first_name: 'Climber', email: 'climber@example.com', brand_name: 'Climber Co', looking_for: 'x', terms_accepted: true }),
+  })).json();
+  await fetch(`${BASE}/api/admin/ccc-network/people/${brand.uuid}/status`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'approved', tier: 'general' }),
+  });
+  await new Promise((r) => setTimeout(r, 200));
+
+  const session = makeSession();
+  await session.get(`/ccc-network/auth/${latestTokenFor('climber@example.com')}`);
+
+  // The whole attack in two calls: promote yourself, then take the export.
+  await session.postJson('/ccc-network/settings/tier', { tier: 'priority' });
+  const after = await session.get('/ccc-network/contacts.csv');
+  assert.equal(after.status, 403, 'export must stay closed to a general brand');
 });
 
 test('CSV export is tier-gated: general brands 403, priority brands succeed', async () => {

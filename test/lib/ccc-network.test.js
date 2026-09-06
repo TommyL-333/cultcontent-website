@@ -287,11 +287,21 @@ describe('settings', () => {
     assert.equal(updated.notify_approval, 1);
     assert.equal(updated.notify_message, 0);
   });
-  test('setTierRequest accepts a valid tier, rejects an invalid one', () => {
-    const ok = net.setTierRequest(person.id, 'executive');
-    assert.equal(ok.ok, true);
-    assert.equal(ok.person.tier, 'executive');
-    assert.equal(net.setTierRequest(person.id, 'diamond').ok, false);
+  test('a brand cannot set its own tier — that is staff-assigned', () => {
+    // Tier gates early roster access and the creator contact export, so
+    // self-service here would be self-granted sponsor access.
+    const before = net.getPerson(person.uuid).tier;
+    const result = net.setTierRequest(person.id, 'executive');
+    assert.equal(result.ok, false);
+    assert.equal(result.error, 'tier_is_admin_assigned');
+    assert.equal(net.getPerson(person.uuid).tier, before, 'tier must be unchanged');
+  });
+
+  test('staff can still set a tier through setStatus', () => {
+    const b = makeBrand('stafftier@example.com');
+    const promoted = net.setStatus(b.uuid, { status: 'approved', tier: 'priority' });
+    assert.equal(promoted.ok, true);
+    assert.equal(promoted.person.tier, 'priority');
   });
   test('requestEmailChange rejects an invalid or already-registered email', () => {
     approve(makeCreator('taken@example.com').uuid);

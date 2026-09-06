@@ -6,6 +6,7 @@ import Topbar from '../components/Topbar';
 import ProfilePhoto from '../components/ProfilePhoto';
 import { connect, getChallenges, getDirectory } from '../api';
 import { orgOf } from '../lib/avatar';
+import { zoneLabel } from '../lib/booth-zones';
 
 // Connect is a request, not an instant reveal — the button reflects
 // pending/accepted state (best-effort from this click; a fresh page load
@@ -41,6 +42,11 @@ function PersonCard({ person, briefs }) {
           <div className="text-xs text-muted-foreground mt-0.5 truncate">
             {[person.category, !isBrand && org].filter(Boolean).join(' · ')}
           </div>
+          {isBrand && zoneLabel(person) && (
+            <div className="mt-1.5 inline-flex items-center gap-1.5 text-[11px] font-bold" style={{ color: 'var(--color-gold)' }}>
+              <span aria-hidden>📍</span>{zoneLabel(person)}
+            </div>
+          )}
         </div>
       </div>
 

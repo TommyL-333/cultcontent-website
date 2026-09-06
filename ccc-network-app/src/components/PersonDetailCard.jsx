@@ -1,6 +1,7 @@
 import { Card, Chip } from '@heroui/react';
 import ProfilePhoto from './ProfilePhoto';
 import { displayName, orgOf } from '../lib/avatar';
+import { zoneLabel } from '../lib/booth-zones';
 
 // Shared full-profile presentation — used by both the read-only ProfileScreen
 // (viewing yourself) and PersonProfileScreen (viewing someone else via the
@@ -17,6 +18,11 @@ export default function PersonDetailCard({ person, actions, extra, contactLabel 
           <div className="text-xl font-bold mt-2">{displayName(person)}</div>
           {org && <div className="text-sm text-muted-foreground">{org}</div>}
           {person.category && <div className="text-xs text-muted-foreground mt-0.5">{person.category}</div>}
+          {person.role === 'brand' && zoneLabel(person) && (
+            <div className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-bold" style={{ color: 'var(--color-gold)' }}>
+              <span aria-hidden>📍</span>{zoneLabel(person)}
+            </div>
+          )}
         </div>
       </div>
 
