@@ -118,8 +118,22 @@ export async function setChallengeStatus(uuid, status) {
   return postJson(`/ccc-network/challenges/${uuid}/status`, { status });
 }
 
+// Appends one link to your entry — call it once per deliverable.
 export async function enterChallenge(uuid, { url, note }) {
   return postJson(`/ccc-network/challenges/${uuid}/enter`, { url, note });
+}
+
+export async function removeChallengeLink(uuid, linkId) {
+  const r = await fetch(`/ccc-network/challenges/${uuid}/links/${linkId}/remove`, { method: 'POST' });
+  return r.json();
+}
+
+export async function reviewChallengeEntry(uuid, creatorUuid, { status, brand_note }) {
+  return postJson(`/ccc-network/challenges/${uuid}/entries/${creatorUuid}/review`, { status, brand_note });
+}
+
+export async function setChallengeEntryPaid(uuid, creatorUuid, paid) {
+  return postJson(`/ccc-network/challenges/${uuid}/entries/${creatorUuid}/paid`, { paid });
 }
 
 export async function withdrawFromChallenge(uuid) {

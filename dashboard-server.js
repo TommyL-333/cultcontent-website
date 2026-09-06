@@ -7239,8 +7239,35 @@ app.post('/ccc-network/challenges/:uuid/status', requireNetworkSession, express.
   res.status(result.ok ? 200 : 400).json(result);
 });
 
+// Appends a link to the creator's entry. A brief asking for three videos
+// takes three calls; nothing is overwritten.
 app.post('/ccc-network/challenges/:uuid/enter', requireNetworkSession, express.json(), (req, res) => {
-  const result = cccChallenges.submitEntry(req.networkPerson, req.params.uuid, req.body || {});
+  const result = cccChallenges.submitLink(req.networkPerson, req.params.uuid, req.body || {});
+  res.status(result.ok ? 200 : 400).json(result);
+});
+
+app.post('/ccc-network/challenges/:uuid/links/:linkId/remove', requireNetworkSession, (req, res) => {
+  const result = cccChallenges.removeLink(req.networkPerson, req.params.uuid, Number(req.params.linkId));
+  res.status(result.ok ? 200 : 400).json(result);
+});
+
+// Review: accept, pick a winner, or pass. Emails the creator either way, so
+// nobody is left refreshing to find out what happened.
+app.post('/ccc-network/challenges/:uuid/entries/:creatorUuid/review', requireNetworkSession, express.json(), (req, res) => {
+  const result = cccChallenges.reviewEntry(req.networkPerson, req.params.uuid, req.params.creatorUuid, req.body || {});
+  res.status(result.ok ? 200 : 400).json(result);
+  if (result.ok) {
+    cccNetMail.sendChallengeReviewEmail(result.creator, {
+      brand: req.networkPerson,
+      challenge: result.challenge,
+      status: result.status,
+      brandNote: (req.body?.brand_note || '').trim(),
+    }).catch((e) => console.error('[ccc-network] challenge review email error:', e.message));
+  }
+});
+
+app.post('/ccc-network/challenges/:uuid/entries/:creatorUuid/paid', requireNetworkSession, express.json(), (req, res) => {
+  const result = cccChallenges.setEntryPaid(req.networkPerson, req.params.uuid, req.params.creatorUuid, !!req.body?.paid);
   res.status(result.ok ? 200 : 400).json(result);
 });
 
