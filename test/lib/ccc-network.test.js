@@ -631,3 +631,70 @@ describe('profile updates merge rather than overwrite', () => {
     assert.equal(net.getPerson(c.uuid).photo_url, '');
   });
 });
+
+describe('TikTok Shop code', () => {
+  test('the code is sanitised and stored for a brand', () => {
+    const b = makeBrand('shopcode@example.com');
+    const p = net.getPerson(b.uuid);
+    net.updateProfile(p.id, { tiktok_shop_code: '  ABC-123_x  ' });
+    assert.equal(net.getPerson(b.uuid).tiktok_shop_code, 'ABC-123_x');
+  });
+
+  test('punctuation and markup are stripped rather than stored', () => {
+    const b = makeBrand('shopcode2@example.com');
+    const p = net.getPerson(b.uuid);
+    net.updateProfile(p.id, { tiktok_shop_code: '<script>alert(1)</script>' });
+    assert.equal(net.getPerson(b.uuid).tiktok_shop_code, 'scriptalert1script');
+  });
+
+  test('the code is never visible to another member, connected or not', () => {
+    const brand = makeBrand('shopprivate@example.com');
+    const creator = makeCreator('shopviewer@example.com');
+    const b = approve(brand.uuid);
+    const c = approve(creator.uuid);
+    net.updateProfile(b.id, { tiktok_shop_code: 'SECRET123' });
+
+    // Unconnected.
+    let seen = net.getPersonProfile(c.id, brand.uuid);
+    assert.equal(seen.tiktok_shop_code, undefined);
+
+    // And still not after connecting — unlike contact details, a peer never
+    // has a reason to see a brand's Shop code.
+    net.connect(c.id, brand.uuid);
+    net.respondToConnection(b.id, creator.uuid, true);
+    seen = net.getPersonProfile(c.id, brand.uuid);
+    assert.equal(seen.tiktok_shop_code, undefined);
+    assert.equal(seen.tiktok_shop_status, undefined);
+  });
+
+  test('the brand still sees their own code and status', () => {
+    const brand = makeBrand('shopself@example.com');
+    const b = approve(brand.uuid);
+    net.updateProfile(b.id, { tiktok_shop_code: 'MINE1' });
+    const self = net.getPersonProfile(b.id, brand.uuid);
+    assert.equal(self.relationship, 'self');
+    assert.equal(self.tiktok_shop_code, 'MINE1');
+  });
+
+  test('it never reaches the directory listing', () => {
+    const brand = makeBrand('shopdir@example.com');
+    const creator = makeCreator('shopdirviewer@example.com');
+    const b = approve(brand.uuid);
+    const c = approve(creator.uuid);
+    net.updateProfile(b.id, { tiktok_shop_code: 'NOPE1' });
+
+    const listed = net.listDirectory(c).people.find((x) => x.uuid === brand.uuid);
+    assert.ok(listed);
+    assert.equal(listed.tiktok_shop_code, undefined);
+  });
+
+  test('status moves submitted → invited, and rejects anything else', () => {
+    const brand = makeBrand('shopstatus@example.com');
+    approve(brand.uuid);
+    assert.equal(net.setTikTokShopStatus(brand.uuid, 'submitted').person.tiktok_shop_status, 'submitted');
+    const invited = net.setTikTokShopStatus(brand.uuid, 'invited');
+    assert.equal(invited.person.tiktok_shop_status, 'invited');
+    assert.ok(invited.person.tiktok_shop_at);
+    assert.equal(net.setTikTokShopStatus(brand.uuid, 'whatever').error, 'bad_status');
+  });
+});

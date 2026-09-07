@@ -54,6 +54,7 @@ export default function SignupScreen() {
   // and the contact export, so staff assign it in the admin. Brands now say
   // where they are on site instead, which is what other members actually want.
   const [boothZone, setBoothZone] = useState('freedom-way');
+  const [shopCode, setShopCode] = useState('');
   const [form, setForm] = useState(initialForm);
   const [error, setError] = useState('');
   const [duplicate, setDuplicate] = useState(null); // { status } | null — approved/rejected/deactivated email already exists
@@ -89,6 +90,7 @@ export default function SignupScreen() {
     const payload = {
       role,
       booth_zone: role === 'brand' ? boothZone : '',
+      tiktok_shop_code: role === 'brand' ? shopCode : '',
       first_name: form.first_name,
       last_name: form.last_name,
       email: form.email,
@@ -262,6 +264,17 @@ export default function SignupScreen() {
 
                 <p className="text-[11px] text-muted-foreground mt-1.5 leading-relaxed">
                   Shown on your listing so creators can find you on the day. Sponsorship level is set by Tommy&rsquo;s team, not here.
+                </p>
+              </div>
+            )}
+
+            {role === 'brand' && (
+              <div>
+                <Label>TikTok Shop code (optional)</Label>
+                <Input value={shopCode} onChange={(e) => setShopCode(e.target.value)} placeholder="Your TikTok Shop code" fullWidth />
+                <p className="text-[11px] text-muted-foreground mt-1.5 leading-relaxed">
+                  Add this and we&rsquo;ll invite you to the Creator Carnival creator matchmaking campaign on TikTok Shop,
+                  so creators can tag your products live from the floor. Private &mdash; only our team sees it, never other members.
                 </p>
               </div>
             )}

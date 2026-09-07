@@ -7070,9 +7070,51 @@ app.get('/api/ccc-network/me', requireNetworkSession, (req, res) => {
   res.json({ ok: true, person: req.networkPerson, completion: cccNet.profileCompletion(req.networkPerson) });
 });
 
+// Pings Lark and email when a brand hands over a TikTok Shop code, because
+// adding them to the campaign is a manual step somebody has to actually do.
+async function alertNewTikTokShopCode(person) {
+  const name = person.brand_name || `${person.first_name} ${person.last_name || ''}`.trim();
+  const text = `\u{1F6CD}\uFE0F TikTok Shop code submitted\n${name}\nCode: ${person.tiktok_shop_code}\n${person.email}\n\nAdd them to the Creator Carnival matchmaking campaign, then mark them invited in /ccc-network-admin.`;
+
+  const alertChatId = process.env.LARK_ALERT_CHAT_ID;
+  if (alertChatId) {
+    larkApi('post', '/im/v1/messages?receive_id_type=chat_id', {
+      receive_id: alertChatId, msg_type: 'text', content: JSON.stringify({ text }),
+    }).catch((e) => console.error('[ccc-network] Lark shop-code alert error:', e.message));
+  }
+
+  const RESEND_KEY = process.env.RESEND_API_KEY;
+  if (!RESEND_KEY) {
+    console.log(`[ccc-network] shop code (no RESEND_API_KEY, logging instead): ${name} / ${person.tiktok_shop_code} / ${person.email}`);
+    return;
+  }
+  try {
+    const { Resend } = require('resend');
+    await new Resend(RESEND_KEY).emails.send({
+      from: process.env.RESEND_FROM_ADDRESS || 'Creator Carnival <noreply@mail.cultcontent.cc>',
+      to: 'tommy@cultcontent.cc',
+      subject: `TikTok Shop code from ${name}`,
+      html: `<p><strong>${name}</strong> submitted a TikTok Shop code for the matchmaking campaign.</p>
+<ul><li>Code: <strong>${person.tiktok_shop_code}</strong></li><li>Email: ${person.email}</li></ul>
+<p>Add them to the campaign, then mark them invited in <a href="${process.env.PUBLIC_BASE_URL || ''}/ccc-network-admin">the admin</a> — that emails them the accept instructions.</p>`,
+    });
+  } catch (e) {
+    console.error('[ccc-network] shop-code notify email error:', e.message);
+  }
+}
+
 app.post('/ccc-network/profile', requireNetworkSession, express.json(), (req, res) => {
-  const updated = cccNet.updateProfile(req.networkPerson.id, req.body || {});
+  const before = req.networkPerson.tiktok_shop_code || '';
+  let updated = cccNet.updateProfile(req.networkPerson.id, req.body || {});
+
+  // Only on a genuine change — re-saving an unchanged profile must not
+  // re-alert, or the channel turns into noise and gets ignored.
+  const after = updated.tiktok_shop_code || '';
+  const isNewCode = Boolean(after) && after !== before;
+  if (isNewCode) updated = cccNet.setTikTokShopStatus(updated.uuid, 'submitted').person;
+
   res.json({ ok: true, person: updated });
+  if (isNewCode) alertNewTikTokShopCode(updated).catch((e) => console.error('[ccc-network] shop-code alert failed:', e.message));
 });
 
 app.get('/api/ccc-network/directory.json', requireNetworkSession, (req, res) => {
@@ -7377,6 +7419,15 @@ app.get('/ccc-network-admin', (req, res) => {
 app.get('/api/admin/ccc-network/people', (req, res) => {
   const { role, status, tier } = req.query;
   res.json({ ok: true, rows: cccNet.listAll({ role, status, tier }) });
+});
+
+app.post('/api/admin/ccc-network/people/:uuid/tiktok-shop', express.json(), (req, res) => {
+  const result = cccNet.setTikTokShopStatus(req.params.uuid, req.body?.status ?? '');
+  res.status(result.ok ? 200 : (result.error === 'not_found' ? 404 : 400)).json(result);
+  if (result.ok && result.person.tiktok_shop_status === 'invited') {
+    cccNetMail.sendTikTokShopInviteEmail(result.person)
+      .catch((e) => console.error('[ccc-network] shop invite email error:', e.message));
+  }
 });
 
 app.get('/api/admin/ccc-network/people.csv', (req, res) => {

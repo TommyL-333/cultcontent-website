@@ -308,6 +308,15 @@ function detailRow(p) {
           <div><div class="field-label">Looking for</div>${esc(p.looking_for) || '—'}</div>
           <div class="full"><div class="field-label">Bio</div>${esc(p.bio) || '—'}</div>
           <div class="full"><div class="field-label">Links</div>${links.length ? links.map(l => esc(l)).join(', ') : '—'}</div>
+          ${p.role === 'brand' && p.tiktok_shop_code ? `
+          <div class="full">
+            <div class="field-label">TikTok Shop code</div>
+            <code>${esc(p.tiktok_shop_code)}</code>
+            &nbsp;<span class="status-pill">${esc(p.tiktok_shop_status || 'submitted')}</span>
+            ${p.tiktok_shop_status === 'invited'
+              ? '&nbsp;<span class="meta">already emailed the accept steps</span>'
+              : `&nbsp;<button class="approve" data-action="shop-invited" data-uuid="${p.uuid}">Mark invited &amp; email them</button>`}
+          </div>` : ''}
         </div>
       </td>
     </tr>
@@ -379,6 +388,18 @@ function render() {
       const patch = { status: statusSel.value };
       if (tierSel) patch.tier = tierSel.value;
       setStatus(uuid, patch, btn);
+    });
+  });
+  $rows.querySelectorAll('[data-action="shop-invited"]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      btn.textContent = 'Sending…';
+      const r = await fetch(`/api/admin/ccc-network/people/${btn.dataset.uuid}/tiktok-shop`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'invited' }),
+      }).then(x => x.json()).catch(() => ({ ok: false }));
+      if (!r.ok) { btn.disabled = false; btn.textContent = 'Failed — retry'; return; }
+      await loadAll();
     });
   });
   $rows.querySelectorAll('[data-action="toggle"]').forEach(btn => {

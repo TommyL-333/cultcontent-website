@@ -28,6 +28,7 @@ export default function SettingsScreen({ person, onSaved }) {
     bio: person.bio || '', looking_for: person.looking_for || '',
     photo_url: person.photo_url || '',
     booth_zone: person.booth_zone || 'freedom-way',
+    tiktok_shop_code: person.tiktok_shop_code || '',
     rate_videos: person.rate_videos || '', rate_price: person.rate_price || '', rate_terms: person.rate_terms || '',
     links: (person.links || []).map((l) => l.url).join('\n'),
   });
@@ -63,7 +64,7 @@ export default function SettingsScreen({ person, onSaved }) {
             tiktok_handle: form.tiktok_handle, instagram_handle: form.instagram_handle,
             rate_videos: form.rate_videos, rate_price: form.rate_price, rate_terms: form.rate_terms,
           }
-        : { brand_name: form.brand_name, booth_zone: form.booth_zone }),
+        : { brand_name: form.brand_name, booth_zone: form.booth_zone, tiktok_shop_code: form.tiktok_shop_code }),
       links: form.links.split('\n').map((s) => s.trim()).filter(Boolean).map((url) => ({ label: 'Link', url })),
     };
     const j = await saveProfile(payload);
@@ -177,6 +178,28 @@ export default function SettingsScreen({ person, onSaved }) {
                     </ListBox>
                   </Select.Popover>
                 </Select.Root>
+              </div>
+            )}
+            {person.role === 'brand' && (
+              <div className="rounded-md border border-border bg-background/40 p-4">
+                <Label>TikTok Shop code (optional)</Label>
+                <Input value={form.tiktok_shop_code} onChange={set('tiktok_shop_code')} placeholder="Your TikTok Shop code" fullWidth />
+                <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+                  We&rsquo;ll invite you to the Creator Carnival creator matchmaking campaign on TikTok Shop, so creators
+                  can tag your products live from the floor. Private &mdash; only our team sees it, never other members.
+                </p>
+                {/* The invite is a manual step on our side, so say where the
+                    request actually is rather than leaving them guessing. */}
+                {person.tiktok_shop_status === 'submitted' && (
+                  <p className="text-xs mt-2 font-semibold" style={{ color: 'var(--color-gold)' }}>
+                    Received &mdash; we&rsquo;re adding you to the campaign and will email you the accept steps.
+                  </p>
+                )}
+                {person.tiktok_shop_status === 'invited' && (
+                  <p className="text-xs mt-2 font-semibold" style={{ color: 'var(--color-accent-2)' }}>
+                    Invited &mdash; check your email for how to accept it in Seller Center.
+                  </p>
+                )}
               </div>
             )}
             <div><Label>Links (one per line)</Label><TextArea value={form.links} onChange={set('links')} fullWidth /></div>
