@@ -346,9 +346,9 @@ app.post('/api/ccc/creator-apply', async (req, res) => {
   const total     = cccCreatorSignups.count();
 
   (async () => {
-    // 1a. Lark Base — Creator Signups table (use user token — bot lacks Base permission)
+    // 1a. Lark Base — Creator Signups table
     const CREATOR_TABLE = 'tblt9CxRyl84MrAY';
-    larkUserApi('post', `/bitable/v1/apps/${CCC_BASE}/tables/${CREATOR_TABLE}/records`, {
+    larkApi('post', `/bitable/v1/apps/${CCC_BASE}/tables/${CREATOR_TABLE}/records`, {
       fields: {
         Name:          name,
         Email:         email,
