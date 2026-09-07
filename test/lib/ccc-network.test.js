@@ -577,3 +577,57 @@ describe('booth zone', () => {
     assert.equal(net.getPerson(r.uuid).booth_zone, 'belvedere');
   });
 });
+
+describe('profile updates merge rather than overwrite', () => {
+  test('a partial update leaves untouched fields alone', () => {
+    // The whole point: a caller that sends only one field must not blank the
+    // rest. This used to wipe everything it omitted.
+    const c = makeCreator('merge@example.com');
+    const p = net.getPerson(c.uuid);
+    net.updateProfile(p.id, {
+      first_name: 'Merge', tiktok_handle: '@keepme', bio: 'keep this bio',
+      rate_price: '$400', photo_url: 'https://cdn.example.com/a.jpg',
+    });
+
+    net.updateProfile(p.id, { first_name: 'Renamed' });
+
+    const after = net.getPerson(c.uuid);
+    assert.equal(after.first_name, 'Renamed');
+    assert.equal(after.tiktok_handle, '@keepme', 'handle should survive');
+    assert.equal(after.bio, 'keep this bio', 'bio should survive');
+    assert.equal(after.rate_price, '$400', 'rates should survive');
+    assert.equal(after.photo_url, 'https://cdn.example.com/a.jpg', 'photo should survive');
+  });
+
+  test('an explicit empty string still clears a field', () => {
+    // Merging must not make it impossible to remove a photo.
+    const c = makeCreator('clearfield@example.com');
+    const p = net.getPerson(c.uuid);
+    net.updateProfile(p.id, { photo_url: 'https://cdn.example.com/a.jpg' });
+    net.updateProfile(p.id, { photo_url: '' });
+    assert.equal(net.getPerson(c.uuid).photo_url, '');
+  });
+
+  test('an empty patch is a no-op, not a wipe', () => {
+    const c = makeCreator('emptypatch@example.com');
+    const p = net.getPerson(c.uuid);
+    net.updateProfile(p.id, { bio: 'still here' });
+    net.updateProfile(p.id, {});
+    assert.equal(net.getPerson(c.uuid).bio, 'still here');
+  });
+
+  test('an uploaded avatar path is accepted where an external url would be too', () => {
+    const c = makeCreator('uploadedpath@example.com');
+    const p = net.getPerson(c.uuid);
+    const local = `/uploads/ccc-avatars/${'b'.repeat(32)}.jpg`;
+    net.updateProfile(p.id, { photo_url: local });
+    assert.equal(net.getPerson(c.uuid).photo_url, local);
+  });
+
+  test('a traversal dressed up as an avatar path is refused', () => {
+    const c = makeCreator('traversal@example.com');
+    const p = net.getPerson(c.uuid);
+    net.updateProfile(p.id, { photo_url: '/uploads/ccc-avatars/../../../etc/passwd' });
+    assert.equal(net.getPerson(c.uuid).photo_url, '');
+  });
+});

@@ -146,6 +146,16 @@ export async function getChallengeEntries(uuid) {
   return r.json();
 }
 
+// ─── Profile photo upload ───────────────────────────────────────────────────────
+// multipart, so this one can't go through postJson. The browser sets the
+// Content-Type boundary itself — setting it by hand breaks the parse.
+export async function uploadProfilePhoto(file) {
+  const body = new FormData();
+  body.append('photo', file);
+  const r = await fetch('/ccc-network/profile/photo', { method: 'POST', body });
+  return r.json();
+}
+
 // ─── Contact sharing consent ────────────────────────────────────────────────────
 export async function updateContactSharing(shareContact) {
   return postJson('/ccc-network/settings/contact-sharing', { share_contact: shareContact });

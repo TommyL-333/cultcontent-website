@@ -7194,6 +7194,74 @@ app.get('/api/ccc-network/event.json', (req, res) => {
   }
 });
 
+// ── Profile photo upload ──────────────────────────────────────────────────────
+// Uploading beats asking for a URL: a share link from Drive or Dropbox serves
+// an HTML page rather than an image, and even a correct link can be
+// hotlink-blocked or simply disappear later. This keeps a copy on the volume.
+//
+// The upload is never stored as sent. It is re-encoded through ffmpeg to a
+// JPEG no larger than 512px, which resizes it, strips metadata (including
+// GPS from phone photos), and means the bytes served back to the roster were
+// produced here rather than supplied by a member.
+const CCC_AVATAR_DIR = path.join(UPLOAD_DIR, 'ccc-avatars');
+if (!fs.existsSync(CCC_AVATAR_DIR)) fs.mkdirSync(CCC_AVATAR_DIR, { recursive: true });
+
+const cccAvatarUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 8 * 1024 * 1024, files: 1 },
+  // A first pass only. The client controls this header, so the real check is
+  // whether ffmpeg can decode it as an image below.
+  fileFilter: (_, file, cb) => cb(null, /^image\//.test(file.mimetype)),
+}).single('photo');
+
+app.post('/ccc-network/profile/photo', requireNetworkSession, (req, res) => {
+  cccAvatarUpload(req, res, async (uploadErr) => {
+    if (uploadErr) {
+      const tooBig = uploadErr.code === 'LIMIT_FILE_SIZE';
+      return res.status(400).json({ ok: false, error: tooBig ? 'file_too_large' : 'upload_failed' });
+    }
+    if (!req.file) return res.status(400).json({ ok: false, error: 'not_an_image' });
+
+    const name = `${crypto.randomBytes(16).toString('hex')}.jpg`;
+    const outPath = path.join(CCC_AVATAR_DIR, name);
+    // Written under a temp name we choose, never one derived from the upload.
+    const tmpPath = path.join(CCC_AVATAR_DIR, `tmp-${crypto.randomBytes(8).toString('hex')}`);
+
+    try {
+      fs.writeFileSync(tmpPath, req.file.buffer);
+      await new Promise((resolve, reject) => {
+        require('child_process').execFile(
+          ffmpegPath,
+          ['-hide_banner', '-loglevel', 'error', '-i', tmpPath,
+           // min() rather than a plain fit, so a small photo isn't upscaled
+           // into a blurry mess.
+           '-vf', "scale='min(512,iw)':'min(512,ih)':force_original_aspect_ratio=decrease",
+           '-frames:v', '1', '-f', 'mjpeg', '-q:v', '4', '-y', outPath],
+          (err) => (err ? reject(err) : resolve()),
+        );
+      });
+    } catch (e) {
+      // A decode failure means it wasn't an image, whatever the mimetype said.
+      console.error('[ccc-network] avatar re-encode failed:', e.message);
+      try { fs.unlinkSync(outPath); } catch { /* nothing written */ }
+      return res.status(400).json({ ok: false, error: 'not_an_image' });
+    } finally {
+      try { fs.unlinkSync(tmpPath); } catch { /* already gone */ }
+    }
+
+    // Drop the previous upload so replacing a photo doesn't leave the volume
+    // filling with orphans. Only ever removes a file this route created.
+    const previous = req.networkPerson.photo_url || '';
+    if (cccNet.UPLOADED_PHOTO_RE.test(previous)) {
+      try { fs.unlinkSync(path.join(CCC_AVATAR_DIR, path.basename(previous))); } catch { /* already gone */ }
+    }
+
+    const photoUrl = `/uploads/ccc-avatars/${name}`;
+    const person = cccNet.updateProfile(req.networkPerson.id, { photo_url: photoUrl });
+    res.json({ ok: true, photo_url: photoUrl, person });
+  });
+});
+
 // ── Exhibitors ────────────────────────────────────────────────────────────────
 // Built from the booth signups themselves (ccc_booth_signups), not a
 // hand-maintained list: a vendor who reserves and pays through /ccc-booth-signup
