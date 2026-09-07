@@ -27,7 +27,7 @@ export default function SettingsScreen({ person, onSaved }) {
     tiktok_handle: person.tiktok_handle || '', instagram_handle: person.instagram_handle || '', brand_name: person.brand_name || '', category: person.category || '',
     bio: person.bio || '', looking_for: person.looking_for || '',
     photo_url: person.photo_url || '',
-    booth_zone: person.booth_zone || 'capitol-canopy', booth_note: person.booth_note || '',
+    booth_zone: person.booth_zone || 'freedom-way',
     rate_videos: person.rate_videos || '', rate_price: person.rate_price || '', rate_terms: person.rate_terms || '',
     links: (person.links || []).map((l) => l.url).join('\n'),
   });
@@ -63,7 +63,7 @@ export default function SettingsScreen({ person, onSaved }) {
             tiktok_handle: form.tiktok_handle, instagram_handle: form.instagram_handle,
             rate_videos: form.rate_videos, rate_price: form.rate_price, rate_terms: form.rate_terms,
           }
-        : { brand_name: form.brand_name, booth_zone: form.booth_zone, booth_note: form.booth_zone === 'other' ? form.booth_note : '' }),
+        : { brand_name: form.brand_name, booth_zone: form.booth_zone }),
       links: form.links.split('\n').map((s) => s.trim()).filter(Boolean).map((url) => ({ label: 'Link', url })),
     };
     const j = await saveProfile(payload);
@@ -174,7 +174,7 @@ export default function SettingsScreen({ person, onSaved }) {
               <div>
                 <Label>Where will you be at the Carnival?</Label>
                 <Select.Root
-                  selectedKey={form.booth_zone || 'capitol-canopy'}
+                  selectedKey={form.booth_zone || 'freedom-way'}
                   onSelectionChange={(v) => setForm((f) => ({ ...f, booth_zone: v }))}
                   aria-label="Booth location"
                   fullWidth
@@ -186,17 +186,6 @@ export default function SettingsScreen({ person, onSaved }) {
                     </ListBox>
                   </Select.Popover>
                 </Select.Root>
-                {form.booth_zone === 'other' && (
-                  <div className="mt-3">
-                    <Label>Tell us your situation</Label>
-                    <TextArea
-                      value={form.booth_note}
-                      onChange={set('booth_note')}
-                      placeholder="e.g. Marketplace Sponsor, activation partner, or attending to meet creators without a booth"
-                      fullWidth
-                    />
-                  </div>
-                )}
               </div>
             )}
             <div><Label>Links (one per line)</Label><TextArea value={form.links} onChange={set('links')} fullWidth /></div>

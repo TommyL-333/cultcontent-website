@@ -549,3 +549,31 @@ describe('brand contact opt-in', () => {
     assert.equal(seen.ghl_contact_id, undefined);
   });
 });
+
+describe('booth zone', () => {
+  test('the four venue areas are accepted', () => {
+    const b = makeBrand('zones-ok@example.com');
+    const p = net.getPerson(b.uuid);
+    for (const zone of ['freedom-way', 'capitol-canopy', 'belvedere', 'other']) {
+      net.updateProfile(p.id, { first_name: 'B', brand_name: 'Z', booth_zone: zone });
+      assert.equal(net.getPerson(b.uuid).booth_zone, zone);
+    }
+  });
+
+  test('anything else is discarded rather than stored', () => {
+    // The value renders on every other member's screen, so a crafted request
+    // must not be able to park arbitrary text there.
+    const b = makeBrand('zones-bad@example.com');
+    const p = net.getPerson(b.uuid);
+    net.updateProfile(p.id, { first_name: 'B', brand_name: 'Z', booth_zone: '<script>alert(1)</script>' });
+    assert.equal(net.getPerson(b.uuid).booth_zone, '');
+  });
+
+  test('a zone set at signup survives', () => {
+    const r = net.signup({
+      role: 'brand', first_name: 'S', email: 'zones-signup@example.com', brand_name: 'Sign Co',
+      looking_for: 'creators', terms_accepted: true, booth_zone: 'belvedere',
+    });
+    assert.equal(net.getPerson(r.uuid).booth_zone, 'belvedere');
+  });
+});

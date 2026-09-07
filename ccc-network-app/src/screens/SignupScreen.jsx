@@ -53,8 +53,7 @@ export default function SignupScreen() {
   // Tier is no longer self-reported — it decides who gets early roster access
   // and the contact export, so staff assign it in the admin. Brands now say
   // where they are on site instead, which is what other members actually want.
-  const [boothZone, setBoothZone] = useState('capitol-canopy');
-  const [boothNote, setBoothNote] = useState('');
+  const [boothZone, setBoothZone] = useState('freedom-way');
   const [form, setForm] = useState(initialForm);
   const [error, setError] = useState('');
   const [duplicate, setDuplicate] = useState(null); // { status } | null — approved/rejected/deactivated email already exists
@@ -90,7 +89,6 @@ export default function SignupScreen() {
     const payload = {
       role,
       booth_zone: role === 'brand' ? boothZone : '',
-      booth_note: role === 'brand' && boothZone === 'other' ? boothNote : '',
       first_name: form.first_name,
       last_name: form.last_name,
       email: form.email,
@@ -261,18 +259,6 @@ export default function SignupScreen() {
                     </ListBox>
                   </Select.Popover>
                 </Select.Root>
-
-                {boothZone === 'other' && (
-                  <div className="mt-3">
-                    <Label>Tell us your situation</Label>
-                    <TextArea
-                      value={boothNote}
-                      onChange={(e) => setBoothNote(e.target.value)}
-                      placeholder="e.g. Marketplace Sponsor, activation partner, or attending to meet creators without a booth"
-                      fullWidth
-                    />
-                  </div>
-                )}
 
                 <p className="text-[11px] text-muted-foreground mt-1.5 leading-relaxed">
                   Shown on your listing so creators can find you on the day. Sponsorship level is set by Tommy&rsquo;s team, not here.
