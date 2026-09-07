@@ -7111,7 +7111,13 @@ app.post('/ccc-network/profile', requireNetworkSession, express.json(), (req, re
   // re-alert, or the channel turns into noise and gets ignored.
   const after = updated.tiktok_shop_code || '';
   const isNewCode = Boolean(after) && after !== before;
-  if (isNewCode) updated = cccNet.setTikTokShopStatus(updated.uuid, 'submitted').person;
+  if (isNewCode) {
+    updated = cccNet.setTikTokShopStatus(updated.uuid, 'submitted').person;
+  } else if (!after && before) {
+    // Removing the code has to clear the status too, or the brand keeps being
+    // told we're adding them to a campaign they just withdrew from.
+    updated = cccNet.setTikTokShopStatus(updated.uuid, '').person;
+  }
 
   res.json({ ok: true, person: updated });
   if (isNewCode) alertNewTikTokShopCode(updated).catch((e) => console.error('[ccc-network] shop-code alert failed:', e.message));

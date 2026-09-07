@@ -698,3 +698,24 @@ describe('TikTok Shop code', () => {
     assert.equal(net.setTikTokShopStatus(brand.uuid, 'whatever').error, 'bad_status');
   });
 });
+
+describe('clearing a TikTok Shop code', () => {
+  test('the status can be reset to empty alongside the code', () => {
+    // Otherwise a brand who removes their code is still told we're adding
+    // them to the campaign.
+    const b = makeBrand('shopclear@example.com');
+    approve(b.uuid);
+    const p = net.getPerson(b.uuid);
+
+    net.updateProfile(p.id, { tiktok_shop_code: 'GONE1' });
+    net.setTikTokShopStatus(b.uuid, 'submitted');
+    assert.equal(net.getPerson(b.uuid).tiktok_shop_status, 'submitted');
+
+    net.updateProfile(p.id, { tiktok_shop_code: '' });
+    net.setTikTokShopStatus(b.uuid, '');
+
+    const after = net.getPerson(b.uuid);
+    assert.equal(after.tiktok_shop_code, '');
+    assert.equal(after.tiktok_shop_status, '');
+  });
+});
