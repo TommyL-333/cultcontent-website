@@ -88,9 +88,11 @@ export default function ExhibitorsScreen({ person }) {
               <div className="mt-4 rounded-md border border-border bg-card p-4">
                 <div className="text-sm font-bold mb-1">{selectedArea.label}</div>
                 <p className="text-[13px] text-foreground/80 leading-relaxed">
-                  {selectedArea.kind === 'stage'
-                    ? 'All the day\u2019s programming happens here, 10am to 5pm.'
-                    : selectedArea.detail + '. An activation space rather than a booth run \u2014 nothing to browse, just come by.'}
+                  {selectedArea.detailText
+                    ? selectedArea.detailText
+                    : selectedArea.kind === 'stage'
+                      ? 'All the day\u2019s programming happens here, 10am to 5pm.'
+                      : selectedArea.detail + '. An activation space rather than a booth run \u2014 nothing to browse, just come by.'}
                 </p>
                 {selectedArea.kind === 'stage' && (
                   <RouterLink to="/schedule" className="inline-block mt-2.5 text-xs font-bold underline" style={{ color: 'var(--color-accent-2)' }}>
