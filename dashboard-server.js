@@ -2180,7 +2180,9 @@ app.get('/api/lark/device-connect', async (req, res) => {
     const appId     = process.env.LARK_APP_ID;
     const appSecret = process.env.LARK_APP_SECRET;
     const scope     = 'base:record:create base:record:read base:record:update base:app:read base:table:read base:field:read minutes:minutes.basic:read minutes:minutes:readonly minutes:minutes.transcript:export offline_access';
-    const r = await axios.post('https://open.larksuite.com/oauth/v1/device_authorization', { app_id: appId, scope })
+    const r = await axios.post('https://accounts.larksuite.com/oauth/v1/device_authorization',
+      { client_id: appId, client_secret: appSecret, scope },
+      { headers: { 'Content-Type': 'application/json' } })
       .catch(e => { throw new Error(`device_auth ${e.response?.status}: ${JSON.stringify(e.response?.data)}`); });
     const d = r.data?.data || r.data;
     if (!d?.device_code) return res.status(500).send(`Lark error: ${JSON.stringify(r.data)}`);
@@ -2216,8 +2218,8 @@ app.get('/api/lark/device-poll', async (req, res) => {
     const appR = await axios.post('https://open.larksuite.com/open-apis/auth/v3/app_access_token/internal', { app_id: appId, app_secret: appSecret });
     const appToken = appR.data?.app_access_token;
     const r = await axios.post('https://open.larksuite.com/open-apis/authen/v2/oauth/token',
-      { grant_type: 'urn:ietf:params:oauth:grant-type:device_code', client_id: appId, device_code: _deviceFlowSession.device_code },
-      { headers: { Authorization: `Bearer ${appToken}` } });
+      { grant_type: 'urn:ietf:params:oauth:grant-type:device_code', client_id: appId, client_secret: appSecret, device_code: _deviceFlowSession.device_code },
+      { headers: { Authorization: `Bearer ${appToken}`, 'Content-Type': 'application/json' } });
     const d = r.data?.data || r.data;
     if (d?.access_token) {
       fs.writeFileSync(LARK_USER_TOKEN_FILE, JSON.stringify({
