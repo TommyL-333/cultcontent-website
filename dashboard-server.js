@@ -2171,6 +2171,69 @@ Return JSON: {"companyName":"...","prospectEmail":"...","prospectName":"...","su
   });
 });
 
+// ─── Lark device-flow connect (no redirect URI needed) ─────────────────────────
+// Initiates device auth and serves a self-polling HTML page to complete it.
+let _deviceFlowSession = null; // { device_code, expires_at }
+
+app.get('/api/lark/device-connect', requireAuth, async (req, res) => {
+  try {
+    const appId     = process.env.LARK_APP_ID;
+    const appSecret = process.env.LARK_APP_SECRET;
+    const scope     = 'base:record:create base:record:read base:record:update base:app:read base:table:read base:field:read minutes:minutes.basic:read minutes:minutes:readonly minutes:minutes.transcript:export offline_access';
+    const r = await axios.post('https://open.larksuite.com/open-apis/authen/v1/device_authorization', { client_id: appId, scope });
+    const d = r.data?.data || r.data;
+    if (!d?.device_code) return res.status(500).send(`Lark error: ${JSON.stringify(r.data)}`);
+    _deviceFlowSession = { device_code: d.device_code, expires_at: Date.now() + (d.expires_in || 300) * 1000 };
+    const approveUrl = d.verification_uri_complete || d.verification_url;
+    res.send(`<!DOCTYPE html><html><head><title>Connect Lark</title></head><body style="font-family:sans-serif;background:#0d0d0d;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;margin:0">
+      <h2 style="margin-bottom:8px">Connect your Lark account</h2>
+      <p style="color:#aaa;margin-bottom:24px">Opens in Lark to approve — then come back here</p>
+      <a href="${approveUrl}" target="_blank" style="background:#1a73e8;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-size:16px;margin-bottom:32px">Open Lark to Approve →</a>
+      <p id="status" style="color:#888">Waiting for approval…</p>
+      <script>
+        let tries = 0;
+        const poll = setInterval(async () => {
+          tries++;
+          const r = await fetch('/api/lark/device-poll').then(x=>x.json()).catch(()=>null);
+          if (!r) return;
+          if (r.connected) { document.getElementById('status').textContent = '✅ Connected! You can close this tab.'; clearInterval(poll); }
+          else if (r.error === 'expired' || tries > 60) { document.getElementById('status').textContent = '❌ Expired — please refresh to try again.'; clearInterval(poll); }
+        }, 3000);
+      </script>
+    </body></html>`);
+  } catch(e) {
+    res.status(500).send(`Error: ${e.message}`);
+  }
+});
+
+app.get('/api/lark/device-poll', requireAuth, async (req, res) => {
+  if (!_deviceFlowSession) return res.json({ connected: false, error: 'no_session' });
+  if (Date.now() > _deviceFlowSession.expires_at) return res.json({ connected: false, error: 'expired' });
+  try {
+    const appId     = process.env.LARK_APP_ID;
+    const appSecret = process.env.LARK_APP_SECRET;
+    const appR = await axios.post('https://open.larksuite.com/open-apis/auth/v3/app_access_token/internal', { app_id: appId, app_secret: appSecret });
+    const appToken = appR.data?.app_access_token;
+    const r = await axios.post('https://open.larksuite.com/open-apis/authen/v1/oauth/token',
+      { grant_type: 'urn:ietf:params:oauth:grant-type:device_code', client_id: appId, device_code: _deviceFlowSession.device_code },
+      { headers: { Authorization: `Bearer ${appToken}` } });
+    const d = r.data?.data || r.data;
+    if (d?.access_token) {
+      fs.writeFileSync(LARK_USER_TOKEN_FILE, JSON.stringify({
+        access_token:  d.access_token,
+        refresh_token: d.refresh_token,
+        expires_at:    Date.now() + ((d.expires_in || 7200) * 1000),
+      }));
+      _deviceFlowSession = null;
+      return res.json({ connected: true });
+    }
+    // authorization_pending or slow_down = still waiting
+    res.json({ connected: false, pending: true });
+  } catch(e) {
+    res.json({ connected: false, error: e.message });
+  }
+});
+
 // ─── Lark OAuth — user token for Minutes access ───────────────────────────────
 // Step 1: redirect user to Lark to authorise
 app.get('/api/lark/oauth/start', requireAuth, (req, res) => {
