@@ -348,7 +348,7 @@ app.post('/api/ccc/creator-apply', async (req, res) => {
   (async () => {
     // 1a. Lark Base — Creator Signups table
     const CREATOR_TABLE = 'tblt9CxRyl84MrAY';
-    larkApi('post', `/bitable/v1/apps/${CCC_BASE}/tables/${CREATOR_TABLE}/records`, {
+    larkUserApi('post', `/bitable/v1/apps/${CCC_BASE}/tables/${CREATOR_TABLE}/records`, {
       fields: {
         Name:          name,
         Email:         email,
@@ -2176,8 +2176,8 @@ Return JSON: {"companyName":"...","prospectEmail":"...","prospectName":"...","su
 app.get('/api/lark/oauth/start', requireAuth, (req, res) => {
   const appId       = process.env.LARK_APP_ID;
   const redirectUri = encodeURIComponent(`${process.env.PUBLIC_BASE_URL || 'https://cult-command-center-production.up.railway.app'}/api/lark/oauth/callback`);
-  const scope       = encodeURIComponent('minutes:minutes.transcript:export minutes:minutes:readonly minutes:minutes.basic:read');
-  res.redirect(`https://open.larksuite.com/open-apis/authen/v1/authorize?app_id=${appId}&redirect_uri=${redirectUri}&scope=${scope}&state=meeting-intel`);
+  const scope       = encodeURIComponent('minutes:minutes.transcript:export minutes:minutes:readonly minutes:minutes.basic:read base:record:create base:record:read base:record:update base:app:read base:table:read base:field:read offline_access');
+  res.redirect(`https://open.larksuite.com/open-apis/authen/v1/authorize?app_id=${appId}&redirect_uri=${redirectUri}&scope=${scope}&state=ccc-bitable`);
 });
 
 // Step 2: Lark redirects back here with a code
