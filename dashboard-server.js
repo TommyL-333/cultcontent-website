@@ -2175,7 +2175,7 @@ Return JSON: {"companyName":"...","prospectEmail":"...","prospectName":"...","su
 // Initiates device auth and serves a self-polling HTML page to complete it.
 let _deviceFlowSession = null; // { device_code, expires_at }
 
-app.get('/api/lark/device-connect', requireAuth, async (req, res) => {
+app.get('/api/lark/device-connect', async (req, res) => {
   try {
     const appId     = process.env.LARK_APP_ID;
     const appSecret = process.env.LARK_APP_SECRET;
@@ -2206,7 +2206,7 @@ app.get('/api/lark/device-connect', requireAuth, async (req, res) => {
   }
 });
 
-app.get('/api/lark/device-poll', requireAuth, async (req, res) => {
+app.get('/api/lark/device-poll', async (req, res) => {
   if (!_deviceFlowSession) return res.json({ connected: false, error: 'no_session' });
   if (Date.now() > _deviceFlowSession.expires_at) return res.json({ connected: false, error: 'expired' });
   try {
