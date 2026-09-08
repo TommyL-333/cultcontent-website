@@ -358,7 +358,7 @@ app.post('/api/ccc/creator-apply', async (req, res) => {
         'Signed Up At': new Date().toISOString().replace('T', ' ').slice(0, 19),
         'SMS Consent': true,
       },
-    }).catch(e => console.error('[ccc-apply] Lark table error:', e.message));
+    }).catch(e => console.error('[ccc-apply] Lark table error:', e.message, JSON.stringify(e.response?.data)));
 
     // 1b. Lark alert to group chat
     const dmText = `🎪 New creator signup!\n👤 ${name}\n📧 ${email}\n📱 ${phone}${tiktok ? `\n🎵 @${tiktok}` : ''}${instagram ? `\n📸 @${instagram}` : ''}\n\nTotal signups: ${total}`;
