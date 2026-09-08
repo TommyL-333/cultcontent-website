@@ -2180,7 +2180,7 @@ app.get('/api/lark/device-connect', async (req, res) => {
     const appId     = process.env.LARK_APP_ID;
     const appSecret = process.env.LARK_APP_SECRET;
     const scope     = 'base:record:create base:record:read base:record:update base:app:read base:table:read base:field:read minutes:minutes.basic:read minutes:minutes:readonly minutes:minutes.transcript:export offline_access';
-    const r = await axios.post('https://open.larksuite.com/open-apis/authen/v1/device_authorization', { app_id: appId, scope })
+    const r = await axios.post('https://open.larksuite.com/oauth/v1/device_authorization', { app_id: appId, scope })
       .catch(e => { throw new Error(`device_auth ${e.response?.status}: ${JSON.stringify(e.response?.data)}`); });
     const d = r.data?.data || r.data;
     if (!d?.device_code) return res.status(500).send(`Lark error: ${JSON.stringify(r.data)}`);
