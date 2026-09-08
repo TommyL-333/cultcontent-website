@@ -150,13 +150,47 @@ test('self-serve: confirming the signup email activates the account with no admi
   await new Promise((r) => setTimeout(r, 300)); // let the async verify-email log flush
   const token = latestTokenFor('selfserve-http@example.com');
   const session = makeSession();
-  const authRes = await session.get(`/ccc-network/auth/${token}`);
+  const authRes = await session.post(`/ccc-network/auth/${token}`);
   assert.equal(authRes.status, 302); // logged straight in, no admin approval in between
 
   const me = await session.getJson('/api/ccc-network/me');
   assert.equal(me.ok, true);
   assert.equal(me.person.status, 'approved');
   assert.equal(me.person.uuid, selfServe.uuid);
+});
+
+// Regression for the "Link invalid" reports traced to email security
+// scanners (Outlook Safe Links, Proofpoint, Mimecast, etc.) pre-fetching
+// every link in an inbound email before the person opens it. Against a
+// single-use token consumed on GET, that prefetch silently burned it —
+// this proves a bare GET is now inert, and only the POST it auto-submits
+// actually consumes the token.
+test('self-serve: a bare GET on the confirm link does not consume the token (email-scanner prefetch safety)', async () => {
+  const signup = await (await fetch(`${BASE}/ccc-network/signup`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ role: 'creator', first_name: 'Prefetch', last_name: 'Test', email: 'prefetch-http@example.com', tiktok_handle: '@prefetchhttp', category: 'Testing', looking_for: 'test brands', terms_accepted: true }),
+  })).json();
+  assert.equal(signup.ok, true);
+
+  await new Promise((r) => setTimeout(r, 300));
+  const token = latestTokenFor('prefetch-http@example.com');
+
+  // Simulate a scanner: a plain GET with no cookie jar, like a bot fetching
+  // the link straight out of the email body.
+  const scannerRes = await fetch(`${BASE}/ccc-network/auth/${token}`, { redirect: 'manual' });
+  assert.equal(scannerRes.status, 200); // renders the interstitial, does not redirect/consume
+  const html = await scannerRes.text();
+  assert.match(html, /Confirming your link/);
+
+  // The real person's click (POST, same as the interstitial's auto-submit)
+  // still works — the token survived the scanner's GET.
+  const session = makeSession();
+  const authRes = await session.post(`/ccc-network/auth/${token}`);
+  assert.equal(authRes.status, 302);
+
+  const me = await session.getJson('/api/ccc-network/me');
+  assert.equal(me.ok, true);
+  assert.equal(me.person.uuid, signup.uuid);
 });
 
 test('self-serve: resubmitting while still pending resends instead of rejecting', async () => {
@@ -192,11 +226,11 @@ const brandSession = makeSession();
 test('magic link login works for both, sets a session cookie', async () => {
   await new Promise((r) => setTimeout(r, 300)); // let the async approval-email log flush
   const cToken = latestTokenFor('httpcreator@example.com');
-  const cAuth = await creatorSession.get(`/ccc-network/auth/${cToken}`);
+  const cAuth = await creatorSession.post(`/ccc-network/auth/${cToken}`);
   assert.equal(cAuth.status, 302);
 
   const bToken = latestTokenFor('httpbrand@example.com');
-  const bAuth = await brandSession.get(`/ccc-network/auth/${bToken}`);
+  const bAuth = await brandSession.post(`/ccc-network/auth/${bToken}`);
   assert.equal(bAuth.status, 302);
 
   const me = await creatorSession.getJson('/api/ccc-network/me');
@@ -299,7 +333,7 @@ test('a general brand cannot self-promote to unlock the contact export', async (
   await new Promise((r) => setTimeout(r, 200));
 
   const session = makeSession();
-  await session.get(`/ccc-network/auth/${latestTokenFor('climber@example.com')}`);
+  await session.post(`/ccc-network/auth/${latestTokenFor('climber@example.com')}`);
 
   // The whole attack in two calls: promote yourself, then take the export.
   await session.postJson('/ccc-network/settings/tier', { tier: 'priority' });
@@ -318,7 +352,7 @@ test('CSV export is tier-gated: general brands 403, priority brands succeed', as
   await new Promise((r) => setTimeout(r, 200));
   const generalSession = makeSession();
   const gToken = latestTokenFor('generalbrand@example.com');
-  await generalSession.get(`/ccc-network/auth/${gToken}`);
+  await generalSession.post(`/ccc-network/auth/${gToken}`);
   const forbidden = await generalSession.get('/ccc-network/contacts.csv');
   assert.equal(forbidden.status, 403);
 
@@ -331,7 +365,7 @@ test('email change: request logs a verification link to the *new* address, confi
   await new Promise((r) => setTimeout(r, 200));
   const match = /settings\/email\/confirm\/([a-f0-9]+)/.exec(stdoutBuf);
   assert.ok(match, 'expected an email-change confirm link in server output');
-  const confirmRes = await fetch(`${BASE}/ccc-network/settings/email/confirm/${match[1]}`, { redirect: 'manual' });
+  const confirmRes = await fetch(`${BASE}/ccc-network/settings/email/confirm/${match[1]}`, { method: 'POST', redirect: 'manual' });
   assert.equal(confirmRes.status, 302);
 });
 
@@ -346,7 +380,7 @@ test('deactivate kills the session', async () => {
   await new Promise((r) => setTimeout(r, 200));
   const session = makeSession();
   const token = latestTokenFor('throwaway-http@example.com');
-  await session.get(`/ccc-network/auth/${token}`);
+  await session.post(`/ccc-network/auth/${token}`);
   await session.postJson('/ccc-network/settings/deactivate');
   const me = await session.get('/api/ccc-network/me');
   assert.equal(me.status, 401);

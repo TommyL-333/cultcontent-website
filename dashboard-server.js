@@ -7023,13 +7023,39 @@ app.post('/ccc-network/login', express.json(), async (req, res) => {
     .catch(e => console.error('[ccc-network] magic link send error:', e.message));
 });
 
+// GET deliberately does NOT consume the token — it used to, and that's what
+// let email security scanners break this flow. Outlook Safe Links, Proofpoint,
+// Mimecast, etc. pre-fetch every link in an inbound email to scan it *before*
+// the human ever opens the message. Against a single-use token consumed on
+// GET, that prefetch silently burns it — the scanner's request succeeds
+// (sets a session cookie nobody uses), and the real person's own click a
+// minute later gets "already_used", rendered as the same generic "Link
+// invalid" as a bad token. Confirmed happening in production Sep 2026 (two
+// reported cases: login links for accounts whose confirmation/login never
+// went through despite clicking the emailed link once).
+// Fix: GET renders a page that auto-submits a POST via JS with a
+// no-JS <button> fallback. Scanners fetch-and-discard the GET; they don't
+// execute JS or submit forms, so the token survives until an actual human
+// (or their browser) acts on it. The POST below is what actually consumes it.
 app.get('/ccc-network/auth/:token', (req, res) => {
+  const token = req.params.token;
+  res.send(`<!doctype html><html><body style="font-family:sans-serif;text-align:center;padding:80px 20px;">
+    <p>Confirming your link&hellip;</p>
+    <form method="POST" action="/ccc-network/auth/${token}">
+      <noscript><p>Click to continue:</p></noscript>
+      <button type="submit" style="font:inherit;padding:.6em 1.2em;">Continue</button>
+    </form>
+    <script>document.forms[0].submit();</script>
+  </body></html>`);
+});
+
+app.post('/ccc-network/auth/:token', (req, res) => {
   const result = cccNet.consumeMagicLink(req.params.token);
   // TEMPORARY diagnostic — pairs with the CREATED log in the signup route
   // above. Compare pid/db between the two for a given token: a mismatch
   // means separate processes/files, i.e. multiple replicas without shared
-  // storage — the real cause, not expiry or double-clicking. Remove once
-  // root-caused.
+  // storage. Remove once the scanner-prefetch fix above is confirmed to
+  // have resolved the "already_used"/"invalid" reports.
   console.log(`[ccc-network-auth-debug] CONSUMED token=${req.params.token.slice(0, 10)}... ok=${result.ok} error=${result.error || ''} pid=${process.pid} db=${cccNet.db.location?.() || '(unknown)'}`);
   // Points back at signup, not login: login's magic link only sends for an
   // already-approved account (createMagicLink requires status='approved').
@@ -7207,7 +7233,22 @@ app.post('/ccc-network/settings/email', requireNetworkSession, express.json(), (
   cccNetMail.sendEmailChangeVerification(req.networkPerson, result.newEmail, result.token).catch(e => console.error('[ccc-network] email-change verification error:', e.message));
 });
 
+// Same GET-doesn't-consume fix as /ccc-network/auth/:token above — a plain
+// GET here was equally vulnerable to email security scanners silently
+// burning the single-use token before the person clicked it themselves.
 app.get('/ccc-network/settings/email/confirm/:token', (req, res) => {
+  const token = req.params.token;
+  res.send(`<!doctype html><html><body style="font-family:sans-serif;text-align:center;padding:80px 20px;">
+    <p>Confirming your new email&hellip;</p>
+    <form method="POST" action="/ccc-network/settings/email/confirm/${token}">
+      <noscript><p>Click to continue:</p></noscript>
+      <button type="submit" style="font:inherit;padding:.6em 1.2em;">Continue</button>
+    </form>
+    <script>document.forms[0].submit();</script>
+  </body></html>`);
+});
+
+app.post('/ccc-network/settings/email/confirm/:token', (req, res) => {
   const result = cccNet.confirmEmailChange(req.params.token);
   if (!result.ok) return res.status(400).send(`<p style="font-family:sans-serif;text-align:center;padding:80px 20px;">Link ${result.error === 'expired' ? 'expired' : 'invalid'}.</p>`);
   res.redirect('/ccc-network/settings');
