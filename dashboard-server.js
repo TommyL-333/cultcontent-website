@@ -7553,6 +7553,33 @@ app.get(['/ccc-network', '/ccc-network/*'], (req, res) => {
   });
 }
 
+// GET /video/:filename — public, no auth required (videos served to event page visitors)
+app.get('/video/:filename', (req, res) => {
+  const _vDir = path.join(DATA_DIR, 'videos');
+  const filename = path.basename(req.params.filename);
+  const filepath = path.join(_vDir, filename);
+  if (!fs.existsSync(filepath)) return res.status(404).send('Not found');
+  const stat = fs.statSync(filepath);
+  const ext  = path.extname(filename).toLowerCase();
+  const mime = { '.mp4': 'video/mp4', '.webm': 'video/webm', '.mov': 'video/quicktime' }[ext] || 'video/mp4';
+  const range = req.headers.range;
+  if (range) {
+    const [startStr, endStr] = range.replace(/bytes=/, '').split('-');
+    const start = parseInt(startStr, 10);
+    const end   = endStr ? parseInt(endStr, 10) : stat.size - 1;
+    res.writeHead(206, {
+      'Content-Range':  `bytes ${start}-${end}/${stat.size}`,
+      'Accept-Ranges':  'bytes',
+      'Content-Length': end - start + 1,
+      'Content-Type':   mime,
+    });
+    fs.createReadStream(filepath, { start, end }).pipe(res);
+  } else {
+    res.writeHead(200, { 'Content-Length': stat.size, 'Content-Type': mime, 'Accept-Ranges': 'bytes' });
+    fs.createReadStream(filepath).pipe(res);
+  }
+});
+
 app.use(requireAuth); // all other routes require auth in production
 
 // ── Creator Carnival Networking Hub — admin ─────────────────────────────────────
