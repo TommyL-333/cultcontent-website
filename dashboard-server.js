@@ -16157,6 +16157,50 @@ app.put('/api/inner-circle/brand-schedules/:id', requirePortalAdmin, express.jso
   }
 });
 
+// ─── Video self-hosting ───────────────────────────────────────────────────────
+const VIDEO_DIR = path.join(DATA_DIR, 'videos');
+if (!fs.existsSync(VIDEO_DIR)) fs.mkdirSync(VIDEO_DIR, { recursive: true });
+
+// GET /video/:filename — serve with range support so seeking works
+app.get('/video/:filename', (req, res) => {
+  const filename = path.basename(req.params.filename);
+  const filepath = path.join(VIDEO_DIR, filename);
+  if (!fs.existsSync(filepath)) return res.status(404).send('Not found');
+  const stat = fs.statSync(filepath);
+  const ext  = path.extname(filename).toLowerCase();
+  const mime = { '.mp4': 'video/mp4', '.webm': 'video/webm', '.mov': 'video/quicktime' }[ext] || 'video/mp4';
+  const range = req.headers.range;
+  if (range) {
+    const [startStr, endStr] = range.replace(/bytes=/, '').split('-');
+    const start = parseInt(startStr, 10);
+    const end   = endStr ? parseInt(endStr, 10) : stat.size - 1;
+    res.writeHead(206, {
+      'Content-Range':  `bytes ${start}-${end}/${stat.size}`,
+      'Accept-Ranges':  'bytes',
+      'Content-Length': end - start + 1,
+      'Content-Type':   mime,
+    });
+    fs.createReadStream(filepath, { start, end }).pipe(res);
+  } else {
+    res.writeHead(200, { 'Content-Length': stat.size, 'Content-Type': mime, 'Accept-Ranges': 'bytes' });
+    fs.createReadStream(filepath).pipe(res);
+  }
+});
+
+// POST /api/admin/video-upload?key=<PORTAL_ADMIN_PASSWORD> — upload a video to DATA_DIR/videos/
+const videoUpload = multer({ storage: multer.diskStorage({
+  destination: (req, file, cb) => cb(null, VIDEO_DIR),
+  filename:    (req, file, cb) => cb(null, file.originalname),
+}) });
+app.post('/api/admin/video-upload', (req, res, next) => {
+  const adminPw = process.env.PORTAL_ADMIN_PASSWORD;
+  if (!adminPw || req.query.key !== adminPw) return res.status(401).json({ error: 'Unauthorized' });
+  next();
+}, videoUpload.single('video'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file received' });
+  res.json({ ok: true, filename: req.file.filename, size: req.file.size, url: `/video/${req.file.filename}` });
+});
+
 app.listen(CFG.port, () => {
   console.log(`\n⚡ Cult Content Command Center`);
   console.log(`   http://localhost:${CFG.port}\n`);
