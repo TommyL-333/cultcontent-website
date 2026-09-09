@@ -7520,6 +7520,39 @@ app.get(['/ccc-network', '/ccc-network/*'], (req, res) => {
   res.sendFile(indexFile);
 });
 
+// Video chunk upload — registered before requireAuth, secured by PORTAL_ADMIN_PASSWORD
+{
+  const _chunkDir = path.join(DATA_DIR, 'video-chunks');
+  if (!fs.existsSync(_chunkDir)) fs.mkdirSync(_chunkDir, { recursive: true });
+  const _chunkUpload = multer({ storage: multer.diskStorage({
+    destination: (req, file, cb) => cb(null, _chunkDir),
+    filename:    (req, file, cb) => cb(null, `${path.basename(req.query.name || 'video.mp4')}.part${req.query.i}`),
+  }), limits: { fileSize: 100 * 1024 * 1024 } });
+  app.post('/api/admin/video-upload', (req, res, next) => {
+    const adminPw = process.env.PORTAL_ADMIN_PASSWORD;
+    if (!adminPw || req.query.key !== adminPw) return res.status(401).send('Unauthorized');
+    next();
+  }, _chunkUpload.single('chunk'), async (req, res) => {
+    const name = path.basename(req.query.name || 'video.mp4');
+    const i = parseInt(req.query.i, 10);
+    const total = parseInt(req.query.total, 10);
+    if (!req.file || isNaN(i) || isNaN(total)) return res.status(400).json({ error: 'Missing params' });
+    const allParts = Array.from({ length: total }, (_, idx) => path.join(_chunkDir, `${name}.part${idx}`));
+    const allExist = allParts.every(p => fs.existsSync(p));
+    if (i === total - 1 && allExist) {
+      const dest = path.join(VIDEO_DIR, name);
+      const out = fs.createWriteStream(dest);
+      for (const part of allParts) {
+        await new Promise((resolve, reject) => { const s = fs.createReadStream(part); s.pipe(out, { end: false }); s.on('end', resolve); s.on('error', reject); });
+      }
+      out.end();
+      allParts.forEach(p => fs.unlink(p, () => {}));
+      return res.json({ ok: true, done: true, filename: name, url: `/video/${name}` });
+    }
+    res.json({ ok: true, done: false, chunk: i });
+  });
+}
+
 app.use(requireAuth); // all other routes require auth in production
 
 // ── Creator Carnival Networking Hub — admin ─────────────────────────────────────
