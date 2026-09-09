@@ -16187,18 +16187,44 @@ app.get('/video/:filename', (req, res) => {
   }
 });
 
-// POST /api/admin/video-upload?key=<PORTAL_ADMIN_PASSWORD> — upload a video to DATA_DIR/videos/
-const videoUpload = multer({ storage: multer.diskStorage({
-  destination: (req, file, cb) => cb(null, VIDEO_DIR),
-  filename:    (req, file, cb) => cb(null, file.originalname),
-}) });
+// POST /api/admin/video-upload — chunked upload to bypass Cloudflare 100MB limit
+// Query params: key, name (filename), i (chunk index 0-based), total (total chunks)
+const CHUNK_DIR = path.join(DATA_DIR, 'video-chunks');
+if (!fs.existsSync(CHUNK_DIR)) fs.mkdirSync(CHUNK_DIR, { recursive: true });
+
+const chunkUpload = multer({ storage: multer.diskStorage({
+  destination: (req, file, cb) => cb(null, CHUNK_DIR),
+  filename:    (req, file, cb) => cb(null, `${req.query.name}.part${req.query.i}`),
+}), limits: { fileSize: 100 * 1024 * 1024 } });
+
 app.post('/api/admin/video-upload', (req, res, next) => {
   const adminPw = process.env.PORTAL_ADMIN_PASSWORD;
   if (!adminPw || req.query.key !== adminPw) return res.status(401).json({ error: 'Unauthorized' });
   next();
-}, videoUpload.single('video'), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'No file received' });
-  res.json({ ok: true, filename: req.file.filename, size: req.file.size, url: `/video/${req.file.filename}` });
+}, chunkUpload.single('chunk'), async (req, res) => {
+  const { name, i, total } = req.query;
+  if (!req.file || !name || i === undefined || !total) return res.status(400).json({ error: 'Missing params' });
+  const chunkIndex = parseInt(i, 10);
+  const totalChunks = parseInt(total, 10);
+  // If all chunks received, assemble
+  const allParts = Array.from({ length: totalChunks }, (_, idx) => path.join(CHUNK_DIR, `${name}.part${idx}`));
+  const allExist = allParts.every(p => fs.existsSync(p));
+  if (chunkIndex === totalChunks - 1 && allExist) {
+    const dest = path.join(VIDEO_DIR, name);
+    const out = fs.createWriteStream(dest);
+    for (const part of allParts) {
+      await new Promise((resolve, reject) => {
+        const s = fs.createReadStream(part);
+        s.pipe(out, { end: false });
+        s.on('end', resolve);
+        s.on('error', reject);
+      });
+    }
+    out.end();
+    allParts.forEach(p => fs.unlink(p, () => {}));
+    return res.json({ ok: true, done: true, filename: name, url: `/video/${name}` });
+  }
+  res.json({ ok: true, done: false, chunk: chunkIndex });
 });
 
 app.listen(CFG.port, () => {
