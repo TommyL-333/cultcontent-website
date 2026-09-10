@@ -6967,8 +6967,14 @@ app.post('/ccc-booth-signup', express.json(), (req, res) => {
     const FINANCES_TABLE  = 'tblgKlWUI3jufYuO';
     const TOMMY_OPEN_ID   = 'ou_cd6157679f48e0cea557ebcb1995c462';
 
+    // Two labels on purpose. boothLarkLabel must match the Lark select
+    // option strings exactly; boothLabel is the human label from the booth
+    // config, used in the finances description and the IM notification.
+    // Removing boothLabel in d741607 while leaving two references to it made
+    // every booth signup throw ReferenceError and kill the process.
     const LARK_BOOTH_TYPE = { 'capitol-canopy': 'Capitol Canopy Booth', 'freedom-way': 'Freedom Way Booth', 'community-vendor': 'Community Vendor' };
     const boothLarkLabel = LARK_BOOTH_TYPE[booth_type] || booth_type;
+    const boothLabel = cccBooths.CCC_BOOTHS[booth_type]?.label || booth_type;
     const boothAmount = booth_type === 'capitol-canopy' ? 500 : 400;
     const stripeFee   = parseFloat((boothAmount * 0.029 + 0.30).toFixed(2));
 
