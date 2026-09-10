@@ -24,10 +24,14 @@ const SEGMENT_COLORS = {
   Culture: 'var(--color-gold)',
   Kickoff: 'var(--color-accent)',
   Believe: 'var(--color-accent)',
+  Break: 'var(--color-muted-foreground)',
+  'Cult Content': 'var(--color-accent)',
   Build: 'var(--color-accent)',
   Carnival: 'var(--color-gold)',
   Opportunity: 'var(--color-accent-2)',
+  'Building Together': 'var(--color-accent-2)',
   Unskrypted: 'var(--color-accent-2)',
+  'What’s Next': 'var(--color-accent-2)',
   Celebration: 'var(--color-gold)',
 };
 const colorFor = (segment) => SEGMENT_COLORS[segment] ?? 'var(--color-gold)';

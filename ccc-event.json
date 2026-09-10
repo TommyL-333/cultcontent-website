@@ -5,73 +5,57 @@
     "date": "2026-09-12",
     "venue": "National Harbor, MD",
     "timezone": "America/New_York",
-    "doors": "10:00 AM – 5:00 PM",
+    "doors": "10:00 AM – 4:00 PM",
     "host": "Khadijah Corrie",
     "note": "Booths, vendors and activations run all day. The stage schedule is below."
   },
   "schedule": [
     {
-      "id": "dj-opening",
+      "id": "jump-dc",
       "start": "10:00",
       "end": "10:30",
       "segment": "Move",
-      "title": "DJ Opening Set",
-      "location": "Main Stage",
-      "description": "The Carnival kicks off. Music builds the energy as people arrive, shop, explore and connect."
-    },
-    {
-      "id": "jump-dc",
-      "start": "10:30",
-      "end": "11:00",
-      "segment": "Move",
       "title": "Jump DC — Double Dutch",
-      "location": "Main Stage",
+      "location": "Plaza Stage",
+      "subtitle": "Wellness + movement activation",
       "people": [
         "Jump DC"
       ],
-      "description": "An interactive jump-rope experience to open the day. Come and get in the rope."
-    },
-    {
-      "id": "creator-connection",
-      "start": "11:00",
-      "end": "11:30",
-      "segment": "Connect",
-      "title": "Creator Connection + Carnival Games",
-      "location": "Main Stage",
-      "description": "Best Dressed, a dance contest, and open creator mixing. This is the block built for meeting people — bring your roster connections into the room."
+      "description": "An interactive double-dutch experience to open the Carnival. Crowd participation — come and get in the rope."
     },
     {
       "id": "line-dancing",
-      "start": "11:30",
-      "end": "12:00",
-      "segment": "Culture",
+      "start": "10:30",
+      "end": "11:00",
+      "segment": "Move",
       "title": "Line Dancing with Tiara Felder",
-      "location": "Main Stage",
+      "location": "Plaza Stage",
       "people": [
         "Tiara Felder — The Dancing Dentist"
       ],
-      "description": "Led line dancing, open to everyone."
+      "description": "Led line dancing, open to everyone. Crowd participation and content moments."
     },
     {
       "id": "kickoff",
-      "start": "12:00",
-      "end": "12:15",
+      "start": "11:00",
+      "end": "11:15",
       "segment": "Kickoff",
-      "title": "Official Welcome",
-      "location": "Main Stage",
+      "title": "Welcome to Creator Carnival",
+      "location": "Plaza Stage",
       "people": [
+        "Khadijah Corrie",
         "Folasade",
         "Tommy Lynch"
       ],
-      "description": "What Creator Carnival is, what to expect, how to take part, and a walk through the day’s programming."
+      "description": "Khadijah opens and introduces Folasade and Tommy. What today is about, how to take part, and what creators, brands and attendees can expect from the day."
     },
     {
       "id": "bet-on-yourself",
-      "start": "12:15",
-      "end": "12:45",
+      "start": "11:15",
+      "end": "11:45",
       "segment": "Believe",
       "title": "Bet On Yourself",
-      "location": "Main Stage",
+      "location": "Plaza Stage",
       "subtitle": "What happens when you stop waiting for permission",
       "people": [
         "Sianni — moderator",
@@ -79,101 +63,125 @@
         "Sommer",
         "Tommy Taylor"
       ],
-      "lineup_tbc": true,
       "description": "Before you build anything, you have to believe you’re capable of building it."
     },
     {
       "id": "dj-break",
-      "start": "12:45",
-      "end": "12:55",
-      "segment": "Move",
+      "start": "11:45",
+      "end": "11:55",
+      "segment": "Break",
       "title": "DJ Break",
-      "location": "Main Stage",
+      "location": "Plaza Stage",
       "description": "A musical reset — stretch your legs, walk the booths, meet someone."
     },
     {
       "id": "cult-content",
-      "start": "12:55",
-      "end": "13:05",
-      "segment": "Build",
-      "title": "Tommy Lynch + Cult Content",
-      "location": "Main Stage",
+      "start": "11:55",
+      "end": "12:10",
+      "segment": "Cult Content",
+      "title": "Tommy + Cult Content",
+      "location": "Plaza Stage",
       "people": [
-        "Tommy Lynch",
-        "David “The Oh” Oliver — interviewer"
+        "Tommy Lynch"
       ],
-      "description": "A short conversation connecting the Carnival to Cult Content and the wider creative ecosystem."
+      "description": "A short conversation about Creator Carnival, Cult Content and the wider creative ecosystem."
     },
     {
       "id": "build-the-brand",
-      "start": "13:05",
-      "end": "13:30",
+      "start": "12:10",
+      "end": "12:35",
       "segment": "Build",
       "title": "Build the Brand",
-      "location": "Main Stage",
+      "location": "Plaza Stage",
       "subtitle": "Turning creator community into culture + commerce",
-      "lineup_tbc": true,
+      "people": [
+        "Khadijah Corrie — moderator",
+        "Bobby — Overnight Bags",
+        "FIF Wilson",
+        "Pierre Edwards",
+        "Rizz the Great — DMV Wholesale Dept.",
+        "Elizabeth Booker Houston"
+      ],
       "description": "“I believe in myself — now how do I build something?” Building brands and community, collaboration, and turning creativity into something sustainable."
     },
     {
-      "id": "roaming-carnival",
-      "start": "13:30",
-      "end": "14:00",
+      "id": "carnival-7g",
+      "start": "12:35",
+      "end": "13:00",
       "segment": "Carnival",
-      "title": "Roaming Entertainment + DJ on Stilts",
+      "title": "7G Bummin",
       "location": "All Zones",
-      "description": "A deliberate break from the stage. Magician, balloon artist, mime and roaming performers through the crowd, with a DJ on stilts. The most filmable half hour of the day — shoot it."
+      "subtitle": "Creator Carnival experience",
+      "people": [
+        "7G Bummin"
+      ],
+      "description": "A deliberate break from the stage — crowd interaction, jumbotron moments, vendor engagement, photos and video. This is where the day should actually feel like a carnival."
     },
     {
       "id": "bomesi",
-      "start": "14:00",
-      "end": "14:35",
+      "start": "13:00",
+      "end": "13:35",
       "segment": "Opportunity",
       "title": "BOMESI",
-      "location": "Main Stage",
+      "location": "Plaza Stage",
       "people": [
         "BOMESI"
       ],
-      "description": "The accelerator, access and resources — and what creators can actually do next to position themselves for opportunities."
+      "description": "The accelerator, access and resources — what creators can actually do next, and how to position yourself for opportunities."
     },
     {
-      "id": "unskrypted",
-      "start": "14:35",
-      "end": "15:05",
-      "segment": "Unskrypted",
-      "title": "The Future of Brand Integration",
-      "location": "Main Stage",
+      "id": "put-me-on",
+      "start": "13:35",
+      "end": "14:05",
+      "segment": "Building Together",
+      "title": "Why Won’t You Put Me On?",
+      "location": "Plaza Stage",
+      "subtitle": "What building together really looks like",
       "people": [
+        "Khadijah Corrie",
         "Folasade",
-        "Poet — Midday Shenanigans"
+        "Poet",
+        "August"
       ],
-      "lineup_tbc": true,
-      "description": "Creators and brands, shoppable content, and where media is going — why creators should be thinking well beyond posting."
+      "description": "Creator and brand collaboration, the future of brand integration, shoppable content, and where media is going — the Unskrypted story told as a conversation rather than a pitch."
+    },
+    {
+      "id": "dj-reset",
+      "start": "14:05",
+      "end": "14:15",
+      "segment": "Break",
+      "title": "DJ Reset",
+      "location": "Plaza Stage",
+      "description": "A quick musical reset — good moment to move between the booths."
     },
     {
       "id": "whats-next",
-      "start": "15:15",
-      "end": "15:45",
+      "start": "14:15",
+      "end": "14:55",
       "segment": "What’s Next",
       "title": "From Creator to Bigger Opportunities",
-      "location": "Main Stage",
+      "location": "Plaza Stage",
       "people": [
-        "David “The Oh” Oliver — moderator"
+        "David “The Oh” Oliver — moderator",
+        "Chris Bivins",
+        "Harry Hall — Drop TV",
+        "Keisha Rich — LA",
+        "Ahmad Islam"
       ],
-      "lineup_tbc": true,
       "description": "You’ve built something, found your voice, created the audience. Now what? Breaking into film and TV, casting, representation, and what the industry actually looks for."
     },
     {
       "id": "tob-finale",
-      "start": "16:00",
-      "end": "17:00",
+      "start": "15:00",
+      "end": "16:00",
       "segment": "Celebration",
       "title": "TOB — Live Performance",
-      "location": "Main Stage",
+      "location": "Plaza Stage",
+      "subtitle": "The big close",
       "people": [
         "TOB"
       ],
-      "description": "The Carnival finale. Live performance, sponsor and vendor recognition, closing remarks, and one big final song."
+      "description": "The Carnival finale. Live performance, creator and vendor recognition, sponsor shoutouts, closing remarks, and one big final song."
     }
   ]
 }
