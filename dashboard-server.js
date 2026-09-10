@@ -4,6 +4,31 @@
  */
 
 require('dotenv').config({ override: true });
+
+// ─── Keep a background failure from taking the site down ──────────────────────
+// This file has a dozen fire-and-forget `(async () => { ... })()` blocks doing
+// Lark writes, GHL syncs and IM notifications after the response has already
+// been sent. Node's default for an unhandled rejection is to terminate, so a
+// single throw in any of them — a renamed Lark field, an axios timeout, an
+// undefined variable — kills the process for everyone. That is exactly what
+// the boothLabel bug did: the vendor got their Stripe link, then the server
+// died mirroring the booking to Lark.
+//
+// Registered before anything else so it covers module initialisation too.
+process.on('unhandledRejection', (reason) => {
+  console.error('[fatal-guard] unhandled rejection — staying up:', reason instanceof Error ? reason.stack : reason);
+});
+
+// An uncaught *synchronous* exception is a different risk: Express already
+// catches throws inside route handlers, so reaching here means something
+// outside the request cycle broke and the process may be in an undefined
+// state. Log it and let the platform restart us cleanly rather than serve
+// from a process we can no longer reason about.
+process.on('uncaughtException', (err) => {
+  console.error('[fatal-guard] uncaught exception — exiting for a clean restart:', err.stack || err);
+  process.exit(1);
+});
+
 const express      = require('express');
 const axios        = require('axios');
 const path         = require('path');

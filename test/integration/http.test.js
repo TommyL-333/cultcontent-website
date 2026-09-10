@@ -121,6 +121,20 @@ test('booth signup reserves a slot and decrements availability', async () => {
   assert.equal(after1, before1 - 1);
 });
 
+test('the server survives the fire-and-forget work a booth signup kicks off', async () => {
+  // A signup responds immediately, then does Lark writes and an IM
+  // notification in an un-awaited async block. A throw in there used to be an
+  // unhandled rejection, which terminates Node by default — that is how the
+  // boothLabel bug took the whole site down after answering the vendor
+  // correctly. Give that background work a moment, then check we're still up.
+  //
+  // Without this the symptom is every *later* test failing with ECONNRESET,
+  // which points nowhere near the actual cause.
+  await new Promise((r) => setTimeout(r, 500));
+  const res = await fetch(`${BASE}/ccc-booth-availability`);
+  assert.equal(res.status, 200, 'server died processing background work after a booth signup');
+});
+
 // ─── Networking Hub: full request -> approve -> connect -> message loop ────────
 let creatorUuid, brandUuid;
 
