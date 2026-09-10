@@ -6967,7 +6967,8 @@ app.post('/ccc-booth-signup', express.json(), (req, res) => {
     const FINANCES_TABLE  = 'tblgKlWUI3jufYuO';
     const TOMMY_OPEN_ID   = 'ou_cd6157679f48e0cea557ebcb1995c462';
 
-    const boothLabel  = cccBooths.CCC_BOOTHS[booth_type]?.label || booth_type;
+    const LARK_BOOTH_TYPE = { 'capitol-canopy': 'Capitol Canopy Booth', 'freedom-way': 'Freedom Way Booth', 'community-vendor': 'Community Vendor' };
+    const boothLarkLabel = LARK_BOOTH_TYPE[booth_type] || booth_type;
     const boothAmount = booth_type === 'capitol-canopy' ? 500 : 400;
     const stripeFee   = parseFloat((boothAmount * 0.029 + 0.30).toFixed(2));
 
@@ -6975,13 +6976,13 @@ app.post('/ccc-booth-signup', express.json(), (req, res) => {
     larkApi('post', `/bitable/v1/apps/${CCC_BASE}/tables/${BOOTH_TABLE}/records`, {
       fields: {
         'Submission Time':  result.submissionTime,
-        'Booth Type':       boothLabel,
+        'Booth Type':       [boothLarkLabel],
         'First Name':       first_name || '',
         'Last Name':        last_name || '',
         'Email':            email,
         'Brand Name':       brand_name,
         'Product Category': product_category || '',
-        'Status':           'Pending',
+        'Status':           ['Pending'],
         'Reservation ID':   result.reservationId,
         'Payment URL':      result.paymentUrl,
         'Invited By':       invited_by || '',
