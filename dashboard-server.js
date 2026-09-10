@@ -7553,6 +7553,16 @@ app.get(['/ccc-network', '/ccc-network/*'], (req, res) => {
   });
 }
 
+// GET /api/admin/booth-dump — password-protected SQLite dump (pre-auth, for reconciliation)
+app.get('/api/admin/booth-dump', (req, res) => {
+  const adminPw = process.env.PORTAL_ADMIN_PASSWORD;
+  if (!adminPw || req.query.key !== adminPw) return res.status(401).json({ error: 'Unauthorized' });
+  try {
+    const rows = cccBooths.listAll();
+    res.json({ ok: true, count: rows.length, rows });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // GET /video/:filename — public, no auth required (videos served to event page visitors)
 app.get('/video/:filename', (req, res) => {
   const _vDir = path.join(DATA_DIR, 'videos');
