@@ -73,6 +73,11 @@ nav{
   box-shadow:0 0 20px rgba(0,242,234,.2);transition:transform .2s,box-shadow .2s
 }
 .nav-apply:hover{transform:translateY(-2px);box-shadow:0 0 32px rgba(0,242,234,.35);color:var(--white)}
+.nav-logo{text-decoration:none}
+.nav-links{display:flex;align-items:center;gap:22px;list-style:none;margin:0;padding:0}
+.nav-links a{color:rgba(255,255,255,.5);font-size:.75rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;transition:color .2s;text-decoration:none}
+.nav-links a:hover{color:#fff}
+@media(max-width:860px){.nav-links{display:none}}
 
 /* ─── HERO SECTION ─── */
 .hero-section{
@@ -418,7 +423,13 @@ nav{
 
 <!-- NAV -->
 <nav>
-  <div class="nav-logo">Cult <span>Content</span></div>
+  <a href="/" class="nav-logo">Cult <span>Content</span></a>
+  <ul class="nav-links">
+    <li><a href="/">Home</a></li>
+    <li><a href="/offers">Offers</a></li>
+    <li><a href="/consulting">Consulting</a></li>
+    <li><a href="/creators">Community</a></li>
+  </ul>
   <a href="https://cultcontent.cc/brand-apply" target="_blank" class="nav-apply">Apply Now</a>
 </nav>
 

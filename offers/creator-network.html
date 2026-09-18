@@ -67,6 +67,11 @@ nav{
 .nav-logo span{background:linear-gradient(135deg,#ff0050,#7b2fff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .nav-back{font-size:.8rem;color:var(--muted);letter-spacing:.06em;transition:color .2s;text-transform:uppercase}
 .nav-back:hover{color:var(--pink)}
+.nav-logo{text-decoration:none}
+.nav-links{display:flex;align-items:center;gap:22px;list-style:none;margin:0;padding:0}
+.nav-links a{color:rgba(255,255,255,.5);font-size:.75rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;transition:color .2s;text-decoration:none}
+.nav-links a:hover{color:#fff}
+@media(max-width:860px){.nav-links{display:none}}
 
 /* ─── HERO SECTION ─── */
 .hero-section{
@@ -399,8 +404,14 @@ nav{
 
 <!-- NAV -->
 <nav>
-  <div class="nav-logo">Cult <span>Content</span></div>
-  <a href="/offers" class="nav-back">← All Offers</a>
+  <a href="/" class="nav-logo">Cult <span>Content</span></a>
+  <ul class="nav-links">
+    <li><a href="/">Home</a></li>
+    <li><a href="/offers">Offers</a></li>
+    <li><a href="/consulting">Consulting</a></li>
+    <li><a href="/creators">Community</a></li>
+  </ul>
+  <a href="https://cultcontent.cc/brand-apply" target="_blank" class="nav-apply">Apply Now</a>
 </nav>
 
 <!-- ══════════════════════════════════════ HERO ══════════════════════════════════════ -->

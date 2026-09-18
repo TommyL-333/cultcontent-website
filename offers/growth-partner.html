@@ -67,6 +67,11 @@ nav{
 .nav-logo span{background:linear-gradient(135deg,var(--purple),var(--lavender));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .nav-back{font-size:.8rem;color:var(--muted);letter-spacing:.06em;transition:color .2s;text-transform:uppercase}
 .nav-back:hover{color:var(--lavender)}
+.nav-logo{text-decoration:none}
+.nav-links{display:flex;align-items:center;gap:22px;list-style:none;margin:0;padding:0}
+.nav-links a{color:rgba(255,255,255,.5);font-size:.75rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;transition:color .2s;text-decoration:none}
+.nav-links a:hover{color:#fff}
+@media(max-width:860px){.nav-links{display:none}}
 
 /* ─── HERO SECTION ─── */
 .hero-section{
@@ -390,8 +395,14 @@ nav{
 
 <!-- NAV -->
 <nav>
-  <div class="nav-logo">Cult <span>Content</span></div>
-  <a href="/offers" class="nav-back">← All Offers</a>
+  <a href="/" class="nav-logo">Cult <span>Content</span></a>
+  <ul class="nav-links">
+    <li><a href="/">Home</a></li>
+    <li><a href="/offers">Offers</a></li>
+    <li><a href="/consulting">Consulting</a></li>
+    <li><a href="/creators">Community</a></li>
+  </ul>
+  <a href="https://cultcontent.cc/brand-apply" target="_blank" class="nav-apply">Apply Now</a>
 </nav>
 
 <!-- ══════════════════════════════════════ HERO ══════════════════════════════════════ -->
@@ -499,7 +510,8 @@ nav{
       <ul class="model-list">
         <li>Ask us anything — strategy, creator briefs, ad copy — and get a real answer fast</li>
         <li>We manage your TikTok Shop ads so you're not guessing on budget or creative</li>
-        <li>AI carousel content running on a dedicated marketing account, not your main page</li>
+        <li>We source and manage creators — finding the right fit for your brief, budget, and category</li>
+        <li>Campaign management end-to-end — from brief to payout, we run the whole cycle</li>
         <li>Monthly performance review to track what's working and adjust the plan</li>
         <li>Commission tied to net sales — we only win when you do</li>
       </ul>
@@ -534,13 +546,13 @@ nav{
       </div>
       <div class="d-row">
         <div class="d-num">04</div>
-        <div class="d-title">AI Carousel Content</div>
-        <div class="d-desc">AI-generated carousel content running on a dedicated marketing account — so your main page stays untouched while volume goes up.</div>
+        <div class="d-title">Creator Sourcing</div>
+        <div class="d-desc">We find and vet the right creators for your brief, budget, and category. Outreach, follow-up, and relationship management — handled by CC.</div>
       </div>
       <div class="d-row">
         <div class="d-num">05</div>
-        <div class="d-title">Creator Sourcing Guidance</div>
-        <div class="d-desc">We identify the right creators for your brief, budget, and category — then coach you through outreach and follow-up.</div>
+        <div class="d-title">Campaign Management</div>
+        <div class="d-desc">End-to-end campaign execution — from brief distribution and creator coordination to content review and payout processing through Reacher.</div>
       </div>
       <div class="d-row">
         <div class="d-num">06</div>
@@ -564,7 +576,7 @@ nav{
       <div class="price-card">
         <div class="pc-label">Monthly Retainer</div>
         <div class="pc-val">$2,000</div>
-        <div class="pc-desc">Covers your dedicated Lark channel, portal access, ads management, AI carousel content, creator sourcing guidance, and monthly review. Cancel anytime after 30 days.</div>
+        <div class="pc-desc">Covers your dedicated Lark channel, portal access, ads management, creator sourcing, campaign management, and monthly review. Cancel anytime after 30 days.</div>
       </div>
       <div class="price-card">
         <div class="pc-label">Net Sales Commission</div>
@@ -599,22 +611,37 @@ nav{
 <div class="section-wrap next-section">
   <div class="section-num">04</div>
   <div class="section-inner">
-    <div class="label-pill">Other Offers</div>
-    <h2 class="section-title">Not the right fit?<br>There's a path for that.</h2>
-    <p class="section-sub">Every Cult Content offer is designed to meet you where you are. Start small or go full-service — we have the model either way.</p>
+    <div class="label-pill">Ready to Go Further?</div>
+    <h2 class="section-title">What you unlock<br>with Scale.</h2>
+    <p class="section-sub">Growth Partner puts CC alongside you. Scale puts CC in the driver's seat. Here's what you're leaving on the table without it.</p>
 
-    <div class="next-cards">
+    <div style="background:rgba(201,168,76,.04);border:1px solid rgba(201,168,76,.2);border-radius:18px;padding:40px;margin-top:48px;margin-bottom:64px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#c9a84c,#b899ff)"></div>
+      <div style="font-size:.72rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#c9a84c;margin-bottom:16px">Scale — $4,000/mo + 5% net sales</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px 40px">
+        <div style="display:flex;align-items:flex-start;gap:12px;font-size:.9rem;color:var(--muted)"><span style="color:#c9a84c;font-weight:900;flex-shrink:0">+</span>AI Carousel Content on a dedicated marketing account</div>
+        <div style="display:flex;align-items:flex-start;gap:12px;font-size:.9rem;color:var(--muted)"><span style="color:#c9a84c;font-weight:900;flex-shrink:0">+</span>Full account management — we own the strategy, not just support it</div>
+        <div style="display:flex;align-items:flex-start;gap:12px;font-size:.9rem;color:var(--muted)"><span style="color:#c9a84c;font-weight:900;flex-shrink:0">+</span>Creator purchase reimbursement program included</div>
+        <div style="display:flex;align-items:flex-start;gap:12px;font-size:.9rem;color:var(--muted)"><span style="color:#c9a84c;font-weight:900;flex-shrink:0">+</span>Lower commission rate — 5% vs 9% of net sales</div>
+      </div>
+      <a href="/offers/scale" style="display:inline-block;margin-top:28px;padding:10px 28px;background:linear-gradient(135deg,#c9a84c,#b899ff);color:#000;font-family:'Montserrat',sans-serif;font-weight:900;font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;border-radius:100px">View Scale →</a>
+    </div>
+
+    <div class="label-pill">Other Offers</div>
+    <h2 class="section-title" style="margin-top:16px">Not the right fit at all?<br>There's a path for that too.</h2>
+
+    <div class="next-cards" style="margin-top:40px">
       <a href="/offers/the-foundation" class="next-card">
-        <div class="nc-offer">One-Time · Foundation</div>
+        <div class="nc-offer">One-Time · Entry Point</div>
         <div class="nc-name">The Foundation</div>
         <div class="nc-price" style="color:var(--teal)">$1,500 one-time</div>
-        <div class="nc-desc">Audit, brief, creator shortlist, Reacher setup, and a 1-hour strategy session. The fastest way to know where you stand.</div>
+        <div class="nc-desc">Account audit, brand brief, and Reacher setup in a single onboarding session. The starting point before any ongoing offer.</div>
       </a>
       <a href="/offers/scale" class="next-card gold-card">
         <div class="nc-offer">Monthly · Done-For-You</div>
         <div class="nc-name">Scale</div>
         <div class="nc-price" style="color:#c9a84c">$4,000/mo + 5% net sales</div>
-        <div class="nc-desc">Full-service management. We run your shop end-to-end — strategy, creators, ads, content. You just watch it grow.</div>
+        <div class="nc-desc">Full-service management. We run your shop end-to-end — strategy, creators, ads, AI content. You focus on the product.</div>
       </a>
       <a href="/offers/creator-network" class="next-card">
         <div class="nc-offer">Monthly · Creators Only</div>

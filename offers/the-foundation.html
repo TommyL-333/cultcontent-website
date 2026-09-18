@@ -67,6 +67,11 @@ nav{
 .nav-logo span{background:linear-gradient(135deg,var(--teal),var(--lavender));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .nav-back{font-size:.8rem;color:var(--muted);letter-spacing:.06em;transition:color .2s;text-transform:uppercase}
 .nav-back:hover{color:var(--teal)}
+.nav-logo{text-decoration:none}
+.nav-links{display:flex;align-items:center;gap:22px;list-style:none;margin:0;padding:0}
+.nav-links a{color:rgba(255,255,255,.5);font-size:.75rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;transition:color .2s;text-decoration:none}
+.nav-links a:hover{color:#fff}
+@media(max-width:860px){.nav-links{display:none}}
 
 /* ─── HERO SECTION ─── */
 .hero-section{
@@ -95,14 +100,8 @@ nav{
   pointer-events:none;z-index:2
 }
 
-/* Grid horizon glow */
-.horizon-glow{
-  position:absolute;bottom:calc(58vh * 0.22);
-  left:0;right:0;height:1px;
-  background:linear-gradient(90deg,transparent 0%,rgba(0,242,234,.6) 20%,rgba(0,242,234,.9) 50%,rgba(0,242,234,.6) 80%,transparent 100%);
-  box-shadow:0 0 60px 12px rgba(0,242,234,.25),0 0 120px 30px rgba(0,242,234,.08);
-  pointer-events:none;z-index:3
-}
+/* Grid horizon glow — hidden (conflicts with hero CTA buttons) */
+.horizon-glow{display:none}
 
 /* Cloud images (real PNGs from homepage) */
 .cloud-wrap{position:absolute;inset:0;pointer-events:none;z-index:4;overflow:hidden}
@@ -355,8 +354,14 @@ nav{
 
 <!-- NAV -->
 <nav>
-  <div class="nav-logo">Cult <span>Content</span></div>
-  <a href="/offers" class="nav-back">← All Offers</a>
+  <a href="/" class="nav-logo">Cult <span>Content</span></a>
+  <ul class="nav-links">
+    <li><a href="/">Home</a></li>
+    <li><a href="/offers">Offers</a></li>
+    <li><a href="/consulting">Consulting</a></li>
+    <li><a href="/creators">Community</a></li>
+  </ul>
+  <a href="https://cultcontent.cc/brand-apply" target="_blank" class="nav-apply">Apply Now</a>
 </nav>
 
 <!-- ══════════════════════════════════════ HERO ══════════════════════════════════════ -->
@@ -518,7 +523,7 @@ nav{
     </div>
 
     <div style="margin-top:32px;padding:20px 24px;background:rgba(0,242,234,.04);border:1px solid rgba(0,242,234,.15);border-radius:12px;font-size:.88rem;color:var(--muted);line-height:1.7">
-      <strong style="color:var(--teal)">Important:</strong> The Foundation is designed as an entry point into an ongoing offer — Growth Partner, Scale, or Creator Network. If you're not planning to continue, this offer isn't the right fit.
+      <strong style="color:var(--teal)">What comes after:</strong> Most Foundation clients move into Growth Partner, Scale, or Creator Network. For brands who prefer to run their own shop, we also offer a $500/mo tech stack — Reacher support, CC tooling, and ongoing automation — sold separately.
     </div>
 
     <div class="stats-strip">
@@ -549,7 +554,7 @@ nav{
   <div class="section-inner">
     <div class="label-pill">What Comes Next</div>
     <h2 class="section-title">The Foundation leads somewhere.</h2>
-    <p class="section-sub">Every Foundation client moves into one of these. That's the point — we build the setup, you choose the path. If you're not planning to continue, this isn't the right offer for you.</p>
+    <p class="section-sub">After your Foundation session, most brands move into one of these ongoing offers. Self-starters can stay in the CC ecosystem on the $500/mo tech stack — Reacher support, CC tooling, and automation without the management layer.</p>
 
     <div class="next-cards">
       <a href="/offers/growth-partner" class="next-card purple-card">
