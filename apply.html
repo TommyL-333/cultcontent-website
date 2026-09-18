@@ -337,6 +337,12 @@
       <div class="step-title">The <span class="grad">Brand</span></div>
       <div class="step-sub">Start with the basics. We want to understand your product before anything else.</div>
 
+      <div class="field-group">
+        <label>Your Name <span class="req">*</span></label>
+        <input type="text" id="applicantName" placeholder="e.g. Jane Smith" />
+        <div class="field-error" id="err-applicantName">Your name is required.</div>
+      </div>
+
       <div class="field-row">
         <div class="field-group">
           <label>Brand Name <span class="req">*</span></label>
@@ -770,6 +776,7 @@
   function validateStep(n) {
     let ok = true;
     if (n === 1) {
+      ok = v('applicantName',  'err-applicantName',  val('applicantName').length > 0)   && ok;
       ok = v('brandName',      'err-brandName',      val('brandName').length > 0)       && ok;
       ok = v('website',        'err-website',        val('website').length > 0)          && ok;
       ok = v('tiktokHandle',   'err-tiktokHandle',   val('tiktokHandle').length > 0)    && ok;
@@ -826,6 +833,7 @@
     if (contact1Added) additional.push({ name: val('ec1Name'), title: val('ec1Title'), email: val('ec1Email'), phone: val('ec1Phone') });
     if (contact2Added) additional.push({ name: val('ec2Name'), title: val('ec2Title'), email: val('ec2Email'), phone: val('ec2Phone') });
     return {
+      applicantName:       val('applicantName'),
       brandName:           val('brandName'),
       website:             val('website'),
       tiktokHandle:        val('tiktokHandle'),
