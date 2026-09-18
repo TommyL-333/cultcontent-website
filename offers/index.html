@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Offers — Cult Content</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080710;--bg2:#0b0b1a;
+  --teal:#00f2ea;--purple:#7b2fff;--lavender:#b899ff;
+  --gold:#c9a84c;--pink:#ff0050;
+  --text:#e8e8f0;--muted:#7a7a9a;--white:#fff;
+  --border:rgba(255,255,255,.07);
+}
+
+/* ─── GLOBAL ─── */
+html{scroll-behavior:smooth}
+body{background:#080710;color:var(--text);font-family:'Lato',sans-serif;line-height:1.65;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
+
+/* ─── STAR FIELD (fixed, full page) ─── */
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:
+    radial-gradient(.6px .6px at 4% 8%,rgba(255,255,255,.7),transparent),
+    radial-gradient(.5px .5px at 11% 27%,rgba(255,255,255,.5),transparent),
+    radial-gradient(.7px .7px at 18% 64%,rgba(255,255,255,.6),transparent),
+    radial-gradient(.5px .5px at 25% 14%,rgba(220,230,255,.55),transparent),
+    radial-gradient(.6px .6px at 33% 78%,rgba(255,255,255,.65),transparent),
+    radial-gradient(.5px .5px at 40% 43%,rgba(255,255,255,.5),transparent),
+    radial-gradient(.5px .5px at 47% 90%,rgba(255,255,255,.55),transparent),
+    radial-gradient(.6px .6px at 56% 22%,rgba(255,255,255,.6),transparent),
+    radial-gradient(.5px .5px at 63% 57%,rgba(220,230,255,.5),transparent),
+    radial-gradient(.7px .7px at 71% 33%,rgba(255,255,255,.65),transparent),
+    radial-gradient(.5px .5px at 79% 81%,rgba(255,255,255,.5),transparent),
+    radial-gradient(.6px .6px at 86% 11%,rgba(255,255,255,.6),transparent),
+    radial-gradient(.5px .5px at 93% 46%,rgba(220,230,255,.55),transparent),
+    radial-gradient(1px 1px at 7% 52%,rgba(255,255,255,.85),transparent),
+    radial-gradient(1px 1px at 21% 38%,rgba(200,220,255,.8),transparent),
+    radial-gradient(1px 1px at 36% 6%,rgba(255,255,255,.9),transparent),
+    radial-gradient(1px 1px at 52% 68%,rgba(255,255,255,.8),transparent),
+    radial-gradient(1px 1px at 68% 85%,rgba(200,220,255,.75),transparent),
+    radial-gradient(1px 1px at 84% 30%,rgba(255,255,255,.85),transparent),
+    radial-gradient(1.5px 1.5px at 14% 76%,rgba(255,255,255,.95),transparent),
+    radial-gradient(1.5px 1.5px at 44% 19%,rgba(180,220,255,.9),transparent),
+    radial-gradient(2px 2px at 73% 60%,rgba(255,255,255,1),transparent),
+    radial-gradient(1.5px 1.5px at 91% 72%,rgba(200,240,255,.95),transparent),
+    radial-gradient(2px 2px at 30% 50%,rgba(255,255,255,.9),transparent);
+  background-size:700px 500px;
+  background-repeat:repeat;
+  opacity:.65
+}
+
+/* ─── NAV ─── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:20px 56px;
+  background:rgba(8,7,16,0.75);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(255,255,255,.06)
+}
+.nav-logo{font-family:'Montserrat',sans-serif;font-weight:900;font-size:1rem;letter-spacing:.1em;color:var(--white);text-transform:uppercase}
+.nav-logo span{background:linear-gradient(135deg,var(--teal),var(--lavender));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.nav-apply{
+  display:inline-block;
+  background:linear-gradient(135deg,var(--teal) 0%,var(--purple) 100%);
+  color:var(--white);font-family:'Montserrat',sans-serif;font-weight:900;font-size:.75rem;
+  letter-spacing:.1em;text-transform:uppercase;padding:10px 24px;border-radius:8px;
+  box-shadow:0 0 20px rgba(0,242,234,.2);transition:transform .2s,box-shadow .2s
+}
+.nav-apply:hover{transform:translateY(-2px);box-shadow:0 0 32px rgba(0,242,234,.35);color:var(--white)}
+
+/* ─── HERO SECTION ─── */
+.hero-section{
+  position:relative;min-height:100vh;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  overflow:hidden;padding-top:80px
+}
+
+/* Tron grid floor — mixed purple+teal */
+.tron-floor{
+  position:absolute;bottom:0;left:-40%;width:180%;height:58vh;
+  transform-origin:bottom center;
+  transform:perspective(700px) rotateX(74deg);
+  background-image:
+    linear-gradient(rgba(123,47,255,.18) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,242,234,.12) 1px,transparent 1px);
+  background-size:80px 80px;
+  -webkit-mask-image:
+    linear-gradient(to top,black 0%,black 30%,transparent 100%),
+    radial-gradient(ellipse 90% 100% at 50% 100%,black 0%,transparent 80%);
+  mask-image:
+    linear-gradient(to top,black 0%,black 30%,transparent 100%),
+    radial-gradient(ellipse 90% 100% at 50% 100%,black 0%,transparent 80%);
+  -webkit-mask-composite:intersect;mask-composite:intersect;
+  pointer-events:none;z-index:2
+}
+
+/* Grid horizon glow — teal to purple gradient */
+.horizon-glow{
+  position:absolute;bottom:calc(58vh * 0.22);
+  left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent 0%,rgba(0,242,234,.7) 20%,rgba(123,47,255,.8) 50%,rgba(0,242,234,.7) 80%,transparent 100%);
+  box-shadow:0 0 60px 12px rgba(0,242,234,.2),0 0 120px 30px rgba(123,47,255,.1);
+  pointer-events:none;z-index:3
+}
+
+/* Cloud images (ci-1 and ci-2 only) */
+.cloud-wrap{position:absolute;inset:0;pointer-events:none;z-index:4;overflow:hidden}
+.cloud-img{
+  position:absolute;
+  background:url('https://gallery.yopriceville.com/var/resizes/Free-Clipart-Pictures/Cloud-PNG/Realistic_Cloud_Transparent_PNG_Clip_Art_Image.png?m=1629830700') center/contain no-repeat;
+}
+.ci-1{width:680px;height:280px;top:-30px;left:-60px;opacity:.28;animation:cDriftFlip 28s ease-in-out infinite alternate}
+.ci-2{width:520px;height:220px;top:-20px;right:-80px;opacity:.22;animation:cDrift 22s ease-in-out infinite alternate-reverse}
+@keyframes cDrift{0%{transform:translate(0,0)}50%{transform:translate(12px,-8px)}100%{transform:translate(24px,-14px)}}
+@keyframes cDriftFlip{0%{transform:scaleX(-1) translate(0,0)}50%{transform:scaleX(-1) translate(-12px,-8px)}100%{transform:scaleX(-1) translate(-24px,-14px)}}
+
+/* Hero radial glow */
+.hero-glow{
+  position:absolute;top:20%;left:50%;transform:translateX(-50%);
+  width:800px;height:400px;
+  background:radial-gradient(ellipse at center,rgba(123,47,255,.07) 0%,rgba(0,242,234,.04) 50%,transparent 70%);
+  pointer-events:none;z-index:3
+}
+
+/* Hero content */
+.hero-content{
+  position:relative;z-index:10;
+  text-align:center;max-width:860px;padding:0 48px;
+}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(0,242,234,.06);border:1px solid rgba(0,242,234,.18);
+  color:var(--teal);font-size:.72rem;font-weight:700;letter-spacing:.16em;
+  text-transform:uppercase;padding:7px 18px;border-radius:100px;margin-bottom:36px
+}
+.hero-content h1{
+  font-family:'Montserrat',sans-serif;font-weight:900;
+  font-size:clamp(2.8rem,6.5vw,5rem);line-height:1.06;
+  color:var(--white);margin-bottom:20px;letter-spacing:-.02em
+}
+.grad-teal{background:linear-gradient(135deg,var(--teal) 0%,var(--lavender) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.grad-purple{background:linear-gradient(135deg,var(--purple) 0%,var(--lavender) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-content .hero-fit{
+  font-family:'Montserrat',sans-serif;font-weight:900;font-size:1.5rem;
+  color:var(--muted);margin-bottom:48px;letter-spacing:.02em
+}
+.hero-cta-row{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap}
+.btn-primary{
+  display:inline-block;
+  background:linear-gradient(135deg,var(--teal) 0%,var(--purple) 100%);
+  color:var(--white);font-family:'Montserrat',sans-serif;font-weight:900;font-size:.85rem;
+  letter-spacing:.1em;text-transform:uppercase;padding:16px 44px;border-radius:8px;
+  transition:transform .22s,box-shadow .22s;
+  box-shadow:0 0 40px rgba(0,242,234,.3),0 8px 32px rgba(0,0,0,.5)
+}
+.btn-primary:hover{transform:translateY(-3px);color:var(--white);box-shadow:0 0 60px rgba(0,242,234,.5),0 16px 40px rgba(0,0,0,.5)}
+.btn-ghost{
+  display:inline-block;color:var(--muted);font-size:.82rem;letter-spacing:.06em;
+  text-transform:uppercase;font-family:'Montserrat',sans-serif;font-weight:700;
+  border:1px solid rgba(255,255,255,.1);padding:14px 28px;border-radius:8px;
+  transition:all .2s
+}
+.btn-ghost:hover{color:var(--white);border-color:rgba(255,255,255,.25)}
+
+/* Scroll indicator */
+.scroll-hint{
+  position:absolute;bottom:40px;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:8px;z-index:10;
+  color:var(--muted);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase
+}
+.scroll-hint::after{
+  content:'';width:1px;height:40px;
+  background:linear-gradient(180deg,rgba(0,242,234,.5),transparent);
+  animation:scrollPulse 2s ease-in-out infinite
+}
+@keyframes scrollPulse{0%,100%{opacity:.3;transform:scaleY(.8)}50%{opacity:1;transform:scaleY(1)}}
+
+/* ─── OFFER SECTIONS ─── */
+.offer-section{position:relative;overflow:hidden}
+.offer-section + .offer-section{border-top:1px solid var(--border)}
+
+/* Checker patterns per accent */
+.offer-teal{background:#070714}
+.offer-teal::before{
+  content:'';position:absolute;inset:0;z-index:1;pointer-events:none;
+  background-image:
+    linear-gradient(45deg,rgba(0,242,234,.05) 25%,transparent 25%,transparent 75%,rgba(0,242,234,.05) 75%),
+    linear-gradient(45deg,rgba(0,242,234,.05) 25%,transparent 25%,transparent 75%,rgba(0,242,234,.05) 75%);
+  background-size:60px 60px;background-position:0 0,30px 30px;
+  -webkit-mask-image:linear-gradient(to bottom,rgba(0,0,0,.7) 0%,rgba(0,0,0,.3) 60%,transparent 100%);
+  mask-image:linear-gradient(to bottom,rgba(0,0,0,.7) 0%,rgba(0,0,0,.3) 60%,transparent 100%)
+}
+.offer-purple{background:#080710}
+.offer-purple::before{
+  content:'';position:absolute;inset:0;z-index:1;pointer-events:none;
+  background-image:
+    linear-gradient(45deg,rgba(123,47,255,.05) 25%,transparent 25%,transparent 75%,rgba(123,47,255,.05) 75%),
+    linear-gradient(45deg,rgba(123,47,255,.05) 25%,transparent 25%,transparent 75%,rgba(123,47,255,.05) 75%);
+  background-size:60px 60px;background-position:0 0,30px 30px;
+  -webkit-mask-image:linear-gradient(to bottom,rgba(0,0,0,.7) 0%,rgba(0,0,0,.3) 60%,transparent 100%);
+  mask-image:linear-gradient(to bottom,rgba(0,0,0,.7) 0%,rgba(0,0,0,.3) 60%,transparent 100%)
+}
+.offer-gold{background:#070714}
+.offer-gold::before{
+  content:'';position:absolute;inset:0;z-index:1;pointer-events:none;
+  background-image:
+    linear-gradient(45deg,rgba(201,168,76,.05) 25%,transparent 25%,transparent 75%,rgba(201,168,76,.05) 75%),
+    linear-gradient(45deg,rgba(201,168,76,.05) 25%,transparent 25%,transparent 75%,rgba(201,168,76,.05) 75%);
+  background-size:60px 60px;background-position:0 0,30px 30px;
+  -webkit-mask-image:linear-gradient(to bottom,rgba(0,0,0,.7) 0%,rgba(0,0,0,.3) 60%,transparent 100%);
+  mask-image:linear-gradient(to bottom,rgba(0,0,0,.7) 0%,rgba(0,0,0,.3) 60%,transparent 100%)
+}
+.offer-pink{background:#080710}
+.offer-pink::before{
+  content:'';position:absolute;inset:0;z-index:1;pointer-events:none;
+  background-image:
+    linear-gradient(45deg,rgba(255,0,80,.04) 25%,transparent 25%,transparent 75%,rgba(255,0,80,.04) 75%),
+    linear-gradient(45deg,rgba(255,0,80,.04) 25%,transparent 25%,transparent 75%,rgba(255,0,80,.04) 75%);
+  background-size:60px 60px;background-position:0 0,30px 30px;
+  -webkit-mask-image:linear-gradient(to bottom,rgba(0,0,0,.7) 0%,rgba(0,0,0,.3) 60%,transparent 100%);
+  mask-image:linear-gradient(to bottom,rgba(0,0,0,.7) 0%,rgba(0,0,0,.3) 60%,transparent 100%)
+}
+
+/* Section watermark number */
+.section-num{
+  position:absolute;
+  font-family:'Montserrat',sans-serif;font-weight:900;
+  font-size:clamp(140px,20vw,260px);
+  color:transparent;
+  line-height:1;pointer-events:none;user-select:none;
+  top:-0.1em;right:3%;z-index:0
+}
+.section-num.teal-stroke{-webkit-text-stroke:1px rgba(0,242,234,.06)}
+.section-num.purple-stroke{-webkit-text-stroke:1px rgba(123,47,255,.07)}
+.section-num.gold-stroke{-webkit-text-stroke:1px rgba(201,168,76,.07)}
+.section-num.pink-stroke{-webkit-text-stroke:1px rgba(255,0,80,.06)}
+
+/* Section inner */
+.offer-inner{
+  max-width:1080px;margin:0 auto;padding:100px 56px;
+  position:relative;z-index:2;
+  display:grid;grid-template-columns:1fr 380px;gap:64px;align-items:start
+}
+
+.offer-left{}
+.offer-badge{
+  display:inline-block;font-size:.7rem;font-weight:700;letter-spacing:.16em;
+  text-transform:uppercase;padding:5px 14px;border-radius:100px;margin-bottom:16px
+}
+.badge-teal{background:rgba(0,242,234,.08);border:1px solid rgba(0,242,234,.22);color:var(--teal)}
+.badge-purple{background:rgba(123,47,255,.1);border:1px solid rgba(123,47,255,.3);color:var(--lavender)}
+.badge-gold{background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.3);color:var(--gold)}
+.badge-pink{background:rgba(255,0,80,.08);border:1px solid rgba(255,0,80,.25);color:var(--pink)}
+
+.offer-name{
+  font-family:'Montserrat',sans-serif;font-weight:900;
+  font-size:clamp(2rem,4vw,3.2rem);color:var(--white);
+  line-height:1.08;margin-bottom:12px;letter-spacing:-.02em
+}
+.offer-price-line{
+  font-family:'Montserrat',sans-serif;font-weight:900;
+  font-size:1.6rem;margin-bottom:6px
+}
+.offer-term{font-size:.88rem;color:var(--muted);margin-bottom:36px;letter-spacing:.03em}
+
+.feature-list{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:12px 32px}
+.feature-list li{
+  display:flex;align-items:flex-start;gap:10px;
+  font-size:.9rem;color:var(--muted);line-height:1.5
+}
+.feature-list li::before{
+  content:'';flex-shrink:0;width:5px;height:5px;border-radius:50%;
+  margin-top:8px
+}
+.feature-list.teal li::before{background:var(--teal);box-shadow:0 0 5px rgba(0,242,234,.5)}
+.feature-list.purple li::before{background:var(--lavender);box-shadow:0 0 5px rgba(184,153,255,.5)}
+.feature-list.gold li::before{background:var(--gold);box-shadow:0 0 5px rgba(201,168,76,.5)}
+.feature-list.pink li::before{background:var(--pink);box-shadow:0 0 5px rgba(255,0,80,.5)}
+
+.offer-note{
+  margin-top:24px;font-size:.84rem;color:var(--muted);
+  padding:14px 20px;border-radius:10px;
+  border-left:3px solid
+}
+.note-gold{background:rgba(201,168,76,.05);border-color:rgba(201,168,76,.3)}
+.note-pink{background:rgba(255,0,80,.05);border-color:rgba(255,0,80,.3)}
+
+/* Right panel */
+.offer-right{
+  background:rgba(12,12,28,.7);border:1px solid var(--border);border-radius:18px;
+  padding:40px;backdrop-filter:blur(10px);position:sticky;top:100px;
+  display:flex;flex-direction:column;align-items:flex-start;gap:0
+}
+.offer-right-price{
+  font-family:'Montserrat',sans-serif;font-weight:900;font-size:2.6rem;
+  line-height:1;color:var(--white);margin-bottom:6px
+}
+.offer-right-label{font-size:.85rem;color:var(--muted);margin-bottom:28px}
+.offer-cta{
+  display:inline-block;width:100%;text-align:center;
+  font-family:'Montserrat',sans-serif;font-weight:900;font-size:.85rem;
+  letter-spacing:.1em;text-transform:uppercase;padding:16px 24px;border-radius:8px;
+  transition:transform .22s,box-shadow .22s;color:var(--white);margin-bottom:16px
+}
+.cta-teal{background:linear-gradient(135deg,var(--teal),var(--purple));box-shadow:0 0 30px rgba(0,242,234,.25)}
+.cta-teal:hover{transform:translateY(-2px);box-shadow:0 0 48px rgba(0,242,234,.4);color:var(--white)}
+.cta-purple{background:linear-gradient(135deg,var(--purple),var(--lavender));box-shadow:0 0 30px rgba(123,47,255,.25)}
+.cta-purple:hover{transform:translateY(-2px);box-shadow:0 0 48px rgba(123,47,255,.4);color:var(--white)}
+.cta-gold{background:linear-gradient(135deg,var(--gold),var(--purple));box-shadow:0 0 30px rgba(201,168,76,.25)}
+.cta-gold:hover{transform:translateY(-2px);box-shadow:0 0 48px rgba(201,168,76,.4);color:var(--white)}
+.cta-pink{background:linear-gradient(135deg,var(--pink),var(--purple));box-shadow:0 0 30px rgba(255,0,80,.25)}
+.cta-pink:hover{transform:translateY(-2px);box-shadow:0 0 48px rgba(255,0,80,.4);color:var(--white)}
+.offer-cta-link{
+  font-size:.78rem;color:var(--muted);text-align:center;width:100%;transition:color .2s
+}
+.offer-cta-link:hover{color:var(--white)}
+
+/* ─── HOW WE WORK ─── */
+.how-section{position:relative;overflow:hidden;background:#070714;border-top:1px solid var(--border)}
+.how-section::before{
+  content:'';position:absolute;inset:0;z-index:1;pointer-events:none;
+  background-image:
+    linear-gradient(45deg,rgba(0,242,234,.03) 25%,transparent 25%,transparent 75%,rgba(0,242,234,.03) 75%),
+    linear-gradient(45deg,rgba(0,242,234,.03) 25%,transparent 25%,transparent 75%,rgba(0,242,234,.03) 75%);
+  background-size:60px 60px;background-position:0 0,30px 30px;
+  -webkit-mask-image:linear-gradient(to bottom,rgba(0,0,0,.7) 0%,rgba(0,0,0,.3) 60%,transparent 100%);
+  mask-image:linear-gradient(to bottom,rgba(0,0,0,.7) 0%,rgba(0,0,0,.3) 60%,transparent 100%)
+}
+.how-inner{max-width:1080px;margin:0 auto;padding:100px 56px;position:relative;z-index:2}
+.label-pill{
+  display:inline-block;
+  background:rgba(0,242,234,.06);border:1px solid rgba(0,242,234,.2);
+  color:var(--teal);font-size:.72rem;font-weight:700;letter-spacing:.16em;
+  text-transform:uppercase;padding:6px 16px;border-radius:100px;margin-bottom:20px
+}
+.section-title{
+  font-family:'Montserrat',sans-serif;font-weight:900;
+  font-size:clamp(2rem,4vw,3rem);color:var(--white);
+  line-height:1.1;margin-bottom:16px;letter-spacing:-.015em
+}
+.section-sub{color:var(--muted);font-size:1.05rem;max-width:600px;line-height:1.7;margin-bottom:0}
+
+.steps-row{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:0;
+  margin-top:64px;position:relative
+}
+.steps-row::before{
+  content:'';position:absolute;top:28px;left:calc(16.66% + 14px);right:calc(16.66% + 14px);height:1px;
+  background:linear-gradient(90deg,var(--teal),var(--purple));z-index:0
+}
+.step-item{display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 32px;position:relative;z-index:1}
+.step-dot{
+  width:56px;height:56px;border-radius:50%;
+  background:linear-gradient(135deg,var(--teal),var(--purple));
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Montserrat',sans-serif;font-weight:900;font-size:1.1rem;color:var(--white);
+  margin-bottom:20px;flex-shrink:0;
+  box-shadow:0 0 24px rgba(0,242,234,.35),0 0 48px rgba(0,242,234,.12)
+}
+.step-item h3{font-family:'Montserrat',sans-serif;font-weight:700;font-size:1rem;color:var(--white);margin-bottom:8px}
+.step-item p{font-size:.88rem;color:var(--muted);line-height:1.6}
+
+/* ─── FINAL CTA ─── */
+.cta-section{
+  position:relative;overflow:hidden;
+  padding:0;background:#080710;
+  border-top:1px solid var(--border)
+}
+.cta-grid-floor{
+  position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(0,242,234,.08) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(123,47,255,.07) 1px,transparent 1px);
+  background-size:60px 60px;
+  -webkit-mask-image:radial-gradient(ellipse 80% 100% at 50% 100%,black 0%,transparent 65%);
+  mask-image:radial-gradient(ellipse 80% 100% at 50% 100%,black 0%,transparent 65%);
+  pointer-events:none
+}
+.cta-inner{
+  position:relative;z-index:2;
+  max-width:720px;margin:0 auto;
+  padding:120px 48px 100px;text-align:center
+}
+.cta-inner h2{
+  font-family:'Montserrat',sans-serif;font-weight:900;
+  font-size:clamp(2rem,4vw,3rem);color:var(--white);
+  margin-bottom:18px;letter-spacing:-.015em
+}
+.cta-inner p{color:var(--muted);font-size:1.05rem;margin-bottom:40px;line-height:1.7}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:960px){
+  nav{padding:18px 24px}
+  .hero-content{padding:0 24px}
+  .offer-inner{grid-template-columns:1fr;padding:72px 28px}
+  .offer-right{position:static;width:100%}
+  .feature-list{grid-template-columns:1fr}
+  .section-num{font-size:100px;right:0}
+  .how-inner{padding:72px 28px}
+  .ci-1,.ci-2{display:none}
+  .steps-row{grid-template-columns:1fr;gap:40px}
+  .steps-row::before{display:none}
+}
+@media(max-width:600px){
+  .hero-content h1{font-size:clamp(2.2rem,8vw,3rem)}
+  .cta-inner{padding:80px 28px}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">Cult <span>Content</span></div>
+  <a href="https://cultcontent.cc/brand-apply" target="_blank" class="nav-apply">Apply Now</a>
+</nav>
+
+<!-- ══════════════════════════════════════ HERO ══════════════════════════════════════ -->
+<section class="hero-section">
+
+  <!-- Cloud images (ci-1 and ci-2 only) -->
+  <div class="cloud-wrap">
+    <div class="cloud-img ci-1"></div>
+    <div class="cloud-img ci-2"></div>
+  </div>
+
+  <!-- Tron grid floor — mixed purple+teal -->
+  <div class="tron-floor"></div>
+  <div class="horizon-glow"></div>
+
+  <!-- Constellation SVG — multi-color -->
+  <svg style="position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none;opacity:.35" viewBox="0 0 1400 800" preserveAspectRatio="xMidYMid slice" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Teal lines — left side -->
+    <line x1="120" y1="180" x2="260" y2="130" stroke="rgba(0,242,234,0.25)" stroke-width="1"/>
+    <line x1="260" y1="130" x2="420" y2="200" stroke="rgba(0,242,234,0.2)" stroke-width="1"/>
+    <line x1="420" y1="200" x2="390" y2="320" stroke="rgba(0,242,234,0.18)" stroke-width="1"/>
+    <line x1="200" y1="400" x2="390" y2="320" stroke="rgba(0,242,234,0.15)" stroke-width="1"/>
+    <!-- Purple lines — center -->
+    <line x1="420" y1="200" x2="560" y2="140" stroke="rgba(123,47,255,0.3)" stroke-width="1"/>
+    <line x1="560" y1="140" x2="680" y2="190" stroke="rgba(123,47,255,0.25)" stroke-width="1"/>
+    <line x1="680" y1="190" x2="820" y2="120" stroke="rgba(123,47,255,0.28)" stroke-width="1"/>
+    <line x1="640" y1="310" x2="950" y2="300" stroke="rgba(123,47,255,0.18)" stroke-width="1"/>
+    <line x1="680" y1="190" x2="640" y2="310" stroke="rgba(123,47,255,0.18)" stroke-width="1"/>
+    <!-- Teal lines — right side -->
+    <line x1="820" y1="120" x2="980" y2="160" stroke="rgba(0,242,234,0.2)" stroke-width="1"/>
+    <line x1="980" y1="160" x2="1100" y2="100" stroke="rgba(0,242,234,0.25)" stroke-width="1"/>
+    <line x1="1100" y1="100" x2="1280" y2="155" stroke="rgba(0,242,234,0.2)" stroke-width="1"/>
+    <line x1="980" y1="160" x2="950" y2="300" stroke="rgba(0,242,234,0.18)" stroke-width="1"/>
+    <line x1="950" y1="300" x2="1180" y2="340" stroke="rgba(0,242,234,0.15)" stroke-width="1"/>
+    <line x1="390" y1="320" x2="640" y2="310" stroke="rgba(0,242,234,0.15)" stroke-width="1"/>
+    <!-- Teal nodes -->
+    <circle cx="120" cy="180" r="6" fill="rgba(0,242,234,0.08)"/>
+    <circle cx="120" cy="180" r="2" fill="rgba(0,242,234,0.8)"/>
+    <circle cx="260" cy="130" r="10" fill="rgba(0,242,234,0.1)"/>
+    <circle cx="260" cy="130" r="3" fill="rgba(255,255,255,0.95)"/>
+    <!-- Purple nodes -->
+    <circle cx="420" cy="200" r="8" fill="rgba(123,47,255,0.15)"/>
+    <circle cx="420" cy="200" r="2.5" fill="rgba(184,153,255,0.9)"/>
+    <circle cx="560" cy="140" r="6" fill="rgba(123,47,255,0.1)"/>
+    <circle cx="560" cy="140" r="2" fill="rgba(184,153,255,0.85)"/>
+    <circle cx="680" cy="190" r="14" fill="rgba(123,47,255,0.15)"/>
+    <circle cx="680" cy="190" r="4" fill="rgba(255,255,255,1)"/>
+    <!-- Pink nodes — scattered -->
+    <circle cx="820" cy="120" r="8" fill="rgba(255,0,80,0.12)"/>
+    <circle cx="820" cy="120" r="2.5" fill="rgba(255,0,80,0.9)"/>
+    <circle cx="390" cy="320" r="5" fill="rgba(255,0,80,0.1)"/>
+    <circle cx="390" cy="320" r="1.8" fill="rgba(255,100,120,0.85)"/>
+    <!-- Teal nodes — right -->
+    <circle cx="980" cy="160" r="10" fill="rgba(0,242,234,0.1)"/>
+    <circle cx="980" cy="160" r="3" fill="rgba(255,255,255,0.95)"/>
+    <circle cx="1100" cy="100" r="6" fill="rgba(0,242,234,0.08)"/>
+    <circle cx="1100" cy="100" r="2" fill="rgba(255,255,255,0.8)"/>
+    <circle cx="1280" cy="155" r="8" fill="rgba(0,242,234,0.08)"/>
+    <circle cx="1280" cy="155" r="2.5" fill="rgba(0,242,234,0.85)"/>
+    <circle cx="640" cy="310" r="6" fill="rgba(0,242,234,0.08)"/>
+    <circle cx="640" cy="310" r="2" fill="rgba(255,255,255,0.7)"/>
+    <circle cx="950" cy="300" r="6" fill="rgba(0,242,234,0.08)"/>
+    <circle cx="950" cy="300" r="2" fill="rgba(255,255,255,0.7)"/>
+    <circle cx="200" cy="400" r="4" fill="rgba(0,242,234,0.06)"/>
+    <circle cx="200" cy="400" r="1.5" fill="rgba(255,255,255,0.6)"/>
+    <!-- Background stars -->
+    <circle cx="60" cy="60" r="1" fill="rgba(255,255,255,0.4)"/>
+    <circle cx="340" cy="45" r="1.2" fill="rgba(255,255,255,0.5)"/>
+    <circle cx="750" cy="55" r="0.8" fill="rgba(255,255,255,0.4)"/>
+    <circle cx="1050" cy="38" r="1" fill="rgba(255,255,255,0.45)"/>
+    <circle cx="1320" cy="70" r="1.2" fill="rgba(255,255,255,0.4)"/>
+    <circle cx="510" cy="250" r="1" fill="rgba(255,255,255,0.35)"/>
+    <circle cx="800" cy="260" r="0.8" fill="rgba(255,255,255,0.3)"/>
+    <circle cx="1200" cy="240" r="1" fill="rgba(255,255,255,0.35)"/>
+  </svg>
+
+  <div class="hero-glow"></div>
+
+  <!-- Hero content -->
+  <div class="hero-content">
+    <div class="hero-eyebrow">TikTok Shop Growth Agency</div>
+    <h1>Four ways we help brands<br><span class="grad-teal">win on TikTok Shop.</span></h1>
+    <p class="hero-fit">Find your fit.</p>
+    <div class="hero-cta-row">
+      <a href="#the-foundation" class="btn-primary">See the Offers</a>
+      <a href="https://cultcontent.cc/brand-apply" target="_blank" class="btn-ghost">Apply Now</a>
+    </div>
+  </div>
+
+  <div class="scroll-hint">Scroll</div>
+</section>
+
+<!-- ══════════════════════════════════════ OFFER 01: THE FOUNDATION ══════════════════════════════════════ -->
+<div class="offer-section offer-teal" id="the-foundation">
+  <div class="section-num teal-stroke">01</div>
+  <div class="offer-inner">
+    <div class="offer-left">
+      <div class="offer-badge badge-teal">One-Time · 14-Day Delivery</div>
+      <h2 class="offer-name"><span class="grad-teal">The Foundation</span></h2>
+      <div class="offer-price-line"><span class="grad-teal">$1,500</span> <span style="font-size:1rem;color:var(--muted)">one-time</span></div>
+      <div class="offer-term">14-day delivery · Everything you need to launch right</div>
+      <ul class="feature-list teal">
+        <li>TikTok Shop account audit and health review</li>
+        <li>Creator-facing brand brief, ready to send on day one</li>
+        <li>Qualification consultation (brand and category)</li>
+        <li>Curated creator shortlist via Reacher database</li>
+        <li>Reacher outreach setup, configured and ready</li>
+        <li>1-hour strategy session and 30-day roadmap</li>
+      </ul>
+    </div>
+    <div class="offer-right">
+      <div class="offer-right-price" style="background:linear-gradient(135deg,var(--teal),var(--lavender));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">$1,500</div>
+      <div class="offer-right-label">One-time · 14-day delivery</div>
+      <a href="/offers/the-foundation" class="offer-cta cta-teal">Get Started →</a>
+      <a href="https://cultcontent.cc/brand-apply" target="_blank" class="offer-cta-link">Apply directly →</a>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ OFFER 02: GROWTH PARTNER ══════════════════════════════════════ -->
+<div class="offer-section offer-purple" id="growth-partner">
+  <div class="section-num purple-stroke">02</div>
+  <div class="offer-inner">
+    <div class="offer-left">
+      <div class="offer-badge badge-purple">Monthly · Done-With-You</div>
+      <h2 class="offer-name"><span class="grad-purple">Growth Partner</span></h2>
+      <div class="offer-price-line"><span class="grad-purple">$2,000</span><span style="font-size:1rem;color:var(--muted)">/mo</span></div>
+      <div class="offer-term">+ 9% of net sales · 30-day term · CC alongside you at every step</div>
+      <ul class="feature-list purple">
+        <li>Full strategy and channel direction from the CC team</li>
+        <li>Creator program management — brief, recruit, oversee</li>
+        <li>TikTok Shop ads management (ad spend billed separately)</li>
+        <li>Content direction and creative feedback</li>
+        <li>Client portal access — full visibility into every action</li>
+        <li>Monthly performance review and priority setting call</li>
+      </ul>
+    </div>
+    <div class="offer-right">
+      <div class="offer-right-price" style="background:linear-gradient(135deg,var(--purple),var(--lavender));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">$2,000</div>
+      <div class="offer-right-label">Per month + 9% net sales</div>
+      <a href="/offers/growth-partner" class="offer-cta cta-purple">Learn More →</a>
+      <a href="https://cultcontent.cc/brand-apply" target="_blank" class="offer-cta-link">Apply directly →</a>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ OFFER 03: SCALE ══════════════════════════════════════ -->
+<div class="offer-section offer-gold" id="scale">
+  <div class="section-num gold-stroke">03</div>
+  <div class="offer-inner">
+    <div class="offer-left">
+      <div class="offer-badge badge-gold">Monthly · Done-For-You</div>
+      <h2 class="offer-name"><span style="background:linear-gradient(135deg,var(--gold),var(--lavender));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Scale</span></h2>
+      <div class="offer-price-line"><span style="background:linear-gradient(135deg,var(--gold),var(--lavender));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">$4,000</span><span style="font-size:1rem;color:var(--muted)">/mo</span></div>
+      <div class="offer-term">+ 5% of net sales · 30-day term · Full account management</div>
+      <ul class="feature-list gold">
+        <li>End-to-end TikTok Shop account management</li>
+        <li>AI carousel content on a dedicated marketing account</li>
+        <li>Full ads management — strategy, creative, and optimization</li>
+        <li>Creator purchase reimbursement campaigns</li>
+        <li>Client portal with full team visibility</li>
+        <li>Monthly strategy review and priority alignment</li>
+      </ul>
+      <div class="offer-note note-gold">
+        Add-ons available: additional marketing accounts at +$500/mo each (up to 5 total). Three content types: management only, AI carousel, or creator UGC.
+      </div>
+    </div>
+    <div class="offer-right">
+      <div class="offer-right-price" style="background:linear-gradient(135deg,var(--gold),var(--lavender));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">$4,000</div>
+      <div class="offer-right-label">Per month + 5% net sales</div>
+      <a href="/offers/scale" class="offer-cta cta-gold">Learn More →</a>
+      <a href="https://cultcontent.cc/brand-apply" target="_blank" class="offer-cta-link">Apply directly →</a>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ OFFER 04: CREATOR NETWORK ══════════════════════════════════════ -->
+<div class="offer-section offer-pink" id="creator-network">
+  <div class="section-num pink-stroke">04</div>
+  <div class="offer-inner">
+    <div class="offer-left">
+      <div class="offer-badge badge-pink">Monthly · Creator Management</div>
+      <h2 class="offer-name"><span style="background:linear-gradient(135deg,#ff0050,#7b2fff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Creator Network</span></h2>
+      <div class="offer-price-line"><span style="background:linear-gradient(135deg,#ff0050,#7b2fff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">$2,000</span><span style="font-size:1rem;color:var(--muted)">/mo</span></div>
+      <div class="offer-term">+ 4% of GMV from CC-placed creators · 30-day term</div>
+      <ul class="feature-list pink">
+        <li>Tier 1 retainer arrangements with $100K+ GMV creators</li>
+        <li>Brief delivery and content oversight for all creators</li>
+        <li>Tier 2 mass community program at $10/video</li>
+        <li>Content verification against brief before payout</li>
+        <li>Payouts processed automatically through Reacher</li>
+        <li>Creator purchase reimbursement campaigns available</li>
+      </ul>
+      <div class="offer-note note-pink">
+        For brands already running their own TikTok Shop. Minimum Tier 1 spend: $10,000/mo in creator retainer budget (brand-funded).
+      </div>
+    </div>
+    <div class="offer-right">
+      <div class="offer-right-price" style="background:linear-gradient(135deg,#ff0050,#7b2fff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">$2,000</div>
+      <div class="offer-right-label">Per month + 4% GMV</div>
+      <a href="/offers/creator-network" class="offer-cta cta-pink">Learn More →</a>
+      <a href="https://cultcontent.cc/brand-apply" target="_blank" class="offer-cta-link">Apply directly →</a>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ HOW WE WORK ══════════════════════════════════════ -->
+<div class="how-section">
+  <div class="how-inner">
+    <div class="label-pill">How We Work</div>
+    <h2 class="section-title">Simple to start.<br>Built to scale.</h2>
+    <p class="section-sub">Every engagement starts the same way — we move fast and you know exactly what happens next.</p>
+
+    <div class="steps-row">
+      <div class="step-item">
+        <div class="step-dot">1</div>
+        <h3>Apply</h3>
+        <p>Submit your brand application. We review your shop, your goals, and your timeline — and recommend the right offer.</p>
+      </div>
+      <div class="step-item">
+        <div class="step-dot">2</div>
+        <h3>Onboard</h3>
+        <p>Sign, pay, and fill out a short intake form. Give us access to your TikTok Shop account. That's all we need to start.</p>
+      </div>
+      <div class="step-item">
+        <div class="step-dot">3</div>
+        <h3>We Get to Work</h3>
+        <p>No waiting around. Your first deliverables are in motion within 48 hours of onboarding completing.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ CTA ══════════════════════════════════════ -->
+<div class="cta-section">
+  <div class="cta-grid-floor"></div>
+  <div class="cta-inner">
+    <h2>Not sure which offer is right?<br><span class="grad-teal">Start with The Foundation.</span></h2>
+    <p>The Foundation is our entry point — a $1,500 one-time engagement that gives you everything you need to know before you commit to a monthly offer. Most clients use it to inform their next move.</p>
+    <a href="https://cultcontent.cc/brand-apply" target="_blank" class="btn-primary">Apply Now →</a>
+  </div>
+</div>
+
+</body>
+</html>
