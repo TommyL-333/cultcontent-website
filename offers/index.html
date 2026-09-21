@@ -367,7 +367,7 @@ nav{
   overflow:visible;position:relative;z-index:1
 }
 /* Diagonal arms: 80px run, 80px rise → 45° */
-.fork-arms{width:80px;flex-shrink:0;position:relative}
+.fork-arms{width:80px;flex-shrink:0;position:relative;overflow:hidden}
 .fork-arm{
   position:absolute;left:0;top:159px;
   width:113px;height:1px; /* √(80²+80²) ≈ 113px */
@@ -398,6 +398,14 @@ nav{
 }
 .step-dot-a{background:linear-gradient(135deg,var(--teal),var(--purple));box-shadow:0 0 24px rgba(0,242,234,.35),0 0 48px rgba(0,242,234,.12)}
 .step-dot-b{background:linear-gradient(135deg,var(--purple),var(--lavender));box-shadow:0 0 24px rgba(123,47,255,.35),0 0 48px rgba(123,47,255,.12)}
+/* Horizontal tails from arm endpoints to dot edges */
+.fork-branch::before{
+  content:'';position:absolute;
+  left:0;top:79px;
+  width:calc(50% - 28px);height:1px
+}
+.fork-branch:first-child::before{background:rgba(0,242,234,.5)}
+.fork-branch:last-child::before{background:rgba(184,153,255,.5)}
 .fork-step h3,.fork-branch h3{font-family:'Montserrat',sans-serif;font-weight:700;font-size:.95rem;color:var(--white);margin-bottom:6px}
 .fork-step p,.fork-branch p{font-size:.82rem;color:var(--muted);line-height:1.5}
 @media(max-width:640px){
