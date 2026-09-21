@@ -372,6 +372,17 @@ nav{
 .step-item h3{font-family:'Montserrat',sans-serif;font-weight:700;font-size:1rem;color:var(--white);margin-bottom:8px}
 .step-item p{font-size:.88rem;color:var(--muted);line-height:1.6}
 
+/* ─── FORK DIAGRAM ─── */
+.fork-connector{width:1px;height:20px;background:linear-gradient(to bottom,rgba(255,255,255,.15),rgba(255,255,255,.06));margin:14px auto 0}
+.fork-tracks{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;width:100%;text-align:left}
+.fork-track{border-radius:10px;padding:11px 13px;display:flex;flex-direction:column;gap:5px}
+.fork-human{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1)}
+.fork-agent{background:rgba(0,242,234,.04);border:1px solid rgba(0,242,234,.2)}
+.fork-track-label{font-family:'Montserrat',sans-serif;font-weight:700;font-size:.65rem;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.45)}
+.fork-agent .fork-track-label{color:var(--teal)}
+.fork-track-tasks{font-size:.7rem;color:var(--muted);line-height:1.6}
+.fork-track-tasks span{display:block}
+
 /* ─── FINAL CTA ─── */
 .cta-section{
   position:relative;overflow:hidden;
@@ -656,10 +667,29 @@ nav{
         <p>Sign, pay, and fill out a short intake form. Give us access to your TikTok Shop account — and agentic workflows spin up immediately.</p>
         <div style="display:inline-block;margin-top:12px;padding:4px 14px;background:rgba(0,242,234,.08);border:1px solid rgba(0,242,234,.2);border-radius:100px;font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--teal)">Agentic Workflows Begin</div>
       </div>
-      <div class="step-item">
+      <div class="step-item" style="padding:0 16px">
         <div class="step-dot">3</div>
-        <h3>Fork</h3>
-        <p>We get to work. Your first deliverables are in motion within 48 hours and the system runs in parallel from day one.</p>
+        <h3>Execute</h3>
+        <p style="margin-bottom:0">Two tracks activate in parallel from day one.</p>
+        <div class="fork-connector"></div>
+        <div class="fork-tracks">
+          <div class="fork-track fork-human">
+            <div class="fork-track-label">You</div>
+            <div class="fork-track-tasks">
+              <span>Approvals</span>
+              <span>Brand calls</span>
+              <span>Direction</span>
+            </div>
+          </div>
+          <div class="fork-track fork-agent">
+            <div class="fork-track-label">CC System</div>
+            <div class="fork-track-tasks">
+              <span>Campaigns</span>
+              <span>Creators</span>
+              <span>Analytics</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
