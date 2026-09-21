@@ -352,57 +352,62 @@ nav{
 }
 .section-sub{color:var(--muted);font-size:1.05rem;max-width:600px;line-height:1.7;margin-bottom:0}
 
-.steps-layout{margin-top:64px}
-.steps-row-top{display:flex;align-items:flex-start;position:relative}
-.steps-row-top::before{
-  content:'';position:absolute;top:28px;
-  left:calc(25% + 28px);right:calc(25% + 28px);
+/* ─── HOW WE WORK — horizontal fork layout ─── */
+.fork-outer{display:flex;height:320px;margin-top:64px;position:relative;overflow:visible}
+/* Steps 1 + 2: horizontal pair, connector line at y=160 */
+.fork-steps{flex:1;display:flex;position:relative}
+.fork-steps::before{
+  content:'';position:absolute;
+  top:159px;left:calc(25% + 28px);right:0;
   height:1px;background:linear-gradient(90deg,var(--teal),var(--purple));z-index:0
 }
-/* fork connector — CSS borders, no SVG scaling quirks */
-.fork-pipe{position:relative;height:56px}
-/* Right-side vertical: stem from step 2 all the way down to B */
-.fork-pipe::before{
-  content:'';position:absolute;
-  left:calc(75% - .5px);top:0;
-  width:1px;height:100%;
-  background:rgba(123,47,255,.45)
+.fork-step{
+  flex:1;padding:132px 20px 0;
+  display:flex;flex-direction:column;align-items:center;text-align:center;
+  overflow:visible;position:relative;z-index:1
 }
-/* Horizontal bar at midpoint, from 25% to 75% */
-.fork-pipe::after{
-  content:'';position:absolute;
-  left:25%;right:25%;top:50%;
-  height:1px;
-  background:linear-gradient(90deg,rgba(0,242,234,.5),rgba(123,47,255,.5))
+/* Diagonal arms: 80px run, 80px rise → 45° */
+.fork-arms{width:80px;flex-shrink:0;position:relative}
+.fork-arm{
+  position:absolute;left:0;top:159px;
+  width:113px;height:1px; /* √(80²+80²) ≈ 113px */
+  transform-origin:0 0
 }
-/* Left-side vertical: from bar midpoint down to A */
-.fork-left-leg{
-  position:absolute;
-  left:calc(25% - .5px);top:50%;
-  width:1px;height:50%;
-  background:rgba(0,242,234,.45)
+.fork-arm-up{
+  transform:rotate(-45deg);
+  background:linear-gradient(90deg,rgba(123,47,255,.6),rgba(0,242,234,.6))
 }
-.steps-row-bottom{display:flex;align-items:flex-start}
-.step-item{display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 32px;position:relative;z-index:1;flex:1}
+.fork-arm-down{
+  transform:rotate(45deg);
+  background:linear-gradient(90deg,rgba(123,47,255,.6),rgba(184,153,255,.6))
+}
+/* Branches 3A + 3B: each 160px tall, dot centered at 80px → matches ±80px arm rise */
+.fork-branches{flex:1;display:flex;flex-direction:column}
+.fork-branch{
+  height:160px;padding:52px 20px 0;
+  display:flex;flex-direction:column;align-items:center;text-align:center;
+  overflow:visible;position:relative;z-index:1
+}
 .step-dot{
   width:56px;height:56px;border-radius:50%;
   background:linear-gradient(135deg,var(--teal),var(--purple));
   display:flex;align-items:center;justify-content:center;
-  font-family:'Montserrat',sans-serif;font-weight:900;font-size:1.1rem;color:var(--white);
-  margin-bottom:20px;flex-shrink:0;
+  font-family:'Montserrat',sans-serif;font-weight:900;font-size:.95rem;color:var(--white);
+  margin-bottom:16px;flex-shrink:0;
   box-shadow:0 0 24px rgba(0,242,234,.35),0 0 48px rgba(0,242,234,.12)
 }
 .step-dot-a{background:linear-gradient(135deg,var(--teal),var(--purple));box-shadow:0 0 24px rgba(0,242,234,.35),0 0 48px rgba(0,242,234,.12)}
 .step-dot-b{background:linear-gradient(135deg,var(--purple),var(--lavender));box-shadow:0 0 24px rgba(123,47,255,.35),0 0 48px rgba(123,47,255,.12)}
-.step-track-tag{display:inline-block;font-family:'Montserrat',sans-serif;font-weight:700;font-size:.62rem;text-transform:uppercase;letter-spacing:.14em;padding:3px 11px;border-radius:100px;margin-bottom:10px}
-.step-track-teal{background:rgba(0,242,234,.08);border:1px solid rgba(0,242,234,.22);color:var(--teal)}
-.step-track-purple{background:rgba(123,47,255,.1);border:1px solid rgba(123,47,255,.3);color:var(--lavender)}
-.step-item h3{font-family:'Montserrat',sans-serif;font-weight:700;font-size:1rem;color:var(--white);margin-bottom:8px}
-.step-item p{font-size:.88rem;color:var(--muted);line-height:1.6}
+.fork-step h3,.fork-branch h3{font-family:'Montserrat',sans-serif;font-weight:700;font-size:.95rem;color:var(--white);margin-bottom:6px}
+.fork-step p,.fork-branch p{font-size:.82rem;color:var(--muted);line-height:1.5}
 @media(max-width:640px){
-  .steps-row-top,.steps-row-bottom{flex-direction:column;gap:40px;align-items:center}
-  .steps-row-top::before{display:none}
-  .fork-pipe{display:none}
+  .fork-outer{height:auto;flex-wrap:wrap;gap:36px;justify-content:center}
+  .fork-steps{width:100%;flex-direction:column;align-items:center;gap:32px}
+  .fork-steps::before{display:none}
+  .fork-step{padding:0 16px}
+  .fork-arms{display:none}
+  .fork-branches{width:100%;flex-direction:row;justify-content:center;gap:16px}
+  .fork-branch{height:auto;padding:0 16px}
 }
 
 /* ─── FINAL CTA ─── */
@@ -677,40 +682,38 @@ nav{
     <h2 class="section-title">Simple to start.<br>Built to scale.</h2>
     <p class="section-sub">Every engagement starts the same way — we move fast and you know exactly what happens next.</p>
 
-    <div class="steps-layout">
-      <!-- Row 1: Steps 1 and 2 -->
-      <div class="steps-row-top">
-        <div class="step-item">
+    <div class="fork-outer">
+      <!-- Steps 1 and 2 — same horizontal line at y=160 -->
+      <div class="fork-steps">
+        <div class="fork-step">
           <div class="step-dot">1</div>
           <h3>Apply</h3>
-          <p>Submit your brand application. We review your shop, your goals, and your timeline — and recommend the right offer.</p>
+          <p>Submit your brand application. We review your shop, goals, and timeline — and recommend the right offer.</p>
         </div>
-        <div class="step-item">
+        <div class="fork-step">
           <div class="step-dot">2</div>
           <h3>Onboard</h3>
-          <p>Sign, pay, and fill out a short intake form. Give us access to your TikTok Shop account — and two tracks activate immediately.</p>
-          <div style="display:inline-block;margin-top:12px;padding:4px 14px;background:rgba(0,242,234,.08);border:1px solid rgba(0,242,234,.2);border-radius:100px;font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--teal)">Both Tracks Begin</div>
+          <p>Sign, pay, and give us TikTok Shop access. Two tracks activate from this moment.</p>
         </div>
       </div>
 
-      <!-- CSS fork connector -->
-      <div class="fork-pipe" aria-hidden="true">
-        <div class="fork-left-leg"></div>
+      <!-- 45° diagonal fork arms -->
+      <div class="fork-arms" aria-hidden="true">
+        <div class="fork-arm fork-arm-up"></div>
+        <div class="fork-arm fork-arm-down"></div>
       </div>
 
-      <!-- Row 2: Parallel tracks 3A and 3B -->
-      <div class="steps-row-bottom">
-        <div class="step-item">
-          <div class="step-dot step-dot-a">A</div>
-          <div class="step-track-tag step-track-teal">Agentic System</div>
+      <!-- Parallel branches -->
+      <div class="fork-branches">
+        <div class="fork-branch">
+          <div class="step-dot step-dot-a">3A</div>
           <h3>Automated Execution</h3>
-          <p>Video briefs generated, creator outreach started, promotions live, performance tracked — the system runs itself from day one.</p>
+          <p>Video briefs, creator outreach, promotions, analytics — the system runs itself from day one.</p>
         </div>
-        <div class="step-item">
-          <div class="step-dot step-dot-b">B</div>
-          <div class="step-track-tag step-track-purple">Your Team</div>
+        <div class="fork-branch">
+          <div class="step-dot step-dot-b">3B</div>
           <h3>Human Layer</h3>
-          <p>Your dedicated CC contacts handle strategy, approvals, and direct communication — the people side of the operation.</p>
+          <p>Strategy, approvals, and direct communication — the people side of the operation.</p>
         </div>
       </div>
     </div>
