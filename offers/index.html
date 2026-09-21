@@ -359,7 +359,29 @@ nav{
   left:calc(25% + 28px);right:calc(25% + 28px);
   height:1px;background:linear-gradient(90deg,var(--teal),var(--purple));z-index:0
 }
-.fork-svg{display:block;width:100%;height:52px;overflow:visible}
+/* fork connector — CSS borders, no SVG scaling quirks */
+.fork-pipe{position:relative;height:56px}
+/* Right-side vertical: stem from step 2 all the way down to B */
+.fork-pipe::before{
+  content:'';position:absolute;
+  left:calc(75% - .5px);top:0;
+  width:1px;height:100%;
+  background:rgba(123,47,255,.45)
+}
+/* Horizontal bar at midpoint, from 25% to 75% */
+.fork-pipe::after{
+  content:'';position:absolute;
+  left:25%;right:25%;top:50%;
+  height:1px;
+  background:linear-gradient(90deg,rgba(0,242,234,.5),rgba(123,47,255,.5))
+}
+/* Left-side vertical: from bar midpoint down to A */
+.fork-left-leg{
+  position:absolute;
+  left:calc(25% - .5px);top:50%;
+  width:1px;height:50%;
+  background:rgba(0,242,234,.45)
+}
 .steps-row-bottom{display:flex;align-items:flex-start}
 .step-item{display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 32px;position:relative;z-index:1;flex:1}
 .step-dot{
@@ -380,7 +402,7 @@ nav{
 @media(max-width:640px){
   .steps-row-top,.steps-row-bottom{flex-direction:column;gap:40px;align-items:center}
   .steps-row-top::before{display:none}
-  .fork-svg{display:none}
+  .fork-pipe{display:none}
 }
 
 /* ─── FINAL CTA ─── */
@@ -671,23 +693,10 @@ nav{
         </div>
       </div>
 
-      <!-- Fork connector SVG: drops from step 2 (75% center) and branches to 3A (25%) and 3B (75%) -->
-      <svg class="fork-svg" viewBox="0 0 100 52" preserveAspectRatio="none" aria-hidden="true">
-        <defs>
-          <linearGradient id="fh" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stop-color="#00f2ea" stop-opacity=".55"/>
-            <stop offset="100%" stop-color="#7b2fff" stop-opacity=".55"/>
-          </linearGradient>
-        </defs>
-        <!-- vertical drop from step 2 center (75%) -->
-        <line x1="75" y1="0" x2="75" y2="26" stroke="#7b2fff" stroke-opacity=".5" stroke-width="1"/>
-        <!-- horizontal bar connecting branch point to 3A -->
-        <line x1="25" y1="26" x2="75" y2="26" stroke="url(#fh)" stroke-width="1"/>
-        <!-- vertical to 3A (25%) -->
-        <line x1="25" y1="26" x2="25" y2="52" stroke="#00f2ea" stroke-opacity=".5" stroke-width="1"/>
-        <!-- vertical continuation to 3B (75%) -->
-        <line x1="75" y1="26" x2="75" y2="52" stroke="#7b2fff" stroke-opacity=".5" stroke-width="1"/>
-      </svg>
+      <!-- CSS fork connector -->
+      <div class="fork-pipe" aria-hidden="true">
+        <div class="fork-left-leg"></div>
+      </div>
 
       <!-- Row 2: Parallel tracks 3A and 3B -->
       <div class="steps-row-bottom">
