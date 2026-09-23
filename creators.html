@@ -797,10 +797,11 @@
         err.style.display = 'block'; return;
       }
       setLoading(true);
+      var ref = new URLSearchParams(window.location.search).get('ref') || '';
       fetch(API, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name, tiktokHandle: tiktok, email: email, phone: phone, discordUsername: discord })
+        body: JSON.stringify({ name: name, tiktokHandle: tiktok, email: email, phone: phone, discordUsername: discord, ref: ref })
       })
       .then(function(r){ return r.json(); })
       .then(function(data){
