@@ -494,7 +494,8 @@ app.post('/api/partner/apply', express.json(), async (req, res) => {
     return res.status(400).json({ ok: false, error: 'Missing required fields.' });
   }
 
-  const entry = { name, email, company, role, channels, pitch, volume, referral, submittedAt: new Date().toISOString() };
+  const services = (req.body?.services && typeof req.body.services === 'object' && !Array.isArray(req.body.services)) ? req.body.services : {};
+  const entry = { name, email, company, role, channels, services, pitch, volume, referral, submittedAt: new Date().toISOString() };
 
   // 1. Persist to local JSON
   try {
@@ -508,18 +509,19 @@ app.post('/api/partner/apply', express.json(), async (req, res) => {
   // 2. Lark alert (non-blocking)
   const alertChatId = process.env.LARK_ALERT_CHAT_ID;
   if (alertChatId) {
-    const channelStr = channels.join(', ');
+    const serviceLines = Object.entries(services).map(([ch, svcs]) => `   ${ch}: ${svcs.join(', ')}`).join('\n');
     const alertText = [
       `🤝 New partner application!`,
       `👤 ${name}${company ? ` — ${company}` : ''}`,
       `📧 ${email}`,
       `🏷  Role: ${role}`,
-      `📡 Channels: ${channelStr}`,
+      `📡 Channels: ${channels.join(', ')}`,
+      serviceLines ? `🔧 Services:\n${serviceLines}` : '',
       volume   ? `💰 Volume: ${volume}` : '',
       referral ? `🔗 Via: ${referral}` : '',
       ``,
       `📝 Pitch:\n${pitch.slice(0, 400)}${pitch.length > 400 ? '…' : ''}`,
-    ].filter(l => l !== undefined && l !== null).join('\n');
+    ].filter(Boolean).join('\n');
 
     larkApi('post', '/im/v1/messages?receive_id_type=chat_id', {
       receive_id: alertChatId, msg_type: 'text', content: JSON.stringify({ text: alertText }),

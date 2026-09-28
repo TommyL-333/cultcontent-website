@@ -182,6 +182,39 @@ nav{
   content:'';display:block;width:4px;height:4px;border-radius:50%;background:#000
 }
 
+/* CHANNEL SERVICES */
+.channel-services-block{
+  margin-top:20px;padding:20px 22px;
+  background:rgba(0,242,234,.03);border:1px solid rgba(0,242,234,.1);
+  border-radius:12px;animation:fadeSlide .2s ease
+}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.channel-services-block+.channel-services-block{margin-top:12px}
+.csb-label{
+  font-size:.7rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--teal);margin-bottom:14px
+}
+.service-pill-group{display:flex;flex-wrap:wrap;gap:8px}
+.service-pill{
+  display:flex;align-items:center;gap:7px;
+  padding:7px 14px;border-radius:100px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.02);
+  color:rgba(255,255,255,.5);font-size:.78rem;font-weight:700;
+  cursor:pointer;user-select:none;transition:all .15s
+}
+.service-pill input[type=checkbox]{position:absolute;opacity:0;width:0;height:0;pointer-events:none}
+.service-pill:hover{border-color:rgba(0,242,234,.25);color:rgba(255,255,255,.8)}
+.service-pill.checked{background:rgba(0,242,234,.07);border-color:rgba(0,242,234,.35);color:var(--teal)}
+.sp-check{
+  width:12px;height:12px;border-radius:50%;flex-shrink:0;
+  border:1.5px solid rgba(255,255,255,.2);transition:all .15s
+}
+.service-pill.checked .sp-check{background:var(--teal);border-color:var(--teal)}
+.service-pill.checked .sp-check::after{
+  content:'';display:block;width:3px;height:3px;border-radius:50%;background:#000;margin:auto;margin-top:2.5px
+}
+
 /* FIELD ERROR */
 .field-error{
   font-size:.78rem;color:var(--error);margin-top:6px;display:none
@@ -348,6 +381,9 @@ nav{
           </div>
           <div class="field-error" style="margin-top:10px">Select at least one channel.</div>
         </div>
+
+        <!-- Per-channel service selectors (shown dynamically) -->
+        <div id="channelServices"></div>
       </div>
 
       <!-- 04. Pitch -->
@@ -368,7 +404,8 @@ nav{
             <option value="$10K–$50K">$10K – $50K / month</option>
             <option value="$50K–$250K">$50K – $250K / month</option>
             <option value="$250K–$1M">$250K – $1M / month</option>
-            <option value="$1M+">$1M+ / month</option>
+            <option value="$1M–$10M">$1M – $10M / month</option>
+            <option value="$10M+">$10M+ / month</option>
             <option value="Not sure">Not sure yet</option>
           </select>
         </div>
@@ -390,13 +427,111 @@ nav{
 </div>
 
 <script>
-// Pill checkbox toggle
-document.querySelectorAll('.pill').forEach(pill => {
+const CHANNEL_SERVICES = {
+  'TikTok Shop': [
+    'Affiliate Management',
+    'Creator Sourcing',
+    'Shop Management / Seller Center',
+    'Live Strategy',
+    'Short Video / Content Creation',
+    'Paid Ads (TikTok Ads)',
+    'Reporting & Analytics',
+  ],
+  'Meta': [
+    'Paid Ads Management',
+    'Content Creation',
+    'Organic Page Management',
+    'Creative Strategy',
+    'Influencer Partnerships',
+    'Reporting & Analytics',
+  ],
+  'Amazon': [
+    'Product Listing Management',
+    'PPC / Ads Management',
+    'A+ Content',
+    'Brand Store Design',
+    'Inventory Management',
+    'Review Management',
+    'Reporting & Analytics',
+  ],
+  'Google': [
+    'Search Ads',
+    'Shopping / Performance Max',
+    'SEO',
+    'Content Strategy',
+    'YouTube Ads',
+    'Reporting & Analytics',
+  ],
+  'Shopify': [
+    'Store Design / Build',
+    'CRO',
+    'Email Marketing',
+    'Product Management',
+    'App Integration',
+    'Reporting & Analytics',
+  ],
+  'YouTube': [
+    'Content Production',
+    'Channel Management',
+    'YouTube Ads',
+    'SEO / Optimization',
+    'Shorts Strategy',
+    'Reporting & Analytics',
+  ],
+  'Other': [
+    'Content Creation',
+    'Paid Ads',
+    'Organic Management',
+    'Product Listing',
+    'Strategy & Consulting',
+    'Reporting & Analytics',
+  ],
+};
+
+const serviceContainer = document.getElementById('channelServices');
+
+function renderServiceBlocks() {
+  const selectedChannels = [...document.querySelectorAll('input[name=channels]:checked')].map(c => c.value);
+  // Remove blocks for unchecked channels
+  serviceContainer.querySelectorAll('.channel-services-block').forEach(block => {
+    if (!selectedChannels.includes(block.dataset.channel)) block.remove();
+  });
+  // Add blocks for newly checked channels (in order)
+  selectedChannels.forEach(channel => {
+    if (serviceContainer.querySelector(`[data-channel="${CSS.escape(channel)}"]`)) return;
+    const services = CHANNEL_SERVICES[channel] || [];
+    const block = document.createElement('div');
+    block.className = 'channel-services-block';
+    block.dataset.channel = channel;
+    block.innerHTML = `
+      <div class="csb-label">${channel} — services you provide</div>
+      <div class="service-pill-group">
+        ${services.map(s => `
+          <label class="service-pill">
+            <input type="checkbox" name="services[${channel}]" value="${s}">
+            <span class="sp-check"></span>${s}
+          </label>`).join('')}
+      </div>`;
+    serviceContainer.appendChild(block);
+    // Wire pill toggles for this block
+    block.querySelectorAll('.service-pill').forEach(sp => {
+      sp.addEventListener('click', () => {
+        const cb = sp.querySelector('input[type=checkbox]');
+        cb.checked = !cb.checked;
+        sp.classList.toggle('checked', cb.checked);
+      });
+    });
+  });
+}
+
+// Channel pill toggle
+document.querySelectorAll('#channelPills .pill').forEach(pill => {
   pill.addEventListener('click', () => {
     const cb = pill.querySelector('input[type=checkbox]');
     cb.checked = !cb.checked;
     pill.classList.toggle('checked', cb.checked);
     document.getElementById('f-channels').classList.remove('has-error');
+    renderServiceBlocks();
   });
 });
 
@@ -412,10 +547,10 @@ document.getElementById('partnerForm').addEventListener('submit', async (e) => {
     else el.classList.remove('has-error');
   }
 
-  const name  = form.name.value.trim();
-  const email = form.email.value.trim();
-  const role  = form.role.value;
-  const pitch = form.pitch.value.trim();
+  const name     = form.name.value.trim();
+  const email    = form.email.value.trim();
+  const role     = form.role.value;
+  const pitch    = form.pitch.value.trim();
   const channels = [...form.querySelectorAll('input[name=channels]:checked')].map(c => c.value);
 
   setError('f-name',     !name);
@@ -425,6 +560,13 @@ document.getElementById('partnerForm').addEventListener('submit', async (e) => {
   setError('f-pitch',    !pitch);
 
   if (!valid) return;
+
+  // Collect per-channel services
+  const services = {};
+  channels.forEach(ch => {
+    const checked = [...form.querySelectorAll(`input[name="services[${ch}]"]:checked`)].map(c => c.value);
+    if (checked.length) services[ch] = checked;
+  });
 
   const btn = document.getElementById('submitBtn');
   btn.disabled = true;
@@ -436,6 +578,7 @@ document.getElementById('partnerForm').addEventListener('submit', async (e) => {
     company:  form.company.value.trim(),
     role,
     channels,
+    services,
     pitch,
     volume:   form.volume.value,
     referral: form.referral.value.trim(),
