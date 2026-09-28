@@ -470,6 +470,65 @@ app.post('/api/ccc/creator-apply', async (req, res) => {
   res.json({ ok: true });
 });
 
+// ─── Partner application form ─────────────────────────────────────────────────
+const PARTNER_APPS_FILE = path.join(__dirname, 'partner-applications.json');
+
+function loadPartnerApps() {
+  try { return JSON.parse(fs.readFileSync(PARTNER_APPS_FILE, 'utf8')); } catch { return []; }
+}
+function savePartnerApps(apps) {
+  fs.writeFileSync(PARTNER_APPS_FILE, JSON.stringify(apps, null, 2));
+}
+
+app.post('/api/partner/apply', express.json(), async (req, res) => {
+  const name     = String(req.body?.name     || '').trim();
+  const email    = String(req.body?.email    || '').trim().toLowerCase();
+  const company  = String(req.body?.company  || '').trim();
+  const role     = String(req.body?.role     || '').trim();
+  const pitch    = String(req.body?.pitch    || '').trim();
+  const volume   = String(req.body?.volume   || '').trim();
+  const referral = String(req.body?.referral || '').trim();
+  const channels = Array.isArray(req.body?.channels) ? req.body.channels.map(c => String(c).trim()).filter(Boolean) : [];
+
+  if (!name || !email || !email.includes('@') || !role || !pitch || channels.length === 0) {
+    return res.status(400).json({ ok: false, error: 'Missing required fields.' });
+  }
+
+  const entry = { name, email, company, role, channels, pitch, volume, referral, submittedAt: new Date().toISOString() };
+
+  // 1. Persist to local JSON
+  try {
+    const apps = loadPartnerApps();
+    apps.push(entry);
+    savePartnerApps(apps);
+  } catch (e) {
+    console.error('[partner-apply] file write error:', e.message);
+  }
+
+  // 2. Lark alert (non-blocking)
+  const alertChatId = process.env.LARK_ALERT_CHAT_ID;
+  if (alertChatId) {
+    const channelStr = channels.join(', ');
+    const alertText = [
+      `🤝 New partner application!`,
+      `👤 ${name}${company ? ` — ${company}` : ''}`,
+      `📧 ${email}`,
+      `🏷  Role: ${role}`,
+      `📡 Channels: ${channelStr}`,
+      volume   ? `💰 Volume: ${volume}` : '',
+      referral ? `🔗 Via: ${referral}` : '',
+      ``,
+      `📝 Pitch:\n${pitch.slice(0, 400)}${pitch.length > 400 ? '…' : ''}`,
+    ].filter(l => l !== undefined && l !== null).join('\n');
+
+    larkApi('post', '/im/v1/messages?receive_id_type=chat_id', {
+      receive_id: alertChatId, msg_type: 'text', content: JSON.stringify({ text: alertText }),
+    }).catch(e => console.error('[partner-apply] Lark alert error:', e.message));
+  }
+
+  res.json({ ok: true });
+});
+
 // ─── GHL Webhook: client onboarding form → auto-add client ───────────────────
 // This route is intentionally registered BEFORE requireAuth so GHL can call it
 // without a Cloudflare Access session. Verified by WEBHOOK_SECRET query param.
@@ -6613,6 +6672,7 @@ app.get('/book-now',                           _pub('book-now.html'));
 app.get('/book-consulting',                    _pub('book-consulting.html'));
 app.get('/partners',                           _pub('partners.html'));
 app.get('/partner',                            _pub('partner.html'));
+app.get('/partner/apply',                      _pub('partner-apply.html'));
 app.get('/work-with-us',                       (req, res) => res.redirect(301, '/offers'));
 app.get('/offers',                             (req, res) => res.sendFile(path.join(__dirname, 'offers', 'index.html')));
 app.get('/offers/the-foundation',              (req, res) => res.sendFile(path.join(__dirname, 'offers', 'the-foundation.html')));

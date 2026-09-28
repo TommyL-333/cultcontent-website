@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Apply to Partner — Cult Content</title>
+<meta name="description" content="Apply to join the Cult Content partner network as a Sales Partner, Service Provider, or both.">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080710;--bg2:#070714;
+  --teal:#00f2ea;--purple:#7b2fff;--lavender:#b899ff;
+  --text:#e8e8f0;--muted:#7a7a9a;--white:#fff;
+  --border:rgba(255,255,255,.07);--border-focus:rgba(0,242,234,.4);
+  --input-bg:rgba(255,255,255,.04);
+  --error:#ff4d6d;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;line-height:1.65;overflow-x:hidden;min-height:100vh}
+a{color:inherit;text-decoration:none}
+
+/* STAR FIELD */
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:
+    radial-gradient(.6px .6px at 6% 12%,rgba(255,255,255,.7),transparent),
+    radial-gradient(.5px .5px at 15% 38%,rgba(255,255,255,.5),transparent),
+    radial-gradient(.7px .7px at 22% 71%,rgba(255,255,255,.6),transparent),
+    radial-gradient(.5px .5px at 31% 19%,rgba(220,210,255,.55),transparent),
+    radial-gradient(.6px .6px at 39% 84%,rgba(255,255,255,.65),transparent),
+    radial-gradient(.5px .5px at 48% 47%,rgba(255,255,255,.5),transparent),
+    radial-gradient(.5px .5px at 57% 9%,rgba(255,255,255,.55),transparent),
+    radial-gradient(.6px .6px at 64% 62%,rgba(255,255,255,.6),transparent),
+    radial-gradient(.5px .5px at 73% 28%,rgba(210,200,255,.5),transparent),
+    radial-gradient(.7px .7px at 81% 55%,rgba(255,255,255,.65),transparent),
+    radial-gradient(.5px .5px at 88% 78%,rgba(255,255,255,.5),transparent),
+    radial-gradient(1px 1px at 9% 55%,rgba(255,255,255,.85),transparent),
+    radial-gradient(1px 1px at 26% 30%,rgba(184,153,255,.8),transparent),
+    radial-gradient(1px 1px at 42% 8%,rgba(255,255,255,.9),transparent),
+    radial-gradient(1px 1px at 58% 72%,rgba(255,255,255,.8),transparent),
+    radial-gradient(1.5px 1.5px at 16% 82%,rgba(255,255,255,.95),transparent),
+    radial-gradient(2px 2px at 77% 43%,rgba(255,255,255,1),transparent);
+  background-size:700px 500px;background-repeat:repeat;opacity:.55
+}
+
+/* NAV */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:20px 56px;
+  background:rgba(8,7,16,.8);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(255,255,255,.06)
+}
+.nav-logo{font-family:'Montserrat',sans-serif;font-weight:900;font-size:1rem;letter-spacing:.1em;color:var(--white);text-transform:uppercase}
+.nav-logo span{background:linear-gradient(135deg,var(--purple),var(--lavender));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.nav-back{
+  display:inline-flex;align-items:center;gap:8px;
+  color:rgba(255,255,255,.4);font-size:.78rem;font-weight:700;
+  letter-spacing:.06em;text-transform:uppercase;
+  transition:color .2s
+}
+.nav-back:hover{color:var(--white)}
+.nav-back svg{width:14px;height:14px;opacity:.6}
+@media(max-width:600px){nav{padding:18px 24px}}
+
+/* PAGE LAYOUT */
+.page{
+  position:relative;z-index:2;
+  min-height:100vh;padding:120px 24px 80px;
+  display:flex;flex-direction:column;align-items:center
+}
+
+/* HEADER */
+.form-header{
+  text-align:center;max-width:640px;margin-bottom:52px
+}
+.header-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(0,242,234,.06);border:1px solid rgba(0,242,234,.2);
+  color:var(--teal);font-size:.7rem;font-weight:700;letter-spacing:.18em;
+  text-transform:uppercase;padding:6px 16px;border-radius:100px;margin-bottom:24px
+}
+.form-header h1{
+  font-family:'Montserrat',sans-serif;font-weight:900;
+  font-size:clamp(2rem,4.5vw,3rem);color:var(--white);
+  line-height:1.08;letter-spacing:-.02em;margin-bottom:14px
+}
+.form-header p{color:var(--muted);font-size:.98rem;line-height:1.75}
+
+/* FORM CARD */
+.form-card{
+  width:100%;max-width:680px;
+  background:rgba(12,10,28,.8);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:24px;padding:48px 52px;
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  position:relative;overflow:hidden
+}
+.form-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--teal),var(--lavender),transparent)
+}
+@media(max-width:600px){.form-card{padding:36px 24px;border-radius:16px}}
+
+/* FORM SECTIONS */
+.form-section{margin-bottom:36px}
+.form-section:last-of-type{margin-bottom:0}
+.section-label{
+  font-family:'Montserrat',sans-serif;font-weight:700;font-size:.72rem;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--teal);
+  margin-bottom:20px;padding-bottom:12px;
+  border-bottom:1px solid rgba(0,242,234,.12)
+}
+
+/* FIELD */
+.field{margin-bottom:20px}
+.field:last-child{margin-bottom:0}
+.field label{
+  display:block;font-size:.82rem;font-weight:700;
+  letter-spacing:.04em;color:rgba(255,255,255,.65);
+  margin-bottom:8px
+}
+.field label .req{color:var(--teal);margin-left:3px}
+
+.field input,
+.field textarea,
+.field select{
+  width:100%;padding:13px 16px;
+  background:var(--input-bg);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:10px;color:var(--white);font-family:'Lato',sans-serif;font-size:.92rem;
+  transition:border-color .2s,background .2s;outline:none;
+  -webkit-appearance:none;appearance:none
+}
+.field input::placeholder,
+.field textarea::placeholder{color:var(--muted)}
+.field input:focus,
+.field textarea:focus,
+.field select:focus{
+  border-color:var(--border-focus);
+  background:rgba(0,242,234,.04)
+}
+.field textarea{min-height:130px;resize:vertical;line-height:1.65}
+.field select{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1L6 7L11 1' stroke='%237a7a9a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center;
+  padding-right:38px;cursor:pointer;
+  background-color:var(--input-bg)
+}
+.field select option{background:#141228;color:var(--white)}
+
+/* MULTI-SELECT PILLS */
+.pill-group{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px}
+.pill{
+  display:flex;align-items:center;gap:8px;
+  padding:9px 16px;border-radius:100px;
+  border:1px solid rgba(255,255,255,.1);
+  background:rgba(255,255,255,.03);
+  color:rgba(255,255,255,.55);font-size:.82rem;font-weight:700;
+  cursor:pointer;user-select:none;transition:all .18s;
+  letter-spacing:.03em
+}
+.pill input[type=checkbox]{
+  position:absolute;opacity:0;width:0;height:0;pointer-events:none
+}
+.pill:hover{border-color:rgba(0,242,234,.3);color:rgba(255,255,255,.85)}
+.pill.checked{
+  background:rgba(0,242,234,.08);border-color:rgba(0,242,234,.4);
+  color:var(--teal)
+}
+.pill-check{
+  width:14px;height:14px;border-radius:50%;
+  border:1.5px solid rgba(255,255,255,.25);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:all .18s
+}
+.pill.checked .pill-check{
+  background:var(--teal);border-color:var(--teal)
+}
+.pill.checked .pill-check::after{
+  content:'';display:block;width:4px;height:4px;border-radius:50%;background:#000
+}
+
+/* FIELD ERROR */
+.field-error{
+  font-size:.78rem;color:var(--error);margin-top:6px;display:none
+}
+.field.has-error input,
+.field.has-error textarea,
+.field.has-error select{border-color:var(--error)}
+.field.has-error .field-error{display:block}
+
+/* SUBMIT */
+.form-footer{margin-top:36px}
+.submit-btn{
+  width:100%;padding:16px;
+  background:linear-gradient(135deg,var(--teal),#00c4be);
+  color:#000;font-family:'Montserrat',sans-serif;font-weight:900;
+  font-size:.88rem;letter-spacing:.1em;text-transform:uppercase;
+  border:none;border-radius:10px;cursor:pointer;
+  transition:transform .22s,box-shadow .22s,opacity .2s;
+  box-shadow:0 0 40px rgba(0,242,234,.2),0 8px 28px rgba(0,0,0,.4)
+}
+.submit-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 0 60px rgba(0,242,234,.35),0 12px 36px rgba(0,0,0,.5)}
+.submit-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.form-note{
+  text-align:center;font-size:.78rem;color:var(--muted);margin-top:14px;line-height:1.65
+}
+
+/* GLOBAL ERROR */
+.global-error{
+  display:none;margin-bottom:20px;padding:14px 18px;
+  background:rgba(255,77,109,.08);border:1px solid rgba(255,77,109,.25);
+  border-radius:10px;color:#ff8fa3;font-size:.88rem;line-height:1.6
+}
+.global-error.visible{display:block}
+
+/* SUCCESS STATE */
+.success-state{
+  display:none;text-align:center;padding:20px 0
+}
+.success-state.visible{display:block}
+.success-icon{
+  width:72px;height:72px;border-radius:50%;
+  background:rgba(0,242,234,.08);border:1px solid rgba(0,242,234,.3);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 28px;font-size:2rem
+}
+.success-state h2{
+  font-family:'Montserrat',sans-serif;font-weight:900;font-size:1.8rem;
+  color:var(--white);margin-bottom:14px
+}
+.success-state p{color:var(--muted);font-size:.95rem;line-height:1.75;max-width:480px;margin:0 auto 28px}
+.back-link{
+  display:inline-block;color:var(--teal);font-weight:700;font-size:.85rem;
+  letter-spacing:.05em;transition:opacity .2s
+}
+.back-link:hover{opacity:.7}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">Cult <span>Content</span></a>
+  <a href="/partner" class="nav-back">
+    <svg viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 2L4 7L9 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Back to Partner
+  </a>
+</nav>
+
+<div class="page">
+
+  <div class="form-header">
+    <div class="header-badge">Partner Application</div>
+    <h1>Tell us about<br>what you bring.</h1>
+    <p>We review every application and respond within 48 hours. Tell us your role, your channels, and why you'd be a strong fit.</p>
+  </div>
+
+  <div class="form-card">
+
+    <!-- Success state (hidden until submit) -->
+    <div class="success-state" id="successState">
+      <div class="success-icon">✓</div>
+      <h2>Application received.</h2>
+      <p>We'll review your application and get back to you within 48 hours at the email you provided.</p>
+      <a href="/partner" class="back-link">← Back to Partner page</a>
+    </div>
+
+    <!-- The form -->
+    <form id="partnerForm" novalidate>
+
+      <div class="global-error" id="globalError"></div>
+
+      <!-- 01. About You -->
+      <div class="form-section">
+        <div class="section-label">About you</div>
+
+        <div class="field" id="f-name">
+          <label>Full name <span class="req">*</span></label>
+          <input type="text" name="name" placeholder="Jane Smith" autocomplete="name">
+          <div class="field-error">Name is required.</div>
+        </div>
+
+        <div class="field" id="f-email">
+          <label>Email address <span class="req">*</span></label>
+          <input type="email" name="email" placeholder="jane@company.com" autocomplete="email">
+          <div class="field-error">Valid email is required.</div>
+        </div>
+
+        <div class="field" id="f-company">
+          <label>Company or website</label>
+          <input type="text" name="company" placeholder="Acme Agency — acme.com">
+        </div>
+      </div>
+
+      <!-- 02. Partnership Type -->
+      <div class="form-section">
+        <div class="section-label">Partnership type</div>
+
+        <div class="field" id="f-role">
+          <label>Which role are you applying for? <span class="req">*</span></label>
+          <select name="role">
+            <option value="" disabled selected>Select a role…</option>
+            <option value="Sales Partner">Sales Partner — I refer brands and earn on deals</option>
+            <option value="Service Provider">Service Provider — I execute channel services for clients</option>
+            <option value="Both">Both — I can do both roles</option>
+          </select>
+          <div class="field-error">Please select a role.</div>
+        </div>
+      </div>
+
+      <!-- 03. Channels -->
+      <div class="form-section">
+        <div class="section-label">Your channel expertise</div>
+
+        <div class="field" id="f-channels">
+          <label>Which channels do you work with? <span class="req">*</span></label>
+          <div class="pill-group" id="channelPills">
+            <label class="pill" data-value="TikTok Shop">
+              <input type="checkbox" name="channels" value="TikTok Shop">
+              <span class="pill-check"></span>TikTok Shop
+            </label>
+            <label class="pill" data-value="Meta">
+              <input type="checkbox" name="channels" value="Meta">
+              <span class="pill-check"></span>Meta
+            </label>
+            <label class="pill" data-value="Amazon">
+              <input type="checkbox" name="channels" value="Amazon">
+              <span class="pill-check"></span>Amazon
+            </label>
+            <label class="pill" data-value="Google">
+              <input type="checkbox" name="channels" value="Google">
+              <span class="pill-check"></span>Google
+            </label>
+            <label class="pill" data-value="Shopify">
+              <input type="checkbox" name="channels" value="Shopify">
+              <span class="pill-check"></span>Shopify
+            </label>
+            <label class="pill" data-value="YouTube">
+              <input type="checkbox" name="channels" value="YouTube">
+              <span class="pill-check"></span>YouTube
+            </label>
+            <label class="pill" data-value="Other">
+              <input type="checkbox" name="channels" value="Other">
+              <span class="pill-check"></span>Other
+            </label>
+          </div>
+          <div class="field-error" style="margin-top:10px">Select at least one channel.</div>
+        </div>
+      </div>
+
+      <!-- 04. Pitch -->
+      <div class="form-section">
+        <div class="section-label">Make your case</div>
+
+        <div class="field" id="f-pitch">
+          <label>Why should we accept you as a partner? <span class="req">*</span></label>
+          <textarea name="pitch" placeholder="Tell us about your track record, the brands or clients you work with, what makes you valuable to this network, and what you're looking to accomplish."></textarea>
+          <div class="field-error">This field is required.</div>
+        </div>
+
+        <div class="field" id="f-volume">
+          <label>Approximate monthly GMV or revenue you manage (or expect to refer)</label>
+          <select name="volume">
+            <option value="" disabled selected>Select a range…</option>
+            <option value="Under $10K">Under $10K / month</option>
+            <option value="$10K–$50K">$10K – $50K / month</option>
+            <option value="$50K–$250K">$50K – $250K / month</option>
+            <option value="$250K–$1M">$250K – $1M / month</option>
+            <option value="$1M+">$1M+ / month</option>
+            <option value="Not sure">Not sure yet</option>
+          </select>
+        </div>
+
+        <div class="field" id="f-referral">
+          <label>How did you hear about Cult Content?</label>
+          <input type="text" name="referral" placeholder="TikTok, a referral, LinkedIn, etc.">
+        </div>
+      </div>
+
+      <div class="form-footer">
+        <div class="global-error" id="globalError2"></div>
+        <button type="submit" class="submit-btn" id="submitBtn">Submit Application →</button>
+        <p class="form-note">We review every application personally and respond within 48 hours.</p>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<script>
+// Pill checkbox toggle
+document.querySelectorAll('.pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    const cb = pill.querySelector('input[type=checkbox]');
+    cb.checked = !cb.checked;
+    pill.classList.toggle('checked', cb.checked);
+    document.getElementById('f-channels').classList.remove('has-error');
+  });
+});
+
+// Form validation + submission
+document.getElementById('partnerForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  let valid = true;
+
+  function setError(fieldId, hasError) {
+    const el = document.getElementById(fieldId);
+    if (hasError) { el.classList.add('has-error'); valid = false; }
+    else el.classList.remove('has-error');
+  }
+
+  const name  = form.name.value.trim();
+  const email = form.email.value.trim();
+  const role  = form.role.value;
+  const pitch = form.pitch.value.trim();
+  const channels = [...form.querySelectorAll('input[name=channels]:checked')].map(c => c.value);
+
+  setError('f-name',     !name);
+  setError('f-email',    !email || !email.includes('@'));
+  setError('f-role',     !role);
+  setError('f-channels', channels.length === 0);
+  setError('f-pitch',    !pitch);
+
+  if (!valid) return;
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Submitting…';
+
+  const payload = {
+    name,
+    email,
+    company:  form.company.value.trim(),
+    role,
+    channels,
+    pitch,
+    volume:   form.volume.value,
+    referral: form.referral.value.trim(),
+  };
+
+  try {
+    const res = await fetch('/api/partner/apply', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) throw new Error(data.error || 'Server error');
+
+    form.style.display = 'none';
+    document.getElementById('successState').classList.add('visible');
+  } catch (err) {
+    const errEl = document.getElementById('globalError2');
+    errEl.textContent = 'Something went wrong. Please try again or email Tommy@cultcontent.cc.';
+    errEl.classList.add('visible');
+    btn.disabled = false;
+    btn.textContent = 'Submit Application →';
+  }
+});
+</script>
+</body>
+</html>
