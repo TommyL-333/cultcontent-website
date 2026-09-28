@@ -494,8 +494,9 @@ app.post('/api/partner/apply', express.json(), async (req, res) => {
     return res.status(400).json({ ok: false, error: 'Missing required fields.' });
   }
 
-  const services = (req.body?.services && typeof req.body.services === 'object' && !Array.isArray(req.body.services)) ? req.body.services : {};
-  const entry = { name, email, company, role, channels, services, pitch, volume, referral, submittedAt: new Date().toISOString() };
+  const services     = (req.body?.services     && typeof req.body.services     === 'object' && !Array.isArray(req.body.services))     ? req.body.services     : {};
+  const channelNotes = (req.body?.channelNotes && typeof req.body.channelNotes === 'object' && !Array.isArray(req.body.channelNotes)) ? req.body.channelNotes : {};
+  const entry = { name, email, company, role, channels, services, channelNotes, pitch, volume, referral, submittedAt: new Date().toISOString() };
 
   // 1. Persist to local JSON
   try {
@@ -509,7 +510,10 @@ app.post('/api/partner/apply', express.json(), async (req, res) => {
   // 2. Lark alert (non-blocking)
   const alertChatId = process.env.LARK_ALERT_CHAT_ID;
   if (alertChatId) {
-    const serviceLines = Object.entries(services).map(([ch, svcs]) => `   ${ch}: ${svcs.join(', ')}`).join('\n');
+    const serviceLines = Object.entries(services).map(([ch, svcs]) => {
+      const note = channelNotes[ch] ? `\n      Note: ${channelNotes[ch]}` : '';
+      return `   ${ch}: ${svcs.join(', ')}${note}`;
+    }).join('\n');
     const alertText = [
       `🤝 New partner application!`,
       `👤 ${name}${company ? ` — ${company}` : ''}`,

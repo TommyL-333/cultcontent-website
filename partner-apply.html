@@ -214,6 +214,14 @@ nav{
 .service-pill.checked .sp-check::after{
   content:'';display:block;width:3px;height:3px;border-radius:50%;background:#000;margin:auto;margin-top:2.5px
 }
+.csb-notes{
+  width:100%;margin-top:14px;padding:10px 14px;
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);
+  border-radius:8px;color:var(--text);font-family:'Lato',sans-serif;font-size:.85rem;
+  line-height:1.6;resize:vertical;min-height:72px;outline:none;transition:border-color .2s
+}
+.csb-notes::placeholder{color:var(--muted)}
+.csb-notes:focus{border-color:rgba(0,242,234,.3);background:rgba(0,242,234,.02)}
 
 /* FIELD ERROR */
 .field-error{
@@ -511,7 +519,8 @@ function renderServiceBlocks() {
             <input type="checkbox" name="services[${channel}]" value="${s}">
             <span class="sp-check"></span>${s}
           </label>`).join('')}
-      </div>`;
+      </div>
+      <textarea class="csb-notes" name="notes[${channel}]" placeholder="Anything else about your ${channel} work? (optional)"></textarea>`;
     serviceContainer.appendChild(block);
     // Wire pill toggles for this block
     block.querySelectorAll('.service-pill').forEach(sp => {
@@ -561,11 +570,14 @@ document.getElementById('partnerForm').addEventListener('submit', async (e) => {
 
   if (!valid) return;
 
-  // Collect per-channel services
+  // Collect per-channel services and notes
   const services = {};
+  const channelNotes = {};
   channels.forEach(ch => {
     const checked = [...form.querySelectorAll(`input[name="services[${ch}]"]:checked`)].map(c => c.value);
     if (checked.length) services[ch] = checked;
+    const note = (form.querySelector(`textarea[name="notes[${ch}]"]`)?.value || '').trim();
+    if (note) channelNotes[ch] = note;
   });
 
   const btn = document.getElementById('submitBtn');
@@ -579,6 +591,7 @@ document.getElementById('partnerForm').addEventListener('submit', async (e) => {
     role,
     channels,
     services,
+    channelNotes,
     pitch,
     volume:   form.volume.value,
     referral: form.referral.value.trim(),
