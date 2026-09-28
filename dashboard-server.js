@@ -6612,6 +6612,7 @@ app.get('/brand-apply',                        _pub('apply.html'));
 app.get('/book-now',                           _pub('book-now.html'));
 app.get('/book-consulting',                    _pub('book-consulting.html'));
 app.get('/partners',                           _pub('partners.html'));
+app.get('/partner',                            _pub('partner.html'));
 app.get('/work-with-us',                       (req, res) => res.redirect(301, '/offers'));
 app.get('/offers',                             (req, res) => res.sendFile(path.join(__dirname, 'offers', 'index.html')));
 app.get('/offers/the-foundation',              (req, res) => res.sendFile(path.join(__dirname, 'offers', 'the-foundation.html')));
