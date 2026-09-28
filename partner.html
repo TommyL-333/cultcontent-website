@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Partner with Cult Content</title>
+<meta name="description" content="Two ways to make money on omnichannel social commerce. Join the Cult Content partner network as a Sales Partner, Service Provider, or both.">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080710;--bg2:#070714;
+  --teal:#00f2ea;--purple:#7b2fff;--lavender:#b899ff;--pink:#ff0050;
+  --text:#e8e8f0;--muted:#7a7a9a;--white:#fff;
+  --border:rgba(255,255,255,.07);
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;line-height:1.65;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+
+/* STAR FIELD */
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:
+    radial-gradient(.6px .6px at 4% 8%,rgba(255,255,255,.7),transparent),
+    radial-gradient(.5px .5px at 11% 27%,rgba(255,255,255,.5),transparent),
+    radial-gradient(.7px .7px at 18% 64%,rgba(255,255,255,.6),transparent),
+    radial-gradient(.5px .5px at 25% 14%,rgba(220,210,255,.55),transparent),
+    radial-gradient(.6px .6px at 33% 78%,rgba(255,255,255,.65),transparent),
+    radial-gradient(.5px .5px at 40% 43%,rgba(255,255,255,.5),transparent),
+    radial-gradient(.5px .5px at 47% 90%,rgba(255,255,255,.55),transparent),
+    radial-gradient(.6px .6px at 56% 22%,rgba(255,255,255,.6),transparent),
+    radial-gradient(.5px .5px at 63% 57%,rgba(210,200,255,.5),transparent),
+    radial-gradient(.7px .7px at 71% 33%,rgba(255,255,255,.65),transparent),
+    radial-gradient(.5px .5px at 79% 81%,rgba(255,255,255,.5),transparent),
+    radial-gradient(.6px .6px at 86% 11%,rgba(255,255,255,.6),transparent),
+    radial-gradient(1px 1px at 7% 52%,rgba(255,255,255,.85),transparent),
+    radial-gradient(1px 1px at 21% 38%,rgba(184,153,255,.8),transparent),
+    radial-gradient(1px 1px at 36% 6%,rgba(255,255,255,.9),transparent),
+    radial-gradient(1px 1px at 52% 68%,rgba(255,255,255,.8),transparent),
+    radial-gradient(1px 1px at 68% 85%,rgba(184,153,255,.75),transparent),
+    radial-gradient(1px 1px at 84% 30%,rgba(255,255,255,.85),transparent),
+    radial-gradient(1.5px 1.5px at 14% 76%,rgba(255,255,255,.95),transparent),
+    radial-gradient(1.5px 1.5px at 44% 19%,rgba(184,153,255,.9),transparent),
+    radial-gradient(2px 2px at 73% 60%,rgba(255,255,255,1),transparent),
+    radial-gradient(2px 2px at 30% 50%,rgba(255,255,255,.9),transparent);
+  background-size:700px 500px;background-repeat:repeat;opacity:.65
+}
+
+/* NAV */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:20px 56px;
+  background:rgba(8,7,16,.75);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(255,255,255,.06)
+}
+.nav-logo{font-family:'Montserrat',sans-serif;font-weight:900;font-size:1rem;letter-spacing:.1em;color:var(--white);text-transform:uppercase}
+.nav-logo span{background:linear-gradient(135deg,var(--purple),var(--lavender));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.nav-links{display:flex;align-items:center;gap:22px;list-style:none;margin:0;padding:0}
+.nav-links a{color:rgba(255,255,255,.5);font-size:.75rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;transition:color .2s}
+.nav-links a:hover{color:#fff}
+.nav-apply{
+  background:linear-gradient(135deg,var(--purple),var(--lavender));
+  color:var(--white);font-family:'Montserrat',sans-serif;font-weight:900;font-size:.72rem;
+  letter-spacing:.1em;text-transform:uppercase;padding:10px 22px;border-radius:100px;
+  transition:opacity .2s,transform .2s
+}
+.nav-apply:hover{opacity:.85;transform:translateY(-1px)}
+@media(max-width:860px){.nav-links{display:none};nav{padding:18px 24px}}
+
+/* HERO */
+.hero-section{
+  position:relative;min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  overflow:hidden;padding-top:80px
+}
+.tron-floor{
+  position:absolute;bottom:0;left:-40%;width:180%;height:52vh;
+  transform-origin:bottom center;transform:perspective(700px) rotateX(74deg);
+  background-image:
+    linear-gradient(rgba(0,242,234,.2) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,242,234,.2) 1px,transparent 1px);
+  background-size:80px 80px;
+  -webkit-mask-image:linear-gradient(to top,black 0%,black 30%,transparent 100%),radial-gradient(ellipse 90% 100% at 50% 100%,black 0%,transparent 80%);
+  mask-image:linear-gradient(to top,black 0%,black 30%,transparent 100%),radial-gradient(ellipse 90% 100% at 50% 100%,black 0%,transparent 80%);
+  -webkit-mask-composite:intersect;mask-composite:intersect;
+  pointer-events:none;z-index:2
+}
+.horizon-glow{
+  position:absolute;bottom:calc(52vh * 0.22);left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent 0%,rgba(0,242,234,.5) 20%,rgba(0,242,234,.9) 50%,rgba(0,242,234,.5) 80%,transparent 100%);
+  box-shadow:0 0 60px 12px rgba(0,242,234,.15),0 0 120px 30px rgba(0,242,234,.05);
+  pointer-events:none;z-index:3
+}
+.hero-glow{
+  position:absolute;top:15%;left:50%;transform:translateX(-50%);
+  width:900px;height:500px;
+  background:radial-gradient(ellipse at center,rgba(0,242,234,.05) 0%,rgba(123,47,255,.06) 40%,transparent 70%);
+  pointer-events:none;z-index:3
+}
+.hero-content{
+  position:relative;z-index:10;
+  text-align:center;max-width:900px;padding:0 48px;
+}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(0,242,234,.07);border:1px solid rgba(0,242,234,.25);
+  color:var(--teal);font-size:.72rem;font-weight:700;letter-spacing:.18em;
+  text-transform:uppercase;padding:7px 18px;border-radius:100px;margin-bottom:36px
+}
+.hero-badge::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--teal);box-shadow:0 0 8px var(--teal)}
+.hero-content h1{
+  font-family:'Montserrat',sans-serif;font-weight:900;
+  font-size:clamp(2.8rem,6.5vw,5.4rem);line-height:1.03;
+  color:var(--white);margin-bottom:28px;letter-spacing:-.025em
+}
+.grad-teal{background:linear-gradient(135deg,var(--teal) 0%,var(--lavender) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.grad-purple{background:linear-gradient(135deg,var(--purple) 0%,var(--lavender) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-content .lead{font-size:1.15rem;color:var(--muted);max-width:680px;margin:0 auto 48px;line-height:1.75}
+.hero-cta-row{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap}
+.btn-primary{
+  display:inline-block;
+  background:linear-gradient(135deg,var(--teal),#00c4be);
+  color:#000;font-family:'Montserrat',sans-serif;font-weight:900;font-size:.85rem;
+  letter-spacing:.1em;text-transform:uppercase;padding:16px 44px;border-radius:8px;
+  transition:transform .22s,box-shadow .22s;
+  box-shadow:0 0 40px rgba(0,242,234,.25),0 8px 32px rgba(0,0,0,.5)
+}
+.btn-primary:hover{transform:translateY(-3px);box-shadow:0 0 60px rgba(0,242,234,.4),0 16px 40px rgba(0,0,0,.5)}
+.btn-ghost{
+  display:inline-block;color:var(--muted);font-size:.82rem;letter-spacing:.06em;
+  text-transform:uppercase;font-family:'Montserrat',sans-serif;font-weight:700;
+  border:1px solid rgba(255,255,255,.1);padding:14px 28px;border-radius:8px;
+  background:rgba(8,7,16,.85);transition:all .2s
+}
+.btn-ghost:hover{color:var(--white);border-color:rgba(255,255,255,.25)}
+
+/* SECTION SHARED */
+.section-wrap{position:relative;overflow:hidden}
+.section-num{
+  position:absolute;font-family:'Montserrat',sans-serif;font-weight:900;
+  font-size:clamp(120px,18vw,220px);color:transparent;
+  -webkit-text-stroke:1px rgba(0,242,234,.04);
+  line-height:1;pointer-events:none;user-select:none;top:-.1em;right:5%;z-index:0
+}
+.section-inner{max-width:1100px;margin:0 auto;padding:100px 56px;position:relative;z-index:2}
+.label-pill{
+  display:inline-block;
+  background:rgba(0,242,234,.06);border:1px solid rgba(0,242,234,.2);
+  color:var(--teal);font-size:.72rem;font-weight:700;letter-spacing:.16em;
+  text-transform:uppercase;padding:6px 16px;border-radius:100px;margin-bottom:20px
+}
+.section-title{
+  font-family:'Montserrat',sans-serif;font-weight:900;
+  font-size:clamp(2rem,4vw,3.2rem);color:var(--white);
+  line-height:1.08;margin-bottom:16px;letter-spacing:-.015em
+}
+.section-sub{color:var(--muted);font-size:1.05rem;max-width:640px;line-height:1.7}
+.checker-section{background:var(--bg2)}
+.checker-section::before{
+  content:'';position:absolute;inset:0;z-index:1;pointer-events:none;
+  background-image:
+    linear-gradient(45deg,rgba(0,242,234,.03) 25%,transparent 25%,transparent 75%,rgba(0,242,234,.03) 75%),
+    linear-gradient(45deg,rgba(0,242,234,.03) 25%,transparent 25%,transparent 75%,rgba(0,242,234,.03) 75%);
+  background-size:60px 60px;background-position:0 0,30px 30px;
+  -webkit-mask-image:linear-gradient(to bottom,rgba(0,0,0,.7) 0%,rgba(0,0,0,.3) 60%,transparent 100%);
+  mask-image:linear-gradient(to bottom,rgba(0,0,0,.7) 0%,rgba(0,0,0,.3) 60%,transparent 100%)
+}
+.h-rule{border:none;border-top:1px solid var(--border);margin:0}
+
+/* PARTNER CARDS */
+.partner-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:64px
+}
+.partner-card{
+  border-radius:20px;padding:52px 48px;
+  position:relative;overflow:hidden;
+}
+.partner-card-sales{
+  background:rgba(0,242,234,.04);
+  border:1px solid rgba(0,242,234,.18);
+}
+.partner-card-service{
+  background:rgba(123,47,255,.04);
+  border:1px solid rgba(123,47,255,.2);
+}
+.partner-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+}
+.partner-card-sales::before{background:linear-gradient(90deg,transparent,var(--teal),transparent)}
+.partner-card-service::before{background:linear-gradient(90deg,transparent,var(--purple),var(--lavender),transparent)}
+.pc-type{
+  font-size:.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;
+  margin-bottom:16px
+}
+.pc-type-sales{color:var(--teal)}
+.pc-type-service{color:var(--lavender)}
+.pc-role{
+  font-family:'Montserrat',sans-serif;font-weight:900;
+  font-size:1.8rem;color:var(--white);line-height:1.1;margin-bottom:12px
+}
+.pc-tagline{font-size:.95rem;color:var(--muted);margin-bottom:36px;line-height:1.6}
+.pc-section-label{
+  font-size:.68rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  color:rgba(255,255,255,.3);margin-bottom:12px;margin-top:28px
+}
+.pc-list{list-style:none;display:flex;flex-direction:column;gap:10px}
+.pc-list li{
+  display:flex;align-items:flex-start;gap:12px;
+  font-size:.92rem;color:var(--text);line-height:1.55
+}
+.pc-list li::before{
+  content:'';width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:.55em
+}
+.partner-card-sales .pc-list li::before{background:var(--teal);box-shadow:0 0 8px var(--teal)}
+.partner-card-service .pc-list li::before{background:var(--lavender);box-shadow:0 0 8px var(--purple)}
+.pc-earn-box{
+  margin-top:32px;padding:24px 28px;border-radius:12px;
+}
+.partner-card-sales .pc-earn-box{background:rgba(0,242,234,.06);border:1px solid rgba(0,242,234,.15)}
+.partner-card-service .pc-earn-box{background:rgba(123,47,255,.07);border:1px solid rgba(123,47,255,.2)}
+.pc-earn-label{font-size:.68rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;margin-bottom:10px}
+.partner-card-sales .pc-earn-label{color:var(--teal)}
+.partner-card-service .pc-earn-label{color:var(--lavender)}
+.pc-earn-line{
+  font-family:'Montserrat',sans-serif;font-weight:900;
+  font-size:1.1rem;color:var(--white);line-height:1.5
+}
+.pc-earn-sub{font-size:.82rem;color:var(--muted);margin-top:6px;line-height:1.5}
+
+/* BOTH ROLES NOTE */
+.both-note{
+  margin-top:24px;
+  padding:28px 36px;
+  background:rgba(184,153,255,.04);
+  border:1px solid rgba(184,153,255,.15);
+  border-radius:16px;
+  display:flex;align-items:center;gap:20px
+}
+.both-dot{
+  width:10px;height:10px;border-radius:50%;flex-shrink:0;
+  background:var(--lavender);box-shadow:0 0 12px var(--purple)
+}
+.both-text{font-size:.92rem;color:var(--muted);line-height:1.6}
+.both-text strong{color:var(--text)}
+
+/* NETWORK VALUE */
+.value-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:56px
+}
+.value-card{
+  background:rgba(12,10,28,.7);border:1px solid var(--border);border-radius:16px;
+  padding:36px 32px;backdrop-filter:blur(10px);
+  position:relative;overflow:hidden;
+  transition:border-color .25s,transform .25s
+}
+.value-card:hover{border-color:rgba(0,242,234,.2);transform:translateY(-4px)}
+.value-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(0,242,234,.3),transparent);
+  transform:scaleX(0);transform-origin:left;transition:transform .3s
+}
+.value-card:hover::before{transform:scaleX(1)}
+.vc-num{
+  font-family:'Montserrat',sans-serif;font-weight:900;font-size:2.2rem;
+  line-height:1;margin-bottom:14px;
+  background:linear-gradient(135deg,var(--teal),var(--lavender));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text
+}
+.vc-title{font-family:'Montserrat',sans-serif;font-weight:700;font-size:1rem;color:var(--white);margin-bottom:10px}
+.vc-desc{font-size:.88rem;color:var(--muted);line-height:1.65}
+
+/* SERVICES NETWORK */
+.services-section{background:var(--bg2)}
+.services-grid{
+  display:flex;flex-wrap:wrap;gap:10px;margin-top:48px
+}
+.service-pill{
+  padding:10px 20px;border-radius:100px;
+  font-size:.8rem;font-weight:700;letter-spacing:.06em;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.03);color:rgba(255,255,255,.6);
+  transition:border-color .2s,color .2s,background .2s
+}
+.service-pill:hover{border-color:rgba(0,242,234,.3);color:var(--teal);background:rgba(0,242,234,.05)}
+.service-pill.tbd{border-style:dashed;opacity:.5}
+.services-note{margin-top:28px;font-size:.88rem;color:var(--muted);line-height:1.65}
+.services-note strong{color:var(--text)}
+
+/* APPLY SECTION */
+.apply-section{
+  position:relative;overflow:hidden;background:var(--bg);
+  padding:0
+}
+.apply-grid-floor{
+  position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(0,242,234,.07) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,242,234,.07) 1px,transparent 1px);
+  background-size:60px 60px;
+  -webkit-mask-image:radial-gradient(ellipse 80% 100% at 50% 100%,black 0%,transparent 65%);
+  mask-image:radial-gradient(ellipse 80% 100% at 50% 100%,black 0%,transparent 65%);
+  pointer-events:none
+}
+.apply-inner{
+  position:relative;z-index:2;
+  max-width:740px;margin:0 auto;
+  padding:120px 48px 100px;text-align:center
+}
+.apply-inner h2{
+  font-family:'Montserrat',sans-serif;font-weight:900;
+  font-size:clamp(2rem,4vw,3.2rem);color:var(--white);
+  margin-bottom:18px;letter-spacing:-.015em
+}
+.apply-inner p{color:var(--muted);font-size:1.05rem;margin-bottom:40px;line-height:1.7}
+
+/* RESPONSIVE */
+@media(max-width:960px){
+  .partner-grid{grid-template-columns:1fr}
+  .value-grid{grid-template-columns:1fr 1fr}
+  .section-inner{padding:72px 28px}
+  .section-num{font-size:100px;right:0}
+  .partner-card{padding:40px 32px}
+}
+@media(max-width:600px){
+  .value-grid{grid-template-columns:1fr}
+  .apply-inner{padding:80px 28px}
+  .hero-content{padding:0 24px}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="/" class="nav-logo">Cult <span>Content</span></a>
+  <ul class="nav-links">
+    <li><a href="/">Home</a></li>
+    <li><a href="/offers">Offers</a></li>
+    <li><a href="/creators">Community</a></li>
+  </ul>
+  <a href="#apply" class="nav-apply">Apply to Partner</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero-section">
+  <div class="tron-floor"></div>
+  <div class="horizon-glow"></div>
+  <div class="hero-glow"></div>
+
+  <svg style="position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none;opacity:.3" viewBox="0 0 1400 800" preserveAspectRatio="xMidYMid slice" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <line x1="80" y1="200" x2="240" y2="140" stroke="rgba(0,242,234,0.25)" stroke-width="1"/>
+    <line x1="240" y1="140" x2="440" y2="190" stroke="rgba(0,242,234,0.2)" stroke-width="1"/>
+    <line x1="440" y1="190" x2="620" y2="130" stroke="rgba(0,242,234,0.25)" stroke-width="1"/>
+    <line x1="620" y1="130" x2="800" y2="175" stroke="rgba(184,153,255,0.22)" stroke-width="1"/>
+    <line x1="800" y1="175" x2="1020" y2="115" stroke="rgba(0,242,234,0.2)" stroke-width="1"/>
+    <line x1="1020" y1="115" x2="1200" y2="160" stroke="rgba(0,242,234,0.18)" stroke-width="1"/>
+    <line x1="1200" y1="160" x2="1360" y2="120" stroke="rgba(184,153,255,0.2)" stroke-width="1"/>
+    <line x1="440" y1="190" x2="400" y2="330" stroke="rgba(0,242,234,0.15)" stroke-width="1"/>
+    <line x1="800" y1="175" x2="760" y2="320" stroke="rgba(184,153,255,0.15)" stroke-width="1"/>
+    <line x1="1020" y1="115" x2="990" y2="300" stroke="rgba(0,242,234,0.15)" stroke-width="1"/>
+    <line x1="400" y1="330" x2="760" y2="320" stroke="rgba(0,242,234,0.12)" stroke-width="1"/>
+    <line x1="760" y1="320" x2="990" y2="300" stroke="rgba(184,153,255,0.12)" stroke-width="1"/>
+    <circle cx="240" cy="140" r="9" fill="rgba(0,242,234,0.1)"/><circle cx="240" cy="140" r="2.5" fill="rgba(0,242,234,0.9)"/>
+    <circle cx="440" cy="190" r="7" fill="rgba(0,242,234,0.08)"/><circle cx="440" cy="190" r="2" fill="rgba(255,255,255,0.9)"/>
+    <circle cx="620" cy="130" r="11" fill="rgba(0,242,234,0.12)"/><circle cx="620" cy="130" r="3" fill="rgba(0,242,234,1)"/>
+    <circle cx="800" cy="175" r="7" fill="rgba(184,153,255,0.1)"/><circle cx="800" cy="175" r="2" fill="rgba(184,153,255,0.9)"/>
+    <circle cx="1020" cy="115" r="9" fill="rgba(0,242,234,0.1)"/><circle cx="1020" cy="115" r="2.5" fill="rgba(255,255,255,0.95)"/>
+    <circle cx="400" cy="330" r="5" fill="rgba(0,242,234,0.07)"/><circle cx="400" cy="330" r="1.5" fill="rgba(255,255,255,0.7)"/>
+    <circle cx="760" cy="320" r="5" fill="rgba(184,153,255,0.07)"/><circle cx="760" cy="320" r="1.5" fill="rgba(255,255,255,0.7)"/>
+  </svg>
+
+  <div class="hero-content">
+    <div class="hero-badge">Partner Network</div>
+    <h1>The infrastructure<br>is <span class="grad-teal">already built.</span></h1>
+    <p class="lead">We're building the operating layer for omnichannel social commerce — and we're bringing in partners to distribute it. Two roles. Different leverage. The same network.</p>
+    <div class="hero-cta-row">
+      <a href="#apply" class="btn-primary">Apply to Partner →</a>
+      <a href="#roles" class="btn-ghost">See the two roles</a>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 01: THE TWO ROLES -->
+<hr class="h-rule">
+<div class="section-wrap checker-section" id="roles">
+  <div class="section-num">01</div>
+  <div class="section-inner">
+    <div class="label-pill">Partner Types</div>
+    <h2 class="section-title">Two ways in.<br>One network behind you.</h2>
+    <p class="section-sub">Pick the role that fits what you already do. Or fill both.</p>
+
+    <div class="partner-grid">
+
+      <!-- SALES PARTNER -->
+      <div class="partner-card partner-card-sales">
+        <div class="pc-type pc-type-sales">Sales Partner — Frontend</div>
+        <div class="pc-role">You close the deal.<br>We handle everything else.</div>
+        <div class="pc-tagline">You have brand relationships. You don't have the execution infrastructure to service omnichannel commerce. We do. Bring us the client and you're on the deal for as long as they stay.</div>
+
+        <div class="pc-section-label">What you do</div>
+        <ul class="pc-list">
+          <li>Bring brands into the CC network and own the client relationship</li>
+          <li>Make the introduction, stay in the loop — zero execution required</li>
+          <li>CC and our Service Providers handle all fulfillment, reporting, and billing</li>
+        </ul>
+
+        <div class="pc-section-label">Who this is for</div>
+        <ul class="pc-list">
+          <li>Creative agencies and brand consultants</li>
+          <li>Amazon agencies looking to add TikTok Shop, Meta, or other channels</li>
+          <li>Media buyers and performance marketers with brand clients</li>
+          <li>Anyone with trusted brand relationships and no desire to build ops</li>
+        </ul>
+
+        <div class="pc-earn-box">
+          <div class="pc-earn-label">What you earn</div>
+          <div class="pc-earn-line">20% of all retainers</div>
+          <div class="pc-earn-line">10% of net sales commission</div>
+          <div class="pc-earn-sub">On every deal you refer, for as long as that client is active. No cap, no expiry.</div>
+        </div>
+      </div>
+
+      <!-- SERVICE PROVIDER -->
+      <div class="partner-card partner-card-service">
+        <div class="pc-type pc-type-service">Service Provider — Backend</div>
+        <div class="pc-role">You execute one channel<br><span class="grad-purple">exceptionally well.</span></div>
+        <div class="pc-tagline">You're great at what you do — TikTok Shop, Meta, Amazon, SEO, whatever your lane is. You just don't want to build a sales team to fill your pipeline. We route you qualified, contracted clients.</div>
+
+        <div class="pc-section-label">What you do</div>
+        <ul class="pc-list">
+          <li>Deliver your channel service at the standard CC clients expect</li>
+          <li>Operate within the CC network — we handle contracts, billing, and client comms</li>
+          <li>Focus entirely on execution — no selling, no chasing invoices</li>
+        </ul>
+
+        <div class="pc-section-label">Who this is for</div>
+        <ul class="pc-list">
+          <li>Channel specialists with proven execution (TikTok Shop, Meta, Amazon, etc.)</li>
+          <li>Small agencies that are great at delivery but struggle with acquisition</li>
+          <li>Freelancers and consultants who want consistent, qualified deal flow</li>
+        </ul>
+
+        <div class="pc-earn-box">
+          <div class="pc-earn-label">What you earn</div>
+          <div class="pc-earn-line">100% when you bring the deal</div>
+          <div class="pc-earn-line">70% on CC-referred deals</div>
+          <div class="pc-earn-sub">Retainer + net sales share for your channel, every month the client is active. The 30% on referred deals covers CC's network orchestration, billing, and sales overhead.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="both-note">
+      <div class="both-dot"></div>
+      <div class="both-text"><strong>Partners can fill both roles simultaneously.</strong> If you close a deal and also execute one of the channel services on it, you earn on both sides — the referral comp and the service delivery comp.</div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 02: WHY THE NETWORK -->
+<hr class="h-rule">
+<div class="section-wrap" style="background:var(--bg)">
+  <div class="section-num">02</div>
+  <div class="section-inner">
+    <div class="label-pill">Why Join</div>
+    <h2 class="section-title">What you get by being<br>inside the network.</h2>
+    <p class="section-sub">Going it alone means building the sales function, the ops layer, the contracts, and the billing infrastructure yourself. Or you plug into what's already built.</p>
+
+    <div class="value-grid">
+      <div class="value-card">
+        <div class="vc-num">01</div>
+        <div class="vc-title">Qualified deal flow — no chasing</div>
+        <div class="vc-desc">CC runs the sales and marketing. Service Providers get clients routed to them who are already contracted, briefed, and ready to start. No cold outreach. No tire kickers.</div>
+      </div>
+      <div class="value-card">
+        <div class="vc-num">02</div>
+        <div class="vc-title">Omnichannel without building every channel</div>
+        <div class="vc-desc">Sales Partners can pitch the full omnichannel stack — TikTok Shop, Meta, Amazon, SEO, and more — without having execution capacity for any of it. The network covers it.</div>
+      </div>
+      <div class="value-card">
+        <div class="vc-num">03</div>
+        <div class="vc-title">Contracts, billing, and ops handled</div>
+        <div class="vc-desc">CC manages the client agreement, the invoicing, the commission tracking, and the reporting infrastructure. Partners focus on what they're good at — not the overhead.</div>
+      </div>
+      <div class="value-card">
+        <div class="vc-num">04</div>
+        <div class="vc-title">Revenue that compounds</div>
+        <div class="vc-desc">Referral comp runs for the life of the client, not just the first month. Build a book of introductions and you're earning on all of them every month — without managing any of them.</div>
+      </div>
+      <div class="value-card">
+        <div class="vc-num">05</div>
+        <div class="vc-title">Early position in a fast-moving network</div>
+        <div class="vc-desc">The partners who come in now help define how services get priced, scoped, and positioned as the network scales. This is a founding partner relationship — not a vendor signup.</div>
+      </div>
+      <div class="value-card">
+        <div class="vc-num">06</div>
+        <div class="vc-title">Built on technology, not headcount</div>
+        <div class="vc-desc">CC's platform handles creator sourcing, campaign management, client portals, and reporting programmatically. The margin that would go to overhead goes to partners instead.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 03: SERVICES IN THE NETWORK -->
+<hr class="h-rule">
+<div class="section-wrap services-section">
+  <div class="section-num">03</div>
+  <div class="section-inner">
+    <div class="label-pill">The Network</div>
+    <h2 class="section-title">The channels we operate.<br>The services we route.</h2>
+    <p class="section-sub">These are the services inside the CC network — some live, some being built with early Service Providers now. The pricing and scope for each is defined collaboratively with the partners who execute it.</p>
+
+    <div class="services-grid">
+      <div class="service-pill">TikTok Shop</div>
+      <div class="service-pill">Meta Ads</div>
+      <div class="service-pill">Amazon</div>
+      <div class="service-pill">Google Ads</div>
+      <div class="service-pill">Shopify</div>
+      <div class="service-pill">YouTube</div>
+      <div class="service-pill">Walmart</div>
+      <div class="service-pill">SEO</div>
+      <div class="service-pill">CRO</div>
+      <div class="service-pill">AI & Automation</div>
+      <div class="service-pill">3PL & Fulfillment</div>
+      <div class="service-pill tbd">Retail Brokerage — pricing TBD</div>
+      <div class="service-pill tbd">Other Marketplaces — expanding</div>
+    </div>
+
+    <div class="services-note">
+      <strong>Service Providers define the scope.</strong> If you execute one of these channels at a high level and want consistent deal flow, apply and we'll scope your service together before any clients are routed to you.
+    </div>
+  </div>
+</div>
+
+<!-- APPLY -->
+<hr class="h-rule">
+<div class="apply-section" id="apply">
+  <div class="apply-grid-floor"></div>
+  <div class="apply-inner">
+    <div class="label-pill">Apply to Partner</div>
+    <h2>Ready to be<br><span class="grad-teal">inside the network?</span></h2>
+    <p>Tell us which role fits — Sales Partner, Service Provider, or both — and what you bring to the table. We review every application and respond within 48 hours.</p>
+    <a href="mailto:Tommy@cultcontent.cc?subject=Partner%20Application" class="btn-primary">Apply Now →</a>
+  </div>
+</div>
+
+</body>
+</html>
