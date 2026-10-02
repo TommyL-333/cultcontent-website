@@ -346,18 +346,38 @@
     }
     /* Mirror Review wordmark */
     .mr-wordmark {
-      font-family: 'Montserrat', sans-serif;
-      font-weight: 900;
-      font-size: 0.65rem;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.7);
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.1);
+      display: inline-flex;
+      align-items: center;
+      gap: 0;
+      background: #fff;
       border-radius: 6px;
-      padding: 4px 8px;
+      padding: 5px 8px;
       white-space: nowrap;
       flex-shrink: 0;
+      line-height: 1;
+    }
+    .mr-wordmark .mr-mirror {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900;
+      font-size: 0.68rem;
+      letter-spacing: 0.01em;
+      color: #cc1111;
+      text-transform: uppercase;
+    }
+    .mr-wordmark .mr-review {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900;
+      font-size: 0.68rem;
+      letter-spacing: 0.01em;
+      color: #111;
+      text-transform: uppercase;
+    }
+    .mr-wordmark .mr-tm {
+      font-family: 'Lato', sans-serif;
+      font-size: 0.42rem;
+      color: #111;
+      vertical-align: super;
+      margin-left: 1px;
     }
     /* SSEL mark container */
     .ssel-mark {
@@ -607,7 +627,9 @@
             <!-- Mirror Review -->
             <div class="recog-row">
               <div class="recog-left">
-                <span class="mr-wordmark">Mirror Review</span>
+                <span class="mr-wordmark">
+                  <span class="mr-mirror">Mirror</span><span class="mr-review">Review</span><span class="mr-tm">™</span>
+                </span>
                 <div class="recog-label">
                   <strong>As Featured In</strong>
                   Mirror Review Magazine
