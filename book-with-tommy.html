@@ -288,6 +288,87 @@
       font-size: 0.75rem; color: var(--teal);
       font-weight: 700; letter-spacing: 0.06em;
     }
+    .recognition-strip {
+      margin-top: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding-top: 18px;
+    }
+    .recog-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .recog-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+    .recog-label {
+      font-size: 0.72rem;
+      color: rgba(255,255,255,0.45);
+      letter-spacing: 0.04em;
+      line-height: 1.3;
+      white-space: nowrap;
+    }
+    .recog-label strong {
+      display: block;
+      color: rgba(255,255,255,0.75);
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+    .recog-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      text-decoration: none;
+      white-space: nowrap;
+      border: 1px solid rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.6);
+      background: rgba(255,255,255,0.04);
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+      flex-shrink: 0;
+    }
+    .recog-btn:hover {
+      border-color: rgba(0,242,234,0.4);
+      color: var(--teal);
+      background: rgba(0,242,234,0.05);
+    }
+    /* Mirror Review wordmark */
+    .mr-wordmark {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900;
+      font-size: 0.65rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.7);
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px;
+      padding: 4px 8px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    /* SSEL mark container */
+    .ssel-mark {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+    }
+    .ssel-mark svg {
+      width: 36px;
+      height: 24px;
+    }
 
     /* ‚îÄ‚îÄ CALENDAR SECTION ‚îÄ‚îÄ */
     .calendar-section {
@@ -480,13 +561,13 @@
         </div>
         <h1>Book a Call<br>with <span class="gt">Tommy Lynch</span></h1>
         <p class="lead">
-          30 minutes. No pitch deck, no fluff. Just an honest conversation about what's possible for your brand on TikTok Shop.
+          30 minutes. No fluff. Whether you're a brand, a creator, a potential partner, or just trying to figure out where you fit in the social commerce economy &mdash; let's talk.
         </p>
 
         <div class="trust-row">
           <div class="trust-item">
             <i class="fa-solid fa-check"></i>
-            <span>Free 30-minute strategy call</span>
+            <span>Free 30-minute call &mdash; no commitment</span>
           </div>
           <div class="trust-item">
             <i class="fa-solid fa-check"></i>
@@ -494,7 +575,7 @@
           </div>
           <div class="trust-item">
             <i class="fa-solid fa-check"></i>
-            <span>Walk away with a clear growth roadmap</span>
+            <span>Walk away with a clear, honest take on what's possible</span>
           </div>
           <div class="trust-item">
             <i class="fa-solid fa-check"></i>
@@ -502,7 +583,7 @@
           </div>
           <div class="trust-item">
             <i class="fa-solid fa-check"></i>
-            <span>Best for brands doing $30K+/month</span>
+            <span>Featured in Mirror Review &middot; Recognized by the SSEL</span>
           </div>
         </div>
       </div>
@@ -519,6 +600,44 @@
           <div class="tommy-badge">
             <i class="fa-solid fa-star" style="font-size:0.65rem;"></i>
             TikTok Shop Partner Agency
+          </div>
+
+          <div class="recognition-strip">
+
+            <!-- Mirror Review -->
+            <div class="recog-row">
+              <div class="recog-left">
+                <span class="mr-wordmark">Mirror Review</span>
+                <div class="recog-label">
+                  <strong>As Featured In</strong>
+                  Mirror Review Magazine
+                </div>
+              </div>
+              <a href="https://www.mirrorreview.com/tommy-lynch/" target="_blank" rel="noopener" class="recog-btn">
+                Read <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.55rem;"></i>
+              </a>
+            </div>
+
+            <!-- SSEL -->
+            <div class="recog-row">
+              <div class="recog-left">
+                <div class="ssel-mark">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80">
+                    <polygon points="6,8 6,72 60,40" fill="#7A2818"></polygon>
+                    <polygon points="114,8 114,72 60,40" fill="none" stroke="#1F4B4D" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"></polygon>
+                    <circle cx="60" cy="40" r="4.5" fill="#7A5410"></circle>
+                  </svg>
+                </div>
+                <div class="recog-label">
+                  <strong>Recognized By</strong>
+                  Society for Social &amp; Economic Liberation
+                </div>
+              </div>
+              <a href="https://ssel.org" target="_blank" rel="noopener" class="recog-btn">
+                Visit <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.55rem;"></i>
+              </a>
+            </div>
+
           </div>
         </div>
       </div>
