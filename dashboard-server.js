@@ -6660,12 +6660,26 @@ app.post('/api/creator-onboard', express.json(), async (req, res) => {
   res.json({ ok: true, discordInvite, results });
 });
 
+// AI-discovery files — plain text, no auth, cacheable. Registered before the
+// auth wall so AI crawlers (GPTBot, PerplexityBot, ClaudeBot, etc.) can read them.
+app.get('/llms.txt', (req, res) => {
+  res.type('text/plain; charset=utf-8').sendFile(path.join(__dirname, 'llms.txt'));
+});
+app.get('/llms-full.txt', (req, res) => {
+  res.type('text/plain; charset=utf-8').sendFile(path.join(__dirname, 'llms-full.txt'));
+});
+app.get('/robots.txt', (req, res) => {
+  res.type('text/plain; charset=utf-8').sendFile(path.join(__dirname, 'robots.txt'));
+});
+
 // Public marketing pages — all registered before the auth wall
 // These map the former GHL funnel URLs to static HTML files in the repo root.
 const _pub = (file) => (req, res) => res.sendFile(path.join(__dirname, file));
 app.get('/',                                   _pub('home.html'));
 app.get('/home',                               _pub('home.html'));
 app.get('/services',                           _pub('services.html'));
+app.get('/faq',                                _pub('faq.html'));
+app.get('/tiktok-shop',                        _pub('tiktok-shop.html'));
 app.get('/strategy',                           _pub('strategy.html'));
 app.get('/consulting',                         _pub('consulting.html'));
 app.get('/book',                               _pub('book.html'));
