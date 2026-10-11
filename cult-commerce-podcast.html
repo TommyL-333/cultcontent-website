@@ -117,6 +117,13 @@
     .submit-btn:hover{opacity:.9;transform:translateY(-1px)}
     .submit-btn:disabled{opacity:.5;pointer-events:none}
 
+    .avail-grid{display:flex;flex-direction:column;gap:10px}
+    .avail-row{display:flex;align-items:center;flex-wrap:wrap;gap:6px 12px;padding:10px 14px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px}
+    .avail-day{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.35);min-width:80px;flex-shrink:0}
+    .avail-check{display:flex;align-items:center;gap:6px;font-size:.84rem;color:rgba(255,255,255,.6);cursor:pointer;font-weight:400;letter-spacing:0;text-transform:none}
+    .avail-check input[type=checkbox]{width:15px;height:15px;accent-color:var(--teal);cursor:pointer;flex-shrink:0}
+    .avail-check:hover{color:var(--text)}
+
     .submit-error{margin-top:14px;text-align:center;font-size:.84rem;color:#ff4d6d;display:none}
     .submit-error.visible{display:block}
 
@@ -203,6 +210,22 @@
         <textarea id="f-pitch" rows="3" placeholder="Your take, your story, why it'd be interesting for the audience…"></textarea>
       </div>
 
+      <div class="fg">
+        <label>When are you generally available to record?</label>
+        <p style="font-size:.8rem;color:var(--muted);margin-bottom:12px;line-height:1.5">Episodes record live on Riverside (video call). Select all that apply — Tommy will reach out to confirm the exact time after reviewing.</p>
+        <div class="avail-grid" id="avail-grid">
+          <div class="avail-row"><span class="avail-day">Weekdays</span>
+            <label class="avail-check"><input type="checkbox" value="weekday-morning"> Morning (9–12 ET)</label>
+            <label class="avail-check"><input type="checkbox" value="weekday-afternoon"> Afternoon (12–5 ET)</label>
+            <label class="avail-check"><input type="checkbox" value="weekday-evening"> Evening (5–8 ET)</label>
+          </div>
+          <div class="avail-row"><span class="avail-day">Weekends</span>
+            <label class="avail-check"><input type="checkbox" value="weekend-morning"> Morning (9–12 ET)</label>
+            <label class="avail-check"><input type="checkbox" value="weekend-afternoon"> Afternoon (12–5 ET)</label>
+          </div>
+        </div>
+      </div>
+
       <div class="submit-error" id="submit-error"></div>
       <button class="submit-btn" id="submit-btn" onclick="submitApplication()">Apply to be a guest →</button>
     </div>
@@ -228,6 +251,7 @@
       const social = document.getElementById('f-social').value.trim();
       const topics = document.getElementById('f-topics').value.trim();
       const pitch = document.getElementById('f-pitch').value.trim();
+      const availability = Array.from(document.querySelectorAll('#avail-grid input[type=checkbox]:checked')).map(cb => cb.value);
 
       if (!name) { showErr('Please enter your name.'); return; }
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showErr('Please enter a valid email.'); return; }
@@ -240,7 +264,7 @@
         const res = await fetch(API, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email, role, social, topics, pitch }),
+          body: JSON.stringify({ name, email, role, social, topics, pitch, availability }),
         });
         const data = await res.json();
         if (data.ok) {
