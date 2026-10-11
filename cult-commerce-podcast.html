@@ -211,18 +211,10 @@
       </div>
 
       <div class="fg">
-        <label>When are you generally available to record?</label>
-        <p style="font-size:.8rem;color:var(--muted);margin-bottom:12px;line-height:1.5">Episodes record live on Riverside (video call). Select all that apply — Tommy will reach out to confirm the exact time after reviewing.</p>
-        <div class="avail-grid" id="avail-grid">
-          <div class="avail-row"><span class="avail-day">Weekdays</span>
-            <label class="avail-check"><input type="checkbox" value="weekday-morning"> Morning (9–12 ET)</label>
-            <label class="avail-check"><input type="checkbox" value="weekday-afternoon"> Afternoon (12–5 ET)</label>
-            <label class="avail-check"><input type="checkbox" value="weekday-evening"> Evening (5–8 ET)</label>
-          </div>
-          <div class="avail-row"><span class="avail-day">Weekends</span>
-            <label class="avail-check"><input type="checkbox" value="weekend-morning"> Morning (9–12 ET)</label>
-            <label class="avail-check"><input type="checkbox" value="weekend-afternoon"> Afternoon (12–5 ET)</label>
-          </div>
+        <label>Pick a recording time</label>
+        <p style="font-size:.8rem;color:var(--muted);margin-bottom:16px;line-height:1.5">Episodes record live on Riverside (video call). Book a time below — Tommy reviews every application and will confirm or reschedule if needed.</p>
+        <div style="border:1px solid var(--border);border-radius:12px;overflow:hidden;background:rgba(255,255,255,.02)">
+          <iframe src="https://api.leadconnectorhq.com/widget/booking/a7WEIKVtjnIVihywwHcX" style="width:100%;height:620px;border:none;display:block" loading="lazy" title="Book a podcast recording time"></iframe>
         </div>
       </div>
 
@@ -251,8 +243,6 @@
       const social = document.getElementById('f-social').value.trim();
       const topics = document.getElementById('f-topics').value.trim();
       const pitch = document.getElementById('f-pitch').value.trim();
-      const availability = Array.from(document.querySelectorAll('#avail-grid input[type=checkbox]:checked')).map(cb => cb.value);
-
       if (!name) { showErr('Please enter your name.'); return; }
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showErr('Please enter a valid email.'); return; }
       if (!topics) { showErr('Please tell us what you\'d like to talk about.'); return; }
@@ -264,7 +254,7 @@
         const res = await fetch(API, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email, role, social, topics, pitch, availability }),
+          body: JSON.stringify({ name, email, role, social, topics, pitch }),
         });
         const data = await res.json();
         if (data.ok) {
