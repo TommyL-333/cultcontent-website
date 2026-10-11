@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cult Commerce Podcast — Be a Guest</title>
+  <meta name="description" content="Apply to be a guest on the Cult Commerce Podcast with Tommy Lynch. Conversations about social commerce, TikTok Shop, creator economy, and building brands in public." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root{
+      --bg:#080710;--teal:#00f2ea;--pink:#ff0050;--purple:#7b2fff;
+      --lavender:#b899ff;--gold:#c9a84c;
+      --text:#e8e8f0;--muted:#7a7a9a;--white:#fff;
+      --border:rgba(255,255,255,.07);
+      --ease:0.25s cubic-bezier(0.4,0,0.2,1);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;min-height:100vh}
+    h1,h2,h3,h4{font-family:'Montserrat',sans-serif;font-weight:900;line-height:1.1}
+    p{line-height:1.7}
+    a{color:inherit;text-decoration:none}
+
+    body::before{
+      content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+      background-image:
+        radial-gradient(.6px .6px at 4% 8%,rgba(255,255,255,.7),transparent),
+        radial-gradient(.5px .5px at 11% 27%,rgba(255,255,255,.5),transparent),
+        radial-gradient(.7px .7px at 18% 64%,rgba(255,255,255,.6),transparent),
+        radial-gradient(.5px .5px at 25% 14%,rgba(220,230,255,.55),transparent),
+        radial-gradient(.6px .6px at 33% 78%,rgba(255,255,255,.65),transparent),
+        radial-gradient(.5px .5px at 40% 43%,rgba(255,255,255,.5),transparent),
+        radial-gradient(.6px .6px at 56% 22%,rgba(255,255,255,.6),transparent),
+        radial-gradient(.7px .7px at 71% 33%,rgba(255,255,255,.65),transparent),
+        radial-gradient(.5px .5px at 79% 81%,rgba(255,255,255,.5),transparent),
+        radial-gradient(.6px .6px at 86% 11%,rgba(255,255,255,.6),transparent),
+        radial-gradient(1.5px 1.5px at 14% 76%,rgba(255,255,255,.95),transparent),
+        radial-gradient(2px 2px at 73% 60%,rgba(255,255,255,1),transparent);
+      background-size:700px 500px;background-repeat:repeat;opacity:.55
+    }
+
+    nav{
+      position:fixed;top:0;left:0;right:0;z-index:200;
+      display:flex;align-items:center;justify-content:space-between;
+      padding:20px 56px;
+      background:rgba(8,7,16,0.82);
+      backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+      border-bottom:1px solid rgba(255,255,255,.06)
+    }
+    .nav-logo{font-family:'Montserrat',sans-serif;font-weight:900;font-size:1rem;letter-spacing:.1em;color:var(--white);text-transform:uppercase;text-decoration:none}
+    .nav-logo span{background:linear-gradient(135deg,var(--teal),var(--lavender));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .nav-back{font-size:.75rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,.45);transition:color .2s}
+    .nav-back:hover{color:var(--teal)}
+    @media(max-width:860px){nav{padding:18px 24px}}
+
+    .hero{position:relative;padding:140px 24px 60px;text-align:center;overflow:hidden}
+    .hero::before{
+      content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+      width:700px;height:350px;
+      background:radial-gradient(ellipse at center,rgba(0,242,234,.07) 0%,rgba(123,47,255,.05) 50%,transparent 70%);
+      pointer-events:none
+    }
+    .badge{
+      display:inline-flex;align-items:center;gap:8px;
+      font-family:'Montserrat',sans-serif;font-size:.68rem;font-weight:700;letter-spacing:.14em;
+      color:var(--teal);text-transform:uppercase;
+      border:1px solid rgba(0,242,234,.25);border-radius:100px;
+      padding:7px 18px;margin-bottom:24px
+    }
+    .badge-dot{width:6px;height:6px;border-radius:50%;background:var(--teal);animation:pulse 2s infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+    h1{font-size:clamp(2rem,6vw,3.8rem);margin-bottom:20px}
+    h1 .accent{background:linear-gradient(135deg,var(--teal),var(--lavender));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .hero-sub{font-size:1.05rem;color:var(--muted);max-width:520px;margin:0 auto 40px;line-height:1.7}
+
+    .about{max-width:800px;margin:0 auto;padding:0 24px 60px;display:grid;gap:16px}
+    .about-card{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:16px;padding:24px 28px;display:flex;align-items:flex-start;gap:16px}
+    .about-icon{font-size:24px;flex-shrink:0;margin-top:2px}
+    .about-card h3{font-size:1rem;margin-bottom:6px}
+    .about-card p{font-size:.88rem;color:var(--muted);line-height:1.6}
+
+    .form-wrap{max-width:580px;margin:0 auto;padding:0 24px 80px;position:relative;z-index:1}
+    .form-card{
+      background:rgba(255,255,255,.03);border:1px solid var(--border);
+      border-radius:20px;padding:36px 40px;position:relative;overflow:hidden
+    }
+    .form-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--teal),var(--purple))}
+    @media(max-width:600px){.form-card{padding:28px 20px}}
+    .form-title{font-size:1.3rem;margin-bottom:6px}
+    .form-sub{font-size:.85rem;color:var(--muted);margin-bottom:28px;line-height:1.6}
+
+    .fg{margin-bottom:20px}
+    label{display:block;font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:8px}
+    label .opt{color:rgba(255,255,255,.22);font-weight:400;text-transform:none;letter-spacing:0;font-size:.72rem}
+    input,textarea,select{
+      width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);
+      border-radius:10px;padding:13px 16px;color:var(--text);font-family:'Lato',sans-serif;
+      font-size:.92rem;transition:border-color var(--ease),background var(--ease);resize:none;outline:none
+    }
+    input:focus,textarea:focus,select:focus{border-color:rgba(0,242,234,.4);background:rgba(0,242,234,.03)}
+    ::placeholder{color:rgba(255,255,255,.2)}
+
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    @media(max-width:500px){.row{grid-template-columns:1fr}}
+
+    .submit-btn{
+      width:100%;padding:15px;margin-top:8px;
+      background:linear-gradient(135deg,var(--teal),var(--purple));
+      color:#080710;font-family:'Montserrat',sans-serif;font-weight:900;
+      font-size:.85rem;letter-spacing:.08em;text-transform:uppercase;
+      border:none;border-radius:12px;cursor:pointer;
+      transition:opacity var(--ease),transform var(--ease)
+    }
+    .submit-btn:hover{opacity:.9;transform:translateY(-1px)}
+    .submit-btn:disabled{opacity:.5;pointer-events:none}
+
+    .submit-error{margin-top:14px;text-align:center;font-size:.84rem;color:#ff4d6d;display:none}
+    .submit-error.visible{display:block}
+
+    .success{display:none;text-align:center;padding:40px 20px}
+    .success-icon{font-size:48px;margin-bottom:16px}
+    .success h2{font-size:1.6rem;margin-bottom:12px}
+    .success p{color:var(--muted);line-height:1.7;max-width:380px;margin:0 auto}
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="/" class="nav-logo">Cult <span>Content</span></a>
+    <a href="/" class="nav-back">← Back to site</a>
+  </nav>
+
+  <section class="hero">
+    <div class="badge"><span class="badge-dot"></span> Now booking guests</div>
+    <h1>The <span class="accent">Cult Commerce</span> Podcast</h1>
+    <p class="hero-sub">Real conversations about social commerce, TikTok Shop, the creator economy, and building in public. Hosted by Tommy Lynch.</p>
+  </section>
+
+  <div class="about">
+    <div class="about-card">
+      <div class="about-icon">🎙</div>
+      <div>
+        <h3>What we talk about</h3>
+        <p>Social commerce strategies, TikTok Shop brand and creator stories, building agencies and networks, and the honest truth about what's working right now.</p>
+      </div>
+    </div>
+    <div class="about-card">
+      <div class="about-icon">📅</div>
+      <div>
+        <h3>How it works</h3>
+        <p>Submit your application. If it's a fit, Tommy will reach out to schedule a recording time. Episodes are recorded live via Riverside and edited into short-form content.</p>
+      </div>
+    </div>
+    <div class="about-card">
+      <div class="about-icon">🚀</div>
+      <div>
+        <h3>Who we're looking for</h3>
+        <p>Brand founders, creators, agency operators, and anyone with a real story or contrarian take on social commerce. You don't need a big following — you need a point of view.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-wrap">
+    <div class="form-card" id="form-card">
+      <h2 class="form-title">Apply to be a guest</h2>
+      <p class="form-sub">Tommy reviews every application personally. If it's a fit, you'll hear back within a few days.</p>
+
+      <div class="fg">
+        <div class="row">
+          <div>
+            <label>Your name</label>
+            <input type="text" id="f-name" placeholder="First Last" autocomplete="name" />
+          </div>
+          <div>
+            <label>Email</label>
+            <input type="email" id="f-email" placeholder="you@example.com" autocomplete="email" />
+          </div>
+        </div>
+      </div>
+
+      <div class="fg">
+        <div class="row">
+          <div>
+            <label>What you do <span class="opt">(title / company)</span></label>
+            <input type="text" id="f-role" placeholder="Founder @ Brand, Creator, etc." />
+          </div>
+          <div>
+            <label>Social handle <span class="opt">(TikTok, IG, LinkedIn)</span></label>
+            <input type="text" id="f-social" placeholder="@handle or URL" />
+          </div>
+        </div>
+      </div>
+
+      <div class="fg">
+        <label>What would you like to talk about?</label>
+        <textarea id="f-topics" rows="3" placeholder="Topics, stories, or angles you'd bring to the conversation…"></textarea>
+      </div>
+
+      <div class="fg">
+        <label>Why should you be on the show? <span class="opt">(optional)</span></label>
+        <textarea id="f-pitch" rows="3" placeholder="Your take, your story, why it'd be interesting for the audience…"></textarea>
+      </div>
+
+      <div class="submit-error" id="submit-error"></div>
+      <button class="submit-btn" id="submit-btn" onclick="submitApplication()">Apply to be a guest →</button>
+    </div>
+
+    <div class="success" id="success-state">
+      <div class="success-icon">🎙</div>
+      <h2>Application sent!</h2>
+      <p>Tommy reviews every application personally. If it's a fit, you'll hear back within a few days. Keep making moves.</p>
+    </div>
+  </div>
+
+  <script>
+    const API = 'https://cult-command-center-production.up.railway.app/api/podcast-applications';
+
+    async function submitApplication() {
+      const btn = document.getElementById('submit-btn');
+      const errEl = document.getElementById('submit-error');
+      errEl.classList.remove('visible');
+
+      const name = document.getElementById('f-name').value.trim();
+      const email = document.getElementById('f-email').value.trim();
+      const role = document.getElementById('f-role').value.trim();
+      const social = document.getElementById('f-social').value.trim();
+      const topics = document.getElementById('f-topics').value.trim();
+      const pitch = document.getElementById('f-pitch').value.trim();
+
+      if (!name) { showErr('Please enter your name.'); return; }
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showErr('Please enter a valid email.'); return; }
+      if (!topics) { showErr('Please tell us what you\'d like to talk about.'); return; }
+
+      btn.disabled = true;
+      btn.textContent = 'Submitting…';
+
+      try {
+        const res = await fetch(API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, role, social, topics, pitch }),
+        });
+        const data = await res.json();
+        if (data.ok) {
+          document.getElementById('form-card').style.display = 'none';
+          document.getElementById('success-state').style.display = 'block';
+        } else {
+          showErr(data.error || 'Something went wrong. Please try again.');
+          btn.disabled = false;
+          btn.textContent = 'Apply to be a guest →';
+        }
+      } catch (e) {
+        showErr('Network error — please check your connection and try again.');
+        btn.disabled = false;
+        btn.textContent = 'Apply to be a guest →';
+      }
+    }
+
+    function showErr(msg) {
+      const el = document.getElementById('submit-error');
+      el.textContent = msg;
+      el.classList.add('visible');
+    }
+
+    // Allow enter to submit from any field
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) submitApplication();
+    });
+  </script>
+</body>
+</html>
