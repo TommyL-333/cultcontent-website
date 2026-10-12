@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Book Your Recording — Cult Commerce Podcast</title>
+  <style>
+    :root{--bg:#0d0d12;--text:#e8eaf2;--muted:rgba(255,255,255,.45);--teal:#00f2ea;--border:rgba(255,255,255,.08)}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column}
+    header{padding:28px 32px 20px;border-bottom:1px solid var(--border)}
+    .back{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:13px;text-decoration:none;margin-bottom:16px;transition:.15s}
+    .back:hover{color:var(--text)}
+    .logo{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+    h1{font-size:22px;font-weight:700;margin-top:6px;background:linear-gradient(90deg,var(--teal),#a78bfa);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+    .sub{font-size:14px;color:var(--muted);margin-top:6px;line-height:1.6}
+    main{flex:1;padding:32px;max-width:860px;width:100%;margin:0 auto}
+    .calendar-wrap{border:1px solid var(--border);border-radius:16px;overflow:hidden;background:rgba(255,255,255,.02)}
+    iframe{display:block;width:100%;height:700px;border:none}
+    @media(max-width:600px){main{padding:20px 16px}iframe{height:580px}}
+  </style>
+</head>
+<body>
+  <header>
+    <a class="back" href="/cult-commerce-podcast">← Back to Podcast</a>
+    <div class="logo">Cult Commerce Podcast</div>
+    <h1>Book Your Recording Session</h1>
+    <p class="sub">Pick a time below. Episodes record live on Riverside — make sure you have a stable internet connection and a quiet space.</p>
+  </header>
+  <main>
+    <div class="calendar-wrap">
+      <iframe src="https://api.leadconnectorhq.com/widget/booking/a7WEIKVtjnIVihywwHcX" loading="lazy" title="Book a podcast recording session"></iframe>
+    </div>
+  </main>
+</body>
+</html>
