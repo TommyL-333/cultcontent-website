@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Apply to Partner — Cult Content</title>
-<meta name="description" content="Apply to join the Cult Content partner network as a Sales Partner, Service Provider, or both.">
+<meta name="description" content="Apply to join the Cult Content partner network as a Sales, Service Provider, Consultant, Software, or Mission partner.">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Lato:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -122,6 +122,8 @@ nav{
   margin-bottom:8px
 }
 .field label .req{color:var(--teal);margin-left:3px}
+.types-help-link{float:right;font-size:.74rem;font-weight:600;color:var(--teal);text-decoration:underline;text-transform:none;letter-spacing:0;cursor:pointer}
+.types-help-link:hover{color:var(--lavender)}
 
 .field input,
 .field textarea,
@@ -329,6 +331,12 @@ nav{
           <div class="field-error">Valid email is required.</div>
         </div>
 
+        <div class="field" id="f-linkedin">
+          <label>LinkedIn profile <span class="req">*</span></label>
+          <input type="url" name="linkedin" placeholder="https://linkedin.com/in/janesmith" autocomplete="url">
+          <div class="field-error">LinkedIn profile is required.</div>
+        </div>
+
         <div class="field" id="f-company">
           <label>Company or website</label>
           <input type="text" name="company" placeholder="Acme Agency — acme.com">
@@ -339,15 +347,34 @@ nav{
       <div class="form-section">
         <div class="section-label">Partnership type</div>
 
-        <div class="field" id="f-role">
-          <label>Which role are you applying for? <span class="req">*</span></label>
-          <select name="role">
-            <option value="" disabled selected>Select a role…</option>
-            <option value="Sales Partner">Sales Partner — I refer brands and earn on deals</option>
-            <option value="Service Provider">Service Provider — I execute channel services for clients</option>
-            <option value="Both">Both — I can do both roles</option>
-          </select>
-          <div class="field-error">Please select a role.</div>
+        <div class="field" id="f-roles">
+          <label>
+            Which partner type(s) are you applying for? <span class="req">*</span>
+            <a href="/partner/types" target="_blank" rel="noopener" class="types-help-link">Not sure what the different types are?</a>
+          </label>
+          <div class="pill-group" id="rolePills">
+            <label class="pill" data-value="Sales">
+              <input type="checkbox" name="roles" value="Sales">
+              <span class="pill-check"></span>Sales — I refer brands and earn on deals
+            </label>
+            <label class="pill" data-value="Service Provider">
+              <input type="checkbox" name="roles" value="Service Provider">
+              <span class="pill-check"></span>Service Provider — I execute channel services for clients
+            </label>
+            <label class="pill" data-value="Consultant">
+              <input type="checkbox" name="roles" value="Consultant">
+              <span class="pill-check"></span>Consultant — I sell my own paid 1:1 sessions
+            </label>
+            <label class="pill" data-value="Software">
+              <input type="checkbox" name="roles" value="Software">
+              <span class="pill-check"></span>Software — I provide a tool or platform
+            </label>
+            <label class="pill" data-value="Mission">
+              <input type="checkbox" name="roles" value="Mission">
+              <span class="pill-check"></span>Mission — I'm a mission-aligned organization
+            </label>
+          </div>
+          <div class="field-error" style="margin-top:10px">Select at least one partner type.</div>
         </div>
       </div>
 
@@ -558,13 +585,15 @@ document.getElementById('partnerForm').addEventListener('submit', async (e) => {
 
   const name     = form.name.value.trim();
   const email    = form.email.value.trim();
-  const role     = form.role.value;
+  const linkedin = form.linkedin.value.trim();
+  const roles    = [...form.querySelectorAll('input[name=roles]:checked')].map(c => c.value);
   const pitch    = form.pitch.value.trim();
   const channels = [...form.querySelectorAll('input[name=channels]:checked')].map(c => c.value);
 
   setError('f-name',     !name);
   setError('f-email',    !email || !email.includes('@'));
-  setError('f-role',     !role);
+  setError('f-linkedin', !linkedin);
+  setError('f-roles',    roles.length === 0);
   setError('f-channels', channels.length === 0);
   setError('f-pitch',    !pitch);
 
@@ -587,8 +616,9 @@ document.getElementById('partnerForm').addEventListener('submit', async (e) => {
   const payload = {
     name,
     email,
+    linkedin,
     company:  form.company.value.trim(),
-    role,
+    roles,
     channels,
     services,
     channelNotes,
