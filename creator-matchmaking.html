@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Creator Matchmaking — Cult Content</title>
+<meta name="description" content="Get your products in front of 700+ vetted TikTok Shop creators. Submit your shop and we'll match you with the right community.">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080710;--bg2:#0d0b1a;
+  --teal:#00f2ea;--purple:#7b2fff;--lavender:#b899ff;--pink:#ff0050;
+  --text:#e8e8f0;--muted:#7a7a9a;--white:#fff;
+  --border:rgba(255,255,255,.07);--card:rgba(255,255,255,.04);
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;line-height:1.65;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+
+/* STAR FIELD */
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:
+    radial-gradient(.6px .6px at 4% 8%,rgba(255,255,255,.7),transparent),
+    radial-gradient(.5px .5px at 11% 27%,rgba(255,255,255,.5),transparent),
+    radial-gradient(.7px .7px at 18% 64%,rgba(255,255,255,.6),transparent),
+    radial-gradient(.5px .5px at 25% 14%,rgba(220,210,255,.55),transparent),
+    radial-gradient(.6px .6px at 33% 78%,rgba(255,255,255,.65),transparent),
+    radial-gradient(.5px .5px at 40% 43%,rgba(255,255,255,.5),transparent),
+    radial-gradient(.5px .5px at 47% 90%,rgba(255,255,255,.55),transparent),
+    radial-gradient(.6px .6px at 56% 22%,rgba(255,255,255,.6),transparent),
+    radial-gradient(.5px .5px at 63% 57%,rgba(210,200,255,.5),transparent),
+    radial-gradient(.7px .7px at 71% 33%,rgba(255,255,255,.65),transparent),
+    radial-gradient(.5px .5px at 79% 81%,rgba(255,255,255,.5),transparent),
+    radial-gradient(.6px .6px at 86% 11%,rgba(255,255,255,.6),transparent),
+    radial-gradient(1px 1px at 7% 52%,rgba(255,255,255,.85),transparent),
+    radial-gradient(1px 1px at 21% 38%,rgba(184,153,255,.8),transparent),
+    radial-gradient(1px 1px at 36% 6%,rgba(255,255,255,.9),transparent),
+    radial-gradient(1px 1px at 52% 68%,rgba(255,255,255,.8),transparent),
+    radial-gradient(1px 1px at 68% 85%,rgba(184,153,255,.75),transparent),
+    radial-gradient(1px 1px at 84% 30%,rgba(255,255,255,.85),transparent),
+    radial-gradient(1.5px 1.5px at 14% 76%,rgba(255,255,255,.95),transparent),
+    radial-gradient(1.5px 1.5px at 44% 19%,rgba(184,153,255,.9),transparent),
+    radial-gradient(2px 2px at 73% 60%,rgba(255,255,255,1),transparent),
+    radial-gradient(2px 2px at 30% 50%,rgba(255,255,255,.9),transparent);
+  background-size:700px 500px;background-repeat:repeat;opacity:.65
+}
+
+/* NAV */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:20px 56px;
+  background:rgba(8,7,16,.75);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(255,255,255,.06)
+}
+.nav-logo{font-family:'Montserrat',sans-serif;font-weight:900;font-size:1rem;letter-spacing:.1em;color:var(--white);text-transform:uppercase}
+.nav-logo span{background:linear-gradient(135deg,var(--purple),var(--lavender));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.nav-links{display:flex;align-items:center;gap:22px;list-style:none}
+.nav-links a{color:rgba(255,255,255,.5);font-size:.75rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;transition:color .2s}
+.nav-links a:hover{color:#fff}
+.nav-apply{
+  background:linear-gradient(135deg,var(--purple),var(--lavender));
+  color:var(--white);font-family:'Montserrat',sans-serif;font-weight:900;font-size:.72rem;
+  letter-spacing:.1em;text-transform:uppercase;padding:10px 22px;border-radius:100px;
+  transition:opacity .2s,transform .2s
+}
+.nav-apply:hover{opacity:.85;transform:translateY(-1px)}
+@media(max-width:860px){.nav-links{display:none};nav{padding:18px 24px}}
+
+/* HERO */
+.hero{
+  position:relative;min-height:60vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;
+  padding:140px 24px 80px;overflow:hidden
+}
+.hero-floor{
+  position:absolute;bottom:0;left:-40%;width:180%;height:45vh;
+  background:repeating-conic-gradient(rgba(123,47,255,.07) 0% 25%,transparent 0% 50%) 0 0/60px 60px;
+  transform:perspective(700px) rotateX(68deg);transform-origin:bottom center;
+  pointer-events:none
+}
+.label-pill{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(123,47,255,.15);border:1px solid rgba(123,47,255,.3);
+  color:var(--lavender);font-family:'Montserrat',sans-serif;font-weight:700;
+  font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;
+  padding:6px 16px;border-radius:100px;margin-bottom:24px
+}
+.hero h1{
+  font-family:'Montserrat',sans-serif;font-weight:900;font-size:clamp(2.2rem,5.5vw,4rem);
+  line-height:1.1;letter-spacing:-.02em;margin-bottom:20px
+}
+.grad-teal{background:linear-gradient(90deg,var(--teal),#00c9ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.grad-purple{background:linear-gradient(135deg,var(--purple),var(--lavender));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{font-size:1.1rem;color:var(--muted);max-width:560px;margin:0 auto 36px}
+.hero-stats{display:flex;gap:40px;justify-content:center;flex-wrap:wrap;margin-bottom:48px}
+.hero-stat strong{display:block;font-family:'Montserrat',sans-serif;font-weight:900;font-size:1.8rem;background:linear-gradient(90deg,var(--teal),#00c9ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-stat span{font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+
+/* HOW IT WORKS */
+.section{position:relative;z-index:1;padding:80px 24px}
+.section-inner{max-width:900px;margin:0 auto}
+.section-title{font-family:'Montserrat',sans-serif;font-weight:900;font-size:clamp(1.6rem,3.5vw,2.4rem);line-height:1.15;letter-spacing:-.02em;margin-bottom:12px}
+.section-sub{color:var(--muted);font-size:.95rem;margin-bottom:48px;max-width:600px}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px}
+.step{
+  background:var(--card);border:1px solid var(--border);border-radius:16px;
+  padding:28px 24px;position:relative;overflow:hidden
+}
+.step::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--purple),var(--lavender))
+}
+.step-num{
+  font-family:'Montserrat',sans-serif;font-weight:900;font-size:2rem;
+  background:linear-gradient(135deg,var(--purple),var(--lavender));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-bottom:12px
+}
+.step h3{font-family:'Montserrat',sans-serif;font-weight:700;font-size:.9rem;letter-spacing:.04em;margin-bottom:8px}
+.step p{font-size:.85rem;color:var(--muted);line-height:1.55}
+
+/* FORM SECTION */
+.form-section{position:relative;z-index:1;padding:0 24px 100px}
+.form-wrap{
+  max-width:680px;margin:0 auto;
+  background:var(--card);border:1px solid var(--border);border-radius:24px;
+  padding:48px 44px;
+}
+@media(max-width:600px){.form-wrap{padding:32px 24px}}
+.form-wrap h2{font-family:'Montserrat',sans-serif;font-weight:900;font-size:1.6rem;margin-bottom:8px}
+.form-wrap p{color:var(--muted);font-size:.9rem;margin-bottom:32px}
+.form-row{margin-bottom:22px}
+.form-row label{display:block;font-size:.78rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.form-row input,.form-row textarea,.form-row select{
+  width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);
+  border-radius:10px;color:var(--text);font-family:'Lato',sans-serif;font-size:.95rem;
+  padding:13px 16px;transition:border-color .2s,box-shadow .2s;
+  -webkit-appearance:none;appearance:none
+}
+.form-row input:focus,.form-row textarea:focus,.form-row select:focus{
+  outline:none;border-color:rgba(123,47,255,.5);
+  box-shadow:0 0 0 3px rgba(123,47,255,.12)
+}
+.form-row textarea{resize:vertical;min-height:100px}
+.form-hint{font-size:.78rem;color:var(--muted);margin-top:6px}
+.form-hint a{color:var(--lavender)}
+.commission-row{display:flex;gap:12px;align-items:flex-end}
+.commission-row input{flex:1}
+.commission-badge{
+  background:rgba(0,242,234,.1);border:1px solid rgba(0,242,234,.25);
+  color:var(--teal);font-size:.75rem;font-weight:700;letter-spacing:.06em;
+  padding:13px 14px;border-radius:10px;white-space:nowrap
+}
+.submit-btn{
+  width:100%;margin-top:8px;
+  background:linear-gradient(135deg,var(--purple),var(--lavender));
+  color:#fff;font-family:'Montserrat',sans-serif;font-weight:900;font-size:.9rem;
+  letter-spacing:.1em;text-transform:uppercase;padding:16px;border:none;
+  border-radius:12px;cursor:pointer;transition:opacity .2s,transform .2s;
+  position:relative;overflow:hidden
+}
+.submit-btn::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);
+  transform:translateX(-100%);transition:transform .4s
+}
+.submit-btn:hover::after{transform:translateX(100%)}
+.submit-btn:hover{opacity:.9;transform:translateY(-1px)}
+.submit-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.form-note{margin-top:20px;font-size:.8rem;color:var(--muted);text-align:center;line-height:1.5}
+
+/* SUCCESS STATE */
+.success-box{
+  display:none;text-align:center;padding:20px 0
+}
+.success-icon{font-size:3rem;margin-bottom:16px}
+.success-box h3{font-family:'Montserrat',sans-serif;font-weight:900;font-size:1.4rem;margin-bottom:12px}
+.success-box p{color:var(--muted);font-size:.9rem;line-height:1.6;max-width:460px;margin:0 auto 24px}
+.success-steps{
+  text-align:left;background:rgba(255,255,255,.03);border:1px solid var(--border);
+  border-radius:12px;padding:20px 24px;margin-top:8px
+}
+.success-steps li{font-size:.88rem;padding:6px 0;border-bottom:1px solid var(--border);color:var(--muted)}
+.success-steps li:last-child{border:none}
+.success-steps li strong{color:var(--text)}
+
+/* FOOTER */
+footer{
+  position:relative;z-index:1;
+  text-align:center;padding:48px 24px;
+  border-top:1px solid var(--border);
+  color:var(--muted);font-size:.8rem
+}
+footer a{color:var(--lavender);transition:color .2s}
+footer a:hover{color:#fff}
+.footer-logo{font-family:'Montserrat',sans-serif;font-weight:900;font-size:.9rem;letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px;color:var(--white)}
+.footer-logo span{background:linear-gradient(135deg,var(--purple),var(--lavender));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="https://cultcontent.cc" class="nav-logo">Cult <span>Content</span></a>
+  <ul class="nav-links">
+    <li><a href="https://cultcontent.cc">Home</a></li>
+    <li><a href="https://cultcontent.cc/creators">Creators</a></li>
+    <li><a href="https://cultcontent.cc/partner">Partners</a></li>
+  </ul>
+  <a href="https://cultcontent.cc/book-with-tommy" class="nav-apply">Book a Call</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-floor"></div>
+  <div class="label-pill">Creator Matchmaking</div>
+  <h1>Get Your Products in Front of<br><span class="grad-teal">700+ Creators</span></h1>
+  <p>Submit your TikTok Shop and we'll place you inside the Cult Content Community campaign — a curated network of creators actively generating affiliate revenue.</p>
+  <div class="hero-stats">
+    <div class="hero-stat"><strong>700+</strong><span>Active Creators</span></div>
+    <div class="hero-stat"><strong>$50M+</strong><span>Community GMV</span></div>
+    <div class="hero-stat"><strong>10%</strong><span>Min Commission</span></div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section">
+  <div class="section-inner">
+    <div class="label-pill">How It Works</div>
+    <h2 class="section-title">From submission to community<br><span class="grad-purple">in four steps.</span></h2>
+    <p class="section-sub">We handle the campaign setup. You just need to accept the invite and your products go live to the community.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <h3>Submit Your Shop</h3>
+        <p>Fill out the form below with your TikTok Shop code and contact info. Takes under 2 minutes.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <h3>We Add You to the Campaign</h3>
+        <p>Our team adds you as a selected seller in the Cult Content Community campaign on TikTok Partner Center.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <h3>Accept the Invitation</h3>
+        <p>You'll receive instructions to accept the campaign in your TikTok Affiliate Center. Takes about 60 seconds.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">04</div>
+        <h3>Go Live to the Community</h3>
+        <p>Once confirmed, we generate your affiliate link and publish your opportunity to 700+ creators.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FORM -->
+<section class="form-section" id="apply">
+  <div class="form-wrap">
+
+    <!-- Default form state -->
+    <div id="form-state">
+      <div class="label-pill" style="margin-bottom:16px">Apply Now</div>
+      <h2>Submit Your Shop</h2>
+      <p>We review every submission and add approved brands within 1–2 business days.</p>
+
+      <form id="matchmaking-form">
+        <div class="form-row">
+          <label>Brand / Company Name *</label>
+          <input type="text" name="brandName" required placeholder="e.g. Reacher Skincare">
+        </div>
+        <div class="form-row">
+          <label>Your Name *</label>
+          <input type="text" name="contactName" required placeholder="First and last name">
+        </div>
+        <div class="form-row">
+          <label>Email Address *</label>
+          <input type="email" name="email" required placeholder="you@brand.com">
+        </div>
+        <div class="form-row">
+          <label>TikTok Shop Code *</label>
+          <input type="text" name="shopCode" required placeholder="e.g. 7XXXXXXXXXXXXXXX">
+          <div class="form-hint">Find this in your TikTok Seller Center → Shop Settings → Shop Info. It's your numeric Shop ID.</div>
+        </div>
+        <div class="form-row">
+          <label>Commission Rate *</label>
+          <div class="commission-row">
+            <input type="number" name="commissionRate" min="10" max="80" value="10" step="0.5" required>
+            <div class="commission-badge">% · Min 10%</div>
+          </div>
+          <div class="form-hint">Campaign minimum is 10%. Higher rates attract more creators.</div>
+        </div>
+        <div class="form-row">
+          <label>Notes <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+          <textarea name="notes" placeholder="Product categories, top SKUs, target creator niches, anything else we should know..."></textarea>
+        </div>
+
+        <button type="submit" class="submit-btn" id="submit-btn">Submit My Shop →</button>
+        <p class="form-note">By submitting you agree to the campaign's 10% minimum commission requirement. Our team will reach out within 1–2 business days.</p>
+      </form>
+    </div>
+
+    <!-- Success state -->
+    <div class="success-box" id="success-state">
+      <div class="success-icon">🎯</div>
+      <h3>You're in the queue.</h3>
+      <p>We've received your submission and will add you to the Cult Content Community campaign within 1–2 business days. Check your email for next steps.</p>
+      <div class="success-steps">
+        <p style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:12px">What happens next</p>
+        <ol style="list-style:none;padding:0">
+          <li>✅ <strong>We add you</strong> as a selected seller in TikTok Partner Center</li>
+          <li>📧 <strong>You receive an email</strong> with step-by-step instructions to accept</li>
+          <li>🔗 <strong>You accept</strong> the campaign in your TikTok Affiliate Center</li>
+          <li>🚀 <strong>We publish</strong> your opportunity to the creator community</li>
+        </ol>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<footer>
+  <div class="footer-logo">Cult <span>Content</span></div>
+  <p>The machine that turns audiences into revenue. &nbsp;·&nbsp; <a href="https://cultcontent.cc">cultcontent.cc</a></p>
+</footer>
+
+<script>
+document.getElementById('matchmaking-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Submitting…';
+
+  const form = e.target;
+  const data = {
+    brandName:      form.brandName.value.trim(),
+    contactName:    form.contactName.value.trim(),
+    email:          form.email.value.trim().toLowerCase(),
+    shopCode:       form.shopCode.value.trim(),
+    commissionRate: Number(form.commissionRate.value),
+    notes:          form.notes.value.trim(),
+  };
+
+  try {
+    const res = await fetch('/api/creator-matchmaking/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Submission failed');
+
+    document.getElementById('form-state').style.display = 'none';
+    document.getElementById('success-state').style.display = 'block';
+  } catch (err) {
+    btn.disabled = false;
+    btn.textContent = 'Submit My Shop →';
+    alert('Something went wrong: ' + err.message + '\n\nPlease email Tommy@cultcontent.cc if this persists.');
+  }
+});
+</script>
+</body>
+</html>

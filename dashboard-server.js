@@ -103,6 +103,15 @@ const apiLimiter = rateLimit({
 });
 app.use('/api/', apiLimiter);
 
+// Network-map unlock — rate-limited separately (10 attempts / 15 min per IP)
+const networkMapLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: 'Too many unlock attempts — try again later.',
+});
+
 // ─── Session middleware — powers client portal (session-based auth, separate from CF Access) ──
 // The secret used to fall back to a hardcoded string committed to this repo.
 // Anyone who could read the source could forge a signed session cookie and be
@@ -471,7 +480,15 @@ app.post('/api/ccc/creator-apply', async (req, res) => {
 });
 
 // ─── Partner application form ─────────────────────────────────────────────────
-const PARTNER_APPS_FILE = path.join(__dirname, 'partner-applications.json');
+const PARTNER_APPS_FILE    = path.join(__dirname, 'partner-applications.json');
+const MATCHMAKING_FILE     = path.join(DATA_DIR,    'creator-matchmaking.json');
+
+function loadMatchmakingSubmissions() {
+  try { return JSON.parse(fs.readFileSync(MATCHMAKING_FILE, 'utf8')); } catch { return []; }
+}
+function saveMatchmakingSubmissions(rows) {
+  fs.writeFileSync(MATCHMAKING_FILE, JSON.stringify(rows, null, 2));
+}
 
 function loadPartnerApps() {
   try { return JSON.parse(fs.readFileSync(PARTNER_APPS_FILE, 'utf8')); } catch { return []; }
@@ -483,20 +500,21 @@ function savePartnerApps(apps) {
 app.post('/api/partner/apply', express.json(), async (req, res) => {
   const name     = String(req.body?.name     || '').trim();
   const email    = String(req.body?.email    || '').trim().toLowerCase();
+  const linkedin = String(req.body?.linkedin || '').trim();
   const company  = String(req.body?.company  || '').trim();
-  const role     = String(req.body?.role     || '').trim();
+  const roles    = Array.isArray(req.body?.roles)    ? req.body.roles.map(r => String(r).trim()).filter(Boolean)    : [];
   const pitch    = String(req.body?.pitch    || '').trim();
   const volume   = String(req.body?.volume   || '').trim();
   const referral = String(req.body?.referral || '').trim();
   const channels = Array.isArray(req.body?.channels) ? req.body.channels.map(c => String(c).trim()).filter(Boolean) : [];
 
-  if (!name || !email || !email.includes('@') || !role || !pitch || channels.length === 0) {
+  if (!name || !email || !email.includes('@') || !linkedin || roles.length === 0 || !pitch || channels.length === 0) {
     return res.status(400).json({ ok: false, error: 'Missing required fields.' });
   }
 
   const services     = (req.body?.services     && typeof req.body.services     === 'object' && !Array.isArray(req.body.services))     ? req.body.services     : {};
   const channelNotes = (req.body?.channelNotes && typeof req.body.channelNotes === 'object' && !Array.isArray(req.body.channelNotes)) ? req.body.channelNotes : {};
-  const entry = { name, email, company, role, channels, services, channelNotes, pitch, volume, referral, submittedAt: new Date().toISOString() };
+  const entry = { name, email, linkedin, company, roles, channels, services, channelNotes, pitch, volume, referral, submittedAt: new Date().toISOString() };
 
   // 1. Persist to local JSON
   try {
@@ -518,7 +536,8 @@ app.post('/api/partner/apply', express.json(), async (req, res) => {
       `🤝 New partner application!`,
       `👤 ${name}${company ? ` — ${company}` : ''}`,
       `📧 ${email}`,
-      `🏷  Role: ${role}`,
+      `🔗 LinkedIn: ${linkedin}`,
+      `🏷  Type(s): ${roles.join(', ')}`,
       `📡 Channels: ${channels.join(', ')}`,
       serviceLines ? `🔧 Services:\n${serviceLines}` : '',
       volume   ? `💰 Volume: ${volume}` : '',
@@ -533,6 +552,148 @@ app.post('/api/partner/apply', express.json(), async (req, res) => {
   }
 
   res.json({ ok: true });
+});
+
+// ─── Creator Matchmaking — public routes, registered BEFORE requireAuth ───────
+
+app.get('/creator-matchmaking', (req, res) => {
+  res.sendFile(path.join(__dirname, 'creator-matchmaking.html'));
+});
+
+app.post('/api/creator-matchmaking/submit', express.json(), async (req, res) => {
+  const brandName      = String(req.body?.brandName      || '').trim();
+  const contactName    = String(req.body?.contactName    || '').trim();
+  const email          = String(req.body?.email          || '').trim().toLowerCase();
+  const shopCode       = String(req.body?.shopCode       || '').trim();
+  const commissionRate = Number(req.body?.commissionRate) || 10;
+  const notes          = String(req.body?.notes          || '').trim();
+
+  if (!brandName || !contactName || !email || !email.includes('@') || !shopCode) {
+    return res.status(400).json({ ok: false, error: 'Missing required fields.' });
+  }
+  if (commissionRate < 10) {
+    return res.status(400).json({ ok: false, error: 'Commission rate must be at least 10%.' });
+  }
+
+  const id = crypto.randomBytes(16).toString('hex');
+  const entry = {
+    id, brandName, contactName, email, shopCode, commissionRate, notes,
+    status: 'submitted',
+    submittedAt: new Date().toISOString(),
+    acceptedAt: null,
+  };
+
+  // 1. Persist locally
+  try {
+    const rows = loadMatchmakingSubmissions();
+    rows.push(entry);
+    saveMatchmakingSubmissions(rows);
+  } catch (e) {
+    console.error('[matchmaking] file write error:', e.message);
+  }
+
+  // 2. Lark alert (non-blocking)
+  const alertChatId = process.env.LARK_ALERT_CHAT_ID;
+  if (alertChatId) {
+    const alertText = [
+      `🎯 New Creator Matchmaking submission!`,
+      `🏷  Brand: ${brandName}`,
+      `👤 Contact: ${contactName}`,
+      `📧 ${email}`,
+      `🛒 Shop Code: ${shopCode}`,
+      `💰 Commission: ${commissionRate}%`,
+      notes ? `📝 Notes: ${notes.slice(0, 300)}` : '',
+      ``,
+      `⚡️ Next: add ${brandName} as a selected seller in TikTok Partner Center → Cult Content Community campaign`,
+      `✅ Confirm here: https://cultcontent.cc/creator-matchmaking/confirmed?id=${id}`,
+    ].filter(Boolean).join('\n');
+    larkApi('post', '/im/v1/messages?receive_id_type=chat_id', {
+      receive_id: alertChatId, msg_type: 'text', content: JSON.stringify({ text: alertText }),
+    }).catch(e => console.error('[matchmaking] Lark alert error:', e.message));
+  }
+
+  // 3. Confirmation email to brand (non-blocking)
+  const RESEND_KEY = process.env.RESEND_API_KEY;
+  if (RESEND_KEY) {
+    try {
+      const { Resend } = require('resend');
+      const resend = new Resend(RESEND_KEY);
+      const confirmedUrl = `https://cultcontent.cc/creator-matchmaking/confirmed?id=${id}`;
+      await resend.emails.send({
+        from: 'Cult Content <Tommy@cultcontent.cc>',
+        to: email,
+        subject: `Next steps — Cult Content Community campaign`,
+        html: `
+<div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:560px;margin:0 auto;color:#141210;background:#fff;padding:40px 32px;border-radius:12px">
+  <p style="font-size:1.1rem;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:#7b2fff;margin-bottom:4px">CULT CONTENT</p>
+  <h1 style="font-size:1.6rem;font-weight:900;margin:0 0 8px">You're queued up.</h1>
+  <p style="color:#555;margin-bottom:28px">Hey ${contactName}, thanks for submitting ${brandName}. We're adding you to the <strong>Cult Content Community</strong> campaign. Here's what happens next:</p>
+
+  <div style="background:#f7f3ec;border-radius:10px;padding:24px;margin-bottom:28px">
+    <p style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#7a7268;margin:0 0 16px">How to accept the campaign</p>
+    <ol style="padding-left:20px;margin:0;color:#3a3530;line-height:1.8">
+      <li>Log in to your <strong>TikTok Seller Center</strong></li>
+      <li>Go to <strong>Affiliate Center → Partner Management → Campaigns</strong></li>
+      <li>Search for <strong>"Cult Content Community"</strong></li>
+      <li>Click <strong>Accept</strong> on the campaign invitation</li>
+    </ol>
+  </div>
+
+  <p style="color:#555;margin-bottom:24px">Once you've accepted, click the button below so we know to generate your affiliate link and publish your products to the community.</p>
+
+  <a href="${confirmedUrl}" style="display:inline-block;background:linear-gradient(135deg,#7b2fff,#b899ff);color:#fff;font-weight:900;font-size:.9rem;letter-spacing:.08em;text-transform:uppercase;padding:14px 32px;border-radius:8px;text-decoration:none">I've Accepted the Campaign →</a>
+
+  <p style="margin-top:32px;font-size:.8rem;color:#999">Questions? Reply to this email or reach out at Tommy@cultcontent.cc. We typically respond within a few hours.</p>
+  <hr style="border:none;border-top:1px solid #eee;margin:24px 0">
+  <p style="font-size:.75rem;color:#bbb;margin:0">Cult Content · cultcontent.cc</p>
+</div>`,
+      });
+    } catch (e) {
+      console.error('[matchmaking] Resend error:', e.message);
+    }
+  }
+
+  res.json({ ok: true, id });
+});
+
+// Brand clicks "I've Accepted" — updates status and alerts the team
+app.get('/creator-matchmaking/confirmed', async (req, res) => {
+  const id = String(req.query?.id || '').replace(/[^a-f0-9]/g, '');
+  if (!id) return res.redirect('/creator-matchmaking');
+
+  let entry = null;
+  try {
+    const rows = loadMatchmakingSubmissions();
+    const idx  = rows.findIndex(r => r.id === id);
+    if (idx !== -1) {
+      entry = rows[idx];
+      if (entry.status === 'submitted') {
+        rows[idx].status     = 'accepted';
+        rows[idx].acceptedAt = new Date().toISOString();
+        saveMatchmakingSubmissions(rows);
+      }
+    }
+  } catch (e) {
+    console.error('[matchmaking] confirmed update error:', e.message);
+  }
+
+  const alertChatId = process.env.LARK_ALERT_CHAT_ID;
+  if (alertChatId && entry) {
+    const alertText = [
+      `✅ ${entry.brandName} accepted the Cult Content Community campaign!`,
+      `🛒 Shop Code: ${entry.shopCode}`,
+      `📧 ${entry.email}`,
+      `💰 Commission: ${entry.commissionRate}%`,
+      ``,
+      `⚡️ Next: generate affiliate link in TikTok Partner Center and publish to the community.`,
+    ].join('\n');
+    larkApi('post', '/im/v1/messages?receive_id_type=chat_id', {
+      receive_id: alertChatId, msg_type: 'text', content: JSON.stringify({ text: alertText }),
+    }).catch(e => console.error('[matchmaking] confirmed Lark error:', e.message));
+  }
+
+  const brandName = entry?.brandName || 'your brand';
+  res.send(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>You're confirmed — Cult Content</title><link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@900&family=Lato:wght@400;700&display=swap" rel="stylesheet"><style>*{box-sizing:border-box;margin:0;padding:0}body{background:#080710;color:#e8e8f0;font-family:'Lato',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}.card{max-width:520px;width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:24px;padding:48px 40px;text-align:center}.icon{font-size:3rem;margin-bottom:20px}.h1{font-family:'Montserrat',sans-serif;font-weight:900;font-size:1.7rem;margin-bottom:12px}.sub{color:#7a7a9a;font-size:.95rem;line-height:1.65;margin-bottom:28px}.note{background:rgba(123,47,255,.1);border:1px solid rgba(123,47,255,.25);border-radius:10px;padding:16px 20px;font-size:.85rem;color:#b899ff;line-height:1.6}.footer{margin-top:32px;font-size:.8rem;color:#4a4a6a}a{color:#b899ff}</style></head><body><div class="card"><div class="icon">🚀</div><h1 class="h1">You're confirmed!</h1><p class="sub">We've received your confirmation for <strong>${brandName}</strong>. Our team will generate your affiliate link and publish your opportunity to 700+ creators in the Cult Content community.</p><div class="note">Expect your affiliate link within 1 business day. We'll follow up at the email you provided.</div><p class="footer">Questions? <a href="mailto:Tommy@cultcontent.cc">Tommy@cultcontent.cc</a></p></div></body></html>`);
 });
 
 // ─── GHL Webhook: client onboarding form → auto-add client ───────────────────
@@ -6672,6 +6833,141 @@ app.get('/robots.txt', (req, res) => {
   res.type('text/plain; charset=utf-8').sendFile(path.join(__dirname, 'robots.txt'));
 });
 
+// ─── Cult Commerce host-based routing ────────────────────────────────────────
+// cultcommerce.cc is a separate domain served by this same Railway service.
+// Detect it by hostname (Railway forwards Host via x-forwarded-host).
+function isCultCommerce(req) {
+  const host = (req.headers['x-forwarded-host'] || req.headers.host || '').toLowerCase().split(':')[0];
+  return host === 'cultcommerce.cc' || host === 'www.cultcommerce.cc';
+}
+
+// Cult Commerce: public site
+app.get('/', (req, res, next) => {
+  if (!isCultCommerce(req)) return next();
+  res.sendFile(path.join(__dirname, 'cultcommerce-index.html'));
+});
+
+// Cult Commerce: partner program pages (reskinned)
+app.get('/partner', (req, res, next) => {
+  if (!isCultCommerce(req)) return next();
+  res.sendFile(path.join(__dirname, 'cultcommerce-partner.html'));
+});
+app.get('/partner/apply', (req, res, next) => {
+  if (!isCultCommerce(req)) return next();
+  res.sendFile(path.join(__dirname, 'cultcommerce-partner-apply.html'));
+});
+app.get('/partner/types', (req, res, next) => {
+  if (!isCultCommerce(req)) return next();
+  res.sendFile(path.join(__dirname, 'cultcommerce-partner-types.html'));
+});
+
+// Cult Commerce: network map — server-side password gate
+// Password is stored as a bcrypt hash in NETWORK_MAP_PASSWORD_HASH,
+// or as plain text in NETWORK_MAP_PASSWORD (bcrypt preferred).
+// Tommy sets one of these in Railway > Variables.
+// Note: access is remembered in a session cookie. Sessions use SQLite (survives
+// deploys). Viewers must re-enter after the MemoryStore-era reset; with SqliteSessionStore
+// they stay logged in across deploys.
+const NETWORK_MAP_UNLOCK_FORM = (wrongPassword) => `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Cult Commerce · Network Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&display=swap">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#1A0A2E;--velvet:#3B0F7A;--gold:#C9A84C;--gold-light:#E8C97A;--text:#F0E8FF;--muted:#9B8DB0;--error:#ff6b6b}
+body{background:var(--bg);color:var(--text);font-family:'Cormorant Garamond',serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 120% 80% at 50% 0%,rgba(59,15,122,0.6) 0%,transparent 70%)}
+.card{position:relative;z-index:1;width:100%;max-width:420px;background:rgba(59,15,122,0.25);border:1px solid rgba(201,168,76,0.25);border-radius:16px;padding:48px 40px;text-align:center;backdrop-filter:blur(12px)}
+.card::before{content:'';position:absolute;top:0;left:24px;right:24px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.eyebrow{font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:20px}
+h1{font-family:'Cinzel',serif;font-size:1.5rem;font-weight:600;color:var(--text);margin-bottom:10px;letter-spacing:0.02em}
+.sub{font-size:0.95rem;color:var(--muted);margin-bottom:36px;font-style:italic;line-height:1.6}
+.error{background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.35);border-radius:8px;padding:12px 16px;font-size:0.85rem;color:var(--error);margin-bottom:24px;display:${wrongPassword ? 'block' : 'none'}}
+input[type=password]{width:100%;padding:13px 16px;background:rgba(255,255,255,0.05);border:1px solid rgba(201,168,76,0.25);border-radius:8px;color:var(--text);font-family:'Cormorant Garamond',serif;font-size:1rem;outline:none;transition:border-color .2s;-webkit-appearance:none;appearance:none;letter-spacing:0.08em}
+input[type=password]::placeholder{color:var(--muted);letter-spacing:0}
+input[type=password]:focus{border-color:rgba(201,168,76,0.6)}
+button{margin-top:16px;width:100%;padding:14px;background:linear-gradient(135deg,#C9A84C,#8B6914);color:#1A0A2E;font-family:'Cinzel',serif;font-weight:700;font-size:0.8rem;letter-spacing:0.12em;text-transform:uppercase;border:none;border-radius:8px;cursor:pointer;transition:opacity .2s,transform .2s}
+button:hover{opacity:0.88;transform:translateY(-1px)}
+.footer-link{margin-top:32px;font-size:0.78rem;color:var(--muted)}
+.footer-link a{color:var(--gold);text-decoration:none}
+@media(max-width:480px){.card{padding:36px 24px}}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="eyebrow">Cult Commerce · Partner Network</div>
+  <h1>Network Data Map</h1>
+  <p class="sub">This page is for partners. Enter the access password to continue.</p>
+  <div class="error">Incorrect password — please try again.</div>
+  <form method="POST" action="/api/network-map/unlock">
+    <input type="password" name="password" placeholder="Access password" autofocus autocomplete="current-password">
+    <button type="submit">Unlock</button>
+  </form>
+  <p class="footer-link"><a href="/">← Cult Commerce</a></p>
+</div>
+</body>
+</html>`;
+
+app.get('/network-map', (req, res, next) => {
+  if (!isCultCommerce(req)) return next();
+  res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+  if (req.session?.networkMapAccess) {
+    return res.sendFile(path.join(__dirname, 'private', 'network-map.html'));
+  }
+  res.send(NETWORK_MAP_UNLOCK_FORM(false));
+});
+
+app.post('/api/network-map/unlock', networkMapLimiter, express.urlencoded({ extended: false }), async (req, res) => {
+  if (!isCultCommerce(req)) return res.status(404).end();
+  const attempted = String(req.body?.password || '');
+  let granted = false;
+
+  const hashEnv  = process.env.NETWORK_MAP_PASSWORD_HASH;
+  const plainEnv = process.env.NETWORK_MAP_PASSWORD;
+
+  if (hashEnv) {
+    try { granted = await bcrypt.compare(attempted, hashEnv); } catch { granted = false; }
+  } else if (plainEnv) {
+    granted = attempted === plainEnv;
+  }
+
+  if (!granted) {
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+    return res.status(401).send(NETWORK_MAP_UNLOCK_FORM(true));
+  }
+
+  req.session.networkMapAccess = true;
+  req.session.save(() => {
+    res.redirect(303, '/network-map');
+  });
+});
+
+// cultcontent.cc/partner → cultcommerce.cc/partner (301 redirect)
+// Only enable once cultcommerce.cc DNS is live. Flip the env var CULTCOMMERCE_LIVE=true.
+// Until then, the old cultcontent.cc partner pages keep working normally.
+app.get('/partner', (req, res, next) => {
+  if (!process.env.CULTCOMMERCE_LIVE) return next();
+  if (isCultCommerce(req)) return next();
+  return res.redirect(301, 'https://cultcommerce.cc/partner');
+});
+app.get('/partner/apply', (req, res, next) => {
+  if (!process.env.CULTCOMMERCE_LIVE) return next();
+  if (isCultCommerce(req)) return next();
+  return res.redirect(301, 'https://cultcommerce.cc/partner/apply');
+});
+app.get('/partner/types', (req, res, next) => {
+  if (!process.env.CULTCOMMERCE_LIVE) return next();
+  if (isCultCommerce(req)) return next();
+  return res.redirect(301, 'https://cultcommerce.cc/partner/types');
+});
+
+// ─── End Cult Commerce routing ────────────────────────────────────────────────
+
 // Public marketing pages — all registered before the auth wall
 // These map the former GHL funnel URLs to static HTML files in the repo root.
 const _pub = (file) => (req, res) => res.sendFile(path.join(__dirname, file));
@@ -6693,6 +6989,7 @@ app.get('/book-consulting',                    _pub('book-consulting.html'));
 app.get('/partners',                           _pub('partners.html'));
 app.get('/partner',                            _pub('partner.html'));
 app.get('/partner/apply',                      _pub('partner-apply.html'));
+app.get('/partner/types',                      _pub('partner-types.html'));
 app.get('/work-with-us',                       (req, res) => res.redirect(301, '/offers'));
 app.get('/offers',                             (req, res) => res.sendFile(path.join(__dirname, 'offers', 'index.html')));
 app.get('/offers/the-foundation',              (req, res) => res.sendFile(path.join(__dirname, 'offers', 'the-foundation.html')));
@@ -7820,6 +8117,9 @@ app.get('/index.html', (req, res) => {
 });
 
 app.use(express.static(path.join(__dirname, 'dashboard')));
+// Block access to private/ via the /tools static mount — the network map must never
+// be downloadable without the password gate.
+app.get('/tools/private/*', (req, res) => res.status(404).end());
 app.use('/tools', express.static(path.join(__dirname)));
 
 const CFG = {

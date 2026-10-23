@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Cult Network Data Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: schematic up top, then three source columns (Content | shared core | Commerce) and a mission row; every count is computed from the stream list below. */
+:root{
+  --bg:#EEF1EF; --panel:#FFFFFF; --fg:#18211E; --muted:#5C6964; --rule:#CBD3CF;
+  --content:#B02A6B; --content-soft:#F6E3EC;
+  --commerce:#11707A; --commerce-soft:#DDEFF0;
+  --core:#9A6A0E; --core-soft:#F5EBD6;
+  --live:#1F7A44; --partial:#8A6A00; --planned:#6B7672; --new:#6A3FB5;
+  --display:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --body:"IBM Plex Sans","Helvetica Neue",Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121816; --panel:#1A2220; --fg:#E6ECE9; --muted:#97A39E; --rule:#2F3A37;
+  --content:#E86FA6; --content-soft:#3A1F2C; --commerce:#4DBAC4; --commerce-soft:#16322F;
+  --core:#E0AE4C; --core-soft:#3A2F17; --live:#5BC88A; --partial:#D9B54A; --planned:#8E9A95; --new:#A98BEA;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121816; --panel:#1A2220; --fg:#E6ECE9; --muted:#97A39E; --rule:#2F3A37;
+  --content:#E86FA6; --content-soft:#3A1F2C; --commerce:#4DBAC4; --commerce-soft:#16322F;
+  --core:#E0AE4C; --core-soft:#3A2F17; --live:#5BC88A; --partial:#D9B54A; --planned:#8E9A95; --new:#A98BEA;
+  color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 var(--body);padding:32px 20px 56px}
+.wrap{max-width:1200px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1{font:800 clamp(28px,4vw,40px)/1.05 var(--display);letter-spacing:-.01em;margin:0;text-wrap:balance}
+h2{font:700 18px/1.2 var(--display);margin:0;text-wrap:balance}
+.lede{color:var(--muted);max-width:68ch;margin:8px 0 0}
+.eyebrow{font:500 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+/* counts */
+.counts{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.count{background:var(--panel);padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.count b{font:800 28px/1 var(--display);font-variant-numeric:tabular-nums}
+.count span{font-size:12.5px;color:var(--muted)}
+/* schematic */
+.schematic{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:12px;overflow-x:auto}
+.schematic svg{display:block;min-width:760px;width:100%;height:auto}
+.s-box{stroke-width:1.5}
+.s-title{font:700 15px var(--display);fill:var(--fg)}
+.s-num{font:800 30px var(--display);fill:var(--fg)}
+.s-sub{font:400 11.5px var(--body);fill:var(--muted)}
+.s-arrow{stroke:var(--muted);stroke-width:1.4;fill:none}
+.s-dash{stroke:var(--muted);stroke-width:1.2;stroke-dasharray:4 4;fill:none}
+/* filters */
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.filters button{font:500 13px var(--body);color:var(--fg);background:var(--panel);border:1px solid var(--rule);border-radius:999px;padding:6px 12px;cursor:pointer}
+.filters button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.filters button:focus-visible{outline:2px solid var(--commerce);outline-offset:2px}
+.sep{width:1px;height:22px;background:var(--rule);margin:0 4px}
+/* columns */
+.cols{display:grid;grid-template-columns:1fr 0.82fr 1fr;gap:20px;align-items:start}
+@media (max-width:980px){.cols{grid-template-columns:1fr}}
+.col{display:flex;flex-direction:column;gap:10px;min-width:0}
+.col-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding-bottom:8px;border-bottom:2px solid currentColor}
+.col-head .n{font:500 12px var(--mono);color:var(--muted)}
+.c-content{color:var(--content)} .c-commerce{color:var(--commerce)} .c-core{color:var(--core)}
+.col-head h2{color:var(--fg)}
+.card{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.card[hidden]{display:none!important}
+.card-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.card h3{font:600 14.5px/1.3 var(--body);margin:0}
+.src{font:400 11.5px/1.4 var(--mono);color:var(--muted);overflow-wrap:anywhere}
+.tells{font-size:13px;color:var(--fg);margin:0}
+.tags{display:flex;flex-wrap:wrap;gap:5px}
+.tag{font:500 10.5px/1 var(--mono);padding:4px 6px;border-radius:3px;letter-spacing:.02em}
+.t-G{background:var(--content-soft);color:var(--content)}
+.t-A{background:var(--commerce-soft);color:var(--commerce)}
+.t-L{background:var(--core-soft);color:var(--core)}
+.t-gap{border:1px dashed var(--muted);color:var(--muted)}
+.pill{flex:none;font:500 10.5px/1 var(--mono);text-transform:uppercase;letter-spacing:.06em;padding:4px 7px;border-radius:999px;border:1px solid currentColor}
+.p-live{color:var(--live);background:color-mix(in srgb,var(--live) 14%,transparent)}
+.p-partial{color:var(--partial)}
+.p-planned{color:var(--planned);border-style:dashed}
+.p-new{color:var(--new);border-width:1.5px}
+.layer{border-radius:6px;padding:14px;display:flex;flex-direction:column;gap:6px;border:1.5px solid}
+.layer h3{font:700 15px var(--display);margin:0}
+.layer p{margin:0;font-size:13px}
+.layer .feeds{font:500 12px var(--mono);color:var(--muted)}
+.l-G{background:var(--content-soft);border-color:var(--content)} .l-G h3{color:var(--content)}
+.l-L{background:var(--core-soft);border-color:var(--core)} .l-L h3{color:var(--core)}
+.l-A{background:var(--commerce-soft);border-color:var(--commerce)} .l-A h3{color:var(--commerce)}
+.sub-eyebrow{margin-top:10px}
+.mission{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.note{border-top:2px solid var(--fg);padding-top:10px}
+.note h3{font:700 15px var(--display);margin:0 0 6px}
+.note p{margin:0;font-size:13.5px;color:var(--muted)}
+.empty{font-size:13px;color:var(--muted);padding:8px 2px}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Cult Content × Cult Commerce · data map · Oct 2026</div>
+    <h1>Every data stream the two companies sit on</h1>
+    <p class="lede">Raw sources on each side, the three layers we build on top of them, and which streams carry money into the velocity ledger. Status reflects what is wired today, not what is planned on paper.</p>
+  </header>
+
+  <section class="counts" id="counts" aria-label="Stream counts"></section>
+
+  <section class="schematic" aria-label="How the streams connect">
+    <svg viewBox="0 0 900 330" role="img" aria-label="Cult Content sources feed the Creator Graph, Cult Commerce sources feed Attribution, and both feed the Velocity Ledger along with mission partners">
+      <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--muted)"/></marker></defs>
+      <rect class="s-box" x="20" y="60" width="190" height="200" rx="6" style="fill:var(--content-soft);stroke:var(--content)"/>
+      <text class="s-title" x="38" y="92">Cult Content</text>
+      <text class="s-sub" x="38" y="110">creator side</text>
+      <text class="s-num" x="38" y="168" id="sv-content">0</text>
+      <text class="s-sub" x="38" y="188">source streams</text>
+      <text class="s-sub" x="38" y="236" id="sv-content-live"></text>
+
+      <rect class="s-box" x="690" y="60" width="190" height="200" rx="6" style="fill:var(--commerce-soft);stroke:var(--commerce)"/>
+      <text class="s-title" x="708" y="92">Cult Commerce</text>
+      <text class="s-sub" x="708" y="110">brand side · omni-channel</text>
+      <text class="s-num" x="708" y="168" id="sv-commerce">0</text>
+      <text class="s-sub" x="708" y="188">source streams</text>
+      <text class="s-sub" x="708" y="236" id="sv-commerce-live"></text>
+
+      <rect class="s-box" x="250" y="30" width="170" height="86" rx="6" style="fill:var(--panel);stroke:var(--content)"/>
+      <text class="s-title" x="266" y="58">Creator Graph</text>
+      <text class="s-sub" x="266" y="78">one record per creator</text>
+      <text class="s-sub" x="266" y="98" id="sv-G"></text>
+
+      <rect class="s-box" x="480" y="30" width="170" height="86" rx="6" style="fill:var(--panel);stroke:var(--commerce)"/>
+      <text class="s-title" x="496" y="58">Attribution</text>
+      <text class="s-sub" x="496" y="78">which channel earned the sale</text>
+      <text class="s-sub" x="496" y="98" id="sv-A"></text>
+
+      <rect class="s-box" x="315" y="168" width="270" height="86" rx="6" style="fill:var(--core-soft);stroke:var(--core)"/>
+      <text class="s-title" x="333" y="196">Velocity Ledger</text>
+      <text class="s-sub" x="333" y="216">every in-network dollar → network multiplier</text>
+      <text class="s-sub" x="333" y="236" id="sv-L"></text>
+
+      <rect class="s-box" x="345" y="282" width="210" height="38" rx="6" style="fill:var(--panel);stroke:var(--rule)"/>
+      <text class="s-sub" x="360" y="306" id="sv-mission" style="fill:var(--fg)"></text>
+
+      <path class="s-arrow" d="M210,110 L248,82" marker-end="url(#ah)"/>
+      <path class="s-arrow" d="M210,215 L313,211" marker-end="url(#ah)"/>
+      <path class="s-arrow" d="M690,110 L652,82" marker-end="url(#ah)"/>
+      <path class="s-arrow" d="M690,215 L587,211" marker-end="url(#ah)"/>
+      <path class="s-arrow" d="M335,116 L390,166" marker-end="url(#ah)"/>
+      <path class="s-arrow" d="M565,116 L510,166" marker-end="url(#ah)"/>
+      <path class="s-arrow" d="M450,282 L450,256" marker-end="url(#ah)"/>
+      <path class="s-dash" d="M422,60 L478,60"/>
+      <text class="s-sub" x="450" y="20" text-anchor="middle">which creators drive which sales</text>
+      <path class="s-dash" d="M450,24 L450,56"/>
+    </svg>
+  </section>
+
+  <div class="filters" role="group" aria-label="Filter streams">
+    <span class="eyebrow">Show</span>
+    <button id="f-all" data-st="all" aria-pressed="true">All</button>
+    <button id="f-live" data-st="live" aria-pressed="false">Live</button>
+    <button id="f-partial" data-st="partial" aria-pressed="false">Partial</button>
+    <button id="f-planned" data-st="planned" aria-pressed="false">Planned or new</button>
+    <span class="sep" aria-hidden="true"></span>
+    <button id="f-money" data-flag="money" aria-pressed="false">Carries money</button>
+    <button id="f-gap" data-flag="gap" aria-pressed="false">No MCP / API yet</button>
+  </div>
+
+  <section class="cols">
+    <div class="col">
+      <div class="col-head c-content"><h2>Cult Content</h2><span class="n" id="n-content"></span></div>
+      <div id="list-content" class="col"></div>
+    </div>
+    <div class="col">
+      <div class="col-head c-core"><h2>The layers we build</h2><span class="n">3 derived</span></div>
+      <div class="layer l-G"><h3>Creator Graph</h3><p>Merges each creator across Discord, TikTok, FastMoss, partner communities and licensing into one profile and one score. This is what finds the really good creators.</p><span class="feeds" id="feeds-G"></span></div>
+      <div class="layer l-L"><h3>Velocity Ledger</h3><p>Records every dollar that moves between brands, providers, communities and creators. The output is the network multiplier SSEL publishes.</p><span class="feeds" id="feeds-L"></span></div>
+      <div class="layer l-A"><h3>Attribution</h3><p>Gives credit across channels: a TikTok video spike against Shopify or Amazon sales. A shared reporting layer across partners lives here.</p><span class="feeds" id="feeds-A"></span></div>
+      <div class="eyebrow sub-eyebrow">Shared sources</div>
+      <div id="list-shared" class="col"></div>
+    </div>
+    <div class="col">
+      <div class="col-head c-commerce"><h2>Cult Commerce</h2><span class="n" id="n-commerce"></span></div>
+      <div id="list-commerce" class="col"></div>
+    </div>
+  </section>
+
+  <section class="col">
+    <div class="col-head" style="color:var(--fg)"><h2>Mission partners</h2><span class="n" id="n-mission"></span></div>
+    <div id="list-mission" class="mission"></div>
+  </section>
+
+  <section class="notes">
+    <div class="note"><h3>Partner contracts need a data clause</h3><p>Creator communities join the network for supply and data together. Without a data-sharing term, their creators never reach the Creator Graph.</p></div>
+    <div class="note"><h3>Half of Commerce is still a report</h3><p>Amazon, Walmart, AI UGC and fulfillment arrive as partner reports, not feeds. Each one is a dollar the ledger cannot see until the partner exposes an API or a shared export.</p></div>
+    <div class="note"><h3>Licensing is the one new stream</h3><p>The likeness registry is the only stream that does not exist anywhere yet. It feeds all three layers: who licensed, which videos used them, and what royalties are owed.</p></div>
+  </section>
+</div>
+
+<script>
+const S=[
+ // side, name, source, access, status, tells, feeds (G graph, L ledger, A attribution)
+ ['content','Discord community','Discord','MCP','live','About 680 members, activity, @support tickets',['G']],
+ ['content','Inner Circle portal','portal.cultcontent.cc','Built','partial','Creator profiles, niches, onboarding answers',['G']],
+ ['content','Creator TikTok accounts','TikTok Display API · Cult Content app','API','partial','Followers, views and video performance, with creator consent',['G','A']],
+ ['content','Creator affiliate earnings','TikTok Shop affiliate · Partner Center','API','partial','GMV and commission per creator, per brand',['G','L','A']],
+ ['content','FastMoss creator intelligence','FastMoss','MCP','live','Market-wide creator GMV, categories, growth rankings',['G']],
+ ['content',"Clint's creator community",'Partner community','Contract','live','Roster and results from shared partner campaigns',['G','L']],
+ ['content','Creator community partner','Partner community','Contract','planned','Large roster and performance data on top creators',['G','L']],
+ ['content','Creator community partner ','Partner community','Contract','planned','Large roster and performance data on top creators',['G','L']],
+ ['content','AI likeness licensing','Licensing registry','Built','new','Consents, likeness assets, uses per video, royalties owed',['G','L','A']],
+ ['content','Coaching & 1000 Video Challenge','Lark','API','live','Posting cadence and progress per creator',['G']],
+ ['content','Events & Creator Carnival','events.cultcontent.cc · Lark Base','Built','live','Registrations, booths, sponsors, creators who attend',['G','L']],
+ ['content','Podcast & social channels','Riverside · Buffer','MCP','live','Episodes, post reach, audience growth',[]],
+ ['commerce','Brand onboarding form','portal.cultcontent.cc/client','Built','live','Goals, budget, products, channels',['A']],
+ ['commerce','TikTok Shop seller data','Shop API · Seller Center MCP','MCP','partial','Orders, GMV, products, violations',['L','A']],
+ ['commerce','Reacher','Reacher (wrapped)','Vendor tool','live','Outreach, samples, creator replies, campaign results',['G','A']],
+ ['commerce','Amazon','Movement Retail','Partner report','planned','Sales and ad spend, including lift from TikTok content',['L','A']],
+ ['commerce','Walmart','Movement Retail','Partner report','planned','Sales and retail placement',['L','A']],
+ ['commerce','Shopify','Network provider','API','planned','Orders, CAC, LTV, conversion rate',['L','A']],
+ ['commerce','Meta ads','Network provider','API','planned','Spend, ROAS, partnership-ad results',['L','A']],
+ ['commerce','Google & YouTube','Network providers','API','planned','Spend, ROAS, YouTube channel results',['L','A']],
+ ['commerce','Email (Klaviyo)','Network provider','API','planned','Flows and repeat purchase',['A']],
+ ['commerce','Agentative market data','agentative.ai','Vendor tool','partial','Combined Amazon, Shopify and TikTok market insight',['A']],
+ ['commerce','AI UGC production','AI content partner','Partner report','planned','Creatives, CTR and conversion per video',['G','L','A']],
+ ['commerce','White-label fulfillment','Fulfillment partner','Partner report','planned','Account work completed per brand',['L']],
+ ['commerce','Partner network','partner.cultcontent.cc','Built','live','Partners, referrals, commissions, payouts',['L']],
+ ['commerce','CRM pipeline','GoHighLevel','MCP','live','Leads, deals, brand contacts',[]],
+ ['shared','Payments & banking','Stripe · Rho','API','live','Invoices, payouts, cash on hand',['L']],
+ ['shared','Operating record','Lark · Fireflies · Command Center','MCP','live','Calls, tasks, decisions',[]],
+ ['mission','Social Currant','socialcurrant.co','Partner','planned','Cause campaigns, creator payments, 1099s',['G','L']],
+ ['mission','Create on Purpose','createonpurpose.org','Partner','planned','Pilot cohorts, foundation and brand funding',['G','L']],
+ ['mission','SSEL','ssel.info','Partner','planned','Members, grievances, the published velocity number',['L']],
+].map(([side,name,src,acc,st,tells,f])=>({side,name,src,acc,st,tells,f,
+  money:f.includes('L'), gap:!['MCP','API','Built'].includes(acc)}));
+
+const LABEL={G:'Creator Graph',L:'Ledger',A:'Attribution'};
+const by=(k,v)=>S.filter(s=>s[k]===v);
+const n=(arr,st)=>arr.filter(s=>s.st===st).length;
+
+function counts(){
+  const c=[
+    [S.length,'source streams in total'],
+    [n(S,'live'),'live today'],
+    [n(S,'partial'),'partly wired'],
+    [n(S,'planned')+n(S,'new'),'planned or new'],
+    [S.filter(s=>s.money).length,'carry money into the ledger'],
+    [S.filter(s=>s.f.includes('G')).length,'help find top creators'],
+    [S.filter(s=>s.gap).length,'have no MCP or API yet'],
+  ];
+  document.getElementById('counts').innerHTML=c.map(([b,t])=>`<div class="count"><b>${b}</b><span>${t}</span></div>`).join('');
+  const side=x=>by('side',x);
+  const set=(id,t)=>document.getElementById(id).textContent=t;
+  set('sv-content',side('content').length); set('sv-commerce',side('commerce').length);
+  set('sv-content-live',`${n(side('content'),'live')} live · ${side('content').filter(s=>s.gap).length} without API`);
+  set('sv-commerce-live',`${n(side('commerce'),'live')} live · ${side('commerce').filter(s=>s.gap).length} without API`);
+  ['G','L','A'].forEach(k=>{const m=S.filter(s=>s.f.includes(k)).length;
+    set('sv-'+k,`fed by ${m} streams`); set('feeds-'+k,`Fed by ${m} of ${S.length} streams`);});
+  set('sv-mission',`Mission partners · ${side('mission').length} streams`);
+  ['content','commerce','mission'].forEach(x=>set('n-'+x,`${side(x).length} streams`));
+}
+
+function card(s){
+  const tags=s.f.map(k=>`<span class="tag t-${k}">${LABEL[k]}</span>`).join('')+(s.gap?`<span class="tag t-gap">${s.acc}</span>`:'');
+  return `<article class="card" data-st="${s.st}" data-money="${s.money}" data-gap="${s.gap}">
+    <div class="card-top"><h3>${s.name}</h3><span class="pill p-${s.st}">${s.st}</span></div>
+    <div class="src">${s.src} · ${s.acc}</div>
+    <p class="tells">${s.tells}</p>
+    ${tags?`<div class="tags">${tags}</div>`:''}
+  </article>`;
+}
+['content','commerce','shared','mission'].forEach(x=>{
+  document.getElementById('list-'+x).innerHTML=by('side',x).map(card).join('');
+});
+
+let st='all', flag=null;
+function apply(){
+  document.querySelectorAll('.card').forEach(c=>{
+    const okSt= st==='all' || c.dataset.st===st || (st==='planned' && c.dataset.st==='new');
+    const okFlag= !flag || c.dataset[flag]==='true';
+    c.hidden=!(okSt&&okFlag);
+  });
+  document.querySelectorAll('.filters [data-st]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.st===st));
+  document.querySelectorAll('.filters [data-flag]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.flag===flag));
+  ['content','commerce','shared','mission'].forEach(x=>{
+    const box=document.getElementById('list-'+x);
+    const any=[...box.querySelectorAll('.card')].some(c=>!c.hidden);
+    let e=box.querySelector('.empty');
+    if(!any&&!e){e=document.createElement('div');e.className='empty';e.textContent='No streams match this filter.';box.appendChild(e);}
+    if(any&&e)e.remove();
+  });
+}
+document.querySelectorAll('.filters button').forEach(b=>b.addEventListener('click',()=>{
+  if(b.dataset.st){st=b.dataset.st}else{flag= flag===b.dataset.flag?null:b.dataset.flag}
+  apply();
+}));
+counts(); apply();
+</script>
+
+</body>
+</html>
