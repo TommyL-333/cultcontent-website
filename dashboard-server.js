@@ -662,6 +662,7 @@ app.get('/creator-matchmaking/confirmed', async (req, res) => {
   if (!id) return res.redirect('/creator-matchmaking');
 
   let entry = null;
+  let justAccepted = false;
   try {
     const rows = loadMatchmakingSubmissions();
     const idx  = rows.findIndex(r => r.id === id);
@@ -671,6 +672,7 @@ app.get('/creator-matchmaking/confirmed', async (req, res) => {
         rows[idx].status     = 'accepted';
         rows[idx].acceptedAt = new Date().toISOString();
         saveMatchmakingSubmissions(rows);
+        justAccepted = true;
       }
     }
   } catch (e) {
@@ -690,6 +692,26 @@ app.get('/creator-matchmaking/confirmed', async (req, res) => {
     larkApi('post', '/im/v1/messages?receive_id_type=chat_id', {
       receive_id: alertChatId, msg_type: 'text', content: JSON.stringify({ text: alertText }),
     }).catch(e => console.error('[matchmaking] confirmed Lark error:', e.message));
+  }
+
+  // Create a my-tasks card for the team to action the affiliate link (only on first acceptance)
+  if (justAccepted && opsMyTasksHelpers) {
+    opsMyTasksHelpers.createTask({
+      task: `Generate affiliate link — ${entry.brandName}`,
+      promptAction: [
+        `Shop Code: ${entry.shopCode}`,
+        `Commission: ${entry.commissionRate}%`,
+        `Contact: ${entry.email}`,
+        ``,
+        `Steps:`,
+        `1. Go to TikTok Partner Center → Cult Content Community campaign`,
+        `2. Add collection link for this seller (shop code above)`,
+        `3. Post the affiliate link to the creator community Discord`,
+      ].join('\n'),
+      status: 'To Do',
+      priority: 'High',
+      pillar: 'Creators',
+    }).catch(e => console.error('[matchmaking] create-task error:', e.message));
   }
 
   const brandName = entry?.brandName || 'your brand';

@@ -3416,6 +3416,23 @@ Produce 4-8 tasks split across relevant sections. Keep task titles short and act
   });
 
   // Expose helpers for later steps / test harnesses.
+  async function createTask({ task, promptAction, status, priority, ownerOpenId, pillar, dueDate, clientRecordId } = {}) {
+    if (!(task || '').trim()) throw new Error('task is required');
+    const fields = { 'Task': task.trim(), 'Status': status || 'To Do', 'Created On': Date.now() };
+    if (priority) fields['Priority'] = priority;
+    if (ownerOpenId) fields['Owner'] = [{ id: ownerOpenId }];
+    if (pillar) fields['Pillar'] = pillar;
+    if (promptAction) fields['Prompt / Action'] = promptAction;
+    if (dueDate) fields['Due Date'] = new Date(dueDate + 'T12:00:00.000Z').getTime();
+    if (clientRecordId) fields['Client'] = [{ record_id: clientRecordId }];
+    const data = await larkPost(
+      `/open-apis/bitable/v1/apps/${OPS_APP_TOKEN}/tables/${TASKS_TABLE}/records`,
+      { fields }
+    );
+    if (data.code !== 0) throw new Error(`Lark error ${data.code}: ${data.msg}`);
+    return data.data && data.data.record;
+  }
+
   registerOpsMyTasks._helpers = {
     getTenantToken,
     listAllTaskRecords,
@@ -3429,6 +3446,7 @@ Produce 4-8 tasks split across relevant sections. Keep task titles short and act
     ownerIds,
     textVal,
     STATUS,
+    createTask,
   };
 
   return app;
