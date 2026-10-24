@@ -269,8 +269,13 @@ footer a:hover{color:#fff}
 
       <form id="matchmaking-form">
         <div class="form-row">
-          <label>Brand / Company Name *</label>
-          <input type="text" name="brandName" required placeholder="e.g. Reacher Skincare">
+          <label>Shop Name *</label>
+          <input type="text" name="shopName" required placeholder="e.g. Reacher Skincare">
+        </div>
+        <div class="form-row">
+          <label>Shop Code *</label>
+          <input type="text" name="shopCode" required placeholder="e.g. 7XXXXXXXXXXXXXXX">
+          <div class="form-hint">Find this in your TikTok Seller Center → Shop Settings → Shop Info.</div>
         </div>
         <div class="form-row">
           <label>Your Name *</label>
@@ -281,25 +286,17 @@ footer a:hover{color:#fff}
           <input type="email" name="email" required placeholder="you@brand.com">
         </div>
         <div class="form-row">
-          <label>TikTok Shop Code *</label>
-          <input type="text" name="shopCode" required placeholder="e.g. 7XXXXXXXXXXXXXXX">
-          <div class="form-hint">Find this in your TikTok Seller Center → Shop Settings → Shop Info. It's your numeric Shop ID.</div>
+          <label>Phone Number *</label>
+          <input type="tel" name="phone" required placeholder="+1 (555) 000-0000">
         </div>
         <div class="form-row">
-          <label>Commission Rate *</label>
-          <div class="commission-row">
-            <input type="number" name="commissionRate" min="10" max="80" value="10" step="0.5" required>
-            <div class="commission-badge">% · Min 10%</div>
-          </div>
-          <div class="form-hint">Campaign minimum is 10%. Higher rates attract more creators.</div>
-        </div>
-        <div class="form-row">
-          <label>Notes <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
-          <textarea name="notes" placeholder="Product categories, top SKUs, target creator niches, anything else we should know..."></textarea>
+          <label>Campaign Link *</label>
+          <input type="url" name="campaignLink" required placeholder="https://">
+          <div class="form-hint">Recommended to include a link from Reacher, Euka, or Cruva to incentivize creator participation.</div>
         </div>
 
         <button type="submit" class="submit-btn" id="submit-btn">Submit My Shop →</button>
-        <p class="form-note">By submitting you agree to the campaign's 10% minimum commission requirement. Our team will reach out within 1–2 business days.</p>
+        <p class="form-note">Our team will reach out within 1–2 business days.</p>
       </form>
     </div>
 
@@ -336,12 +333,12 @@ document.getElementById('matchmaking-form').addEventListener('submit', async (e)
 
   const form = e.target;
   const data = {
-    brandName:      form.brandName.value.trim(),
-    contactName:    form.contactName.value.trim(),
-    email:          form.email.value.trim().toLowerCase(),
-    shopCode:       form.shopCode.value.trim(),
-    commissionRate: Number(form.commissionRate.value),
-    notes:          form.notes.value.trim(),
+    shopName:     form.shopName.value.trim(),
+    shopCode:     form.shopCode.value.trim(),
+    contactName:  form.contactName.value.trim(),
+    email:        form.email.value.trim().toLowerCase(),
+    phone:        form.phone.value.trim(),
+    campaignLink: form.campaignLink.value.trim(),
   };
 
   try {

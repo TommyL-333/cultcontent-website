@@ -561,23 +561,20 @@ app.get('/creator-matchmaking', (req, res) => {
 });
 
 app.post('/api/creator-matchmaking/submit', express.json(), async (req, res) => {
-  const brandName      = String(req.body?.brandName      || '').trim();
-  const contactName    = String(req.body?.contactName    || '').trim();
-  const email          = String(req.body?.email          || '').trim().toLowerCase();
-  const shopCode       = String(req.body?.shopCode       || '').trim();
-  const commissionRate = Number(req.body?.commissionRate) || 10;
-  const notes          = String(req.body?.notes          || '').trim();
+  const shopName    = String(req.body?.shopName    || '').trim();
+  const shopCode    = String(req.body?.shopCode    || '').trim();
+  const contactName = String(req.body?.contactName || '').trim();
+  const email       = String(req.body?.email       || '').trim().toLowerCase();
+  const phone       = String(req.body?.phone       || '').trim();
+  const campaignLink = String(req.body?.campaignLink || '').trim();
 
-  if (!brandName || !contactName || !email || !email.includes('@') || !shopCode) {
+  if (!shopName || !shopCode || !contactName || !email || !email.includes('@') || !phone || !campaignLink) {
     return res.status(400).json({ ok: false, error: 'Missing required fields.' });
-  }
-  if (commissionRate < 10) {
-    return res.status(400).json({ ok: false, error: 'Commission rate must be at least 10%.' });
   }
 
   const id = crypto.randomBytes(16).toString('hex');
   const entry = {
-    id, brandName, contactName, email, shopCode, commissionRate, notes,
+    id, shopName, shopCode, contactName, email, phone, campaignLink,
     status: 'submitted',
     submittedAt: new Date().toISOString(),
     acceptedAt: null,
@@ -597,14 +594,14 @@ app.post('/api/creator-matchmaking/submit', express.json(), async (req, res) => 
   if (alertChatId) {
     const alertText = [
       `🎯 New Creator Matchmaking submission!`,
-      `🏷  Brand: ${brandName}`,
+      `🏷  Shop: ${shopName}`,
+      `🛒 Shop Code: ${shopCode}`,
       `👤 Contact: ${contactName}`,
       `📧 ${email}`,
-      `🛒 Shop Code: ${shopCode}`,
-      `💰 Commission: ${commissionRate}%`,
-      notes ? `📝 Notes: ${notes.slice(0, 300)}` : '',
+      `📱 ${phone}`,
+      `🔗 Campaign: ${campaignLink}`,
       ``,
-      `⚡️ Next: add ${brandName} as a selected seller in TikTok Partner Center → Cult Content Community campaign`,
+      `⚡️ Next: add ${shopName} as a selected seller in TikTok Partner Center → Cult Content Community campaign`,
       `✅ Confirm here: https://cultcontent.cc/creator-matchmaking/confirmed?id=${id}`,
     ].filter(Boolean).join('\n');
     larkApi('post', '/im/v1/messages?receive_id_type=chat_id', {
@@ -627,7 +624,7 @@ app.post('/api/creator-matchmaking/submit', express.json(), async (req, res) => 
 <div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:560px;margin:0 auto;color:#141210;background:#fff;padding:40px 32px;border-radius:12px">
   <p style="font-size:1.1rem;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:#7b2fff;margin-bottom:4px">CULT CONTENT</p>
   <h1 style="font-size:1.6rem;font-weight:900;margin:0 0 8px">You're queued up.</h1>
-  <p style="color:#555;margin-bottom:28px">Hey ${contactName}, thanks for submitting ${brandName}. We're adding you to the <strong>Cult Content Community</strong> campaign. Here's what happens next:</p>
+  <p style="color:#555;margin-bottom:28px">Hey ${contactName}, thanks for submitting ${shopName}. We're adding you to the <strong>Cult Content Community</strong> campaign. Here's what happens next:</p>
 
   <div style="background:#f7f3ec;border-radius:10px;padding:24px;margin-bottom:28px">
     <p style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#7a7268;margin:0 0 16px">How to accept the campaign</p>
@@ -682,10 +679,11 @@ app.get('/creator-matchmaking/confirmed', async (req, res) => {
   const alertChatId = process.env.LARK_ALERT_CHAT_ID;
   if (alertChatId && entry) {
     const alertText = [
-      `✅ ${entry.brandName} accepted the Cult Content Community campaign!`,
+      `✅ ${entry.shopName} accepted the Cult Content Community campaign!`,
       `🛒 Shop Code: ${entry.shopCode}`,
       `📧 ${entry.email}`,
-      `💰 Commission: ${entry.commissionRate}%`,
+      `📱 ${entry.phone}`,
+      `🔗 Campaign: ${entry.campaignLink}`,
       ``,
       `⚡️ Next: generate affiliate link in TikTok Partner Center and publish to the community.`,
     ].join('\n');
@@ -714,7 +712,7 @@ app.get('/creator-matchmaking/confirmed', async (req, res) => {
     }).catch(e => console.error('[matchmaking] create-task error:', e.message));
   }
 
-  const brandName = entry?.brandName || 'your brand';
+  const brandName = entry?.shopName || 'your shop';
   res.send(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>You're confirmed — Cult Content</title><link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@900&family=Lato:wght@400;700&display=swap" rel="stylesheet"><style>*{box-sizing:border-box;margin:0;padding:0}body{background:#080710;color:#e8e8f0;font-family:'Lato',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}.card{max-width:520px;width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:24px;padding:48px 40px;text-align:center}.icon{font-size:3rem;margin-bottom:20px}.h1{font-family:'Montserrat',sans-serif;font-weight:900;font-size:1.7rem;margin-bottom:12px}.sub{color:#7a7a9a;font-size:.95rem;line-height:1.65;margin-bottom:28px}.note{background:rgba(123,47,255,.1);border:1px solid rgba(123,47,255,.25);border-radius:10px;padding:16px 20px;font-size:.85rem;color:#b899ff;line-height:1.6}.footer{margin-top:32px;font-size:.8rem;color:#4a4a6a}a{color:#b899ff}</style></head><body><div class="card"><div class="icon">🚀</div><h1 class="h1">You're confirmed!</h1><p class="sub">We've received your confirmation for <strong>${brandName}</strong>. Our team will generate your affiliate link and publish your opportunity to 700+ creators in the Cult Content community.</p><div class="note">Expect your affiliate link within 1 business day. We'll follow up at the email you provided.</div><p class="footer">Questions? <a href="mailto:Tommy@cultcontent.cc">Tommy@cultcontent.cc</a></p></div></body></html>`);
 });
 
