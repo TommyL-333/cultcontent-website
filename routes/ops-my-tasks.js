@@ -3416,7 +3416,7 @@ Produce 4-8 tasks split across relevant sections. Keep task titles short and act
   });
 
   // Expose helpers for later steps / test harnesses.
-  async function createTask({ task, promptAction, status, priority, ownerOpenId, pillar, dueDate, clientRecordId } = {}) {
+  async function createTask({ task, promptAction, status, priority, ownerOpenId, pillar, dueDate, clientRecordId, source } = {}) {
     if (!(task || '').trim()) throw new Error('task is required');
     const fields = { 'Task': task.trim(), 'Status': status || 'To Do', 'Created On': Date.now() };
     if (priority) fields['Priority'] = priority;
@@ -3425,6 +3425,7 @@ Produce 4-8 tasks split across relevant sections. Keep task titles short and act
     if (promptAction) fields['Prompt / Action'] = promptAction;
     if (dueDate) fields['Due Date'] = new Date(dueDate + 'T12:00:00.000Z').getTime();
     if (clientRecordId) fields['Client'] = [{ record_id: clientRecordId }];
+    if (source) fields['Source'] = source;
     const data = await larkPost(
       `/open-apis/bitable/v1/apps/${OPS_APP_TOKEN}/tables/${TASKS_TABLE}/records`,
       { fields }

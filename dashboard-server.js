@@ -707,8 +707,9 @@ app.get('/creator-matchmaking/confirmed', async (req, res) => {
         `3. Post the affiliate link to the creator community Discord`,
       ].join('\n'),
       status: 'To Do',
-      priority: 'High',
+      priority: '🔴 Critical',
       pillar: 'Creators',
+      source: 'creator-matchmaking',
     }).catch(e => console.error('[matchmaking] create-task error:', e.message));
   }
 
