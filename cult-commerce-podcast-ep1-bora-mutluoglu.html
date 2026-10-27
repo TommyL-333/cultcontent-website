@@ -173,18 +173,48 @@
 
   <!-- Video embed -->
   <div class="video-wrap" id="video-container">
-    <div class="video-placeholder" id="video-placeholder">
-      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16" fill="currentColor"/></svg>
-      <span>YouTube video coming soon</span>
-    </div>
+    <video id="ep-video" controls preload="metadata" poster="https://hosting-media.riverside.com/media/clips/6ae0f73503aa22e7c3a62ddb/thumbnail.jpg" style="position:absolute;top:0;left:0;width:100%;height:100%;border-radius:16px;background:#000">
+      <source src="https://hosting-media.riverside.com/media/clips/6ae0f73503aa22e7c3a62ddb/tommy-lynchs-studio-2026-10-27__19-10-45.mp4" type="video/mp4" />
+    </video>
   </div>
 
-  <!-- About this episode -->
+  <!-- Synopsis -->
   <div class="section">
-    <span class="section-label">About This Episode</span>
-    <p>Bora Mutluoglu, co-founder of Reacher — the leading TikTok Shop automation and AI platform — sits down with Tommy Lynch for the inaugural episode of the Cult Commerce Podcast.</p>
-    <p>They cover how Reacher went from a $500/mo Python script to a Y Combinator-backed platform with thousands of brand customers, why cold-starting a brand on TikTok Shop is harder than ever, what the Halo Effect actually looks like in practice, and what a real agentic social commerce workflow looks like using Claude + the Reacher API.</p>
-    <p>If you're building a brand, running an agency, or just trying to understand where the creator economy and social commerce are actually headed — this episode is essential listening.</p>
+    <span class="section-label">Synopsis</span>
+    <p>Bora Mutluoglu, co-founder of Reacher and Y Combinator W25 alum, joins Tommy Lynch for the inaugural episode of the Cult Commerce Podcast. Bora built Reacher from a $500/month Python automation script into one of the leading TikTok Shop AI platforms — and he did it while watching the entire TikTok Shop landscape transform underneath him.</p>
+    <p>This conversation covers the full arc: from the gold rush days when mass-sampling guaranteed sales, to the current reality where established brands deliberately lose money on TikTok to capture Amazon halo revenue, to the near future where two-person companies run agentic AI teams that do the work of ten.</p>
+    <p>The centerpiece of the episode is a live walkthrough of what an actual agentic social commerce workflow looks like — using Claude connected to the Reacher API to find competitors, analyze their top-performing content, generate creator outreach, and automate follow-up daily, entirely hands-off. No hypotheticals. This is real infrastructure that agencies are running today.</p>
+  </div>
+
+  <!-- Key Takeaways -->
+  <div class="section">
+    <span class="section-label">Key Takeaways</span>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;gap:14px;align-items:flex-start;padding:16px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px">
+        <span style="font-size:1.2rem;flex-shrink:0">🚫</span>
+        <div><strong style="color:var(--white);font-size:.9rem">Mass sampling is dead.</strong><br/><span style="font-size:.85rem;color:var(--muted)">The TikTok subsidies that made "send samples to everyone" work in 2023 are gone. Cold-starting a brand today requires finding 5–10 creators who genuinely love the product first — by hand, at events, through DMs — before scaling outreach.</span></div>
+      </div>
+      <div style="display:flex;gap:14px;align-items:flex-start;padding:16px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px">
+        <span style="font-size:1.2rem;flex-shrink:0">📦</span>
+        <div><strong style="color:var(--white);font-size:.9rem">The 40% Amazon Halo Effect is real — and it changes everything.</strong><br/><span style="font-size:.85rem;color:var(--muted)">Big brands intentionally break even on TikTok Shop because a viral video lifts their Amazon and Shopify revenue by 40%. For them, TikTok is a marketing channel, not a profit center. This is the competitor you're up against — plan accordingly.</span></div>
+      </div>
+      <div style="display:flex;gap:14px;align-items:flex-start;padding:16px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px">
+        <span style="font-size:1.2rem;flex-shrink:0">✍️</span>
+        <div><strong style="color:var(--white);font-size:.9rem">The "write" unlock is what separates AI users from AI operators.</strong><br/><span style="font-size:.85rem;color:var(--muted)">Most brands use AI in "read" mode — summarize, analyze, report. The actual economic leverage is "write" mode: agents that take action. Finding creators → sending outreach → booking samples → sending briefs → doing it every day, automatically.</span></div>
+      </div>
+      <div style="display:flex;gap:14px;align-items:flex-start;padding:16px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px">
+        <span style="font-size:1.2rem;flex-shrink:0">🤖</span>
+        <div><strong style="color:var(--white);font-size:.9rem">One Claude prompt can replace a full-time role.</strong><br/><span style="font-size:.85rem;color:var(--muted)">The creatine gummy workflow Bora describes — competitor analysis, creator search, outreach, sample booking, brief delivery, daily repeat — is a single connected agent instruction. Set it once and it runs forever. This is not the future. Agencies are doing it today.</span></div>
+      </div>
+      <div style="display:flex;gap:14px;align-items:flex-start;padding:16px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px">
+        <span style="font-size:1.2rem;flex-shrink:0">🌐</span>
+        <div><strong style="color:var(--white);font-size:.9rem">Omnichannel is no longer optional.</strong><br/><span style="font-size:.85rem;color:var(--muted)">TikTok Shop + Amazon + Shopify is the minimum viable stack. Meta Shopping, YouTube Shopping, and Amazon Affiliate are all moving fast. Brands that build only on TikTok will be competing against companies that capture the halo across every channel.</span></div>
+      </div>
+      <div style="display:flex;gap:14px;align-items:flex-start;padding:16px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px">
+        <span style="font-size:1.2rem;flex-shrink:0">🔮</span>
+        <div><strong style="color:var(--white);font-size:.9rem">In 5 years: two-person brands, ten-person output.</strong><br/><span style="font-size:.85rem;color:var(--muted)">Bora's vision: AI-native brands run by a founder and a product person, with agents handling every platform — outreach, ads, retention, Amazon, Shopify. The headcount question changes from "how many people do I need?" to "which agents do I deploy?"</span></div>
+      </div>
+    </div>
   </div>
 
   <!-- Guest -->
@@ -479,11 +509,11 @@
 </footer>
 
 <script>
-  // Update YouTube link once video ID is known
-  var YT_VIDEO_ID = ''; // Set this once uploaded to YouTube
+  // Once the episode is on YouTube, set YT_VIDEO_ID to swap in the embed and update the button
+  var YT_VIDEO_ID = '';
   if (YT_VIDEO_ID) {
     var container = document.getElementById('video-container');
-    container.innerHTML = '<iframe src="https://www.youtube.com/embed/' + YT_VIDEO_ID + '?rel=0" allowfullscreen></iframe>';
+    container.innerHTML = '<iframe src="https://www.youtube.com/embed/' + YT_VIDEO_ID + '?rel=0" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;border-radius:16px"></iframe>';
     document.getElementById('youtube-link').href = 'https://www.youtube.com/watch?v=' + YT_VIDEO_ID;
   }
 </script>
