@@ -8029,6 +8029,7 @@ app.get('/video/:filename', (req, res) => {
 // Public podcast application page — registered BEFORE requireAuth so anyone can visit
 app.get('/cult-commerce-podcast', (req, res) => res.sendFile(path.join(__dirname, 'cult-commerce-podcast.html')));
 app.get('/cult-commerce-podcast/book', (req, res) => res.sendFile(path.join(__dirname, 'cult-commerce-podcast-book.html')));
+app.get('/cult-commerce-podcast/bora-mutluoglu', (req, res) => res.sendFile(path.join(__dirname, 'cult-commerce-podcast-ep1-bora-mutluoglu.html')));
 
 app.use(requireAuth); // all other routes require auth in production
 

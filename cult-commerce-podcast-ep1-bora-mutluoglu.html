@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>E1: The Future of Social Commerce ft. Bora Mutluoglu (Reacher) | Cult Commerce Podcast</title>
+  <meta name="description" content="Bora Mutluoglu, co-founder of Reacher, joins Tommy Lynch to discuss how TikTok Shop has changed, the 40% Amazon Halo Effect, agentic social commerce workflows, and where the industry is headed in the next 5 years." />
+  <meta property="og:title" content="E1: The Future of Social Commerce ft. Bora Mutluoglu (Reacher)" />
+  <meta property="og:description" content="From a $500/mo Python script to Y Combinator — Bora Mutluoglu breaks down the future of social commerce, agentic AI, and the omnichannel shift brands can't ignore." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://cultcontent.cc/cult-commerce-podcast/bora-mutluoglu" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root{
+      --bg:#080710;--teal:#00f2ea;--pink:#ff0050;--purple:#7b2fff;
+      --lavender:#b899ff;--gold:#c9a84c;
+      --text:#e8e8f0;--muted:#7a7a9a;--white:#fff;
+      --border:rgba(255,255,255,.07);
+      --ease:0.25s cubic-bezier(0.4,0,0.2,1);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;min-height:100vh}
+    h1,h2,h3,h4{font-family:'Montserrat',sans-serif;font-weight:900;line-height:1.1}
+    p{line-height:1.7}
+    a{color:inherit;text-decoration:none}
+
+    body::before{
+      content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+      background-image:
+        radial-gradient(.6px .6px at 4% 8%,rgba(255,255,255,.7),transparent),
+        radial-gradient(.5px .5px at 11% 27%,rgba(255,255,255,.5),transparent),
+        radial-gradient(.7px .7px at 18% 64%,rgba(255,255,255,.6),transparent),
+        radial-gradient(.5px .5px at 25% 14%,rgba(220,230,255,.55),transparent),
+        radial-gradient(.6px .6px at 33% 78%,rgba(255,255,255,.65),transparent),
+        radial-gradient(.5px .5px at 40% 43%,rgba(255,255,255,.5),transparent),
+        radial-gradient(.6px .6px at 56% 22%,rgba(255,255,255,.6),transparent),
+        radial-gradient(.7px .7px at 71% 33%,rgba(255,255,255,.65),transparent),
+        radial-gradient(.5px .5px at 79% 81%,rgba(255,255,255,.5),transparent),
+        radial-gradient(.6px .6px at 86% 11%,rgba(255,255,255,.6),transparent),
+        radial-gradient(1.5px 1.5px at 14% 76%,rgba(255,255,255,.95),transparent),
+        radial-gradient(2px 2px at 73% 60%,rgba(255,255,255,1),transparent);
+      background-size:700px 500px;background-repeat:repeat;opacity:.55
+    }
+
+    nav{
+      position:fixed;top:0;left:0;right:0;z-index:200;
+      display:flex;align-items:center;justify-content:space-between;
+      padding:20px 56px;
+      background:rgba(8,7,16,0.82);
+      backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+      border-bottom:1px solid rgba(255,255,255,.06)
+    }
+    .nav-logo{font-family:'Montserrat',sans-serif;font-weight:900;font-size:1rem;letter-spacing:.1em;color:var(--white);text-transform:uppercase;text-decoration:none}
+    .nav-logo span{background:linear-gradient(135deg,var(--teal),var(--lavender));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .nav-back{font-size:.75rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,.45);transition:color .2s}
+    .nav-back:hover{color:var(--teal)}
+    @media(max-width:860px){nav{padding:18px 24px}}
+
+    .hero{position:relative;padding:120px 24px 56px;text-align:center;overflow:hidden;z-index:1}
+    .ep-label{display:inline-block;font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+      color:var(--teal);border:1px solid rgba(0,242,234,.3);border-radius:100px;padding:5px 14px;margin-bottom:20px}
+    .hero h1{font-size:clamp(1.8rem,4vw,3.2rem);max-width:800px;margin:0 auto 20px;
+      background:linear-gradient(135deg,var(--white) 40%,var(--lavender));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .guest-line{font-size:1rem;color:var(--muted);margin-bottom:32px}
+    .guest-line strong{color:var(--text)}
+
+    .listen-row{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-bottom:48px}
+    .listen-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:100px;
+      font-size:.8rem;font-weight:700;letter-spacing:.05em;transition:transform .15s,opacity .15s;
+      border:1px solid rgba(255,255,255,.12)}
+    .listen-btn:hover{transform:translateY(-2px);opacity:.9}
+    .listen-btn.spotify{background:#1DB954;color:#000}
+    .listen-btn.apple{background:#fc3c44;color:#fff}
+    .listen-btn.youtube{background:#ff0000;color:#fff}
+    .listen-btn.rss{background:rgba(255,255,255,.08);color:var(--text)}
+
+    .container{max-width:860px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+
+    .video-wrap{position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:16px;
+      background:rgba(255,255,255,.04);border:1px solid var(--border);margin-bottom:56px}
+    .video-wrap iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0;border-radius:16px}
+    .video-placeholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--muted);font-size:.9rem}
+    .video-placeholder svg{opacity:.3}
+
+    .section{margin-bottom:56px}
+    .section-label{font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+      color:var(--teal);margin-bottom:16px;display:block}
+    .section h2{font-size:1.4rem;margin-bottom:16px;color:var(--white)}
+    .section p{color:rgba(232,232,240,.8);margin-bottom:14px}
+
+    .chapters{list-style:none;display:flex;flex-direction:column;gap:2px}
+    .chapter{display:flex;align-items:baseline;gap:14px;padding:12px 16px;border-radius:10px;
+      border:1px solid transparent;transition:background .15s,border-color .15s;cursor:default}
+    .chapter:hover{background:rgba(255,255,255,.04);border-color:var(--border)}
+    .chapter-time{font-size:.75rem;font-weight:700;color:var(--teal);font-family:'Montserrat',sans-serif;min-width:42px;flex-shrink:0}
+    .chapter-title{font-size:.9rem;color:var(--text)}
+    .chapter-desc{font-size:.78rem;color:var(--muted);margin-top:2px}
+
+    .guest-card{display:flex;gap:24px;align-items:flex-start;padding:28px;border-radius:16px;
+      background:rgba(255,255,255,.04);border:1px solid var(--border);margin-bottom:56px}
+    .guest-avatar{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--teal));
+      display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:900;
+      font-family:'Montserrat',sans-serif;color:#fff;flex-shrink:0}
+    .guest-info h3{font-size:1.1rem;margin-bottom:4px}
+    .guest-info .role{font-size:.82rem;color:var(--muted);margin-bottom:10px}
+    .guest-links{display:flex;gap:10px;flex-wrap:wrap}
+    .guest-link{font-size:.75rem;font-weight:700;letter-spacing:.05em;padding:5px 12px;border-radius:100px;
+      border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.7);transition:color .15s,border-color .15s}
+    .guest-link:hover{color:var(--teal);border-color:rgba(0,242,234,.4)}
+
+    .transcript{padding:28px;border-radius:16px;background:rgba(255,255,255,.03);border:1px solid var(--border);max-height:600px;overflow-y:auto}
+    .transcript::-webkit-scrollbar{width:4px}
+    .transcript::-webkit-scrollbar-track{background:transparent}
+    .transcript::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:4px}
+    .t-block{margin-bottom:20px}
+    .t-speaker{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--teal);margin-bottom:4px}
+    .t-speaker.guest{color:var(--lavender)}
+    .t-time{font-size:.68rem;color:var(--muted);margin-left:6px;font-weight:400}
+    .t-text{font-size:.88rem;color:rgba(232,232,240,.75);line-height:1.65}
+
+    .cta-box{padding:40px;border-radius:20px;text-align:center;
+      background:linear-gradient(135deg,rgba(123,47,255,.12),rgba(0,242,234,.06));
+      border:1px solid rgba(123,47,255,.25);margin-bottom:56px}
+    .cta-box h3{font-size:1.3rem;margin-bottom:10px}
+    .cta-box p{color:var(--muted);font-size:.9rem;margin-bottom:24px}
+    .cta-btn{display:inline-block;padding:14px 32px;border-radius:100px;font-weight:700;font-size:.85rem;letter-spacing:.05em;
+      background:linear-gradient(135deg,var(--purple),var(--teal));color:#fff;transition:opacity .2s,transform .15s}
+    .cta-btn:hover{opacity:.88;transform:translateY(-2px)}
+
+    footer{border-top:1px solid var(--border);padding:32px 24px;text-align:center;color:var(--muted);font-size:.78rem;position:relative;z-index:1}
+    footer a{color:var(--teal)}
+
+    @media(max-width:640px){
+      .guest-card{flex-direction:column}
+      .listen-row{gap:8px}
+      .listen-btn{font-size:.75rem;padding:9px 16px}
+      .chapter{flex-direction:column;gap:4px}
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">Cult <span>Commerce</span></a>
+  <a href="/cult-commerce-podcast" class="nav-back">← All Episodes</a>
+</nav>
+
+<div class="hero">
+  <div class="ep-label">Episode 1 · Pilot</div>
+  <h1>The Future of Social Commerce ft. Bora Mutluoglu</h1>
+  <p class="guest-line">With <strong>Bora Mutluoglu</strong>, Co-Founder of <strong>Reacher</strong> &nbsp;·&nbsp; Hosted by Tommy Lynch</p>
+
+  <div class="listen-row">
+    <a href="https://open.spotify.com/show/" class="listen-btn spotify" id="spotify-link">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+      Spotify
+    </a>
+    <a href="https://podcasts.apple.com/" class="listen-btn apple" id="apple-link">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></svg>
+      Apple Podcasts
+    </a>
+    <a href="#" class="listen-btn youtube" id="youtube-link">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z"/></svg>
+      YouTube
+    </a>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Video embed -->
+  <div class="video-wrap" id="video-container">
+    <div class="video-placeholder" id="video-placeholder">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16" fill="currentColor"/></svg>
+      <span>YouTube video coming soon</span>
+    </div>
+  </div>
+
+  <!-- About this episode -->
+  <div class="section">
+    <span class="section-label">About This Episode</span>
+    <p>Bora Mutluoglu, co-founder of Reacher — the leading TikTok Shop automation and AI platform — sits down with Tommy Lynch for the inaugural episode of the Cult Commerce Podcast.</p>
+    <p>They cover how Reacher went from a $500/mo Python script to a Y Combinator-backed platform with thousands of brand customers, why cold-starting a brand on TikTok Shop is harder than ever, what the Halo Effect actually looks like in practice, and what a real agentic social commerce workflow looks like using Claude + the Reacher API.</p>
+    <p>If you're building a brand, running an agency, or just trying to understand where the creator economy and social commerce are actually headed — this episode is essential listening.</p>
+  </div>
+
+  <!-- Guest -->
+  <div class="guest-card">
+    <div class="guest-avatar">BM</div>
+    <div class="guest-info">
+      <h3>Bora Mutluoglu</h3>
+      <p class="role">Co-Founder & CEO, Reacher · Y Combinator W25 · Calling in from Penticton, Canada 🍁</p>
+      <div class="guest-links">
+        <a href="https://www.linkedin.com/in/bora-mutluoglu/" target="_blank" class="guest-link">LinkedIn</a>
+        <a href="mailto:bora@reacherapp.com" class="guest-link">Email</a>
+        <a href="https://reacherapp.com" target="_blank" class="guest-link">Reacher</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chapters -->
+  <div class="section">
+    <span class="section-label">Key Moments</span>
+    <ul class="chapters">
+      <li class="chapter">
+        <span class="chapter-time">0:00</span>
+        <div><div class="chapter-title">Intro — Welcome to the Cult Commerce Podcast</div></div>
+      </li>
+      <li class="chapter">
+        <span class="chapter-time">2:29</span>
+        <div>
+          <div class="chapter-title">How Reacher Was Built</div>
+          <div class="chapter-desc">UC Berkeley → two failed startups → TikTok Shop gold rush → $500/mo Python script → Y Combinator</div>
+        </div>
+      </li>
+      <li class="chapter">
+        <span class="chapter-time">5:24</span>
+        <div>
+          <div class="chapter-title">Why TikTok Shop Is Harder to Launch On Now</div>
+          <div class="chapter-desc">Mass sampling no longer works. What you need to do instead to get your first 10 creators.</div>
+        </div>
+      </li>
+      <li class="chapter">
+        <span class="chapter-time">9:50</span>
+        <div>
+          <div class="chapter-title">The Wild West Is Over — What Changed</div>
+          <div class="chapter-desc">TikTok subsidies, capital flood, and how established brands view TikTok as a marketing channel (not a profit center).</div>
+        </div>
+      </li>
+      <li class="chapter">
+        <span class="chapter-time">11:33</span>
+        <div>
+          <div class="chapter-title">The 40% Amazon Halo Effect</div>
+          <div class="chapter-desc">Why big brands break even on TikTok Shop deliberately — and what that means for your brand strategy.</div>
+        </div>
+      </li>
+      <li class="chapter">
+        <span class="chapter-time">15:06</span>
+        <div>
+          <div class="chapter-title">Omnichannel Social Commerce — The Trifecta</div>
+          <div class="chapter-desc">TikTok Shop + Amazon + Shopify. Why you need all three, and how Reacher is building for each platform.</div>
+        </div>
+      </li>
+      <li class="chapter">
+        <span class="chapter-time">20:48</span>
+        <div>
+          <div class="chapter-title">Read vs. Write AI — The Real Unlock</div>
+          <div class="chapter-desc">Most brands only use "read" capabilities. The actual value is in "write" — agents that take action for you.</div>
+        </div>
+      </li>
+      <li class="chapter">
+        <span class="chapter-time">23:56</span>
+        <div>
+          <div class="chapter-title">The Creatine Gummy Agent Workflow (Full Breakdown)</div>
+          <div class="chapter-desc">A step-by-step agentic workflow using Claude + Reacher API that eliminates an entire role at your company.</div>
+        </div>
+      </li>
+      <li class="chapter">
+        <span class="chapter-time">28:21</span>
+        <div>
+          <div class="chapter-title">Self-Driving Tesla + Grok Story</div>
+          <div class="chapter-desc">Jordan West (Social Commerce Club) finds Chipotle without touching the wheel — this is what agentic AI actually looks like.</div>
+        </div>
+      </li>
+      <li class="chapter">
+        <span class="chapter-time">38:25</span>
+        <div>
+          <div class="chapter-title">"This Is Your Sign" — Enable Your Team</div>
+          <div class="chapter-desc">Tommy realizes live on air that he needs to sit down with his ops lead and set up Claude Code. Are you next?</div>
+        </div>
+      </li>
+      <li class="chapter">
+        <span class="chapter-time">39:21</span>
+        <div>
+          <div class="chapter-title">The 5-Year Vision for Social Commerce</div>
+          <div class="chapter-desc">Two-person brands running agentic teams. Every platform has its own social commerce. Reacher sits at the center.</div>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Transcript -->
+  <div class="section">
+    <span class="section-label">Full Transcript</span>
+    <div class="transcript" id="transcript">
+
+      <div class="t-block">
+        <div class="t-speaker">Tommy Lynch <span class="t-time">0:01</span></div>
+        <div class="t-text">What is up everyone? Welcome to the first ever episode of the Cult Commerce Podcast where we discuss all things related to social commerce and the future of the world itself. Today I have a very special guest for this pilot episode. We have Bora Mutluoglu from Reacher — and Bora honestly helped me come up in this industry. I think he's a very fitting person to have as the first guest. Bora, if you don't mind giving yourself an intro here.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker guest">Bora Mutluoglu <span class="t-time">0:41</span></div>
+        <div class="t-text">Yeah, hey everybody. My name is Bora Mutluoglu. I am calling in today from Penticton, Canada — near Kelowna, east of Vancouver, very random in the mountains. I'm visiting Jordan West from Social Commerce Club. I'm one of the co-founders of Reacher. We are one of the top TikTok Shop automation AI platforms building agentic solutions for brands and creators. We operate on TikTok Shop and other social commerce platforms — Meta, and expanding to YouTube Shopping, Amazon affiliate. We work with thousands of brands. We've been on TikTok Shop since its launch in the United States three years ago.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker guest">Bora Mutluoglu <span class="t-time">1:38</span></div>
+        <div class="t-text">Like Tommy mentioned, he helped us out during Y Combinator — flew out to SF, helped us boots on the ground during a very hectic time with a lot of growth. So yeah, I'm happy to be your first official guest on your inaugural pilot episode. Very excited to be here. Let's get into it.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker">Tommy Lynch <span class="t-time">1:52</span></div>
+        <div class="t-text">For this podcast, I want to really focus on the future of social commerce. But there's a saying that in order to understand the future you have to understand the past. So before we get into what the future looks like into 2027 and beyond, I want to better understand you, your past, and the past of Reacher. How did you get into this space?</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker guest">Bora Mutluoglu <span class="t-time">2:29</span></div>
+        <div class="t-text">My co-founder and I met in college at UC Berkeley. We did our masters there. While we were there, we were both working corporate jobs — he was working at Meta as an Instagram Shopping engineer, and I was working as a cybersecurity solutions demo engineer at Palo Alto Networks. We decided we wanted to do startups, turned our capstone project into a startup which failed, tried another which also failed. Then we got into social commerce, specifically TikTok Shop. He had experience on the brand side from Instagram Shop, and I'd always made content — kind of a micro influencer on TikTok, YouTube, Instagram.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker guest">Bora Mutluoglu <span class="t-time">3:56</span></div>
+        <div class="t-text">This was the end of 2023, very early 2024 — right before all the big AI coding tools like Claude Code. Everything was done manually with Python scripts. We figured out quickly that with this gold rush of TikTok Shop, the platform was subsidizing all three sides: creators, brands, and consumers. Everybody had discounts, everything was on fire sale — they just wanted to onboard people. The number one thing brands needed was reaching out to creators. Anybody that could get a product in a creator's hand basically guaranteed to make money. So we built a Python automation script that would literally just send target collaborations to creators at scale. We started selling it for $500/mo and people were paying. So we knew there was something there, kept building, and the rest is history.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker">Tommy Lynch <span class="t-time">4:58</span></div>
+        <div class="t-text">That makes me think back to when TikTok Shop seemed so much simpler — the go-to strategy was literally just hand out as many target collabs as you can, put the samples out there, and as long as you had inventory you could get content that would convert to sales. I think strategies have changed significantly. What is it that's changed on TikTok Shop over the last few years, and are you still seeing mass sampling work?</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker guest">Bora Mutluoglu <span class="t-time">6:11</span></div>
+        <div class="t-text">It's way, way different than "send as many samples as possible." It's actually much harder to launch as a brand on TikTok Shop now than back then — especially if you're cold start with no budget. You have to do a lot of manual, unscalable things. That's what Y Combinator taught us: do the things that don't scale in the beginning to win. If you're a new brand launching, you can't just send target collaborations to top creators — your response rate will be abysmal. But maybe if you go to events, talk to creators in person, or message them on Instagram and get five to ten creators that genuinely love your product — that's a great start. Find the people who really love your product first. Then automated outreach tools like ours that help you handle the volume? Still critical. As a founder, you should spend your time on the highest leverage activities — like finding your top ambassadors and connecting with them — while letting the tool handle the volume work.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker guest">Bora Mutluoglu <span class="t-time">8:37</span></div>
+        <div class="t-text">The omnichannel approach is also getting more relevant. TikTok Shop was the only social commerce platform for the longest time. Now we have Meta Affiliate making moves, YouTube Shopping, Amazon Affiliate, Shopify Affiliate. And even using your TikTok Shop content to run ads on Meta — we have a solution for whitelisting creator content. TikTok is growing like crazy. I think they did eighteen to twenty-five billion this year. All the other platforms are realizing if they don't do something, TikTok's going to take all the creators and customers.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker">Tommy Lynch <span class="t-time">9:50</span></div>
+        <div class="t-text">TikTok Shop used to be where you had dropshippers, small brands blowing up — zero to $500K in a month, the wild wild west. Part of that was all the subsidies TikTok was pouring in, all the discounts, and so few sellers tapping this massive creator pool. But I've been hearing about brands like Goalie losing over a million dollars a month on TikTok Shop because they know it's top-of-funnel awareness. That makes it so much harder for a new brand doing a cold start.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker guest">Bora Mutluoglu <span class="t-time">11:33</span></div>
+        <div class="t-text">On the Halo Effect — a lot of bigger, established brands do see TikTok Shop as a pure marketing channel. They're happy to break even, knowing they're going to get a 40% lift on Amazon, Shopify, and retail. They're trying to acquire the new eyeballs of Gen Z, Gen Alpha. For retention, TikTok Shop isn't the best platform — it's best for discovery and new eyeballs. So they're asking, how do we retain them on Amazon or Shopify? The attribution piece is still not solved. I'm actually partnering with one of the largest agencies in the world that has built a solution for that — can't talk about it yet, but very excited for when it comes out.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker">Tommy Lynch <span class="t-time">13:03</span></div>
+        <div class="t-text">That's the direction the whole space is going. We've talked about the halo effect for a year or two now. One thing I'm focused on is omnichannel support — partnering with Amazon agencies, Shopify, Google, because I think even for a brand that's just launching, it's dangerous to rely only on TikTok. The cost for attention is just so much higher now. And you've got omnichannel brand strategy AND omnichannel creator strategy — both at the same time. There are so many platforms: Amazon, Shopify, Meta, X, LTK, Snapchat, Pinterest.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker guest">Bora Mutluoglu <span class="t-time">15:06</span></div>
+        <div class="t-text">Right before I get into where Reacher is focused — I want to double down on the trifecta you mentioned. For a brand wanting to launch on TikTok Shop, you need Amazon and Shopify set up at a minimum. That's where the Halo is going to be captured most. We've similarly been a TikTok Shop powerhouse since the beginning. Recently we've branched into Meta — we have Instagram creator profiles in Reacher and are about to launch Instagram outreach. We have a creator app now. As brands expand to omnichannel, there's a lack of tools that aggregate all that data into one place and let you take action. That's top of mind for us. And the core of that is the agentic build — agentifying as many things as possible.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker guest">Bora Mutluoglu <span class="t-time">17:32</span></div>
+        <div class="t-text">Agentifying sounds fancy but it's basically: how do we build a bunch of personal agents — like Muse — that are the best at individual things? Outreach on Instagram, outreach on YouTube, outreach on TikTok — one personal agent that does all of that. We've actually already built that for TikTok Shop specifically. You can hire different agents to do different work.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker">Tommy Lynch <span class="t-time">18:22</span></div>
+        <div class="t-text">You guys have a powerful analytics solution that I think is underutilized. You can pull all of the TikTok Shop data and use it to learn what content's working, what products are performing. And over time as you supplement that with Shopify data, Amazon, Meta — if you can aggregate all of that, you can have insights from every channel. There's the reading and then there's the writing — you got agents that can pull insights, but how do you make it so that automatically goes into writing — setting up ads, furthering a campaign?</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker guest">Bora Mutluoglu <span class="t-time">19:50</span></div>
+        <div class="t-text">I agree. A lot of people use platforms like Reacher pretty basically — AI creator search, outreach, maybe campaigns. But there's so much more from a read-write capability standpoint. Read is gathering and telling you information. Write is: I have the information, now let me go take an action. That's where the actual unlock is. Instead of each brand and agency having to train people who might quit after three months, how can we have an always-on, loyal agent? You teach it once, give it the autonomy to mostly read and write. That's what we believe is the future. There's a huge lagging tail of brands and agencies that aren't understanding the value of this agentic workforce coming out.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker">Tommy Lynch <span class="t-time">22:12</span></div>
+        <div class="t-text">That's something I've been dreaming about since I first entered this space. At some point this is all going to be automated — software that just does everything. You press a button and it launches a whole brand and does all the marketing. The way this is going is more and more being automated. Software absorbs other software. And the read-write thing is massive. It used to be that you could only really use AI to gather data or write you a little thing you'd copy-paste. But now you can actually use Reacher via APIs to create a full automation that sends to people, uses creator search to find creators.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker">Tommy Lynch <span class="t-time">23:31</span></div>
+        <div class="t-text">What workflows are you seeing your customer base use? Are you seeing people successfully take creator data, use the API to run creator search, and then set up automations? Or does the customer base not quite get there yet?</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker guest">Bora Mutluoglu <span class="t-time">23:56</span></div>
+        <div class="t-text">The customer base is not quite there yet for social commerce in general. There are very few powerhouse agencies and brands that have actually used Claude to talk to Reacher data. There's this one agency — Jackson from the Affiliate Assembly — who was managing seven to eight brands himself with one other person, using only Reacher agents. He had Claude integrated with Reacher — a two-minute setup. Once done, you don't even go into Reacher at all. You just go into Claude and say: I'm a creatine gummy brand. Find all other creatine gummy brands on TikTok Shop. Find the top performing videos for those products every day. Break down the videos into creative briefs. Give me a list of all creators who generated GMV for those products. Throw that list into an automation, generate the outreach messaging, send them a message and invite them to work with us. Once they've accepted a sample request, automatically send them the updated brief. Do all of this every single day and don't ask me for permission. That's a whole role that you don't have to hire anymore — just done by Claude on a schedule.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker guest">Bora Mutluoglu <span class="t-time">26:19</span></div>
+        <div class="t-text">That's an agentic workflow that I believe Jackson did something similar to for his agency. And that's a whole role that you don't need to hire for. The more you deep dive into the APIs and think about each task as you're doing it — "I wonder if I can automate this" — the answer is usually 99% yes. It just takes a few hours to sit down and figure out the workflow and prompt the agent properly. Once that's done, it's mostly automated for the rest of your existence.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker">Tommy Lynch <span class="t-time">27:34</span></div>
+        <div class="t-text">It makes sense, because the tooling exists. You can even voice-message Claude with Whisper Flow and just tell it what to do. And if you've got your API connections set up, you can build a Discord app to do that too. We've automated a lot of our agency stuff — onboard a brand and it automatically pulls their data, creates the creative brief, messages creators, all of it.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker guest">Bora Mutluoglu <span class="t-time">28:21</span></div>
+        <div class="t-text">Not even just TikTok Shop focused. We're here in Penticton with Jordan West. He picked us up in a Tesla with self-driving. He's hands off the wheel and we're hungry, so he says to Grok: "Can you find the closest Chipotle that's the most efficient on our route back to my house?" Grok found it and asked "Do you want me to map to it and park?" And then without touching anything, he just navigated there. Didn't open Google Maps, didn't go into the UI, just told the agent.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker">Tommy Lynch <span class="t-time">29:12</span></div>
+        <div class="t-text">Told the agent. And that's the way the whole thing is going — you literally just tell the agent what you want, and if you give it the capacity to do it, it will. This is only happening for the first time, ever. And you guys have the TikTok Shop tooling down, now Meta, soon Shopify — Reacher Shopify integration?</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker guest">Bora Mutluoglu <span class="t-time">30:01</span></div>
+        <div class="t-text">Yeah — Meta integration locked, WhatsApp API almost through app review, Shopify APIs, Amazon APIs. We're just figuring out what to build and launch first. The interesting thing about the agentic world is that UI/UX doesn't matter anymore — agents aren't navigating the UI, they're just hitting an API and pulling data. You don't have to worry about UI/UX at all. You tell the agent what to do and it handles it.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker">Tommy Lynch <span class="t-time">30:56</span></div>
+        <div class="t-text">That's true — I remember mapping out your whole UI in a 70-page document during Y Combinator. Now I barely go in anymore unless I'm onboarding a new client. How do you use Reacher agentic capabilities for your TikTok Shop work?</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker guest">Bora Mutluoglu <span class="t-time">31:14</span></div>
+        <div class="t-text">Why don't you tell me how you use the agentic capabilities?</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker">Tommy Lynch <span class="t-time">31:23</span></div>
+        <div class="t-text">For us, we onboard the brand into Reacher, set up the account, and onboard them into our own systems. We can automate promotion setup, creative briefs, pull FastMoss data. We have our own app. A lot of it's still being built — but we can automate promotion setup, creative briefs. I'm still working on enabling my team with Reacher to really fully automate.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker guest">Bora Mutluoglu <span class="t-time">33:23</span></div>
+        <div class="t-text">That's the blocker I keep seeing. The head of an organization is bought into AI agentic, but they're so busy they can't efficiently push it down on their team. And the team is like "the UI exists, I'll just use the UI, I don't need to set up this agent workflow thing." The person who should push this on the team doesn't have time, and the team doesn't see why they'd change what works. That's the core problem we're trying to solve.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker">Tommy Lynch <span class="t-time">38:25</span></div>
+        <div class="t-text">This is your sign. If you're listening to this podcast — set up your team members to be agentic. I know how to do it for myself, but if I'm not setting up my team to do the same thing, what am I doing? I'm literally telling myself this right now. It's literally just sitting down with a team member and getting their Claude Code set up. That's it. It's sharing API keys — that's all it takes.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker guest">Bora Mutluoglu <span class="t-time">38:54</span></div>
+        <div class="t-text">What are you doing, Tommy? Come on.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker">Tommy Lynch <span class="t-time">39:21</span></div>
+        <div class="t-text">So Bora — five years from now. What does this whole landscape look like?</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker guest">Bora Mutluoglu <span class="t-time">39:47</span></div>
+        <div class="t-text">Five years from now, we will be a lot more AI native. You'll be able to just be a product and branding expert and have everything else done for you by AI agents — experts in retention, Amazon, Shopify, TikTok Shop. There'll be a lot more two-person brands, massive brands and agencies with the same headcount supporting far more clients. All the big platforms — YouTube, Meta, TikTok, Pinterest, Reddit — will have their own social commerce. And we're going to be the center of all of that, connecting everything together agentically. The true omnichannel solution. That might even happen faster than five years.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker">Tommy Lynch <span class="t-time">41:42</span></div>
+        <div class="t-text">That makes sense. Well I really appreciate you jumping on. Tell the people where they can find you.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker guest">Bora Mutluoglu <span class="t-time">41:47</span></div>
+        <div class="t-text">You can find me on email at bora@reacherapp.com. LinkedIn — Bora Mutluoglu. X is the same. Instagram — gili_king. For work, email and LinkedIn are probably best. Message me on LinkedIn and maybe I'll give you my number.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker">Tommy Lynch <span class="t-time">42:16</span></div>
+        <div class="t-text">Thank you so much Bora. I really appreciate your time. Looking forward to the next one.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-box">
+    <h3>Want to be on the show?</h3>
+    <p>The Cult Commerce Podcast features founders, operators, and creators building in social commerce. If you're doing something interesting — apply below.</p>
+    <a href="/cult-commerce-podcast" class="cta-btn">Apply to Be a Guest</a>
+  </div>
+
+</div>
+
+<footer>
+  <p>© 2026 Cult Content LLC · <a href="/">cultcontent.cc</a> · <a href="/cult-commerce-podcast">All Episodes</a></p>
+</footer>
+
+<script>
+  // Update YouTube link once video ID is known
+  var YT_VIDEO_ID = ''; // Set this once uploaded to YouTube
+  if (YT_VIDEO_ID) {
+    var container = document.getElementById('video-container');
+    container.innerHTML = '<iframe src="https://www.youtube.com/embed/' + YT_VIDEO_ID + '?rel=0" allowfullscreen></iframe>';
+    document.getElementById('youtube-link').href = 'https://www.youtube.com/watch?v=' + YT_VIDEO_ID;
+  }
+</script>
+
+</body>
+</html>
