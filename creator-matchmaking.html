@@ -294,6 +294,11 @@ footer a:hover{color:#fff}
           <input type="url" name="campaignLink" required placeholder="https://">
           <div class="form-hint">Recommended to include a link from Reacher, Euka, or Cruva to incentivize creator participation.</div>
         </div>
+        <div class="form-row">
+          <label>Content Brief *</label>
+          <textarea name="contentBrief" required placeholder="Tell creators about your products — what they are, key benefits, talking points, any do's and don'ts for content, what a great video looks like for your brand." style="min-height:140px"></textarea>
+          <div class="form-hint">This will be shared with creators when your campaign goes live. Be specific — it drives better content.</div>
+        </div>
 
         <button type="submit" class="submit-btn" id="submit-btn">Submit My Shop →</button>
         <p class="form-note">Our team will reach out within 1–2 business days.</p>
@@ -339,10 +344,18 @@ document.getElementById('matchmaking-form').addEventListener('submit', async (e)
     email:        form.email.value.trim().toLowerCase(),
     phone:        form.phone.value.trim(),
     campaignLink: form.campaignLink.value.trim(),
+    contentBrief: form.contentBrief.value.trim(),
   };
 
+  if (!data.contentBrief) {
+    alert('Please fill in the Content Brief — creators need this to know what to make.');
+    btn.disabled = false;
+    btn.textContent = 'Submit My Shop →';
+    return;
+  }
+
   try {
-    const res = await fetch('/api/creator-matchmaking/submit', {
+    const res = await fetch('https://manifest.cultcontent.cc/api/creator-matchmaking/submit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
