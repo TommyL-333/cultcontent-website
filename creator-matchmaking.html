@@ -295,9 +295,9 @@ footer a:hover{color:#fff}
           <div class="form-hint">Recommended to include a link from Reacher, Euka, or Cruva to incentivize creator participation.</div>
         </div>
         <div class="form-row">
-          <label>Content Brief *</label>
-          <textarea name="contentBrief" required placeholder="Tell creators about your products — what they are, key benefits, talking points, any do's and don'ts for content, what a great video looks like for your brand." style="min-height:140px"></textarea>
-          <div class="form-hint">This will be shared with creators when your campaign goes live. Be specific — it drives better content.</div>
+          <label>Content Brief Link *</label>
+          <input type="url" name="contentBrief" required placeholder="https://docs.google.com/... or any link to your creator brief" />
+          <div class="form-hint">Link to your creator brief (Google Doc, Notion, etc.) — shared with creators when your campaign goes live.</div>
         </div>
 
         <button type="submit" class="submit-btn" id="submit-btn">Submit My Shop →</button>
@@ -348,7 +348,7 @@ document.getElementById('matchmaking-form').addEventListener('submit', async (e)
   };
 
   if (!data.contentBrief) {
-    alert('Please fill in the Content Brief — creators need this to know what to make.');
+    alert('Please add your Content Brief link — creators need this to know what to make.');
     btn.disabled = false;
     btn.textContent = 'Submit My Shop →';
     return;
