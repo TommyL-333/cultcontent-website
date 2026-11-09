@@ -560,6 +560,16 @@ function renderServiceBlocks() {
   });
 }
 
+// Role pill toggle
+document.querySelectorAll('#rolePills .pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    const cb = pill.querySelector('input[type=checkbox]');
+    cb.checked = !cb.checked;
+    pill.classList.toggle('checked', cb.checked);
+    document.getElementById('f-roles').classList.remove('has-error');
+  });
+});
+
 // Channel pill toggle
 document.querySelectorAll('#channelPills .pill').forEach(pill => {
   pill.addEventListener('click', () => {
