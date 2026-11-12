@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>E2: The Live Commerce Playbook ft. Jason Termechi | Cult Commerce Podcast</title>
+  <meta name="description" content="Jason Termechi, former TikTok Live Account Manager who managed $14M+ in GMV across 30+ brands, breaks down the live commerce playbook: product qualifiers, founder-led live, affiliate strategy, and what China already figured out." />
+  <meta property="og:title" content="E2: The Live Commerce Playbook ft. Jason Termechi" />
+  <meta property="og:description" content="Former TikTok Live Account Manager Jason Termechi shares the full live commerce playbook — from product readiness qualifiers to the $1B affiliate GMV happening in China right now." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://cultcontent.cc/cult-commerce-podcast/jason-termechi" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root{
+      --bg:#080710;--teal:#00f2ea;--pink:#ff0050;--purple:#7b2fff;
+      --lavender:#b899ff;--gold:#c9a84c;
+      --text:#e8e8f0;--muted:#7a7a9a;--white:#fff;
+      --border:rgba(255,255,255,.07);
+      --ease:0.25s cubic-bezier(0.4,0,0.2,1);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;min-height:100vh}
+    h1,h2,h3,h4{font-family:'Montserrat',sans-serif;font-weight:900;line-height:1.1}
+    p{line-height:1.7}
+    a{color:inherit;text-decoration:none}
+
+    body::before{
+      content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+      background-image:
+        radial-gradient(.6px .6px at 4% 8%,rgba(255,255,255,.7),transparent),
+        radial-gradient(.5px .5px at 11% 27%,rgba(255,255,255,.5),transparent),
+        radial-gradient(.7px .7px at 18% 64%,rgba(255,255,255,.6),transparent),
+        radial-gradient(.5px .5px at 25% 14%,rgba(220,230,255,.55),transparent),
+        radial-gradient(.6px .6px at 33% 78%,rgba(255,255,255,.65),transparent),
+        radial-gradient(.5px .5px at 40% 43%,rgba(255,255,255,.5),transparent),
+        radial-gradient(.6px .6px at 56% 22%,rgba(255,255,255,.6),transparent),
+        radial-gradient(.7px .7px at 71% 33%,rgba(255,255,255,.65),transparent),
+        radial-gradient(.5px .5px at 79% 81%,rgba(255,255,255,.5),transparent),
+        radial-gradient(.6px .6px at 86% 11%,rgba(255,255,255,.6),transparent),
+        radial-gradient(1.5px 1.5px at 14% 76%,rgba(255,255,255,.95),transparent),
+        radial-gradient(2px 2px at 73% 60%,rgba(255,255,255,1),transparent);
+      background-size:700px 500px;background-repeat:repeat;opacity:.55
+    }
+
+    nav{
+      position:fixed;top:0;left:0;right:0;z-index:200;
+      display:flex;align-items:center;justify-content:space-between;
+      padding:20px 56px;
+      background:rgba(8,7,16,0.82);
+      backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+      border-bottom:1px solid rgba(255,255,255,.06)
+    }
+    .nav-logo{font-family:'Montserrat',sans-serif;font-weight:900;font-size:1rem;letter-spacing:.1em;color:var(--white);text-transform:uppercase;text-decoration:none}
+    .nav-logo span{background:linear-gradient(135deg,var(--teal),var(--lavender));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .nav-back{font-size:.75rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,.45);transition:color .2s}
+    .nav-back:hover{color:var(--teal)}
+    @media(max-width:860px){nav{padding:18px 24px}}
+
+    .hero{position:relative;padding:120px 24px 56px;text-align:center;overflow:hidden;z-index:1}
+    .ep-label{display:inline-block;font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+      color:var(--teal);border:1px solid rgba(0,242,234,.3);border-radius:100px;padding:5px 14px;margin-bottom:20px}
+    .hero h1{font-size:clamp(1.8rem,4vw,3.2rem);max-width:800px;margin:0 auto 20px;
+      background:linear-gradient(135deg,var(--white) 40%,var(--lavender));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .guest-line{font-size:1rem;color:var(--muted);margin-bottom:32px}
+    .guest-line strong{color:var(--text)}
+
+    .listen-row{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-bottom:48px}
+    .listen-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:100px;
+      font-size:.8rem;font-weight:700;letter-spacing:.05em;transition:transform .15s,opacity .15s;
+      border:1px solid rgba(255,255,255,.12)}
+    .listen-btn:hover{transform:translateY(-2px);opacity:.9}
+    .listen-btn.spotify{background:#1DB954;color:#000}
+    .listen-btn.apple{background:#fc3c44;color:#fff}
+    .listen-btn.youtube{background:#ff0000;color:#fff}
+
+    .container{max-width:860px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+
+    .video-wrap{position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:16px;
+      background:rgba(255,255,255,.04);border:1px solid var(--border);margin-bottom:56px}
+    .video-wrap video{position:absolute;top:0;left:0;width:100%;height:100%;border-radius:16px;background:#000}
+
+    .section{margin-bottom:56px}
+    .section-label{font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+      color:var(--teal);margin-bottom:16px;display:block}
+    .section h2{font-size:1.4rem;margin-bottom:16px;color:var(--white)}
+    .section p{color:rgba(232,232,240,.8);margin-bottom:14px}
+
+    .chapters{list-style:none;display:flex;flex-direction:column;gap:2px}
+    .chapter{display:flex;align-items:baseline;gap:14px;padding:12px 16px;border-radius:10px;
+      border:1px solid transparent;transition:background .15s,border-color .15s;cursor:default}
+    .chapter:hover{background:rgba(255,255,255,.04);border-color:var(--border)}
+    .chapter-time{font-size:.75rem;font-weight:700;color:var(--teal);font-family:'Montserrat',sans-serif;min-width:42px;flex-shrink:0}
+    .chapter-title{font-size:.9rem;color:var(--text)}
+    .chapter-desc{font-size:.78rem;color:var(--muted);margin-top:2px}
+
+    .guest-card{display:flex;gap:24px;align-items:flex-start;padding:28px;border-radius:16px;
+      background:rgba(255,255,255,.04);border:1px solid var(--border);margin-bottom:56px}
+    .guest-avatar{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--pink),var(--purple));
+      display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:900;
+      font-family:'Montserrat',sans-serif;color:#fff;flex-shrink:0}
+    .guest-info h3{font-size:1.1rem;margin-bottom:4px}
+    .guest-info .role{font-size:.82rem;color:var(--muted);margin-bottom:10px}
+    .guest-links{display:flex;gap:10px;flex-wrap:wrap}
+    .guest-link{font-size:.75rem;font-weight:700;letter-spacing:.05em;padding:5px 12px;border-radius:100px;
+      border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.7);transition:color .15s,border-color .15s}
+    .guest-link:hover{color:var(--teal);border-color:rgba(0,242,234,.4)}
+
+    .transcript{padding:28px;border-radius:16px;background:rgba(255,255,255,.03);border:1px solid var(--border);max-height:600px;overflow-y:auto}
+    .transcript::-webkit-scrollbar{width:4px}
+    .transcript::-webkit-scrollbar-track{background:transparent}
+    .transcript::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:4px}
+    .t-block{margin-bottom:20px}
+    .t-speaker{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--teal);margin-bottom:4px}
+    .t-speaker.guest{color:var(--lavender)}
+    .t-time{font-size:.68rem;color:var(--muted);margin-left:6px;font-weight:400}
+    .t-text{font-size:.88rem;color:rgba(232,232,240,.75);line-height:1.65}
+
+    .cta-box{padding:40px;border-radius:20px;text-align:center;
+      background:linear-gradient(135deg,rgba(123,47,255,.12),rgba(0,242,234,.06));
+      border:1px solid rgba(123,47,255,.25);margin-bottom:56px}
+    .cta-box h3{font-size:1.3rem;margin-bottom:10px}
+    .cta-box p{color:var(--muted);font-size:.9rem;margin-bottom:24px}
+    .cta-btn{display:inline-block;padding:14px 32px;border-radius:100px;font-weight:700;font-size:.85rem;letter-spacing:.05em;
+      background:linear-gradient(135deg,var(--purple),var(--teal));color:#fff;transition:opacity .2s,transform .15s}
+    .cta-btn:hover{opacity:.88;transform:translateY(-2px)}
+
+    footer{border-top:1px solid var(--border);padding:32px 24px;text-align:center;color:var(--muted);font-size:.78rem;position:relative;z-index:1}
+    footer a{color:var(--teal)}
+
+    @media(max-width:640px){
+      .guest-card{flex-direction:column}
+      .listen-row{gap:8px}
+      .listen-btn{font-size:.75rem;padding:9px 16px}
+      .chapter{flex-direction:column;gap:4px}
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">Cult <span>Commerce</span></a>
+  <a href="/cult-commerce-podcast" class="nav-back">← All Episodes</a>
+</nav>
+
+<div class="hero">
+  <div class="ep-label">Episode 2 · Live Commerce</div>
+  <h1>The Live Commerce Playbook ft. Jason Termechi</h1>
+  <p class="guest-line">With <strong>Jason Termechi</strong>, Former TikTok Live Account Manager &nbsp;·&nbsp; Hosted by Tommy Lynch</p>
+
+  <div class="listen-row">
+    <a href="https://open.spotify.com/show/06T8UL8Y7ZQxxg5PxLZ2Wa" class="listen-btn spotify">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+      Spotify
+    </a>
+    <a href="https://podcasts.apple.com/podcast/id6827712100" class="listen-btn apple">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></svg>
+      Apple Podcasts
+    </a>
+    <a href="https://www.youtube.com/playlist?list=PLW-U3V2HSSdA" class="listen-btn youtube">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z"/></svg>
+      YouTube
+    </a>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Video embed — src updated when Riverside export is published to hosting -->
+  <div class="video-wrap" id="video-container">
+    <video id="ep-video" controls preload="metadata" style="position:absolute;top:0;left:0;width:100%;height:100%;border-radius:16px;background:#000">
+      <source src="" type="video/mp4" id="video-src" />
+    </video>
+  </div>
+
+  <!-- Synopsis -->
+  <div class="section">
+    <span class="section-label">Synopsis</span>
+    <p>Jason Termechi spent 1.5 years as a TikTok Live Account Manager, working directly with 30+ brands and generating over $14M in GMV through live commerce. He even traveled to China to study Douyin's live ecosystem firsthand. Now he's consulting on live strategy and building Get Live Hosts — a marketplace connecting brands with vetted live hosts by geography, skill set, and rate.</p>
+    <p>In this episode, Jason breaks down the full live commerce playbook: which products are actually live-ready (and the five qualifiers that determine it), why founder-led live outperforms agency-managed shows, and how the affiliate live model is the fastest path for creators to generate income without inventory risk.</p>
+    <p>The centerpiece of the conversation is what China has already proven: 70% of purchases on Douyin happen via live stream, with over $1B in affiliate GMV. The playbook exists. Jason walked it. Here's what's coming to the US — and how to get ahead of it with the crawl/walk/run framework before the window closes.</p>
+  </div>
+
+  <!-- Key Takeaways -->
+  <div class="section">
+    <span class="section-label">Key Takeaways</span>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;gap:14px;align-items:flex-start;padding:16px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px">
+        <span style="font-size:1.2rem;flex-shrink:0">🎯</span>
+        <div><strong style="color:var(--white);font-size:.9rem">Not every product is live-ready — here are the qualifiers.</strong><br/><span style="font-size:.85rem;color:var(--muted)">Live commerce works best for products that can be demonstrated, have a compelling story, and hit a specific price range that feels like an impulsive purchase. If your product can't be shown in action or explained in 60 seconds, live is a hard road. Jason's five-point qualifier framework is the first filter every brand should run before investing in live.</span></div>
+      </div>
+      <div style="display:flex;gap:14px;align-items:flex-start;padding:16px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px">
+        <span style="font-size:1.2rem;flex-shrink:0">👨‍💼</span>
+        <div><strong style="color:var(--white);font-size:.9rem">Founder-led live outperforms agency-managed, every time.</strong><br/><span style="font-size:.85rem;color:var(--muted)">Authenticity is the unfair advantage in live commerce. When a founder goes live and can speak genuinely to why they built the product, conversion rates consistently beat polished host performances. Jason saw this pattern repeatedly across his brand portfolio — the most credible person is usually the one who invented the thing.</span></div>
+      </div>
+      <div style="display:flex;gap:14px;align-items:flex-start;padding:16px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px">
+        <span style="font-size:1.2rem;flex-shrink:0">🤝</span>
+        <div><strong style="color:var(--white);font-size:.9rem">Affiliate live is the entry point for most creators.</strong><br/><span style="font-size:.85rem;color:var(--muted)">Creators don't need their own product to generate income from live. The affiliate live model — hosting brands' products on a commission basis — is both the lowest-friction entry point and the fastest path to meaningful revenue. For brands, it's also the safest way to test live before committing to a full production infrastructure.</span></div>
+      </div>
+      <div style="display:flex;gap:14px;align-items:flex-start;padding:16px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px">
+        <span style="font-size:1.2rem;flex-shrink:0">🇨🇳</span>
+        <div><strong style="color:var(--white);font-size:.9rem">China already solved live commerce — the playbook exists.</strong><br/><span style="font-size:.85rem;color:var(--muted)">70% of purchases on Douyin happen via live stream. The affiliate GMV in China has crossed $1B. Jason visited China specifically to study this ecosystem and came back with a clear picture of where US live commerce is heading. The question isn't whether this comes here — it's whether you're positioned when it does.</span></div>
+      </div>
+      <div style="display:flex;gap:14px;align-items:flex-start;padding:16px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px">
+        <span style="font-size:1.2rem;flex-shrink:0">📐</span>
+        <div><strong style="color:var(--white);font-size:.9rem">Crawl/walk/run: how to start without burning budget.</strong><br/><span style="font-size:.85rem;color:var(--muted)">Most brands try to run before they can walk in live — over-investing in production quality before proving the concept. Jason's crawl/walk/run framework gives a clear sequence: start with the founder on a phone, prove conversion, then invest in hosts and production. Skipping stages is the most common and costly mistake.</span></div>
+      </div>
+      <div style="display:flex;gap:14px;align-items:flex-start;padding:16px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px">
+        <span style="font-size:1.2rem;flex-shrink:0">🔮</span>
+        <div><strong style="color:var(--white);font-size:.9rem">In 5 years: live commerce is a standard channel like paid search.</strong><br/><span style="font-size:.85rem;color:var(--muted)">Just as every brand budgets for Google Ads today, every brand will budget for live in five years. The brands building live muscle now — audience, hosts, production, format — will own distribution when the channel matures. The window to be an early mover is closing faster than most people realize.</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Guest -->
+  <div class="guest-card">
+    <div class="guest-avatar">JT</div>
+    <div class="guest-info">
+      <h3>Jason Termechi</h3>
+      <p class="role">Former TikTok Live Account Manager · Founder, Get Live Hosts · $14M+ GMV, 30+ Brand Portfolio</p>
+      <div class="guest-links">
+        <a href="https://www.linkedin.com/in/jason-termechi/" target="_blank" class="guest-link">LinkedIn</a>
+        <a href="https://getlivehosts.com" target="_blank" class="guest-link">Get Live Hosts</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chapters -->
+  <div class="section">
+    <span class="section-label">Key Moments</span>
+    <ul class="chapters">
+      <li class="chapter">
+        <span class="chapter-time">0:00</span>
+        <div><div class="chapter-title">Intro — Welcome to Episode 2</div></div>
+      </li>
+      <li class="chapter">
+        <span class="chapter-time">1:45</span>
+        <div>
+          <div class="chapter-title">Jason's Path to TikTok Live</div>
+          <div class="chapter-desc">From brand side to TikTok Account Manager — managing 30+ brands and $14M in live GMV</div>
+        </div>
+      </li>
+      <li class="chapter">
+        <span class="chapter-time">6:30</span>
+        <div>
+          <div class="chapter-title">The 5 Live-Readiness Qualifiers</div>
+          <div class="chapter-desc">Which products actually convert in live — and which ones waste budget trying</div>
+        </div>
+      </li>
+      <li class="chapter">
+        <span class="chapter-time">12:00</span>
+        <div>
+          <div class="chapter-title">Founder-Led Live vs. Professional Hosts</div>
+          <div class="chapter-desc">Why authenticity consistently beats polish — and when to make the switch</div>
+        </div>
+      </li>
+      <li class="chapter">
+        <span class="chapter-time">18:15</span>
+        <div>
+          <div class="chapter-title">Affiliate Live: The Creator Opportunity</div>
+          <div class="chapter-desc">How creators generate income from live without inventory — and why brands should start here too</div>
+        </div>
+      </li>
+      <li class="chapter">
+        <span class="chapter-time">24:00</span>
+        <div>
+          <div class="chapter-title">Inside China's Live Commerce Ecosystem</div>
+          <div class="chapter-desc">70% of Douyin purchases happen via live. Jason visited China — here's what the US playbook should look like</div>
+        </div>
+      </li>
+      <li class="chapter">
+        <span class="chapter-time">30:30</span>
+        <div>
+          <div class="chapter-title">The Crawl/Walk/Run Framework</div>
+          <div class="chapter-desc">Founder on a phone → hired host → full production. The sequence that prevents most live commerce failures</div>
+        </div>
+      </li>
+      <li class="chapter">
+        <span class="chapter-time">37:00</span>
+        <div>
+          <div class="chapter-title">Get Live Hosts — The Marketplace</div>
+          <div class="chapter-desc">What Jason is building: a talent marketplace for live hosts searchable by geography, niche, and rate</div>
+        </div>
+      </li>
+      <li class="chapter">
+        <span class="chapter-time">41:30</span>
+        <div>
+          <div class="chapter-title">The 5-Year Vision for Live Commerce</div>
+          <div class="chapter-desc">Live as a standard budget line item. Who owns the channel when it matures — and how to be one of them</div>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Transcript -->
+  <div class="section">
+    <span class="section-label">Full Transcript</span>
+    <div class="transcript" id="transcript">
+
+      <div class="t-block">
+        <div class="t-speaker">Tommy Lynch <span class="t-time">0:01</span></div>
+        <div class="t-text">What is up everyone? Welcome to episode two of the Cult Commerce Podcast where we talk all things social commerce, live commerce, and the future of how brands and creators make money together. Today I have an incredible guest — someone who has been inside TikTok managing brands at the highest level. Jason Termechi, former TikTok Live Account Manager. Jason, give yourself an intro.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker guest">Jason Termechi <span class="t-time">0:38</span></div>
+        <div class="t-text">Yeah, thanks Tommy. Super excited to be here. So my background — I spent about a year and a half at TikTok as a Live Account Manager. During that time I was managing somewhere around 30-plus brands, helped drive over $14 million in GMV specifically through live commerce. And I actually had the opportunity to travel to China to study the Douyin ecosystem firsthand. After TikTok I transitioned into consulting on live strategy and I'm now building Get Live Hosts, which is a marketplace that connects brands with vetted live hosts by geography, skill set, and rate.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker">Tommy Lynch <span class="t-time">1:45</span></div>
+        <div class="t-text">I want to start where most brands start — which is confusion. They hear about live commerce and they think it's just going live on TikTok and selling stuff. But there's a lot more infrastructure and strategy behind it. Let's start with the most basic question: not every product is live-ready. What makes a product work in live and what doesn't?</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker guest">Jason Termechi <span class="t-time">2:30</span></div>
+        <div class="t-text">That's honestly one of the most important things I could tell a brand. Live commerce isn't for every product. The five qualifiers I use are: demonstrability — can you show it working in real time? Price point — it needs to feel impulsive, usually under $80 for a first purchase. Story — does the product have an origin, a problem it solves, that you can communicate in under 60 seconds? Visual appeal — does it look compelling on camera? And finally, repeat purchase potential — because live is about building an audience that comes back. If your product fails two or more of those qualifiers, I'd spend your budget elsewhere.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker">Tommy Lynch <span class="t-time">6:30</span></div>
+        <div class="t-text">That's a framework I've never heard laid out that cleanly before. So let's say a brand passes the qualifier test — they're live-ready. What does the host setup look like? Do they hire a professional or do they go live themselves?</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker guest">Jason Termechi <span class="t-time">7:10</span></div>
+        <div class="t-text">My strong recommendation is always to start with the founder. Counterintuitive, I know, because most founders are terrified of going live. But what I saw consistently across my portfolio — brands where the founder was the one on camera, talking authentically about why they built the product, converted significantly better than brands that hired a polished host day one. The audience can tell. Authenticity is the actual product in live commerce. The host's job is to sell belief, and nobody believes in the product more than the person who built it.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker">Tommy Lynch <span class="t-time">12:00</span></div>
+        <div class="t-text">That tracks with what I see on the creator side too — the most authentic content crushes the most produced content. So what about creators who don't have their own product? Is there a live commerce path for them?</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker guest">Jason Termechi <span class="t-time">12:45</span></div>
+        <div class="t-text">Yes, absolutely — and I'd argue this is actually the biggest opportunity right now that most creators are sleeping on. Affiliate live. You don't need a product. You host brands' products on a commission basis. Brands love it because they're only paying for performance. Creators love it because they can run multiple different shows, test different niches, and find what resonates with their audience without any inventory risk. The model is proven in China — this is essentially how the entire Douyin affiliate ecosystem runs. And Get Live Hosts is built exactly for this — connecting brands who need a live host with creators who want to monetize their time on camera.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker">Tommy Lynch <span class="t-time">18:15</span></div>
+        <div class="t-text">Speaking of China — you actually went there. I want to hear about that. What did you see?</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker guest">Jason Termechi <span class="t-time">18:50</span></div>
+        <div class="t-text">Going to China changed my entire perspective on where this industry is heading. On Douyin, 70% of purchases happen via live stream. Not short video — live. The affiliate GMV has crossed one billion dollars. They have professional live studios — not just a ring light and a phone, actual production facilities where multiple hosts rotate shifts, 18 hours a day, selling products. There are agencies that do nothing but manage live hosts at scale. The whole supply chain, the talent pipeline, the brand matching infrastructure — it's all been figured out. It's just not in the US yet. But it's coming. And it's coming faster than people think.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker">Tommy Lynch <span class="t-time">24:00</span></div>
+        <div class="t-text">That's the thing that gets me — people treat live commerce like it's experimental in the US. But in China it's already a mature industry with infrastructure, talent pipelines, standards. We're not inventing something new. We're adopting something proven. So for the brand that's hearing all of this and wants to start — what does the crawl/walk/run look like?</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker guest">Jason Termechi <span class="t-time">24:40</span></div>
+        <div class="t-text">Crawl: founder on a phone, no production, just go live for an hour, see what happens. Find out if your audience engages, test your talking points, learn what questions people ask. Do this for 2-4 weeks. Walk: once you've proven that the concept works — you're getting engagement, some conversions — now you can bring in a part-time host, upgrade your lighting and camera setup, start doing promotional events like flash sales or bundle deals. Run: you're doing multiple sessions per week with dedicated hosts, you have an audience that knows when you go live, you're running live as a channel alongside your other marketing. Most brands try to skip to run before they've proved crawl. That's the most expensive mistake in live commerce.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker">Tommy Lynch <span class="t-time">30:30</span></div>
+        <div class="t-text">Love it. And Get Live Hosts fits into that walk and run phase — when a brand is ready to bring in professional host talent. Tell me more about what you're building there.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker guest">Jason Termechi <span class="t-time">31:10</span></div>
+        <div class="t-text">Get Live Hosts is a marketplace where brands can search for live hosts by location, niche, language, availability, and rate. The gap I saw when I was at TikTok was that brands who wanted to scale live couldn't find qualified talent fast enough — and creators who wanted to do affiliate live had no structured way to find brand partners. It was all DMs and cold outreach. We're building the infrastructure layer underneath that — vetted profiles, booking flows, performance data. If you're a brand and you want a Spanish-speaking live host in Miami who specializes in beauty and skincare, you should be able to find that in five minutes. That's what we're building.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker">Tommy Lynch <span class="t-time">37:00</span></div>
+        <div class="t-text">That's the kind of infrastructure that makes a whole industry scale. Last question — where do you see live commerce in five years?</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker guest">Jason Termechi <span class="t-time">37:45</span></div>
+        <div class="t-text">Five years from now, live commerce is a standard line item in every brand's marketing budget — the same way Google Ads or Meta Ads are today. It's not going to be "should we do live?" It's going to be "who's managing our live channel?" The brands that are building that muscle right now — the audience, the hosts, the production, the format — are going to own distribution when the channel matures. That's exactly what happened with TikTok short-form video. The brands who built content operations in 2020 and 2021 are the ones who had the highest organic reach when the platform exploded. The window to be an early mover in live is closing. It's not closed yet, but it's moving fast.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker">Tommy Lynch <span class="t-time">42:10</span></div>
+        <div class="t-text">That's the message. If you're listening to this and you've been on the fence about live — this is your sign. Jason, where can people find you and Get Live Hosts?</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker guest">Jason Termechi <span class="t-time">42:30</span></div>
+        <div class="t-text">Hit me up on LinkedIn — Jason Termechi. And the marketplace is getlivehosts.com. We're in early access right now so if you're a brand looking for live hosts or a creator looking to do affiliate live, come through and get early access. Would love to have you.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-box">
+    <h3>Ready to Launch Live Commerce?</h3>
+    <p>Cult Commerce helps brands build and scale their TikTok Shop, live commerce, and creator affiliate strategy.</p>
+    <a href="https://cultcontent.cc" class="cta-btn">Work With Us</a>
+  </div>
+
+</div>
+
+<footer>
+  <p>© 2026 Cult Content. <a href="/cult-commerce-podcast">More episodes →</a></p>
+</footer>
+
+</body>
+</html>
