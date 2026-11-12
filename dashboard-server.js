@@ -8030,6 +8030,7 @@ app.get('/video/:filename', (req, res) => {
 app.get('/cult-commerce-podcast', (req, res) => res.sendFile(path.join(__dirname, 'cult-commerce-podcast.html')));
 app.get('/cult-commerce-podcast/book', (req, res) => res.sendFile(path.join(__dirname, 'cult-commerce-podcast-book.html')));
 app.get('/cult-commerce-podcast/bora-mutluoglu', (req, res) => res.sendFile(path.join(__dirname, 'cult-commerce-podcast-ep1-bora-mutluoglu.html')));
+app.get('/cult-commerce-podcast/jason-termechi', (req, res) => res.sendFile(path.join(__dirname, 'cult-commerce-podcast-ep2-jason-termechi.html')));
 
 app.use(requireAuth); // all other routes require auth in production
 
