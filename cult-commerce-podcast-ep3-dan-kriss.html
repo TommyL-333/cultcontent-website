@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>E3: The Omni-Channel Playbook ft. Dan Kriss | Cult Commerce Podcast</title>
+  <meta name="description" content="Dan Kriss, former TikTok Shop (Health, TSP & Onboarding teams) and now Head of Partnerships at Join Brands, breaks down what brands get wrong about creator tier, why retail is making a comeback, and how omni-channel is now the floor — not the ceiling." />
+  <meta property="og:title" content="E3: The Omni-Channel Playbook ft. Dan Kriss" />
+  <meta property="og:description" content="Dan Kriss spent two years inside TikTok Shop across three teams before joining Join Brands' 500K-creator network. Here's what he learned about creator quality, retail campaigns, and the future of social commerce." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://cultcontent.cc/cult-commerce-podcast/dan-kriss" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root{
+      --bg:#080710;--teal:#00f2ea;--pink:#ff0050;--purple:#7b2fff;
+      --lavender:#b899ff;--gold:#c9a84c;
+      --text:#e8e8f0;--muted:#7a7a9a;--white:#fff;
+      --border:rgba(255,255,255,.07);
+      --ease:0.25s cubic-bezier(0.4,0,0.2,1);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;min-height:100vh}
+    h1,h2,h3,h4{font-family:'Montserrat',sans-serif;font-weight:900;line-height:1.1}
+    p{line-height:1.7}
+    a{color:inherit;text-decoration:none}
+
+    body::before{
+      content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+      background-image:
+        radial-gradient(.6px .6px at 4% 8%,rgba(255,255,255,.7),transparent),
+        radial-gradient(.5px .5px at 11% 27%,rgba(255,255,255,.5),transparent),
+        radial-gradient(.7px .7px at 18% 64%,rgba(255,255,255,.6),transparent),
+        radial-gradient(.5px .5px at 25% 14%,rgba(220,230,255,.55),transparent),
+        radial-gradient(.6px .6px at 33% 78%,rgba(255,255,255,.65),transparent),
+        radial-gradient(.5px .5px at 40% 43%,rgba(255,255,255,.5),transparent),
+        radial-gradient(.6px .6px at 56% 22%,rgba(255,255,255,.6),transparent),
+        radial-gradient(.7px .7px at 71% 33%,rgba(255,255,255,.65),transparent),
+        radial-gradient(.5px .5px at 79% 81%,rgba(255,255,255,.5),transparent),
+        radial-gradient(.6px .6px at 86% 11%,rgba(255,255,255,.6),transparent),
+        radial-gradient(1.5px 1.5px at 14% 76%,rgba(255,255,255,.95),transparent),
+        radial-gradient(2px 2px at 73% 60%,rgba(255,255,255,1),transparent);
+      background-size:700px 500px;background-repeat:repeat;opacity:.55
+    }
+
+    nav{
+      position:fixed;top:0;left:0;right:0;z-index:200;
+      display:flex;align-items:center;justify-content:space-between;
+      padding:20px 56px;
+      background:rgba(8,7,16,0.82);
+      backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+      border-bottom:1px solid rgba(255,255,255,.06)
+    }
+    .nav-logo{font-family:'Montserrat',sans-serif;font-weight:900;font-size:1rem;letter-spacing:.1em;color:var(--white);text-transform:uppercase;text-decoration:none}
+    .nav-logo span{background:linear-gradient(135deg,var(--teal),var(--lavender));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .nav-back{font-size:.75rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,.45);transition:color .2s}
+    .nav-back:hover{color:var(--teal)}
+    @media(max-width:860px){nav{padding:18px 24px}}
+
+    .hero{position:relative;padding:120px 24px 56px;text-align:center;overflow:hidden;z-index:1}
+    .ep-label{display:inline-block;font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+      color:var(--teal);border:1px solid rgba(0,242,234,.3);border-radius:100px;padding:5px 14px;margin-bottom:20px}
+    .hero h1{font-size:clamp(1.8rem,4vw,3.2rem);max-width:800px;margin:0 auto 20px;
+      background:linear-gradient(135deg,var(--white) 40%,var(--lavender));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .guest-line{font-size:1rem;color:var(--muted);margin-bottom:32px}
+    .guest-line strong{color:var(--text)}
+
+    .listen-row{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-bottom:48px}
+    .listen-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:100px;
+      font-size:.8rem;font-weight:700;letter-spacing:.05em;transition:transform .15s,opacity .15s;
+      border:1px solid rgba(255,255,255,.12)}
+    .listen-btn:hover{transform:translateY(-2px);opacity:.9}
+    .listen-btn.spotify{background:#1DB954;color:#000}
+    .listen-btn.apple{background:#fc3c44;color:#fff}
+    .listen-btn.youtube{background:#ff0000;color:#fff}
+
+    .container{max-width:860px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+
+    .video-wrap{position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:16px;
+      background:rgba(255,255,255,.04);border:1px solid var(--border);margin-bottom:56px}
+    .video-wrap video{position:absolute;top:0;left:0;width:100%;height:100%;border-radius:16px;background:#000}
+
+    .section{margin-bottom:56px}
+    .section-label{font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+      color:var(--teal);margin-bottom:16px;display:block}
+    .section h2{font-size:1.4rem;margin-bottom:16px;color:var(--white)}
+    .section p{color:rgba(232,232,240,.8);margin-bottom:14px}
+
+    .chapters{list-style:none;display:flex;flex-direction:column;gap:2px}
+    .chapter{display:flex;align-items:baseline;gap:14px;padding:12px 16px;border-radius:10px;
+      border:1px solid transparent;transition:background .15s,border-color .15s;cursor:default}
+    .chapter:hover{background:rgba(255,255,255,.04);border-color:var(--border)}
+    .chapter-time{font-size:.75rem;font-weight:700;color:var(--teal);font-family:'Montserrat',sans-serif;min-width:42px;flex-shrink:0}
+    .chapter-title{font-size:.9rem;color:var(--text)}
+    .chapter-desc{font-size:.78rem;color:var(--muted);margin-top:2px}
+
+    .guest-card{display:flex;gap:24px;align-items:flex-start;padding:28px;border-radius:16px;
+      background:rgba(255,255,255,.04);border:1px solid var(--border);margin-bottom:56px}
+    .guest-avatar{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--teal));
+      display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:900;
+      font-family:'Montserrat',sans-serif;color:#fff;flex-shrink:0}
+    .guest-info h3{font-size:1.1rem;margin-bottom:4px}
+    .guest-info .role{font-size:.82rem;color:var(--muted);margin-bottom:10px}
+    .guest-links{display:flex;gap:10px;flex-wrap:wrap}
+    .guest-link{font-size:.75rem;font-weight:700;letter-spacing:.05em;padding:5px 12px;border-radius:100px;
+      border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.7);transition:color .15s,border-color .15s}
+    .guest-link:hover{color:var(--teal);border-color:rgba(0,242,234,.4)}
+
+    .transcript{padding:28px;border-radius:16px;background:rgba(255,255,255,.03);border:1px solid var(--border);max-height:600px;overflow-y:auto}
+    .transcript::-webkit-scrollbar{width:4px}
+    .transcript::-webkit-scrollbar-track{background:transparent}
+    .transcript::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:4px}
+    .t-block{margin-bottom:20px}
+    .t-speaker{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--teal);margin-bottom:4px}
+    .t-speaker.guest{color:var(--lavender)}
+    .t-time{font-size:.68rem;color:var(--muted);margin-left:6px;font-weight:400}
+    .t-text{font-size:.88rem;color:rgba(232,232,240,.75);line-height:1.65}
+
+    .cta-box{padding:40px;border-radius:20px;text-align:center;
+      background:linear-gradient(135deg,rgba(123,47,255,.12),rgba(0,242,234,.06));
+      border:1px solid rgba(123,47,255,.25);margin-bottom:56px}
+    .cta-box h3{font-size:1.3rem;margin-bottom:10px}
+    .cta-box p{color:var(--muted);font-size:.9rem;margin-bottom:24px}
+    .cta-btn{display:inline-block;padding:14px 32px;border-radius:100px;font-weight:700;font-size:.85rem;letter-spacing:.05em;
+      background:linear-gradient(135deg,var(--purple),var(--teal));color:#fff;transition:opacity .2s,transform .15s}
+    .cta-btn:hover{opacity:.88;transform:translateY(-2px)}
+
+    footer{border-top:1px solid var(--border);padding:32px 24px;text-align:center;color:var(--muted);font-size:.78rem;position:relative;z-index:1}
+    footer a{color:var(--teal)}
+
+    @media(max-width:640px){
+      .guest-card{flex-direction:column}
+      .listen-row{gap:8px}
+      .listen-btn{font-size:.75rem;padding:9px 16px}
+      .chapter{flex-direction:column;gap:4px}
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">Cult <span>Commerce</span></a>
+  <a href="/cult-commerce-podcast" class="nav-back">← All Episodes</a>
+</nav>
+
+<div class="hero">
+  <div class="ep-label">Episode 3 · Omni-Channel Commerce</div>
+  <h1>The Omni-Channel Playbook ft. Dan Kriss</h1>
+  <p class="guest-line">With <strong>Dan Kriss</strong>, Head of Partnerships, Join Brands | Former TikTok Shop &nbsp;·&nbsp; Hosted by Tommy Lynch</p>
+
+  <div class="listen-row">
+    <a href="https://open.spotify.com/show/06T8UL8Y7ZQxxg5PxLZ2Wa" class="listen-btn spotify">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+      Spotify
+    </a>
+    <a href="https://podcasts.apple.com/podcast/id6827712100" class="listen-btn apple">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></svg>
+      Apple Podcasts
+    </a>
+    <a href="https://www.youtube.com/playlist?list=PLW-U3V2HSSdA" class="listen-btn youtube">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z"/></svg>
+      YouTube
+    </a>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Video embed — src updated when Riverside export is published to hosting -->
+  <div class="video-wrap" id="video-container">
+    <video id="ep-video" controls preload="metadata" style="position:absolute;top:0;left:0;width:100%;height:100%;border-radius:16px;background:#000">
+      <source src="" type="video/mp4" id="video-src" />
+    </video>
+  </div>
+
+  <!-- Synopsis -->
+  <div class="section">
+    <span class="section-label">Synopsis</span>
+    <p>Dan Kriss joined TikTok Shop in the summer of 2023 — the wild west days when the goal was simply to onboard anyone and everyone. Over two years he rotated through three teams: mass onboarding, the TSP (TikTok Shop Partner) agency program, and the Health vertical, where he was focused on brands doing $10M+ in annual GMV. After TikTok's reorg in May 2025, he landed at Join Brands, one of the largest UGC creator marketplaces in the world, with a network of 500,000 creators.</p>
+    <p>In this episode, Dan breaks down what brands consistently get wrong about creator tier — why micro-influencers outperform expectations, and why a single L3 creator's stats can be misleading. He also reveals Join Brands' emerging retail campaign capability: location-based creator sourcing that can place creators within a five-mile radius of specific store locations, a tool that's become critical as retail makes a comeback.</p>
+    <p>The conversation covers the full state of social commerce: why omni-channel is now the floor, not the ceiling; how the platform has gotten harder for smaller brands as TikTok doubles down on SKMs; and where AI-generated content fits into a world that increasingly values authentic human UGC. Dan closes with one piece of advice every brand working with creators needs to hear about content usage rights.</p>
+  </div>
+
+  <!-- Key Takeaways -->
+  <div class="section">
+    <span class="section-label">Key Takeaways</span>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;gap:14px;align-items:flex-start;padding:16px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px">
+        <span style="font-size:1.2rem;flex-shrink:0">🎯</span>
+        <div><strong style="color:var(--white);font-size:.9rem">Don't be too picky on creator tier — micro-influencers are massively underrated.</strong><br/><span style="font-size:.85rem;color:var(--muted)">The difference in content quality between an L1 and an L3 creator is not what most brands think it is. Many L3s are one-hit wonders — a single viral video inflated their stats. L1s and L2s are available at scale, more attentive, and you can get five videos per product sample instead of one. At the volume TikTok rewards, that math wins more often than you'd expect.</span></div>
+      </div>
+      <div style="display:flex;gap:14px;align-items:flex-start;padding:16px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px">
+        <span style="font-size:1.2rem;flex-shrink:0">📍</span>
+        <div><strong style="color:var(--white);font-size:.9rem">Location data is the next unlock for retail-forward brands.</strong><br/><span style="font-size:.85rem;color:var(--muted)">Most creator platforms don't have granular location data because TikTok doesn't share it. Join Brands collects location directly from creators at signup — which means brands can now target creators within a five-mile radius of a specific store. For retail launches at HEB in Texas, Walmart in a specific region, or the National Harbor shops in Maryland, that targeting is a category-defining capability that didn't exist before.</span></div>
+      </div>
+      <div style="display:flex;gap:14px;align-items:flex-start;padding:16px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px">
+        <span style="font-size:1.2rem;flex-shrink:0">📉</span>
+        <div><strong style="color:var(--white);font-size:.9rem">TikTok has gotten harder for smaller brands — and agencies fill the gap.</strong><br/><span style="font-size:.85rem;color:var(--muted)">The days of a brand posting a few videos and going viral by luck are largely over. TikTok now flows almost everything through GMV Max and prioritizes Strategic Key Merchants — brands doing $10M+. If you're not an SKM, you're not getting the same platform support you used to. For non-SKMs, working with a TSP-certified agency has gone from nice-to-have to effectively required.</span></div>
+      </div>
+      <div style="display:flex;gap:14px;align-items:flex-start;padding:16px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px">
+        <span style="font-size:1.2rem;flex-shrink:0">♻️</span>
+        <div><strong style="color:var(--white);font-size:.9rem">One UGC video has 20+ repurpose opportunities — most brands miss them all.</strong><br/><span style="font-size:.85rem;color:var(--muted)">Join Brands gives brands full unlimited usage rights to creator content. That means one video can run as a TikTok ad, a Meta ad, an email campaign asset, a website testimonial, a YouTube pre-roll, a Shopify product page video, and more. Dan shared a list of 20 different repurpose use cases. The brands getting the most ROI from UGC aren't just posting it — they're distributing it everywhere.</span></div>
+      </div>
+      <div style="display:flex;gap:14px;align-items:flex-start;padding:16px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px">
+        <span style="font-size:1.2rem;flex-shrink:0">🤖</span>
+        <div><strong style="color:var(--white);font-size:.9rem">As AI content floods the feed, authentic human UGC becomes the differentiator.</strong><br/><span style="font-size:.85rem;color:var(--muted)">Dan's platform verifies that every creator is a real human before joining. That's not an accident — it's a bet on the direction of the market. AI-generated content can be scaled infinitely and tested cheaply, but social commerce is fundamentally trust-driven. The feed will get noisier with AI. Human authenticity will be harder to fake and more valuable to find.</span></div>
+      </div>
+      <div style="display:flex;gap:14px;align-items:flex-start;padding:16px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px">
+        <span style="font-size:1.2rem;flex-shrink:0">🌐</span>
+        <div><strong style="color:var(--white);font-size:.9rem">Omni-channel is no longer optional — TikTok is discovery, everything else is conversion.</strong><br/><span style="font-size:.85rem;color:var(--muted)">The halo effect is real: TikTok drives awareness and your Amazon, Shopify, and retail shelf captures the conversion. Brands that are only on TikTok shop are leaving the majority of their revenue potential on the table. If you're not set up on Amazon when your TikTok content starts popping, you're giving that revenue to competitors. The brands winning in 2026 aren't thinking about channels — they're thinking about the full customer journey.</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Guest -->
+  <div class="guest-card">
+    <div class="guest-avatar">DK</div>
+    <div class="guest-info">
+      <h3>Dan Kriss</h3>
+      <p class="role">Head of Partnerships, Join Brands · Former TikTok Shop (Health, TSP & Onboarding Teams, 2023–2025)</p>
+      <div class="guest-links">
+        <a href="https://www.linkedin.com/in/dan-kriss/" target="_blank" class="guest-link">LinkedIn</a>
+        <a href="https://joinbrands.com" target="_blank" class="guest-link">Join Brands</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chapters -->
+  <div class="section">
+    <span class="section-label">Key Moments</span>
+    <ul class="chapters">
+      <li class="chapter">
+        <span class="chapter-time">0:00</span>
+        <div><div class="chapter-title">Intro — Welcome to Episode 3</div></div>
+      </li>
+      <li class="chapter">
+        <span class="chapter-time">1:31</span>
+        <div>
+          <div class="chapter-title">The Wild West Days of TikTok Shop</div>
+          <div class="chapter-desc">What it was actually like to be on the TikTok Shop team in summer 2023 — mass onboarding, no filters, just get everyone in</div>
+        </div>
+      </li>
+      <li class="chapter">
+        <span class="chapter-time">1:59</span>
+        <div>
+          <div class="chapter-title">Dan's Background Before TikTok</div>
+          <div class="chapter-desc">From Square payment processing to ABC TV commercial sales — why a diverse outside-sales background actually prepares you for social commerce</div>
+        </div>
+      </li>
+      <li class="chapter">
+        <span class="chapter-time">3:24</span>
+        <div>
+          <div class="chapter-title">"I Didn't Download TikTok Until 30 Minutes Before My Interview"</div>
+          <div class="chapter-desc">Dan's unlikely origin story — how being anti-TikTok didn't stop him from landing one of the most coveted jobs on the platform</div>
+        </div>
+      </li>
+      <li class="chapter">
+        <span class="chapter-time">4:04</span>
+        <div>
+          <div class="chapter-title">Dan's Three Roles at TikTok Shop</div>
+          <div class="chapter-desc">Mass onboarding → TSP agency team → Health vertical BD ($10M+ brands) — what each team taught him about how TikTok actually allocates resources</div>
+        </div>
+      </li>
+      <li class="chapter">
+        <span class="chapter-time">7:51</span>
+        <div>
+          <div class="chapter-title">From TikTok Reorg to Join Brands</div>
+          <div class="chapter-desc">The Tuesday morning email, a brief stop at Temu, and why the transition to the agency side felt natural</div>
+        </div>
+      </li>
+      <li class="chapter">
+        <span class="chapter-time">10:23</span>
+        <div>
+          <div class="chapter-title">Omni-Channel Strategy: The Halo Effect Explained</div>
+          <div class="chapter-desc">TikTok is the discovery engine. Amazon, Shopify, and retail are where the conversion happens. How brands should think about the full funnel in 2026</div>
+        </div>
+      </li>
+      <li class="chapter">
+        <span class="chapter-time">12:57</span>
+        <div>
+          <div class="chapter-title">Join Brands' Location Data Advantage</div>
+          <div class="chapter-desc">The retail campaign capability nobody else has — placing creators within a 5-mile radius of specific store locations for retail launches</div>
+        </div>
+      </li>
+      <li class="chapter">
+        <span class="chapter-time">18:41</span>
+        <div>
+          <div class="chapter-title">What Makes Join Brands Different</div>
+          <div class="chapter-desc">Creator responsiveness, inbound applications flipping the outreach model, and brand protections that guarantee content quality</div>
+        </div>
+      </li>
+      <li class="chapter">
+        <span class="chapter-time">21:32</span>
+        <div>
+          <div class="chapter-title">Brand Protections: Content Review Before Posting</div>
+          <div class="chapter-desc">Creators buy upfront, submit for approval before posting — how Join Brands gives brands full control without killing creator authenticity</div>
+        </div>
+      </li>
+      <li class="chapter">
+        <span class="chapter-time">24:13</span>
+        <div>
+          <div class="chapter-title">The Next 5 Years of Social Commerce</div>
+          <div class="chapter-desc">Live commerce will grow (but not like China). AI content will blur the line. Human UGC becomes the differentiator. What Dan is actually betting on</div>
+        </div>
+      </li>
+      <li class="chapter">
+        <span class="chapter-time">31:25</span>
+        <div>
+          <div class="chapter-title">TikTok Has Gotten Harder for Smaller Brands</div>
+          <div class="chapter-desc">GMV Max, SKM focus, the end of viral luck — why the platform increasingly favors brands who can spend and why agencies fill the gap for everyone else</div>
+        </div>
+      </li>
+      <li class="chapter">
+        <span class="chapter-time">36:22</span>
+        <div>
+          <div class="chapter-title">Don't Sleep on Micro-Influencers — The Closing Argument</div>
+          <div class="chapter-desc">L1 and L2 creators at scale beat one L4 every time. Plus: the 20 ways you can repurpose a single piece of UGC you own the rights to</div>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Transcript -->
+  <div class="section">
+    <span class="section-label">Full Transcript</span>
+    <div class="transcript" id="transcript">
+
+      <div class="t-block">
+        <div class="t-speaker">Tommy Lynch <span class="t-time">0:01</span></div>
+        <div class="t-text">What's going on everyone? Welcome to episode three of the Cult Commerce Podcast, where we discuss the future of social commerce. Today we have a very special guest — Dan Kriss, ex TikTok, now at Join Brands, which is one of the largest UGC platforms in the world. Dan, would you mind giving yourself an intro?</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker guest">Dan Kriss <span class="t-time">0:38</span></div>
+        <div class="t-text">Yeah, what's going on Tommy? Appreciate you having me. So my name's Dan — I'm the head of partnerships at Join Brands. We're a creator marketplace with a network of about half a million creators. We help brands and agencies source and hire creators for all kinds of campaigns: TikTok, TikTok Shop, Instagram, Amazon, YouTube, or just any kind of UGC content. Before this I spent about two years at TikTok Shop, which I joined back in June or July of 2023 — back when shop was first really getting the wheels spinning here in the US. I was on three different teams there.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker">Tommy Lynch <span class="t-time">1:55</span></div>
+        <div class="t-text">What did you do before TikTok Shop?</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker guest">Dan Kriss <span class="t-time">1:59</span></div>
+        <div class="t-text">Before TikTok I didn't have any social commerce experience. I was working a multitude of different sales jobs. Right before TikTok I was an account manager at Square — the payment processor — working with restaurants, retail stores, beauty salons. And before that I sold commercial airtime at a local ABC TV station back in Phoenix. So I was selling ad spots into local news, Modern Family, Shark Tank, plus streaming and pre-roll. TikTok shop was really my introduction into social commerce.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker guest">Dan Kriss <span class="t-time">2:54</span></div>
+        <div class="t-text">The funny story I always tell — when TikTok first became popular, I was one of those rebellious people who was like, everyone's using it, so I'm not going to. I never had TikTok on my phone. I didn't download it for the first time until I was interviewing for the job. I was living in Arizona, looking to relocate to Texas, saw openings at the Austin office — and literally downloaded the app and learned as much as I could probably thirty minutes before my first interview.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker">Tommy Lynch <span class="t-time">3:40</span></div>
+        <div class="t-text">Nice — and it worked out. So what did they have you doing at TikTok?</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker guest">Dan Kriss <span class="t-time">4:04</span></div>
+        <div class="t-text">I had a couple different roles. When I started, it was just the introductory blitz — we were trying to get anyone and everyone onboarded. Didn't matter the vertical, didn't matter the GMV. Then once TikTok wanted to be more strategic about who got white-glove support, I moved to the TSP team — TikTok Shop Partners, which are agencies like Tommy's that have TikTok's stamp of approval. I was managing about 20 agencies, helping them grow their brands, incubating them up through the tiers, plus doing BD to find new agencies. Then an opportunity came up on the Health team, which fits my background — I got my degree in exercise science. I was there bringing on and onboarding vitamins, supplement, and wellness brands doing at least $10M a year in total annual GMV.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker">Tommy Lynch <span class="t-time">7:51</span></div>
+        <div class="t-text">Tell us about the jump from TikTok Shop Health to Join Brands.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker guest">Dan Kriss <span class="t-time">8:02</span></div>
+        <div class="t-text">About a year and a half ago, TikTok was going through one of their big reorgs, some leadership change came in, and I got the classic email on a random Tuesday morning saying my role was eliminated. Spent a brief time at Temu in a similar BD role, then this opportunity came up at Join Brands. I already knew who they were — they'd been a TSP for a while. The transition was pretty easy in terms of knowledge base. The biggest change was getting used to not having that big corporate hierarchy. Join Brands runs very lean — leadership gives me a lot of flexibility to move around and do what I need to do.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker">Tommy Lynch <span class="t-time">10:23</span></div>
+        <div class="t-text">One of the themes that keeps coming up for me is the need to go omni-channel — TikTok Shop, Amazon affiliate, YouTube Shopping, Meta partner ads. What are your thoughts on omni-channel strategy?</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker guest">Dan Kriss <span class="t-time">11:04</span></div>
+        <div class="t-text">I'm a big supporter. TikTok is the ultimate discovery app — it's where brands are found and shared. So having that omni-channel plan where you're on Amazon, Shopify, Meta, YouTube — being able to be discovered across platforms once people initially find you on TikTok — that's the halo effect everyone talks about. In an ideal world you want to be omni-channel, but it's definitely something you have to scale up to with the right plan and infrastructure. A lot of brands are operating at limited capacity. It depends on the brand.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker">Tommy Lynch <span class="t-time">12:57</span></div>
+        <div class="t-text">I was talking with Ian, the founder of Join Brands, at the SOCOM event and he was telling me about the local campaigns — retail launches — and I realized this is one of your moats: you're actually getting location data of creators. TikTok isn't sharing that. Can you dive into that?</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker guest">Dan Kriss <span class="t-time">13:36</span></div>
+        <div class="t-text">Yes — local and retail campaigns is going to be a huge unlock going forward. Since we rolled it out a few weeks ago, it's really taken off. There's a resurgence of retail that I've been noticing everywhere. Being able to push creators into retail stores in that first 30-60-90 days helps a lot with additional purchase orders and shelf space. We can tell brands specifically — here's the list of creators available within a five-mile radius of the stores you want to send them to. We get location data because creators enter it when they sign up with us. For example, we've got a brand doing a launch in HEB — which is only here in Texas — and we can give them a list of Texas-based creators within five miles of specific HEB locations. It just makes it so easy.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker">Tommy Lynch <span class="t-time">18:41</span></div>
+        <div class="t-text">What are the other key differentiators for Join Brands?</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker guest">Dan Kriss <span class="t-time">18:45</span></div>
+        <div class="t-text">Creator attentiveness is a big one. Brands struggle all the time with creator communication — whether it's TikTok target collab invites, Discord, WhatsApp. When you message a creator on Join Brands, you're going to get a timely response. We also flipped the outreach model. Rather than blasting thousands of messages, all you do is post a campaign, get it approved, wait a couple days — and you've got a thousand creators who've come in and applied to work with you. Then all you have to do is say yes or no. And the brand protections are strong: creators buy the product up front, they don't get paid out until the job is done, and they have to submit their video to the brand for review before they even post it. If it doesn't match what you're looking for, you reject it and they redo it.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker">Tommy Lynch <span class="t-time">23:53</span></div>
+        <div class="t-text">In terms of the next five years of social commerce — what do you think are the biggest differences between now and then?</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker guest">Dan Kriss <span class="t-time">24:13</span></div>
+        <div class="t-text">Five years is a long time in this space. I do think live is gonna continue to grow — it just hasn't been growing at the pace TikTok originally wanted. I also think there'll be a pushback against AIGC. We're already seeing that. Join Brands is strictly UGC-only — every creator goes through a verification process to make sure they're a real human. As AI continues to grow, I think social commerce will emphasize real, genuine, authentic human-made UGC. AI is great for workflows and day-to-day tasks, but when it comes to the content itself, human-made content is going to be a big driver.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker">Tommy Lynch <span class="t-time">31:25</span></div>
+        <div class="t-text">I've noticed TikTok has gotten harder for brands — more brands on the platform, more expensive, way less free coupons and incentives. And now TikTok is so focused on these strategic key merchants — ten million dollar plus brands — a lot of which are just dumping millions, losing money, knowing they'll see the halo effect on Amazon and retail. Is that something you've noticed?</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker guest">Dan Kriss <span class="t-time">32:37</span></div>
+        <div class="t-text">Yeah, pretty much everything on TikTok now flows under GMV Max. The days of spam-posting a couple videos a day and having one pop for half a million views are largely done. It's become harder, more expensive. And the harsh reality is that if you're a smaller brand and you're not an SKM, it can be hard to get direct support and guidance from TikTok. That's where working with an agency really plays a role. With the way TikTok has been allocating resources, non-SKM brands basically need a TSP-certified agency these days.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker">Tommy Lynch <span class="t-time">36:01</span></div>
+        <div class="t-text">If there was one thing you want listeners to leave with, what would it be?</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker guest">Dan Kriss <span class="t-time">36:22</span></div>
+        <div class="t-text">When it comes to working with creators — don't be too picky. You always hear about L3, L4, L5 creators being the cream of the crop. But the majority of Join Brands is smaller micro-influencers — L1s and L2s — and there's so much value there. You can hire them at scale. You can give them extra hooks and prompts and get five videos from one product sample. In the world of TikTok — a volume platform — you want to A/B test a bunch of different hooks and styles. And we've seen that the content quality difference between an L1 and an L3 isn't as much as people think. A lot of L3s just had one viral video that GMV Max caught. Do your due diligence. And once you get their video — full unlimited usage rights. You can run it on Meta, put it on your website, email campaigns, pre-roll. There's 20-plus ways to repurpose a piece of content that you own. That's where the real ROI is.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-speaker">Tommy Lynch <span class="t-time">39:00</span></div>
+        <div class="t-text">Both really good tips. I appreciate you jumping on, Dan.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-box">
+    <h3>Work with Cult Commerce</h3>
+    <p>We help brands build their omni-channel social commerce presence — TikTok Shop, Amazon, Meta, and beyond.</p>
+    <a href="https://cultcontent.cc" class="cta-btn">Get in Touch</a>
+  </div>
+
+</div>
+
+<footer>
+  <p>© 2026 Cult Commerce · <a href="/cult-commerce-podcast">All Episodes</a></p>
+</footer>
+
+</body>
+</html>
