@@ -3,29 +3,32 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Cult Commerce — The commerce engine for the creator economy</title>
-  <meta name="description" content="One coordinated team across every channel. A vetted network of specialists. A mission to keep dollars circulating inside the creator economy.">
+  <title>Cult Commerce — AppLovin Agency for DTC Brands</title>
+  <meta name="description" content="Free AppLovin ad credits + 90 days free management for DTC brands. We run TikTok Shop and AppLovin together — the highest-growth performance channel in DTC.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     /* ── Design tokens ── */
     :root {
-      --bg:         #1A0A2E;
-      --bg2:        #150826;
-      --surface:    #3B0F7A;
-      --gold:       #C9A84C;
-      --gold-lt:    #E8C97A;
-      --gold-hi:    #FFF0B3;
-      --gold-grad:  linear-gradient(135deg, #C9A84C 0%, #E8C97A 50%, #FFF0B3 70%, #C9A84C 100%);
-      --text:       #F0E8FF;
-      --text-muted: #9B8DB0;
-      --border:     rgba(201,168,76,0.18);
+      --bg:           #0E0518;
+      --bg2:          #120620;
+      --bg3:          #1A0A2E;
+      --surface:      rgba(59,15,122,0.22);
+      --gold:         #C9A84C;
+      --gold-lt:      #E8C97A;
+      --gold-hi:      #FFF0B3;
+      --gold-grad:    linear-gradient(135deg, #C9A84C 0%, #E8C97A 50%, #FFF0B3 70%, #C9A84C 100%);
+      --teal:         #00C2CB;
+      --teal-lt:      #4DEFF5;
+      --text:         #F0E8FF;
+      --text-muted:   #9B8DB0;
+      --border:       rgba(201,168,76,0.18);
       --font-display: 'Cinzel', serif;
       --font-body:    'Cormorant Garamond', serif;
+      --font-ui:      'Inter', sans-serif;
     }
 
-    /* ── Reset ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
     body {
@@ -38,592 +41,504 @@
       overflow-x: hidden;
     }
 
-    /* ── Typography helpers ── */
     h1,h2,h3,h4,h5 { font-family: var(--font-display); font-weight: 600; line-height: 1.15; }
-    p { font-family: var(--font-body); }
 
     /* ── Gold rule ── */
     .gold-rule {
-      display: block;
-      width: 120px;
-      height: 1px;
-      background: var(--gold-grad);
-      margin: 0 auto;
+      display: block; width: 120px; height: 1px;
+      background: var(--gold-grad); margin: 0 auto; border-radius: 1px;
     }
-    .gold-rule.left { margin: 0; }
-    .gold-rule.wide { width: 200px; }
+    .gold-rule.left  { margin: 0; }
+    .gold-rule.wide  { width: 200px; }
+    .gold-rule.full  { width: 100%; max-width: 600px; }
 
-    /* ── Section wrapper ── */
-    .section {
-      padding: 100px 24px;
-      max-width: 1100px;
-      margin: 0 auto;
-    }
-    .section-center { text-align: center; }
-
-    /* ── Velvet texture (layered radial gradients to simulate woven noise) ── */
-    .velvet-bg {
-      background-color: var(--bg);
-      background-image:
-        radial-gradient(ellipse at 20% 50%, rgba(59,15,122,0.18) 0%, transparent 60%),
-        radial-gradient(ellipse at 80% 20%, rgba(201,168,76,0.04) 0%, transparent 50%),
-        radial-gradient(ellipse at 60% 80%, rgba(59,15,122,0.12) 0%, transparent 55%),
-        repeating-linear-gradient(
-          45deg,
-          transparent,
-          transparent 2px,
-          rgba(255,255,255,0.008) 2px,
-          rgba(255,255,255,0.008) 4px
-        ),
-        repeating-linear-gradient(
-          -45deg,
-          transparent,
-          transparent 2px,
-          rgba(59,15,122,0.06) 2px,
-          rgba(59,15,122,0.06) 4px
-        );
-    }
-
-    /* ═══════════════════════════════
-       NAV
-    ═══════════════════════════════ */
+    /* ══════════════════ NAV ══════════════════ */
     nav {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
       padding: 18px 32px;
-      background: rgba(21,8,38,0.88);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
+      background: rgba(14,5,24,0.90);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
       border-bottom: 1px solid var(--border);
     }
 
     .nav-wordmark {
       font-family: var(--font-display);
-      font-size: 1.1rem;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      color: #fff;
-      text-decoration: none;
+      font-size: 1.1rem; font-weight: 700; letter-spacing: 0.06em;
+      color: #fff; text-decoration: none;
     }
+    .nav-wordmark span { color: var(--gold); }
 
     .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 32px;
-      list-style: none;
+      display: flex; align-items: center; gap: 32px; list-style: none;
     }
     .nav-links a {
       font-family: var(--font-display);
-      font-size: 0.72rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      text-decoration: none;
-      transition: color 0.2s;
+      font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--text-muted); text-decoration: none; transition: color 0.2s;
     }
     .nav-links a:hover { color: var(--gold-lt); }
 
     .btn-gold {
-      display: inline-block;
-      padding: 10px 24px;
+      display: inline-block; padding: 10px 24px;
       background: var(--gold-grad);
-      color: #1A0A2E;
-      font-family: var(--font-display);
-      font-size: 0.7rem;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      text-decoration: none;
-      border-radius: 3px;
+      color: #0E0518;
+      font-family: var(--font-display); font-size: 0.7rem; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      text-decoration: none; border-radius: 3px; border: none; cursor: pointer;
       transition: opacity 0.2s, transform 0.15s;
     }
     .btn-gold:hover { opacity: 0.88; transform: translateY(-1px); }
 
     .btn-ghost {
-      display: inline-block;
-      padding: 10px 24px;
+      display: inline-block; padding: 10px 24px;
       background: transparent;
       color: var(--gold-lt);
-      font-family: var(--font-display);
-      font-size: 0.7rem;
-      font-weight: 600;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      text-decoration: none;
-      border: 1px solid rgba(201,168,76,0.45);
-      border-radius: 3px;
+      font-family: var(--font-display); font-size: 0.7rem; font-weight: 600;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      text-decoration: none; border: 1px solid rgba(201,168,76,0.45); border-radius: 3px;
       transition: background 0.2s, border-color 0.2s, transform 0.15s;
     }
     .btn-ghost:hover {
-      background: rgba(201,168,76,0.08);
-      border-color: rgba(201,168,76,0.75);
-      transform: translateY(-1px);
+      background: rgba(201,168,76,0.08); border-color: rgba(201,168,76,0.75); transform: translateY(-1px);
     }
 
-    /* hamburger for mobile */
     .nav-toggle {
-      display: none;
-      flex-direction: column;
-      gap: 5px;
-      cursor: pointer;
-      background: none;
-      border: none;
-      padding: 4px;
+      display: none; flex-direction: column; gap: 5px;
+      cursor: pointer; background: none; border: none; padding: 4px;
     }
-    .nav-toggle span {
-      display: block;
-      width: 22px;
-      height: 2px;
-      background: var(--gold-lt);
-      border-radius: 2px;
-      transition: opacity 0.2s;
-    }
+    .nav-toggle span { display: block; width: 22px; height: 2px; background: var(--gold-lt); border-radius: 2px; }
 
-    /* ═══════════════════════════════
-       HERO
-    ═══════════════════════════════ */
+    /* ══════════════════ HERO ══════════════════ */
     #hero {
       min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       text-align: center;
       padding: 140px 24px 80px;
       position: relative;
+      background:
+        radial-gradient(ellipse 70% 60% at 50% 40%, rgba(59,15,122,0.45) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 40% at 20% 80%, rgba(0,194,203,0.06) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 30% at 80% 20%, rgba(201,168,76,0.05) 0%, transparent 50%);
     }
 
-    /* diagonal velvet texture overlay */
     #hero::before {
       content: '';
-      position: absolute;
-      inset: 0;
+      position: absolute; inset: 0;
       background-image:
-        repeating-linear-gradient(
-          135deg,
-          transparent,
-          transparent 3px,
-          rgba(59,15,122,0.08) 3px,
-          rgba(59,15,122,0.08) 6px
-        ),
-        repeating-linear-gradient(
-          -135deg,
-          transparent,
-          transparent 3px,
-          rgba(201,168,76,0.025) 3px,
-          rgba(201,168,76,0.025) 6px
-        ),
-        radial-gradient(ellipse at 50% 40%, rgba(59,15,122,0.35) 0%, transparent 70%);
+        repeating-linear-gradient(135deg, transparent, transparent 3px, rgba(59,15,122,0.06) 3px, rgba(59,15,122,0.06) 6px),
+        repeating-linear-gradient(-135deg, transparent, transparent 3px, rgba(201,168,76,0.015) 3px, rgba(201,168,76,0.015) 6px);
       pointer-events: none;
     }
 
-    .hero-inner {
-      position: relative;
-      max-width: 820px;
-    }
+    .hero-inner { position: relative; max-width: 860px; }
 
-    .hero-rule {
-      display: block;
-      width: 180px;
-      height: 2px;
-      background: var(--gold-grad);
-      margin: 0 auto 36px;
-      border-radius: 1px;
-    }
-
-    #hero h1 {
-      font-size: clamp(2rem, 5vw, 3.4rem);
-      color: #fff;
-      letter-spacing: 0.03em;
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 10px;
+      font-family: var(--font-ui);
+      font-size: 0.72rem; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--teal);
       margin-bottom: 28px;
     }
+    .hero-eyebrow::before, .hero-eyebrow::after {
+      content: ''; display: block; width: 32px; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--teal));
+    }
+    .hero-eyebrow::after { background: linear-gradient(90deg, var(--teal), transparent); }
+
+    #hero h1 {
+      font-size: clamp(2.2rem, 5.5vw, 3.8rem);
+      color: #fff;
+      letter-spacing: 0.02em;
+      margin-bottom: 24px;
+    }
+    #hero h1 .accent { background: var(--gold-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 
     .hero-sub {
       font-size: clamp(1.2rem, 2.4vw, 1.5rem);
-      font-style: italic;
-      color: var(--text-muted);
-      max-width: 660px;
-      margin: 0 auto 48px;
-      line-height: 1.7;
+      font-style: italic; color: var(--text-muted);
+      max-width: 680px; margin: 0 auto 20px; line-height: 1.7;
+    }
+
+    .hero-offer-pill {
+      display: inline-block;
+      padding: 10px 24px;
+      background: rgba(0,194,203,0.08);
+      border: 1px solid rgba(0,194,203,0.35);
+      border-radius: 50px;
+      font-family: var(--font-ui);
+      font-size: 0.8rem; font-weight: 500; letter-spacing: 0.04em;
+      color: var(--teal-lt);
+      margin-bottom: 44px;
     }
 
     .hero-ctas {
-      display: flex;
-      gap: 18px;
-      justify-content: center;
-      flex-wrap: wrap;
+      display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; margin-bottom: 56px;
     }
-    .hero-ctas .btn-gold { padding: 14px 32px; font-size: 0.75rem; }
-    .hero-ctas .btn-ghost { padding: 14px 32px; font-size: 0.75rem; }
+    .hero-ctas .btn-gold { padding: 14px 36px; font-size: 0.75rem; }
+    .hero-ctas .btn-ghost { padding: 14px 36px; font-size: 0.75rem; }
 
-    /* ═══════════════════════════════
-       WHAT IS CULT COMMERCE
-    ═══════════════════════════════ */
-    #what {
+    /* scroll indicator */
+    .scroll-hint {
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      font-family: var(--font-ui); font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--text-muted); opacity: 0.6;
+      animation: pulse 2.5s ease-in-out infinite;
+    }
+    .scroll-hint::after {
+      content: ''; display: block; width: 1px; height: 32px;
+      background: linear-gradient(to bottom, var(--gold), transparent);
+    }
+    @keyframes pulse { 0%,100%{opacity:0.4} 50%{opacity:0.8} }
+
+    /* ══════════════════ STATS STRIP ══════════════════ */
+    #stats {
       background: var(--bg2);
       border-top: 1px solid var(--border);
       border-bottom: 1px solid var(--border);
-      padding: 100px 24px;
+      padding: 44px 24px;
     }
 
-    #what .section { max-width: 1100px; }
-
-    .what-title {
-      font-size: clamp(1.6rem, 3vw, 2.4rem);
-      text-align: center;
-      margin-bottom: 64px;
-      color: #fff;
-    }
-    .what-title .gold-rule.wide {
-      margin: 18px auto 0;
-    }
-
-    /* Venn diagram */
-    .venn-wrap {
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
       gap: 0;
-      position: relative;
-      min-height: 280px;
-      flex-wrap: wrap;
+      max-width: 980px;
+      margin: 0 auto;
     }
 
-    .venn-circle {
-      width: 280px;
-      height: 280px;
-      border-radius: 50%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+    .stat-item {
       text-align: center;
-      padding: 32px;
-      position: relative;
+      padding: 20px 24px;
+      border-right: 1px solid var(--border);
     }
+    .stat-item:last-child { border-right: none; }
 
-    .venn-left {
-      background: radial-gradient(circle at 60% 50%, rgba(59,15,122,0.9), rgba(30,8,70,0.95));
-      border: 1px solid rgba(139,92,246,0.4);
-      margin-right: -60px;
-      z-index: 1;
-    }
-
-    .venn-center {
-      background: radial-gradient(circle at 50% 50%, rgba(120,68,20,0.92), rgba(100,50,10,0.95));
-      border: 1px solid rgba(201,168,76,0.55);
-      z-index: 2;
-      width: 200px;
-      height: 200px;
-    }
-
-    .venn-right {
-      background: radial-gradient(circle at 40% 50%, rgba(59,15,122,0.9), rgba(30,8,70,0.95));
-      border: 1px solid rgba(139,92,246,0.4);
-      margin-left: -60px;
-      z-index: 1;
-    }
-
-    .venn-label {
+    .stat-num {
       font-family: var(--font-display);
-      font-size: 0.85rem;
+      font-size: clamp(1.6rem, 3vw, 2.4rem);
       font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: #fff;
-      margin-bottom: 10px;
+      background: var(--gold-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      display: block; margin-bottom: 6px;
     }
 
-    .venn-sub {
-      font-family: var(--font-body);
-      font-size: 0.88rem;
-      color: var(--text-muted);
-      line-height: 1.5;
+    .stat-label {
+      font-family: var(--font-ui);
+      font-size: 0.72rem; font-weight: 500; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--text-muted);
     }
 
-    .venn-center .venn-label {
-      color: var(--gold-lt);
-      font-size: 0.95rem;
-    }
-
-    .venn-infinity {
-      font-size: 2rem;
-      color: var(--gold);
-      margin-bottom: 4px;
-      line-height: 1;
-    }
-
-    .dollar-velocity {
-      text-align: center;
-      margin-top: 52px;
-      position: relative;
-    }
-
-    .dollar-velocity-inner {
-      display: inline-flex;
-      align-items: center;
-      gap: 16px;
-      padding: 16px 28px;
-      border: 1px solid var(--border);
-      border-radius: 3px;
-      background: rgba(59,15,122,0.18);
-    }
-
-    .dollar-velocity .rule-h {
-      width: 40px;
-      height: 1px;
-      background: var(--gold-grad);
-      flex-shrink: 0;
-    }
-
-    .dollar-velocity p {
-      font-family: var(--font-body);
-      font-style: italic;
-      font-size: 1rem;
-      color: var(--text-muted);
-    }
-
-    /* ═══════════════════════════════
-       FOR BRANDS
-    ═══════════════════════════════ */
-    #brands {
+    /* ══════════════════ OFFER SECTION ══════════════════ */
+    #offer {
       padding: 100px 24px;
       max-width: 1100px;
       margin: 0 auto;
     }
 
     .section-eyebrow {
-      font-family: var(--font-display);
-      font-size: 0.65rem;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--gold);
-      margin-bottom: 16px;
-      display: block;
+      font-family: var(--font-ui);
+      font-size: 0.65rem; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 16px; display: block;
     }
 
     .section-headline {
-      font-size: clamp(1.8rem, 3.5vw, 2.8rem);
-      color: #fff;
-      margin-bottom: 20px;
+      font-size: clamp(1.8rem, 3.5vw, 2.8rem); color: #fff; margin-bottom: 20px;
     }
 
     .section-subhead {
       font-size: clamp(1.1rem, 2vw, 1.3rem);
-      font-style: italic;
-      color: var(--text-muted);
-      max-width: 620px;
-      margin-bottom: 44px;
-      line-height: 1.7;
+      font-style: italic; color: var(--text-muted);
+      max-width: 640px; margin-bottom: 56px; line-height: 1.7;
     }
 
-    /* Channel pills */
-    .channel-pills {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 32px;
+    .offer-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
     }
 
-    .channel-pill {
-      display: inline-block;
-      padding: 7px 18px;
-      background: rgba(201,168,76,0.10);
-      border: 1px solid rgba(201,168,76,0.35);
-      border-radius: 50px;
+    .offer-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 36px 28px;
+      position: relative;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .offer-card:hover { border-color: rgba(201,168,76,0.4); background: rgba(59,15,122,0.32); }
+
+    .offer-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0;
+      height: 2px; background: var(--gold-grad); border-radius: 4px 4px 0 0;
+    }
+
+    .offer-card.teal::before { background: linear-gradient(90deg, var(--teal), var(--teal-lt)); }
+
+    .offer-num {
       font-family: var(--font-display);
-      font-size: 0.68rem;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--gold-lt);
+      font-size: 2.2rem; font-weight: 700;
+      background: var(--gold-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      display: block; margin-bottom: 12px; line-height: 1;
+    }
+    .offer-card.teal .offer-num { background: linear-gradient(135deg, var(--teal), var(--teal-lt)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+    .offer-title {
+      font-family: var(--font-display);
+      font-size: 0.9rem; font-weight: 700; letter-spacing: 0.06em;
+      color: #fff; margin-bottom: 10px;
     }
 
-    .brands-note {
+    .offer-body {
       font-family: var(--font-body);
-      font-style: italic;
-      font-size: 1rem;
-      color: var(--text-muted);
-      max-width: 580px;
-      margin-bottom: 44px;
-      padding-left: 18px;
-      border-left: 2px solid rgba(201,168,76,0.35);
+      font-size: 1rem; color: var(--text-muted); line-height: 1.6;
     }
 
-    /* ═══════════════════════════════
-       FOR CREATORS
-    ═══════════════════════════════ */
-    #creators {
+    /* ══════════════════ HOW IT WORKS ══════════════════ */
+    #how {
       padding: 100px 24px;
       background: var(--bg2);
       border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
     }
 
-    #creators .section-inner {
-      max-width: 1100px;
-      margin: 0 auto;
+    #how .inner {
+      max-width: 1100px; margin: 0 auto;
     }
 
-    .creator-cards {
+    .steps {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 20px;
-      margin-top: 48px;
-    }
-
-    .creator-card {
-      background: rgba(59,15,122,0.20);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 32px 28px;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      margin-top: 56px;
       position: relative;
-      transition: border-color 0.2s, background 0.2s;
-    }
-    .creator-card:hover {
-      border-color: rgba(201,168,76,0.38);
-      background: rgba(59,15,122,0.30);
     }
 
-    .creator-card-top {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 14px;
+    .steps::before {
+      content: '';
+      position: absolute;
+      top: 32px; left: 10%; right: 10%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold), var(--gold), transparent);
+      opacity: 0.3;
     }
 
-    .card-title {
+    .step {
+      text-align: center;
+      padding: 0 20px;
+      position: relative;
+    }
+
+    .step-dot {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: var(--bg);
+      border: 1px solid rgba(201,168,76,0.45);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px;
       font-family: var(--font-display);
-      font-size: 0.88rem;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      color: #fff;
-      line-height: 1.3;
+      font-size: 1.1rem; font-weight: 700; color: var(--gold);
+      position: relative; z-index: 1;
     }
 
-    .badge {
-      display: inline-block;
-      padding: 3px 10px;
-      border-radius: 50px;
+    .step-title {
       font-family: var(--font-display);
-      font-size: 0.55rem;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      white-space: nowrap;
-      flex-shrink: 0;
+      font-size: 0.85rem; font-weight: 700; letter-spacing: 0.06em;
+      color: #fff; margin-bottom: 10px;
     }
 
-    .badge-live {
-      background: rgba(34,197,94,0.15);
-      border: 1px solid rgba(34,197,94,0.45);
-      color: #86efac;
-    }
-
-    .badge-coming {
-      background: rgba(201,168,76,0.10);
-      border: 1px solid rgba(201,168,76,0.35);
-      color: var(--gold-lt);
-    }
-
-    .card-body {
+    .step-body {
       font-family: var(--font-body);
-      font-size: 1rem;
-      color: var(--text-muted);
-      line-height: 1.6;
+      font-size: 0.95rem; color: var(--text-muted); line-height: 1.6;
     }
 
-    .creator-cta-wrap {
+    /* ══════════════════ WHY APPLOVIN ══════════════════ */
+    #why {
+      padding: 100px 24px;
+      max-width: 1100px; margin: 0 auto;
+    }
+
+    .why-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: start;
       margin-top: 56px;
     }
 
-    /* ═══════════════════════════════
-       FOR PARTNERS
-    ═══════════════════════════════ */
-    #partners {
-      padding: 100px 24px;
+    .why-col-label {
+      font-family: var(--font-ui);
+      font-size: 0.65rem; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--text-muted); margin-bottom: 24px; display: block;
     }
 
-    #partners .section-inner {
-      max-width: 1100px;
-      margin: 0 auto;
+    .why-col-label.teal { color: var(--teal); }
+    .why-col-label.gold { color: var(--gold); }
+
+    .why-col-title {
+      font-family: var(--font-display);
+      font-size: clamp(1.4rem, 2.5vw, 1.9rem); font-weight: 600;
+      color: #fff; margin-bottom: 20px;
     }
 
-    .partner-cards {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 24px;
-      margin-top: 48px;
+    .why-list {
+      list-style: none; display: flex; flex-direction: column; gap: 14px;
     }
 
-    .partner-card {
-      background: rgba(59,15,122,0.22);
-      border: 1px solid var(--border);
+    .why-list li {
+      display: flex; align-items: flex-start; gap: 12px;
+      font-family: var(--font-body); font-size: 1.05rem; color: var(--text-muted); line-height: 1.6;
+    }
+
+    .why-list li::before {
+      content: '✦';
+      color: var(--gold); font-size: 0.6rem; margin-top: 7px; flex-shrink: 0;
+    }
+
+    .why-col:first-child .why-list li::before { color: var(--teal); }
+
+    .why-bridge {
+      grid-column: 1 / -1;
+      display: flex; align-items: center; gap: 20px;
+      padding: 24px 32px;
+      background: rgba(201,168,76,0.05);
+      border: 1px solid rgba(201,168,76,0.22);
       border-radius: 4px;
-      padding: 40px 36px;
-      position: relative;
-      transition: border-color 0.2s, background 0.2s;
-    }
-    .partner-card:hover {
-      border-color: rgba(201,168,76,0.4);
-      background: rgba(59,15,122,0.32);
     }
 
-    /* gold top accent bar */
-    .partner-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2px;
-      background: var(--gold-grad);
-      border-radius: 4px 4px 0 0;
+    .why-bridge-icon {
+      font-size: 1.8rem; flex-shrink: 0;
     }
 
-    .partner-card-title {
-      font-family: var(--font-display);
-      font-size: 1.05rem;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      color: #fff;
-      margin-bottom: 8px;
+    .why-bridge p {
+      font-family: var(--font-body); font-style: italic;
+      font-size: 1.1rem; color: var(--text-muted); line-height: 1.6;
+    }
+    .why-bridge strong { color: var(--gold-lt); font-style: normal; }
+
+    /* ══════════════════ BRANDS TABLE ══════════════════ */
+    #credits {
+      padding: 100px 24px;
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
     }
 
-    .partner-card-tagline {
-      font-family: var(--font-body);
-      font-style: italic;
-      font-size: 1.05rem;
-      color: var(--gold-lt);
-      margin-bottom: 18px;
+    #credits .inner { max-width: 900px; margin: 0 auto; }
+
+    .credits-table {
+      width: 100%; border-collapse: collapse; margin-top: 48px;
     }
 
-    .partner-card-comp {
-      font-family: var(--font-body);
-      font-size: 0.98rem;
-      color: var(--text-muted);
-      margin-bottom: 28px;
-      line-height: 1.55;
+    .credits-table th, .credits-table td {
+      padding: 16px 20px;
+      text-align: left;
+      border-bottom: 1px solid rgba(201,168,76,0.12);
+      font-family: var(--font-ui);
     }
 
-    .partner-full-link {
-      display: block;
+    .credits-table thead th {
+      font-size: 0.65rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--gold); background: rgba(59,15,122,0.3);
+    }
+
+    .credits-table tbody td { font-size: 0.9rem; color: var(--text-muted); }
+    .credits-table tbody td:first-child { color: #fff; font-weight: 500; }
+
+    .credits-table .credits-num {
+      color: var(--teal-lt); font-weight: 600;
+    }
+
+    .credits-table tbody tr:hover td { background: rgba(59,15,122,0.2); }
+
+    /* ══════════════════ ABOUT / TRUST ══════════════════ */
+    #trust {
+      padding: 100px 24px;
+      max-width: 1100px; margin: 0 auto;
+    }
+
+    .trust-inner {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center;
+    }
+
+    .trust-text .section-subhead { margin-bottom: 36px; }
+
+    .trust-bullets {
+      list-style: none; display: flex; flex-direction: column; gap: 12px; margin-bottom: 40px;
+    }
+
+    .trust-bullets li {
+      display: flex; align-items: flex-start; gap: 12px;
+      font-family: var(--font-body); font-size: 1.05rem; color: var(--text-muted); line-height: 1.55;
+    }
+
+    .trust-bullets li::before { content: '—'; color: var(--gold); flex-shrink: 0; }
+
+    .trust-cred {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 4px;
+      padding: 32px 28px; position: relative; overflow: hidden;
+    }
+
+    .trust-cred::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0;
+      height: 2px; background: var(--gold-grad);
+    }
+
+    .cred-quote {
+      font-family: var(--font-body); font-style: italic; font-size: 1.1rem;
+      color: var(--text); line-height: 1.65; margin-bottom: 24px;
+    }
+
+    .cred-stat-row {
+      display: flex; gap: 24px; flex-wrap: wrap;
+    }
+
+    .cred-stat {
       text-align: center;
-      margin-top: 36px;
-      font-family: var(--font-display);
-      font-size: 0.7rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--gold);
-      text-decoration: none;
-      transition: color 0.2s;
     }
-    .partner-full-link:hover { color: var(--gold-lt); }
 
-    /* ═══════════════════════════════
-       FOOTER
-    ═══════════════════════════════ */
+    .cred-stat-num {
+      font-family: var(--font-display); font-size: 1.5rem; font-weight: 700;
+      background: var(--gold-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      display: block;
+    }
+
+    .cred-stat-label {
+      font-family: var(--font-ui); font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--text-muted); display: block; margin-top: 2px;
+    }
+
+    /* ══════════════════ CTA SECTION ══════════════════ */
+    #cta-section {
+      padding: 100px 24px;
+      text-align: center;
+      position: relative;
+      background:
+        radial-gradient(ellipse 60% 50% at 50% 50%, rgba(59,15,122,0.35) 0%, transparent 70%);
+      border-top: 1px solid var(--border);
+    }
+
+    .cta-inner { max-width: 680px; margin: 0 auto; }
+
+    .cta-rule {
+      display: block; width: 180px; height: 2px;
+      background: var(--gold-grad); margin: 0 auto 36px; border-radius: 1px;
+    }
+
+    #cta-section h2 {
+      font-size: clamp(1.8rem, 3.5vw, 2.8rem); color: #fff; margin-bottom: 20px;
+    }
+
+    #cta-section p {
+      font-family: var(--font-body); font-style: italic; font-size: 1.2rem;
+      color: var(--text-muted); margin-bottom: 44px; line-height: 1.7;
+    }
+
+    .cta-fine {
+      margin-top: 20px;
+      font-family: var(--font-ui); font-size: 0.72rem; color: var(--text-muted); opacity: 0.7;
+    }
+
+    /* ══════════════════ FOOTER ══════════════════ */
     footer {
       background: var(--bg2);
       border-top: 1px solid var(--border);
@@ -632,347 +547,360 @@
     }
 
     .footer-wordmark {
-      font-family: var(--font-display);
-      font-size: 1.2rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      color: #fff;
-      margin-bottom: 12px;
+      font-family: var(--font-display); font-size: 1.2rem; font-weight: 700; letter-spacing: 0.08em;
+      color: #fff; margin-bottom: 10px;
     }
 
     .footer-tagline {
-      font-family: var(--font-body);
-      font-style: italic;
-      font-size: 1rem;
-      color: var(--text-muted);
-      margin-bottom: 36px;
+      font-family: var(--font-body); font-style: italic; font-size: 1rem;
+      color: var(--text-muted); margin-bottom: 36px;
     }
 
     .footer-links {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px 28px;
-      justify-content: center;
-      list-style: none;
-      margin-bottom: 40px;
+      display: flex; flex-wrap: wrap; gap: 8px 28px; justify-content: center;
+      list-style: none; margin-bottom: 40px;
     }
     .footer-links a {
-      font-family: var(--font-display);
-      font-size: 0.65rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      text-decoration: none;
-      transition: color 0.2s;
+      font-family: var(--font-display); font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--text-muted); text-decoration: none; transition: color 0.2s;
     }
     .footer-links a:hover { color: var(--gold-lt); }
 
-    .footer-rule {
-      width: 60px;
-      height: 1px;
-      background: var(--gold-grad);
-      margin: 0 auto 28px;
+    .footer-rule { width: 60px; height: 1px; background: var(--gold-grad); margin: 0 auto 28px; }
+
+    .footer-copy { font-family: var(--font-body); font-size: 0.88rem; color: var(--text-muted); }
+
+    /* ══════════════════ RESPONSIVE ══════════════════ */
+    @media (max-width: 900px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .stat-item:nth-child(2) { border-right: none; }
+      .stat-item:nth-child(3), .stat-item:nth-child(4) { border-top: 1px solid var(--border); }
+      .offer-cards { grid-template-columns: 1fr; }
+      .steps { grid-template-columns: 1fr 1fr; }
+      .steps::before { display: none; }
+      .why-grid { grid-template-columns: 1fr; gap: 40px; }
+      .trust-inner { grid-template-columns: 1fr; gap: 48px; }
     }
 
-    .footer-copy {
-      font-family: var(--font-body);
-      font-size: 0.88rem;
-      color: var(--text-muted);
-    }
-
-    /* ═══════════════════════════════
-       RESPONSIVE
-    ═══════════════════════════════ */
     @media (max-width: 700px) {
       nav { padding: 16px 20px; }
-
       .nav-links {
-        display: none;
-        position: fixed;
-        top: 61px; left: 0; right: 0;
-        background: rgba(21,8,38,0.97);
-        flex-direction: column;
-        gap: 0;
-        border-bottom: 1px solid var(--border);
-        z-index: 99;
+        display: none; position: fixed; top: 61px; left: 0; right: 0;
+        background: rgba(14,5,24,0.97); flex-direction: column; gap: 0;
+        border-bottom: 1px solid var(--border); z-index: 99;
       }
       .nav-links.open { display: flex; }
       .nav-links li { width: 100%; }
-      .nav-links a {
-        display: block;
-        padding: 16px 24px;
-        border-bottom: 1px solid var(--border);
-        font-size: 0.78rem;
-      }
-      .nav-links .btn-gold {
-        display: block;
-        margin: 16px 24px;
-        text-align: center;
-        border-radius: 3px;
-      }
-
+      .nav-links a { display: block; padding: 16px 24px; border-bottom: 1px solid var(--border); font-size: 0.78rem; }
+      .nav-links .btn-gold { display: block; margin: 16px 24px; text-align: center; }
       .nav-toggle { display: flex; }
 
-      .section { padding: 72px 20px; }
-
-      #hero { padding: 120px 20px 72px; }
-
-      .venn-wrap {
-        flex-direction: column;
-        align-items: center;
-        gap: 0;
-        min-height: auto;
-      }
-      .venn-left, .venn-right {
-        width: 240px;
-        height: 240px;
-        margin: 0;
-      }
-      .venn-center {
-        width: 240px;
-        height: 120px;
-        border-radius: 8px;
-        margin: -2px 0;
-        z-index: 2;
-      }
-
-      .partner-cards { grid-template-columns: 1fr; }
-
-      .dollar-velocity-inner {
-        flex-direction: column;
-        gap: 10px;
-        text-align: center;
-      }
-      .dollar-velocity .rule-h { width: 60px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .steps { grid-template-columns: 1fr; }
+      .hero-ctas { flex-direction: column; align-items: center; }
+      .hero-ctas .btn-gold, .hero-ctas .btn-ghost { width: 100%; text-align: center; }
+      .credits-table { font-size: 0.8rem; }
+      .credits-table th, .credits-table td { padding: 12px 12px; }
     }
 
     @media (max-width: 480px) {
-      .hero-ctas { flex-direction: column; align-items: center; }
-      .hero-ctas .btn-gold, .hero-ctas .btn-ghost { width: 100%; text-align: center; }
+      .cred-stat-row { justify-content: center; }
     }
   </style>
 </head>
-<body class="velvet-bg">
+<body>
 
-  <!-- ══════════ NAV ══════════ -->
+  <!-- ══════ NAV ══════ -->
   <nav role="navigation" aria-label="Main navigation">
-    <a class="nav-wordmark" href="/">Cult Commerce</a>
+    <a class="nav-wordmark" href="/">Cult <span>Commerce</span></a>
 
     <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false">
-      <span></span>
-      <span></span>
-      <span></span>
+      <span></span><span></span><span></span>
     </button>
 
     <ul class="nav-links" id="nav-links">
-      <li><a href="#brands">For Brands</a></li>
-      <li><a href="#partners">For Partners</a></li>
-      <li><a href="#creators">For Creators</a></li>
-      <li><a href="/partner/apply" class="btn-gold">Apply to Partner</a></li>
+      <li><a href="#offer">The Offer</a></li>
+      <li><a href="#why">Why AppLovin</a></li>
+      <li><a href="#credits">Free Credits</a></li>
+      <li><a href="#cta-section" class="btn-gold">Book a Call</a></li>
     </ul>
   </nav>
 
-  <!-- ══════════ HERO ══════════ -->
+  <!-- ══════ HERO ══════ -->
   <section id="hero" aria-label="Hero">
     <div class="hero-inner">
-      <span class="hero-rule" aria-hidden="true"></span>
-      <h1>The commerce engine for the creator economy.</h1>
+      <span class="hero-eyebrow">AppLovin Certified Agency Partner</span>
+      <h1>Scale your DTC brand on the <span class="accent">highest-growth ad platform</span> in the world.</h1>
       <p class="hero-sub">
-        One coordinated team across every channel. A vetted network of specialists.
-        And a mission to keep dollars circulating inside the creator economy.
+        We run AppLovin and TikTok Shop together — and right now, we're offering free credits plus 90 days of free ad management to qualifying brands.
       </p>
+      <div class="hero-offer-pill">🎯 Up to $7,000 in free AppLovin credits + 90 days free management</div>
       <div class="hero-ctas">
-        <a href="#brands" class="btn-gold">Build your team</a>
-        <a href="/partner/apply" class="btn-ghost">Apply to Partner</a>
+        <a href="#cta-section" class="btn-gold">Book a Free Strategy Call</a>
+        <a href="#why" class="btn-ghost">See Why AppLovin</a>
+      </div>
+      <div class="scroll-hint" aria-hidden="true">Scroll</div>
+    </div>
+  </section>
+
+  <!-- ══════ STATS ══════ -->
+  <section id="stats" aria-label="AppLovin platform stats">
+    <div class="stats-grid">
+      <div class="stat-item">
+        <span class="stat-num">1B+</span>
+        <span class="stat-label">Active Users</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num">35–38s</span>
+        <span class="stat-label">Avg Watch Time</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num">$3B+</span>
+        <span class="stat-label">Quarterly Revenue</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num">3×+</span>
+        <span class="stat-label">Platform Growth (2024)</span>
       </div>
     </div>
   </section>
 
-  <!-- ══════════ WHAT IS CULT COMMERCE ══════════ -->
-  <section id="what" aria-label="Two sides of one network">
-    <div class="section">
-      <h2 class="what-title">
-        Two sides of one network.
-        <span class="gold-rule wide" aria-hidden="true"></span>
-      </h2>
-
-      <div class="venn-wrap" role="img" aria-label="Diagram: Cult Content on the left, Cult Commerce in the center, Brands and Service Providers on the right">
-        <div class="venn-circle venn-left">
-          <span class="venn-label">Cult Content</span>
-          <span class="venn-sub">Creators, community, coaching, Inner Circle, Creator Carnival</span>
-        </div>
-        <div class="venn-circle venn-center">
-          <div class="venn-infinity" aria-hidden="true">⟺</div>
-          <span class="venn-label">Cult Commerce</span>
-        </div>
-        <div class="venn-circle venn-right">
-          <span class="venn-label">Brands &amp; Providers</span>
-          <span class="venn-sub">Marketplace sellers, DTC brands, specialist service providers</span>
-        </div>
-      </div>
-
-      <div class="dollar-velocity">
-        <div class="dollar-velocity-inner">
-          <span class="rule-h" aria-hidden="true"></span>
-          <p>Dollar velocity: every dollar earned stays inside the network as many times as possible before it leaves.</p>
-          <span class="rule-h" aria-hidden="true"></span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ══════════ FOR BRANDS ══════════ -->
-  <section aria-labelledby="brands-heading">
-    <div class="section" id="brands">
-      <span class="section-eyebrow">For Brands</span>
+  <!-- ══════ OFFER ══════ -->
+  <section id="offer" aria-labelledby="offer-heading">
+    <div class="section" style="max-width:1100px; margin:0 auto; padding:100px 24px;">
+      <span class="section-eyebrow">The Offer</span>
       <span class="gold-rule left" style="margin-bottom:28px" aria-hidden="true"></span>
-      <h2 class="section-headline" id="brands-heading">One team. Every channel.</h2>
+      <h2 class="section-headline" id="offer-heading">What you get. At no cost to test.</h2>
       <p class="section-subhead">
-        Instead of managing a stack of disconnected agencies, Cult Commerce routes one coordinated team across your channels.
-        Specialists are vetted and scopes are clear.
+        We're one of the first agencies positioning on AppLovin for DTC brands. The platform is new, CPMs are low, and the inventory is there. We're offering a free trial so you have no reason not to test it.
       </p>
 
-      <div class="channel-pills" aria-label="Channels">
-        <span class="channel-pill">TikTok Shop</span>
-        <span class="channel-pill">Amazon</span>
-        <span class="channel-pill">Walmart</span>
-        <span class="channel-pill">Meta</span>
-        <span class="channel-pill">Google / YouTube</span>
-        <span class="channel-pill">Shopify</span>
-        <span class="channel-pill">Email</span>
-        <span class="channel-pill">Retail</span>
+      <div class="offer-cards">
+        <div class="offer-card teal">
+          <span class="offer-num">Free</span>
+          <div class="offer-title">AppLovin Ad Credits</div>
+          <p class="offer-body">AppLovin provides direct ad credits based on the size of your brand — up to $7,000 to spend on the platform. We facilitate the application.</p>
+        </div>
+
+        <div class="offer-card">
+          <span class="offer-num">90</span>
+          <div class="offer-title">Days Free Management</div>
+          <p class="offer-body">We set up and run your AppLovin account for 90 days at no charge. Creative setup, campaign structure, performance reporting — all included.</p>
+        </div>
+
+        <div class="offer-card">
+          <span class="offer-num">+</span>
+          <div class="offer-title">TikTok Shop Integration</div>
+          <p class="offer-body">Your best-performing TikTok content is your AppLovin creative — we coordinate both channels under one strategy so your content dollars work twice as hard.</p>
+        </div>
       </div>
-
-      <p class="brands-note">
-        TikTok Shop is where discovery and creative testing happen. Marketplaces and your own site convert.
-      </p>
-
-      <a href="/book-with-tommy" class="btn-gold">Build your team</a>
     </div>
   </section>
 
-  <!-- ══════════ FOR CREATORS ══════════ -->
-  <section id="creators" aria-labelledby="creators-heading">
-    <div class="section-inner">
-      <div style="max-width:1100px; margin:0 auto; padding:0 24px">
-        <span class="section-eyebrow">For Creators</span>
+  <!-- ══════ HOW IT WORKS ══════ -->
+  <section id="how" aria-labelledby="how-heading">
+    <div class="inner">
+      <div style="text-align:center; margin-bottom:0;">
+        <span class="section-eyebrow" style="display:block; text-align:center;">How It Works</span>
+        <span class="gold-rule wide" style="margin:0 auto 28px;" aria-hidden="true"></span>
+        <h2 class="section-headline" id="how-heading" style="text-align:center; max-width:600px; margin:0 auto 16px;">From call to live in under 10 days.</h2>
+        <p class="section-subhead" style="margin:0 auto; text-align:center;">AppLovin moves fast. So do we.</p>
+      </div>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-dot">1</div>
+          <div class="step-title">Book a Call</div>
+          <p class="step-body">We learn your brand, annual GMV, and current channels. Takes 30 minutes.</p>
+        </div>
+        <div class="step">
+          <div class="step-dot">2</div>
+          <div class="step-title">Credits Unlocked</div>
+          <p class="step-body">We facilitate your AppLovin credit application. Amount is based on brand size.</p>
+        </div>
+        <div class="step">
+          <div class="step-dot">3</div>
+          <div class="step-title">Account Live</div>
+          <p class="step-body">We build your campaign structure, load creatives, and get you live within 10 days.</p>
+        </div>
+        <div class="step">
+          <div class="step-dot">4</div>
+          <div class="step-title">Scale Together</div>
+          <p class="step-body">We find your winning creative and iterate. After 90 days, you decide if you want to continue.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════ WHY APPLOVIN ══════ -->
+  <section id="why" aria-labelledby="why-heading">
+    <div class="why-inner" style="max-width:1100px; margin:0 auto; padding:100px 24px;">
+      <span class="section-eyebrow">Why AppLovin + TikTok</span>
+      <span class="gold-rule left" style="margin-bottom:28px" aria-hidden="true"></span>
+      <h2 class="section-headline" id="why-heading">Two platforms. One creative flywheel.</h2>
+
+      <div class="why-grid">
+        <div class="why-col">
+          <span class="why-col-label teal">TikTok Shop</span>
+          <h3 class="why-col-title">Discovery engine + creator volume</h3>
+          <ul class="why-list">
+            <li>750+ creators in the Cult Content community producing content at scale</li>
+            <li>Short-form video drives organic discovery and purchase intent</li>
+            <li>Creator-driven content tests at low cost — winners are clear fast</li>
+            <li>Built-in social proof: views, shares, and comments drive credibility</li>
+          </ul>
+        </div>
+
+        <div class="why-col">
+          <span class="why-col-label gold">AppLovin</span>
+          <h3 class="why-col-title">Performance scale at lower CPMs</h3>
+          <ul class="why-list">
+            <li>1 billion+ active users across free mobile gaming apps</li>
+            <li>Non-skippable 30–60 second ad units — 35–38s average watch time</li>
+            <li>Algorithmic platform: no complex targeting, just creative testing</li>
+            <li>Lower CPMs and higher CTRs than Meta for many DTC categories</li>
+            <li>Fastest-growing ad platform — triple-digit growth in 2024</li>
+          </ul>
+        </div>
+
+        <div class="why-bridge">
+          <span class="why-bridge-icon" aria-hidden="true">⟺</span>
+          <p>
+            Your best TikTok videos <strong>become your AppLovin creatives.</strong> No new production budget required. We repurpose the content you're already creating into the highest-performing ad format on AppLovin's platform.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════ CREDITS TABLE ══════ -->
+  <section id="credits" aria-labelledby="credits-heading">
+    <div class="inner">
+      <span class="section-eyebrow" style="display:block;">Free Credit Tiers</span>
+      <span class="gold-rule left" style="margin-bottom:28px;" aria-hidden="true"></span>
+      <h2 class="section-headline" id="credits-heading">How much can your brand unlock?</h2>
+      <p class="section-subhead" style="max-width:600px;">AppLovin's credit amounts are based on your annual GMV. Here's the breakdown.</p>
+
+      <table class="credits-table" aria-label="Free credit tiers by brand size">
+        <thead>
+          <tr>
+            <th>Annual Brand GMV</th>
+            <th>Free Ad Credits</th>
+            <th>Management Period</th>
+            <th>What's Included</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>$10M – $25M</td>
+            <td class="credits-num">Up to $2,000</td>
+            <td>90 days free</td>
+            <td>Setup, creatives, reporting</td>
+          </tr>
+          <tr>
+            <td>$25M – $50M</td>
+            <td class="credits-num">Up to $5,000</td>
+            <td>90 days free</td>
+            <td>Setup, creatives, reporting + strategy call</td>
+          </tr>
+          <tr>
+            <td>$50M – $100M</td>
+            <td class="credits-num">Up to $7,000</td>
+            <td>90 days free</td>
+            <td>Setup, creatives, reporting + dedicated support</td>
+          </tr>
+          <tr>
+            <td>$100M+</td>
+            <td class="credits-num">Custom</td>
+            <td>Negotiated</td>
+            <td>Full white-glove onboarding + joint team call</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ══════ TRUST / ABOUT ══════ -->
+  <section id="trust" aria-labelledby="trust-heading">
+    <div class="trust-inner">
+      <div class="trust-text">
+        <span class="section-eyebrow">Who We Are</span>
         <span class="gold-rule left" style="margin-bottom:28px" aria-hidden="true"></span>
-        <h2 class="section-headline" id="creators-heading">The infrastructure for creators who are building for real.</h2>
+        <h2 class="section-headline" id="trust-heading">The team behind Cult Content.</h2>
         <p class="section-subhead">
-          These are our commitments and roadmap — clearly marked as live or coming.
+          We've been building the creator-commerce infrastructure since TikTok Shop launched. Now we're extending it to AppLovin — and we're one of the first agencies doing both together.
         </p>
+        <ul class="trust-bullets">
+          <li>5 years in short-form content — 100M+ views across brand campaigns</li>
+          <li>TikTok Certified Agency since March 2025</li>
+          <li>750+ creators in the Cult Content community, available for brand work</li>
+          <li>Worked with Reacher through Y Combinator</li>
+          <li>Two in-person creator commerce events hosted in 2024–2025</li>
+        </ul>
+        <a href="#cta-section" class="btn-gold">Book a Free Strategy Call</a>
       </div>
 
-      <div class="creator-cards" style="max-width:1100px; margin:0 auto; padding:0 24px">
-
-        <div class="creator-card">
-          <div class="creator-card-top">
-            <span class="card-title">More paid brand work</span>
-            <span class="badge badge-live">Live</span>
+      <div class="trust-cred">
+        <p class="cred-quote">
+          "If you develop an agency on AppLovin now, it'd be one of those early TikTok agencies that had started. It's really on yourself — how much you want to learn on optimizing these ads for brands to a point where you end up being the go-to person."
+        </p>
+        <p style="font-family: var(--font-ui); font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); margin-bottom: 28px;">— Harry Singh, AppLovin</p>
+        <div class="cred-stat-row">
+          <div class="cred-stat">
+            <span class="cred-stat-num">750+</span>
+            <span class="cred-stat-label">Creators</span>
           </div>
-          <p class="card-body">The brands Cult Commerce serves have budgets for creators. More brand work routed to you.</p>
-        </div>
-
-        <div class="creator-card">
-          <div class="creator-card-top">
-            <span class="card-title">AI likeness licensing</span>
-            <span class="badge badge-coming">Coming Soon</span>
+          <div class="cred-stat">
+            <span class="cred-stat-num">100M+</span>
+            <span class="cred-stat-label">Views Driven</span>
           </div>
-          <p class="card-body">License your likeness for AI-generated content, with consent, and earn a royalty every time it's used. AI is a tool for creators, not a replacement.</p>
-        </div>
-
-        <div class="creator-card">
-          <div class="creator-card-top">
-            <span class="card-title">A brand accelerator</span>
-            <span class="badge badge-coming">Coming Soon</span>
+          <div class="cred-stat">
+            <span class="cred-stat-num">2</span>
+            <span class="cred-stat-label">IRL Events</span>
           </div>
-          <p class="card-body">Creators who have an audience launch their own products using the network's manufacturers, marketplaces, and affiliate creators.</p>
         </div>
-
-        <div class="creator-card">
-          <div class="creator-card-top">
-            <span class="card-title">Funding and investment</span>
-            <span class="badge badge-coming">Coming Soon</span>
-          </div>
-          <p class="card-body">Money for creators' projects through mission partners and foundations, and investment in creators' businesses over time.</p>
-        </div>
-
-        <div class="creator-card">
-          <div class="creator-card-top">
-            <span class="card-title">The long arc</span>
-            <span class="badge badge-coming">Coming Soon</span>
-          </div>
-          <p class="card-body">Surplus funds SSEL, the Society for Social &amp; Economic Liberation — the nonprofit that organizes for collective bargaining power and a funded floor of housing, food, water, medicine, and education.</p>
-        </div>
-
-      </div>
-
-      <div class="creator-cta-wrap" style="max-width:1100px; margin:0 auto; padding:0 24px">
-        <a href="https://discord.gg/cultcontent" class="btn-gold" target="_blank" rel="noopener">Join the Cult Content community</a>
       </div>
     </div>
   </section>
 
-  <!-- ══════════ FOR PARTNERS ══════════ -->
-  <section id="partners" aria-labelledby="partners-heading">
-    <div class="section-inner">
-      <div style="max-width:1100px; margin:0 auto; padding:0 24px">
-        <span class="section-eyebrow">For Partners</span>
-        <span class="gold-rule left" style="margin-bottom:28px" aria-hidden="true"></span>
-        <h2 class="section-headline" id="partners-heading">Inside the network.</h2>
-      </div>
-
-      <div class="partner-cards" style="max-width:1100px; margin:0 auto; padding:0 24px">
-
-        <div class="partner-card">
-          <div class="partner-card-title">Sales Partners</div>
-          <div class="partner-card-tagline">You close the deal. We handle execution.</div>
-          <p class="partner-card-comp">Earn 20% of retainers and 10% of net sales. Bring a brand into the network and the team takes it from there.</p>
-          <a href="/partner/apply" class="btn-gold">Apply to Partner</a>
-        </div>
-
-        <div class="partner-card">
-          <div class="partner-card-title">Service Providers</div>
-          <div class="partner-card-tagline">You execute one channel exceptionally well.</div>
-          <p class="partner-card-comp">Keep 100% of self-sourced revenue. Earn 70% on Cult Commerce-referred deals. Focused scope, clear briefs, real brands.</p>
-          <a href="/partner/apply" class="btn-gold">Apply to Partner</a>
-        </div>
-
-      </div>
-
-      <a href="/partner" class="partner-full-link" style="max-width:1100px; margin:0 auto; display:block; text-align:center; padding:0 24px">
-        View the full partner program →
+  <!-- ══════ CTA ══════ -->
+  <section id="cta-section" aria-label="Call to action">
+    <div class="cta-inner">
+      <span class="cta-rule" aria-hidden="true"></span>
+      <h2>Ready to test AppLovin for free?</h2>
+      <p>
+        Book a 30-minute strategy call. We'll scope your brand, unlock your credits, and get you live within 10 days — no cost, no commitment.
+      </p>
+      <a href="https://calendly.com/tommy-cultcontent/applovin" class="btn-gold" style="padding:16px 48px; font-size:0.8rem;" target="_blank" rel="noopener">
+        Book a Free Strategy Call
       </a>
+      <p class="cta-fine">Or email Tommy at tommy@cultcontent.cc to start the conversation.</p>
     </div>
   </section>
 
-  <!-- ══════════ FOOTER ══════════ -->
+  <!-- ══════ FOOTER ══════ -->
   <footer>
     <div class="footer-wordmark">Cult Commerce</div>
-    <p class="footer-tagline">The omni-channel commerce engine of the creator economy.</p>
+    <p class="footer-tagline">AppLovin + TikTok Shop agency for DTC brands.</p>
     <ul class="footer-links">
       <li><a href="https://cultcontent.cc" target="_blank" rel="noopener">Cult Content</a></li>
-      <li><a href="https://ssel.info" target="_blank" rel="noopener">SSEL</a></li>
-      <li><a href="/partner">Partners</a></li>
-      <li><a href="/partner/apply">Apply</a></li>
+      <li><a href="#offer">The Offer</a></li>
+      <li><a href="#why">Why AppLovin</a></li>
+      <li><a href="#cta-section">Book a Call</a></li>
     </ul>
     <div class="footer-rule" aria-hidden="true"></div>
     <p class="footer-copy">&copy; <span id="year"></span> Cult Content LLC. All rights reserved.</p>
   </footer>
 
   <script>
-    // Dynamic year
     document.getElementById('year').textContent = new Date().getFullYear();
 
-    // Mobile nav toggle
     var toggle = document.getElementById('nav-toggle');
     var links  = document.getElementById('nav-links');
     toggle.addEventListener('click', function () {
       var open = links.classList.toggle('open');
       toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
     });
-
-    // Close mobile nav on link click
     links.querySelectorAll('a').forEach(function (a) {
       a.addEventListener('click', function () {
         links.classList.remove('open');
