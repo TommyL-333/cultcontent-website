@@ -1042,6 +1042,12 @@ app.get('/home', (req, res, next) => {
   res.sendFile(path.join(__dirname, 'home.html'));
 });
 
+// cultcommerce.cc root — must be before dashboard static so index.html doesn't win
+app.get('/', (req, res, next) => {
+  if (!isCultCommerce(req)) return next();
+  res.sendFile(path.join(__dirname, 'cultcommerce-index.html'));
+});
+
 // Serve dashboard static assets (CSS/JS) before auth wall so portal.cultcontent.cc can load them
 app.use(express.static(path.join(__dirname, 'dashboard')));
 
