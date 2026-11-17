@@ -1033,10 +1033,12 @@ app.get('/', (req, res, next) => {
 // dashboard/index.html doesn't win for GET / on cultcontent.cc.
 app.get('/', (req, res, next) => {
   if ((req.hostname || '').includes('portal.cultcontent.cc')) return next();
+  if (isCultCommerce(req)) return next();
   res.sendFile(path.join(__dirname, 'home.html'));
 });
 app.get('/home', (req, res, next) => {
   if ((req.hostname || '').includes('portal.cultcontent.cc')) return next();
+  if (isCultCommerce(req)) return next();
   res.sendFile(path.join(__dirname, 'home.html'));
 });
 
