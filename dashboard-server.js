@@ -6862,6 +6862,16 @@ function isCultCommerce(req) {
   return host === 'cultcommerce.cc' || host === 'www.cultcommerce.cc';
 }
 
+// Temporary: expose host headers for debugging cultcommerce.cc routing
+app.get('/__debug-host', (req, res) => {
+  res.json({
+    'x-forwarded-host': req.headers['x-forwarded-host'],
+    'host': req.headers.host,
+    'x-forwarded-proto': req.headers['x-forwarded-proto'],
+    isCultCommerce: isCultCommerce(req),
+  });
+});
+
 // Cult Commerce: public site
 app.get('/', (req, res, next) => {
   if (!isCultCommerce(req)) return next();
