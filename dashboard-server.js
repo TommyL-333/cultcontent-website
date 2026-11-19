@@ -6899,6 +6899,10 @@ app.get('/partner/types', (req, res, next) => {
   if (!isCultCommerce(req)) return next();
   res.sendFile(path.join(__dirname, 'cultcommerce-partner-types.html'));
 });
+app.get('/book-with-tommy', (req, res, next) => {
+  if (!isCultCommerce(req)) return next();
+  res.sendFile(path.join(__dirname, 'cultcommerce-book-with-tommy.html'));
+});
 
 // Cult Commerce: network map — server-side password gate
 // Password is stored as a bcrypt hash in NETWORK_MAP_PASSWORD_HASH,
